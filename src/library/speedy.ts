@@ -15,6 +15,7 @@ const CARET = {
     RIGHT: 1,
     LEFT: 0
 };
+type BrowserSelection = globalThis.Selection;
 const ELEMENT_ROLE = {
     CELL: 0,
     INNER_STYLE_BLOCK: 1,
@@ -130,8 +131,8 @@ interface ISpeedyBlockObject {
     role: number;
     startNode: ICellNode;
     endNode: ICellNode;
-    nextTextBlock: IBlockNode;
-    previousTextBlock: IBlockNode;
+    nextTextBlock: BlockNode;
+    previousTextBlock: BlockNode;
 }
 interface ICellNode extends HTMLSpanElement {
     parentNode: ParentNode;
@@ -141,11 +142,11 @@ interface ICellNode extends HTMLSpanElement {
     endProperties: Property[];
     isDeleted: boolean;
 }
-interface IBlockNode extends HTMLDivElement {
-    parentNode: IBlockNode;
+interface BlockNode extends HTMLDivElement {
+    parentNode: BlockNode;
     speedy: ISpeedyBlockObject;
-    previous: IBlockNode;
-    next: IBlockNode;
+    previous: BlockNode;
+    next: BlockNode;
 }
 interface IPropertyTypeData {
     type: string;
@@ -171,6 +172,11 @@ type Monitor = {
 type Selector = {
 
 }
+type Selection = {
+    text: string;
+    startIndex: number;
+    endIndex: number;
+}
 export class Property {
     editor: Editor;
     guid: string;
@@ -192,7 +198,7 @@ export class Property {
     };
     startNode: ICellNode;
     endNode: ICellNode;
-    blockNode: IBlockNode;
+    blockNode: BlockNode;
     bracket: IBracket;
     attributes: {};
     isDeleted: boolean;
@@ -481,7 +487,7 @@ export class Property {
         if (propertyType.format == "block") {
             // const parent = this.startNode.parentElement;
             const styleBlock = this.blockNode;
-            const textBlock = styleBlock.parentElement as IBlockNode;
+            const textBlock = styleBlock.parentElement as BlockNode;
             const insertionPoint = styleBlock.nextElementSibling ? styleBlock.nextElementSibling : styleBlock.previousElementSibling;
             cells.forEach(cell => textBlock.insertBefore(cell, insertionPoint));
             textBlock.removeChild(styleBlock);
@@ -688,6 +694,11 @@ export class Property {
 export interface IPropertyData {
 
 }
+export interface IPropertyHandler {
+    p: Property;
+    editor?: Editor;
+    e?: Event
+}
 export class Editor {
     /**
      * Properties
@@ -711,9 +722,9 @@ export class Editor {
      * Functions
      */
     onPropertyDeleted?: (p: Property) => void;
-    onFocus?: (p: Property) => void;
-    onBlockCreated?: (p: Property) => void;
-    onBlockAdded?: (p: Property) => void;
+    onFocus?: ({ p, e, editor }: IPropertyHandler) => void;
+    onBlockCreated?: ({ p, e }: IPropertyHandler) => void;
+    onBlockAdded?: ({ p, e }: IPropertyHandler) => void;
     onTextChanged?: (p: Property) => void;
     onCharacterAdded?: (p: Property) => void;
     onCharacterDeleted?: (p: Property) => void;
@@ -761,7 +772,7 @@ export class Editor {
         },
         extendProperties: boolean
     };
-    currentBlock?: IBlockNode;
+    currentBlock?: BlockNode;
     data: {
         text: string,
         properties: Property[],
@@ -838,7 +849,8 @@ export class Editor {
         this.subscriber = null;
         this.history = {
             cursor: [],
-            data: []
+            data: [],
+            cursorIndex: 0
         };
         this.mode = {
             selection: {
@@ -881,21 +893,21 @@ export class Editor {
         this.shiftPropertiesRightFromNode(node as ICellNode);
     }
     setupEventHandlers() {
-        var _this = this;
+        var self = this;
         this.container.addEventListener("dblclick", this.handleDoubleClickEvent.bind(this));
         this.container.addEventListener("keydown", this.handleKeyDownEvent.bind(this));
         document.body.addEventListener("keydown", function (e) {
             if (e.target != document.body) {
                 return;
             }
-            var caret = _this.getCaret();
-            _this.processControlOrMeta({ event: e, caret: caret })
+            var caret = self.getCaret();
+            self.processControlOrMeta({ event: e, caret: caret })
         });
         this.container.addEventListener("mouseup", this.handleMouseUpEvent.bind(this));
         this.container.addEventListener("paste", this.handleOnPasteEvent.bind(this));
-        this.container.addEventListener("focus", function (e) {
-            if (_this.onFocus) {
-                _this.onFocus({ editor: _this, e });
+        this.container.addEventListener("focus", function (e: Event) {
+            if (self.onFocus) {
+                self.onFocus({ editor: self, e });
             }
         });
         this.container.addEventListener("contextmenu", e => {
@@ -907,17 +919,17 @@ export class Editor {
             return false;
         });
         this.container.addEventListener("click", e => {
-            const caret = _this.getCaret();
-            if (_this.event.mouse) {
-                const args = { editor: _this, e, caret };
-                if (_this.event.mouse["control-click"]) {
+            const caret = self.getCaret();
+            if (self.event.mouse) {
+                const args = { editor: self, e, caret };
+                if (self.event.mouse["control-click"]) {
                     if (e.ctrlKey && false == e.shiftKey && false == e.altKey && false == e.metaKey) {
-                        _this.event.mouse["control-click"](args);
+                        self.event.mouse["control-click"](args);
                     }
                 }
-                if (_this.event.mouse["shift-click"]) {
+                if (self.event.mouse["shift-click"]) {
                     if (e.shiftKey && false == e.ctrlKey && false == e.altKey && false == e.metaKey) {
-                        _this.event.mouse["shift-click"]({ ...args, client: _this.client });
+                        self.event.mouse["shift-click"]({ ...args, client: self.client });
                     }
                 }
                 //if (_this.event.mouse["alt-click"]) {
@@ -925,17 +937,17 @@ export class Editor {
                 //        _this.event.mouse["alt-click"](args);
                 //    }
                 //}
-                if (_this.event.mouse["click"]) {
-                    _this.clearSelectionMode();
+                if (self.event.mouse["click"]) {
+                    self.clearSelectionMode();
                     if (false == e.ctrlKey && false == e.altKey && false == e.metaKey) {
-                        var selection = _this.getSelectionNodes();
+                        var selection = self.getSelectionNodes();
                         if (!selection) {
-                            _this.event.mouse["click"](args);
+                            self.event.mouse["click"](args);
                         }
                     }
                 }
             }
-            var props = _this.getCurrentRanges(_this.getCurrent());
+            var props = self.getCurrentRanges(self.getCurrent() as ICellNode);
             props.filter(x => !!x.schema.event && !!x.schema.event.annotation)
                 .forEach(x => {
                     const annotation = x.schema.event.annotation;
@@ -997,45 +1009,50 @@ export class Editor {
         });
     }
     setAnimationFrame() {
-        var _this = this;
-        window.requestAnimationFrame(function () {
-            var properties = _this.data.properties.filter(p => !!_this.propertyType[p.type] && !!_this.propertyType[p.type].onRequestAnimationFrame);
+        var self = this;
+        window.requestAnimationFrame(() => {
+            const properties = self.data.properties.filter(p => !!self.propertyType[p.type] && !!self.propertyType[p.type].onRequestAnimationFrame);
             if (!properties.length) {
                 return;
             }
             console.log({ method: "requestAnimationFrame", properties })
-            properties.forEach(p => _this.propertyType[p.type].onRequestAnimationFrame(p, _this.propertyType[p.type], _this));
+            properties.forEach(p => self.propertyType[p.type].onRequestAnimationFrame(p, self.propertyType[p.type], self));
         });
     }
     isWithin(startNode:ICellNode, endNode:ICellNode, cell:ICellNode) {
         return startNode.speedy.index <= cell.speedy.index && cell.speedy.index <= endNode.speedy.index;
     }
     getPropertyAtCursor() {
-        var _this = this;
-        var node = this.getCurrent() as ICellNode;
-        var enclosing = this.data.properties.filter((prop) => _this.isWithin(prop.startNode, prop.endNode, node));
+        var self = this;
+        const node = this.getCurrent() as ICellNode;
+        const enclosing = this.data.properties.filter((prop) => self.isWithin(prop.startNode, prop.endNode, node));
         if (!enclosing.length) {
             return null;
         }
-        var i = this.nodeIndex(node);
-        var ordered = enclosing.sort((a, b) => {
+        const i = this.nodeIndex(node);
+        const ordered = enclosing.sort((a, b) => {
             var da = i - a.startIndex();
             var db = i - b.startIndex();
             return da > db ? 1 : da == db ? 0 : -1;
         });
-        var nearest = ordered[0];
+        const nearest = ordered[0];
         return nearest;
     }
     nodeAtIndex(index: number) {
         return this.indexNode(index);
     }
     handleDoubleClickEvent(e: Event) {
-        const _this = this;
+        const self = this;
         this.clearSelection();
         const target = this.getParentSpan(e.target);
         const props = this.data.properties.filter(function (p) {
             let schema = p.schema;
-            return schema && schema.event && schema.event.annotation && schema.event.annotation["dblclick"] && _this.isWithin(p.startNode, p.endNode, target);
+            return schema
+                && schema.event
+                && schema.event.annotation
+                && schema.event.annotation["dblclick"]
+                && self.isWithin(p.startNode, p.endNode, target)
+                ;
         });
         if (!props.length) {
             return;
@@ -1066,9 +1083,9 @@ export class Editor {
         return nearest;
     }
     getEnclosingProperties(cell: ICellNode) {
-        const _this = this;
+        const self = this;
         const ranges = this.data.properties.filter(p => !p.isDeleted && !!p.startNode && !!p.endNode);
-        const enclosing = ranges.filter(p => _this.isWithin(p.startNode, p.endNode, cell));
+        const enclosing = ranges.filter(p => self.isWithin(p.startNode, p.endNode, cell));
         return enclosing;
     }
     getMostRecentEnclosingProperty(cell: ICellNode) {
@@ -1119,27 +1136,23 @@ export class Editor {
                 const e = prop.endIndex();
                 const a = start.speedy.index;
                 const b = end.speedy.index;
-                //return s <= a && b <= e;
                 return s <= b && a <= e;
             });
         return props;
     }
     updateCurrentRanges(span?: ICellNode) {
-        var _this = this;
-        window.requestAnimationFrame(function () {
+        var self = this;
+        window.requestAnimationFrame(() => {
             if (!span) {
-                span = _this.getCurrent() as ICellNode;
+                span = self.getCurrent() as ICellNode;
             }
-            var props = _this.getPropertiesAroundSpan(span);
-            _this.setMonitor(props || []);
+            var props = self.getPropertiesAroundSpan(span);
+            self.setMonitor(props || []);
         });
     }
     getPropertiesAroundSpan(span: ICellNode) {
         if (!this.marked) {
             this.mark();
-            //this.data.properties
-            //    .filter(p => !p.blockNode)
-            //    .sort((a, b) => a.startIndex() > b.endIndex() ? 1 : a.startIndex() == b.startIndex() ? -1 : 0);
         }
         var props = this.getCurrentRanges(span);
         props.sort((a, b) => {
@@ -1157,24 +1170,23 @@ export class Editor {
         return props;
     }
     deleteAnnotation(type: string) {
-        var _this = this;
+        var self = this;
         var current = this.getCurrent();
         if (!current) return;
-        var enclosing = this.data.properties.filter(function (prop) {
-            return !prop.isDeleted && prop.type == type && _this.isWithin(prop.startNode, prop.endNode, current as ICellNode);
-        });
+        var enclosing = this.data.properties
+            .filter(prop => !prop.isDeleted && prop.type == type && self.isWithin(prop.startNode, prop.endNode, current as ICellNode));
         if (enclosing.length != 1) {
             return;
         }
         enclosing[0].remove();
     }
     setMonitor(props: Property[]) {
-        var _this = this;
-        window.setTimeout(function () {
-            _this.monitors.forEach(x => x.update({ properties: props, characterCount: _this.characterCount, editor: _this }));
+        var self = this;
+        window.setTimeout(() => {
+            self.monitors.forEach(x => x.update({ properties: props, characterCount: self.characterCount, editor: self }));
         }, 1);
     }
-    handleMouseClickEvent(evt: MouseEvent) {
+    handleMouseClickEvent(e: MouseEvent) {
         this.updateCurrentRanges();
     }
     updateSelectors(e: Event) {
@@ -1191,12 +1203,12 @@ export class Editor {
             this.mode.selection.end = undefined;
         }
     }
-    handleMouseUpEvent(e) {
+    handleMouseUpEvent(e: MouseEvent) {
         if (!e.target.speedy || e.target.speedy.role != ELEMENT_ROLE.CELL) {
             return;
         }
-        this.updateCurrentRanges(e.target);
-        var selection = this.getSelectionNodes();
+        this.updateCurrentRanges(e.target as ICellNode);
+        const selection = this.getSelectionNodes();
         if (selection) {
             selection.text = this.getRangeText(selection);
             this.mode.selection.start = selection.start;
@@ -1213,7 +1225,7 @@ export class Editor {
         }
         const caret = this.getCaret();
         this.handleCaretMoveEvent(e, caret);
-        var props = this.getCurrentRanges(e.target);
+        const props = this.getCurrentRanges(e.target as ICellNode);
         if (props) {
             props.forEach(p => {
                 try {
@@ -1228,7 +1240,7 @@ export class Editor {
                 }
             });
         }
-        this.addCursorToHistory(e.target);
+        this.addCursorToHistory(e.target as ICellNode);
     }
     addCursorToHistory(span: ICellNode) {
         this.history.cursor.push(span);
@@ -1258,7 +1270,7 @@ export class Editor {
         this.setCarotByNode(span);
     }
     pasteIntoContainer(args: any) {
-        const { container, cells, right } = args;
+        const { container, cells, right }: { container:BlockNode, cells: ICellNode[], right: ICellNode } = args;
         const content = document.createDocumentFragment();
         cells.forEach((cell: ICellNode) => content.appendChild(cell));
         container.insertBefore(content, right);
@@ -1284,7 +1296,7 @@ export class Editor {
         const currentTextBlock = this.getCurrentContainer(cell);
         if (!currentTextBlock) return;
         const { fragment } = this.textToDocumentFragmentWithTextBlocks(text);
-        const blocks = Array.from(fragment.childNodes) as IBlockNode[];
+        const blocks = Array.from(fragment.childNodes) as BlockNode[];
         const len = blocks.length;
         //
         // Easiest solution: dump the pasted text into new text blocks.
@@ -1346,13 +1358,13 @@ export class Editor {
         const ei = en.speedy.index;
         // NB: assume the simple case of erasing INSIDE property ranges; other cases to follow later.
         const properties = this.data.properties.filter(p => p.startIndex() <= si && ei <= p.endIndex());
-        properties.forEach(function (p) {
+        properties.forEach((p) => {
             var p1 = p.clone();
             var p2 = p.clone();
-            p1.guid = null; // a split property is really two new properties
-            p1.endNode = sn.speedy.previous;
-            p2.guid = null; // a split property is really two new properties
-            p2.startNode = en.speedy.next;
+            p1.guid = ""; // a split property is really two new properties
+            p1.endNode = sn.speedy.previous as ICellNode;
+            p2.guid = ""; // a split property is really two new properties
+            p2.startNode = en.speedy.next as ICellNode;
             p.remove();
             _this.data.properties.push(p1);
             _this.data.properties.push(p2);
@@ -1430,7 +1442,7 @@ export class Editor {
     unpauseChainBreakListener() {
         chainBreakListenerPaused = false;
     }
-    removeTextBlock(current: IBlockNode) {
+    removeTextBlock(current: BlockNode) {
         this.pauseChainBreakListener();
         this.addToHistory();
         const previous = current.speedy.previousTextBlock;
@@ -1458,7 +1470,7 @@ export class Editor {
         this.updateOffsets();
         this.unpauseChainBreakListener();
     }
-    removeContainer(container: IBlockNode) {
+    removeContainer(container: BlockNode) {
         if (!container) {
             return;
         }
@@ -1476,7 +1488,7 @@ export class Editor {
         }
         return this.isContainerEmpty(containers[0]);
     }
-    isContainerEmpty(container: IBlockNode) {
+    isContainerEmpty(container: BlockNode) {
         return container.speedy.startNode == container.speedy.endNode;
     }
     getFirstContainer() {
@@ -1603,8 +1615,8 @@ export class Editor {
     getCellRange() {
 
     }
-    getNextContainer(container: IBlockNode) {
-        var next = container.nextElementSibling as IBlockNode;
+    getNextContainer(container: BlockNode) {
+        var next = container.nextElementSibling as BlockNode;
         if (next && next.speedy && next.speedy.role == ELEMENT_ROLE.TEXT_BLOCK) {
             return next;
         }
@@ -1670,7 +1682,7 @@ export class Editor {
         return current;
     }
     getCaret() {
-        var sel = window.getSelection();
+        var sel = window.getSelection() as BrowserSelection;
         const anchorNode = sel!.anchorNode as ICellNode;
         var anchor = this.getParentSpan(anchorNode);
         if (!anchor) {
@@ -1728,7 +1740,7 @@ export class Editor {
             }
         }
         if (atEnd) {
-            if (!pair.right.speedy.isLineBreak) {
+            if (!pair?.right?.speedy.isLineBreak) {
                 console.log("Error 0001: expected anchor to be EOL", { sel, anchor, anchorNode, container, atStart, atEnd });
             }
             return {
@@ -1739,25 +1751,8 @@ export class Editor {
             left: pair.left, right: pair.right, container, blockPosition: BLOCK_POSITION.INSIDE
         };
         return caret;
-        //var offset = sel.anchorOffset;
-        //if (offset == CARET.LEFT) {
-        //    const left = !atStart ? anchor.speedy.previous : null;
-        //    const right = anchor;
-        //    return { left, right, container, blockPosition: BLOCK_POSITION.INSIDE };
-        //}
-        //else {
-        //    const left = anchor;
-        //    const right = !atEnd ? anchor.speedy.next : null;
-        //    return { left, right, container, blockPosition: BLOCK_POSITION.INSIDE };
-        //}
     }
-    getCaretPair(selection, anchor) {
-        //if (anchor.speedy.isLineBreak) {
-        //    return {
-        //        left: null,
-        //        right: anchor
-        //    };
-        //}
+    getCaretPair(selection: BrowserSelection, anchor: ICellNode) {
         var offset = selection.anchorOffset;
         const anchorContainer = this.getCurrentContainer(anchor);
         if (offset == 0) {
@@ -1779,7 +1774,7 @@ export class Editor {
         else {
             if (anchor.speedy.isLineBreak) {
                 const previousToAnchor = anchor.speedy.previous;
-                const previousContainer = this.getCurrentContainer(previousToAnchor);
+                const previousContainer = this.getCurrentContainer(previousToAnchor as ICellNode);
                 if (previousContainer == anchorContainer) {
                     return {
                         left: previousToAnchor,
@@ -1809,7 +1804,7 @@ export class Editor {
             return { left, right };
         }
     }
-    getBlockPosition(container, cell) {
+    getBlockPosition(container: BlockNode, cell: ICellNode) {
         if (container.speedy.startNode == cell) {
             return BLOCK_POSITION.START;
         }
@@ -1818,7 +1813,7 @@ export class Editor {
         }
         return BLOCK_POSITION.INSIDE;
     }
-    getPreviousCellInBlock(cell) {
+    getPreviousCellInBlock(cell: ICellNode) {
         const previous = cell.speedy.previous;
         if (!previous) {
             return null;
@@ -1830,13 +1825,13 @@ export class Editor {
         }
         return null;
     }
-    deleteRange(range) {
+    deleteRange(range: Range) {
         var cell = range.end;
         if (cell != range.start) {
             while (cell != range.start) {
                 const previous = cell.speedy.previous;
                 this.deleteCell({ updateCaret: false, cell });
-                cell = previous;
+                cell = previous as ICellNode;
             }
         }
         this.deleteCell({ cell });
@@ -1851,7 +1846,7 @@ export class Editor {
             text: text,
             startIndex: this.nodeIndex(range.start),
             endIndex: this.nodeIndex(range.end)
-        };
+        } as Selection;
     }
     canDelete(node) {
         return true;
@@ -3076,14 +3071,14 @@ export class Editor {
             }
         }
     }
-    getCurrentContainer(current: ICellNode): IBlockNode {
+    getCurrentContainer(current: ICellNode): BlockNode {
         if (current) {
             if (current.speedy.role == ELEMENT_ROLE.ROOT) {
-                return this.container.firstChild as IBlockNode;
+                return this.container.firstChild as BlockNode;
             }
-            return this.getContainer(current) as IBlockNode;
+            return this.getContainer(current) as BlockNode;
         }
-        return this.container.firstChild as IBlockNode;
+        return this.container.firstChild as BlockNode;
     }
     getCurrentBlock(current: ICellNode) {
         if (current) {
@@ -3403,7 +3398,7 @@ export class Editor {
         }
         this.addCharacterCell({ container, caret, key: data.key, cell: span });
     }
-    getContainer(node: ICellNode): IBlockNode|null {
+    getContainer(node: ICellNode): BlockNode|null {
         if (node.speedy.role == ELEMENT_ROLE.ROOT) {
             return null;
         }
@@ -3412,7 +3407,7 @@ export class Editor {
             node = node.parentElement as any;
             return this.getContainer(node);
         }
-        return (node as any) as IBlockNode;
+        return (node as any) as BlockNode;
     }
     getBlock(node) {
         if (!node || !node.speedy || node.speedy.role == ELEMENT_ROLE.ROOT) {
@@ -4595,7 +4590,7 @@ export class Editor {
     }
     newTextBlock() {
         const _this = this;
-        var wrapper = document.createElement("DIV") as IBlockNode;
+        var wrapper = document.createElement("DIV") as BlockNode;
         if (this.blockClass) {
             wrapper.classList.add(this.blockClass);
         }
