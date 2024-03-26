@@ -1347,7 +1347,7 @@ export class Editor {
         this.updateCurrentRanges();
     }
     erase() {
-        const _this = this;
+        const self = this;
         const range = this.getSelectionNodes();
         if (range == null) {
             return;
@@ -1366,12 +1366,12 @@ export class Editor {
             p2.guid = ""; // a split property is really two new properties
             p2.startNode = en.speedy.next as ICellNode;
             p.remove();
-            _this.data.properties.push(p1);
-            _this.data.properties.push(p2);
+            self.data.properties.push(p1);
+            self.data.properties.push(p2);
             const firstCells = p1.getSpanRange();
             const secondCells = p2.getSpanRange();
-            firstCells.forEach(cell => _this.paint(cell));
-            secondCells.forEach(cell => _this.paint(cell));
+            firstCells.forEach(cell => self.paint(cell));
+            secondCells.forEach(cell => self.paint(cell));
         });
         this.marked = false;
     }
