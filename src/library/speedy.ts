@@ -24,6 +24,10 @@ const ELEMENT_ROLE = {
     TEXT_BLOCK: 4,
     OUTER_STYLE_BLOCK: 5
 };
+const TEXT_STREAM = {
+    IN: 0,
+    OUT: 1
+}
 const BLOCK_POSITION = {
     "INSIDE": "INSIDE",
     "START": "START",
@@ -38,7 +42,19 @@ const DIRECTION = {
     "LEFT": "LEFT",
     "RIGHT": "RIGHT"
 };
-
+type AddCharacterCellType = {
+    container: BlockNode,
+    caret: any,
+    editor: Editor,
+    cell: ICellNode,
+    key: string
+}
+type Caret = {
+    left: ICellNode;
+    right: ICellNode;
+    container: BlockNode;
+    blockPosition: string;
+}
 const not = (arr: any[]) => false == arr.some(x => x);
 const BACKSPACE = 8,
     CAPSLOCK = 20, PAGE_UP = 33, PAGE_DOWN = 34,
@@ -116,11 +132,14 @@ interface IBracket  {
 interface IOffset {
     x: number;
     y: number;
+    cy: number;
 }
 interface ISpeedyObject {
     previousOffset: IOffset;
     offset: IOffset;
     index: number;
+    isSpace: boolean;
+    stream: number;
     role: number;
     previous: ICellNode|undefined;
     next: ICellNode|undefined;
@@ -129,8 +148,11 @@ interface ISpeedyObject {
 interface ISpeedyBlockObject {
     index: number;
     role: number;
+    stream: number;
     startNode: ICellNode;
     endNode: ICellNode;
+    offset: any;
+    previousOffset: any;
     nextTextBlock: BlockNode;
     previousTextBlock: BlockNode;
 }
@@ -142,6 +164,7 @@ interface ICellNode extends HTMLSpanElement {
     endProperties: Property[];
     isDeleted: boolean;
 }
+type GenericNode = BlockNode | ICellNode;
 interface BlockNode extends HTMLDivElement {
     parentNode: BlockNode;
     speedy: ISpeedyBlockObject;
@@ -181,6 +204,7 @@ export class Property {
     editor: Editor;
     guid: string;
     index: number;
+    name: string;
     className: string;
     type: string;
     value: string;
@@ -189,6 +213,7 @@ export class Property {
         render?: IRender;
         onRequestAnimationFrame?: (p: Property) => void;
         event: {
+            keyboard: Record<string,any>;
             annotation: Record<string,any>;
             property: {
                 mouseUp: (p: Property) => void;
@@ -207,6 +232,7 @@ export class Property {
         this.editor = cons.editor;
         this.guid = cons.guid;
         this.index = cons.index;
+        this.name = cons.name;
         this.className = cons.className;
         this.type = cons.type;
         this.value = cons.value;
@@ -699,6 +725,9 @@ export interface IPropertyHandler {
     editor?: Editor;
     e?: Event
 }
+export interface ITextChanged {
+     action: string, editor: Editor, caret: any, text: string, cells: ICellNode[]
+}
 export class Editor {
     /**
      * Properties
@@ -725,8 +754,8 @@ export class Editor {
     onFocus?: ({ p, e, editor }: IPropertyHandler) => void;
     onBlockCreated?: ({ p, e }: IPropertyHandler) => void;
     onBlockAdded?: ({ p, e }: IPropertyHandler) => void;
-    onTextChanged?: (p: Property) => void;
-    onCharacterAdded?: (p: Property) => void;
+    onTextChanged?: ({ action, editor, caret, text, cells }: ITextChanged) => void;
+    onCharacterAdded?: (p: AddCharacterCellType) => void;
     onCharacterDeleted?: (p: Property) => void;
     onPropertyCreated?: (p: Property) => void;
     onPropertyChanged?: (p: Property) => void;
@@ -763,7 +792,7 @@ export class Editor {
     };
     mode: {
         selection: {
-            direction?: string,
+            direction?: number,
             start?: ICellNode,
             end?: ICellNode
         },
@@ -776,9 +805,10 @@ export class Editor {
     data: {
         text: string,
         properties: Property[],
-        spans: [],
+        spans: ICellNode[],
         characterCount: number,
-        wordCount: number
+        wordCount: number,
+        blocks: BlockNode[]
     }
     
     constructor(cons: any) {
@@ -1204,7 +1234,8 @@ export class Editor {
         }
     }
     handleMouseUpEvent(e: MouseEvent) {
-        if (!e.target.speedy || e.target.speedy.role != ELEMENT_ROLE.CELL) {
+        const target = e.target as ICellNode;
+        if (!target.speedy || target.speedy.role != ELEMENT_ROLE.CELL) {
             return;
         }
         this.updateCurrentRanges(e.target as ICellNode);
@@ -1386,7 +1417,9 @@ export class Editor {
         if (next) next.speedy.previous = previous;
         cells.forEach(c => before.parentNode.insertBefore(c, before));
         const left = before.speedy.previous;
-        left.speedy.next = first;
+        if (left) {
+            left.speedy.next = first;
+        }
         first.speedy.previous = left;
         last.speedy.next = before;
         before.speedy.previous = last;
@@ -1748,8 +1781,11 @@ export class Editor {
             };
         }
         const caret = {
-            left: pair.left, right: pair.right, container, blockPosition: BLOCK_POSITION.INSIDE
-        };
+            left: pair.left,
+            right: pair.right,
+            container,
+            blockPosition: BLOCK_POSITION.INSIDE
+        } as Caret;
         return caret;
     }
     getCaretPair(selection: BrowserSelection, anchor: ICellNode) {
@@ -1848,15 +1884,15 @@ export class Editor {
             endIndex: this.nodeIndex(range.end)
         } as Selection;
     }
-    canDelete(node) {
+    canDelete(node: ICellNode) {
         return true;
     };
     clearSelectionMode() {
-        this.mode.selection.start = null;
-        this.mode.selection.end = null;
-        this.mode.selection.direction = null;
+        this.mode.selection.start = undefined;
+        this.mode.selection.end = undefined;
+        this.mode.selection.direction = undefined;
     }
-    rightSelection(evt, current) {
+    rightSelection(evt, current: ICellNode) {
         console.log("rightSelection() {");
         if (this.mode.selection.direction == null) {
             console.log("... set direction to right");
@@ -1891,7 +1927,7 @@ export class Editor {
                 this.mode.selection.end = next;
                 this.mode.selection.direction = SELECTION_DIRECTION.RIGHT;
             }
-            if (this.nodeIndex(next) > this.nodeIndex(this.mode.selection.end)) {
+            if (this.nodeIndex(next) > this.nodeIndex(this.mode.selection.end as ICellNode)) {
                 console.log("... next character is beyond selection.end")
                 console.log("... set selection.end to next");
                 console.log("... set selection.start to prior selection.end");
@@ -1909,7 +1945,7 @@ export class Editor {
         console.log("}")
         console.log({ selections });
     }
-    leftSelection(evt, current) {
+    leftSelection(evt, current: ICellNode) {
         console.log("leftSelection() { ")
         if (this.mode.selection.direction == null) {
             console.log("... set direction to left")
@@ -1960,7 +1996,7 @@ export class Editor {
         //this.updateSelectors();
         console.log("}");
     }
-    processDelete(data) {
+    processDelete(data: any) {
         const { caret, range, event } = data;
         const canEdit = !!!this.lockText;
         if (!canEdit) {
@@ -1994,7 +2030,7 @@ export class Editor {
             }
         }
     }
-    isAtDocumentStart(caret) {
+    isAtDocumentStart(caret: Caret) {
         if (caret.left) {
             return false;
         }
@@ -2005,7 +2041,7 @@ export class Editor {
         }
         return false;
     }
-    isAtDocumentEnd(caret) {
+    isAtDocumentEnd(caret: Caret) {
         if (!caret.right.speedy.isLineBreak) {
             return false;
         }
@@ -2016,7 +2052,7 @@ export class Editor {
         }
         return false;
     }
-    processRightArrow(data) {
+    processRightArrow(data: any) {
         const { caret, event: e } = data;
         if (e.shiftKey) {
             if (caret.right) {
@@ -2058,7 +2094,7 @@ export class Editor {
         }
         this.updateCurrentRanges();
     }
-    processLeftArrow(data) {
+    processLeftArrow(data: any) {
         const { caret, event: e } = data;
         var current = caret.left || caret.right;
         if (e.shiftKey) {
@@ -2104,7 +2140,7 @@ export class Editor {
         this.setCarotByNode(caret.left, CARET.LEFT);
         this.updateCurrentRanges();
     }
-    processHomeAndEndKeys(data) {
+    processHomeAndEndKeys(data: any) {
         const { caret, key } = data;
         if (key == HOME) {
             if (this.event.keyboard["!HOME"]) {
@@ -2141,7 +2177,7 @@ export class Editor {
         }
         return false;
     }
-    processPageKeys(data) {
+    processPageKeys(data: any) {
         const { caret, key } = data;
         const cursor = caret.right || caret.left;
         const { offset } = cursor.speedy;
@@ -2151,7 +2187,7 @@ export class Editor {
         const ch = rect.height - 20;
         const deltaY = key == PAGE_UP ? (-1 * ch) : ch;
         this.container.scrollBy(0, deltaY);
-        const cells = this.getClosestRowOfCellsByOffset({ x, y: cy, verticalOffset: deltaY });
+        const cells = this.getClosestRowOfCellsByOffset({ x, y: cy, verticalOffset: deltaY }) as ICellNode[];
         if (cells.length == 0) {
             return true;
         }
@@ -2167,7 +2203,7 @@ export class Editor {
         }
         return false;
     }
-    processControlHomeAndEndKeys(args) {
+    processControlHomeAndEndKeys(args: any) {
         const { caret, key } = args;
         const offset = caret.right.speedy.offset;
         if (key == HOME) {
@@ -2443,7 +2479,7 @@ export class Editor {
             }
         }
     }
-    getClosestRowOfCellsByOffset(args) {
+    getClosestRowOfCellsByOffset(args: any) {
         const { x, y, verticalOffset } = args;
         const nextRowOffsetY = y + verticalOffset;
         if (nextRowOffsetY < 0) {
@@ -2460,13 +2496,13 @@ export class Editor {
         const group = verticalOffset > 0 ? ordered[0] : ordered[ordered.length - 1];
         return group[1];
     }
-    getComputedProperty(node, propertyName) {
-        return document.defaultView.getComputedStyle(node, null).getPropertyValue(propertyName);
+    getComputedProperty(node: ICellNode, propertyName: string) {
+        return document?.defaultView?.getComputedStyle(node, null).getPropertyValue(propertyName) || "";
     }
-    getComputedPropertyPixels(node, propertyName) {
+    getComputedPropertyPixels(node: ICellNode, propertyName: string) {
         return parseFloat(this.getComputedProperty(node, propertyName).replace("px", ""));
     }
-    invokeKeyBindings(keybindingPrefix, properties, propsAtCaret, e) {
+    invokeKeyBindings(keybindingPrefix: string, properties: ICellNode[], propsAtCaret: Property[], e: KeyboardEvent) {
         var processed = false;
         let code = e.key.toUpperCase();
         if (e.keyCode == LEFT_ARROW) {
@@ -2499,18 +2535,18 @@ export class Editor {
         }
         return processed;
     }
-    processControlOrMeta(data) {
+    processControlOrMeta(data: any) {
         const _this = this;
         const { caret } = data;
         const { key, keyCode } = event;
-        var canAnnotate = !!!this.lockProperties;
-        var propsAtCaret = this.getCurrentRanges(caret.left || caret.right);
-        var props = propsAtCaret.filter(x => x.schema.event && x.schema.event.keyboard);
+        const canAnnotate = !!!this.lockProperties;
+        const propsAtCaret = this.getCurrentRanges(caret.left || caret.right);
+        const props = propsAtCaret.filter(x => x.schema.event && x.schema.event.keyboard);
         var control = data.event.ctrlKey && data.event.key != "Control",
             shift = data.event.shiftKey && data.event.key != "Shift",
             meta = data.event.metaKey && data.event.key != "Meta",
             alt = data.event.altKey && data.event.key != "Alt";
-        const invokeKeyBindings = (keyBindingPrefix) => {
+        const invokeKeyBindings = (keyBindingPrefix: string) => {
             return _this.invokeKeyBindings(keyBindingPrefix, props, propsAtCaret, data.event);
         };
         var processed = false;
@@ -2620,7 +2656,7 @@ export class Editor {
         }
         return processed;
     }
-    processSelectionOverwrite(data) {
+    processSelectionOverwrite(data: any) {
         const { caret } = data;
         this.deleteRange(data.range);
         const right = caret.right.speedy.next;
@@ -2635,10 +2671,10 @@ export class Editor {
             this.insertCharacter({ ...data, caret: newCaret });
         }
     }
-    insertText(text) {
+    insertText(text: string) {
 
     }
-    handleCaretMoveEvent(e, caret) {
+    handleCaretMoveEvent(e: Event, caret: Caret) {
         if (this.event.input) {
             if (this.event.input.caretMoved) {
                 const cursor = caret.left || caret.right;
@@ -2647,7 +2683,7 @@ export class Editor {
             }
         }
     }
-    processCharacterOverrides(args) {
+    processCharacterOverrides(args: any) {
         const { evt, caret } = args;
         if (this.event.keyboard["CHAR:" + evt.key]) {
             this.event.keyboard["CHAR:" + evt.key]({ editor: this, caret, event: evt });
@@ -2665,12 +2701,12 @@ export class Editor {
         }
         return false;
     }
-    handleKeyDownEvent(evt) {
+    handleKeyDownEvent(evt: KeyboardEvent) {
         var _ = this;
         var canEdit = !!!this.lockText;
         var caret = this.getCaret();
         var key = (evt.which || evt.keyCode);               // get the inputted key
-        var range = this.getSelectionNodes();               // get the mouse selection range, if any
+        var range = this.getSelectionNodes() as Range;               // get the mouse selection range, if any
         var hasSelection = !!range;
         this.handleCaretMoveEvent(evt, caret);
         if (this.processCharacterOverrides({ caret, evt })) {
@@ -2794,17 +2830,17 @@ export class Editor {
             return;
         }
     }
-    processControlBackspace(args) {
+    processControlBackspace(args: any) {
         const { caret } = args;
         const end = caret.left || caret.right;
         const start = this.getWordStart(end);
-        const range = { start, end };
+        const range = { start, end } as Range;
         this.deleteRange(range);
     }
-    getWordStart(cell) {
+    getWordStart(cell: ICellNode) {
         var node = cell;
         if (cell.speedy.isSpace) {
-            node = node.speedy.previous;
+            node = node.speedy.previous as ICellNode;
         }
         const container = this.getCurrentContainer(cell);
         var start = null;
@@ -2833,10 +2869,10 @@ export class Editor {
         }
         return start;
     }
-    getWordEnd(cell) {
+    getWordEnd(cell: ICellNode) {
         var node = cell;
         if (cell.speedy.isSpace) {
-            node = node.speedy.next;
+            node = node.speedy.next as ICellNode;
         }
         const container = this.getCurrentContainer(cell);
         var end = null;
@@ -2865,7 +2901,7 @@ export class Editor {
         }
         return end;
     }
-    processOverrideShiftEnter(args) {
+    processOverrideShiftEnter(args: any) {
         const { event: e, container } = args;
         const overrideShiftEnter = this.event.keyboard["!shift-ENTER"];
         if (overrideShiftEnter != "ENTER") {
@@ -2877,7 +2913,7 @@ export class Editor {
         overrideShiftEnter({ currentBlock: container, editor: this });
         return true;
     }
-    processOverrideEnter(args) {
+    processOverrideEnter(args: any) {
         const { container, event: e } = args;
         if (e.shiftKey) {
             return false;
@@ -2889,14 +2925,14 @@ export class Editor {
         }
         return false;
     }
-    getSiblingCellsToBlockEnd(node) {
+    getSiblingCellsToBlockEnd(node: ICellNode) {
         const currentBlock = this.getCurrentContainer(node);
         var siblings = [];
         let loop = true;
         while (loop && !!node) {
             siblings.push(node);
-            const next = node.speedy.next;
-            const nextCharContainer = this.getContainer(next);
+            const next = node.speedy.next as ICellNode;
+            const nextCharContainer = this.getContainer(next as ICellNode);
             if (nextCharContainer != currentBlock) {
                 loop = false;
                 continue;
@@ -2906,7 +2942,7 @@ export class Editor {
 
         return siblings;
     }
-    processEnter(args) {
+    processEnter(args: any) {
         const _this = this;
         const { caret } = args;
         const currentBlock = caret.container;
@@ -2983,7 +3019,7 @@ export class Editor {
         this.updateOffsets();
         return carriageReturn;
     }
-    insertNewBlock(currentBlock, newBlock) {
+    insertNewBlock(currentBlock: BlockNode, newBlock: BlockNode) {
         const hasNextBlock = currentBlock.nextElementSibling;
         if (hasNextBlock) {
             currentBlock.parentNode.insertBefore(newBlock, currentBlock.nextElementSibling);
@@ -2991,17 +3027,16 @@ export class Editor {
             currentBlock.parentNode.appendChild(newBlock);
         }
     }
-    createSpan(data) {
+    createSpan(data: any) {
         var span = this.newCell();
         if (!data) {
             return span;
         }
         span.textContent = data.event.key;
         this.handleSpecialChars(span, data.key);
-        //this.attachNextPreviousMouseoverEvents(span);
         return span;
     }
-    addCellToChain(data) {
+    addCellToChain(data: any) {
         const { cell, right } = data;
         const previous = right.speedy.previous;
         previous.speedy.next = cell;
@@ -3009,7 +3044,7 @@ export class Editor {
         cell.speedy.next = right;
         right.speedy.previous = cell;
     }
-    debugHighlightTextBlock(block) {
+    debugHighlightTextBlock(block: BlockNode) {
         const sn = "debug-text-block-start-node";
         const en = "debug-text-block-end-node";
         block.classList.add("debug-text-block-current");
@@ -3040,7 +3075,7 @@ export class Editor {
             }
         }
     }
-    debugUnhighlightTextBlock(block: ICellNode) {
+    debugUnhighlightTextBlock(block: BlockNode) {
         const sn = "debug-text-block-start-node";
         const en = "debug-text-block-end-node";
         block.classList.remove("debug-text-block-current");
@@ -3107,21 +3142,21 @@ export class Editor {
             caret.right.speedy.previous = span;
         }
     }
-    getTextBlockData(textBlock) {
+    getTextBlockData(textBlock: BlockNode) {
         const _this = this;
-        const spansArray = [].slice.call(textBlock.getElementsByTagName("span"));
-        const cells = spansArray.filter(x => !!x.speedy && x.speedy.role == ELEMENT_ROLE.CELL && x.speedy.stream == TEXT_STREAM.IN);
+        const spansArray = [].slice.call(textBlock.getElementsByTagName("span")) as ICellNode[];
+        const cells = spansArray.filter(x => !!x.speedy && x.speedy.role == ELEMENT_ROLE.CELL);
         const text = cells.map(cell => _this.getTextContent(cell)).join("");
         return {
             text, cells
         };
     }
-    createOnTextChangedData(args) {
+    createOnTextChangedData(args: any) {
         const { caret, action, cell } = args;
         const { text, cells } = this.getTextBlockData(caret.container);
         return {
             caret, editor: this, cell, action, text, cells
-        };
+        } as ITextChanged;
     }
     calculateCellOffsets() {
         const _this = this;
@@ -3160,7 +3195,7 @@ export class Editor {
             };
         });
     }
-    addCharacterCell(args) {
+    addCharacterCell(args: AddCharacterCellType) {
         const { container, caret, cell, key } = args;
         const previous = caret.right.speedy.previous;
         if (previous) {
@@ -3181,14 +3216,14 @@ export class Editor {
         this.setMarked();
         this.updateOffsets();
         if (this.onCharacterAdded) {
-            this.onCharacterAdded({ cell, editor: this, caret, key });
+            this.onCharacterAdded({ cell, editor: this, caret, key } as any);
         }
         if (this.onTextChanged) {
             const textChangedArgs = this.createOnTextChangedData({ cell, caret, action: "added" });
             this.onTextChanged(textChangedArgs);
         }
     }
-    insertAfterCell(cell, text) {
+    insertAfterCell(cell: ICellNode, text: string) {
         const len = text.length;
         const chain = this.createTextChain(text);
         const first = chain[0];
@@ -3197,14 +3232,16 @@ export class Editor {
         cell.speedy.next = first;
         first.speedy.previous = cell;
         last.speedy.next = next;
-        next.speedy.previous = last;
+        if (next) {
+            next.speedy.previous = last;
+        }
         const fragment = this.toDocumentFragmentFromArray(chain);
-        cell.parentNode.insertBefore(fragment, next);
+        cell.parentNode.insertBefore(fragment, next as Node);
         return chain;
     }
-    insertBeforeCell(cell, text) {
+    insertBeforeCell(cell: ICellNode, text: string) {
         const len = text.length;
-        const container = this.getContainer(cell);
+        const container = this.getContainer(cell) as BlockNode;
         const chain = this.createTextChain(text);
         const first = chain[0];
         const last = chain[len - 1];
@@ -3222,7 +3259,7 @@ export class Editor {
         }
         return chain;
     }
-    createTextChain(text) {
+    createTextChain(text: string) {
         const len = text.length;
         var cells = [];
         for (var i = 0; i < len; i++) {
@@ -3237,16 +3274,16 @@ export class Editor {
         }
         return cells;
     }
-    toDocumentFragmentFromArray(list) {
+    toDocumentFragmentFromArray(list: Node[]) {
         var fragment = new DocumentFragment();
         list.forEach(x => fragment.appendChild(x));            
         return fragment;
     }
-    extendProperties(args) {
+    extendProperties(args: { caret: Caret, cell: ICellNode}) {
         this.extendPropertiesLeft(args);
         this.extendPropertiesRight(args);
     }
-    extendPropertiesLeft(args) {
+    extendPropertiesLeft(args: { caret: Caret, cell: ICellNode}) {
         const { caret, cell } = args;
         const right = caret.right;
         if (!right) {
@@ -3262,7 +3299,7 @@ export class Editor {
             p.setSpanRange();
         });
     }
-    extendPropertiesRight(args) {
+    extendPropertiesRight(args: { caret: Caret, cell: ICellNode}) {
         const { caret, cell } = args;
         const left = caret.left;
         if (!left) {
@@ -3307,18 +3344,18 @@ export class Editor {
     setMarked() {
         this.marked = true;
         this.lastMarked = new Date();
-        const _this = this;
+        const self = this;
         const timeout = 2000;
         const handler = () => {
-            _this.event.afterMarkedInterval({ editor: _this });
-            clearTimeout(_this.timer.afterMarkedInterval);
-            _this.addToHistory();
-            _this.timer.afterMarkedInterval = null;
+            self.event.afterMarkedInterval({ editor: self });
+            clearTimeout(self.timer?.afterMarkedInterval as number);
+            self.addToHistory();
+            self.timer.afterMarkedInterval = null;
         };
         if (!this.timer.afterMarkedInterval) {
             this.timer.afterMarkedInterval = setTimeout(() => {
-                if (_this.marked) {
-                    if (!_this.ignoreAfterMarkedInterval) {
+                if (self.marked) {
+                    if (!self.ignoreAfterMarkedInterval) {
                         handler();
                     }
                 }
@@ -3370,7 +3407,7 @@ export class Editor {
             });
         }
     }
-    updateLinks(cell, caret) {
+    updateLinks(cell: ICellNode, caret: Caret) {
         if (caret.left) {
             caret.left.speedy.next = cell;
         }
@@ -3380,23 +3417,22 @@ export class Editor {
             caret.right.speedy.previous = cell;
         }
     }
-    insertCharacter(data) {
+    insertCharacter(data: { caret: Caret, key: string }) {
         const { caret } = data;
-        var container = caret.container || this.getCurrentContainer(caret.left || caret.right);
-        var span = this.createSpan(data);
+        const container = caret.container || this.getCurrentContainer(caret.left || caret.right);
+        const span = this.createSpan(data);
         this.mark();
-        var index = caret.right.speedy.index;
+        const index = caret.right.speedy.index;
         if (index != null) {
-            var _this = this;
+            var self = this;
             var properties = this.data.properties
                 .filter(p => !p.blockNode)
-                .filter(function (prop) { return !prop.isDeleted && (prop.startIndex() <= index && index < prop.endIndex()); })
-                .sort(function (a, b) { return a.index > b.index ? 1 : a.index == b.index ? 0 : -1; });
-            properties.forEach(function (prop) {
-                _this.paintSpanWithProperty(span, prop);
-            });
+                .filter((prop) => !prop.isDeleted && (prop.startIndex() <= index && index < prop.endIndex()))
+                .sort((a, b) => a.index > b.index ? 1 : a.index == b.index ? 0 : -1)
+                ;
+            properties.forEach((prop) => self.paintSpanWithProperty(span, prop));
         }
-        this.addCharacterCell({ container, caret, key: data.key, cell: span });
+        this.addCharacterCell({ container, caret, key: data.key, cell: span } as AddCharacterCellType);
     }
     getContainer(node: ICellNode): BlockNode|null {
         if (node.speedy.role == ELEMENT_ROLE.ROOT) {
@@ -3409,24 +3445,24 @@ export class Editor {
         }
         return (node as any) as BlockNode;
     }
-    getBlock(node) {
+    getBlock(node: GenericNode): GenericNode|null {
         if (!node || !node.speedy || node.speedy.role == ELEMENT_ROLE.ROOT) {
             return null;
         }
         var isBlock = node.speedy.role == ELEMENT_ROLE.INNER_STYLE_BLOCK;
         if (false == isBlock) {
-            node = node.parentElement;
+            node = node.parentElement as BlockNode;
             return this.getBlock(node);
         }
         return node;
     }
-    getPreviousCharacterNode(span) {
-        return span.speedy.previous;
+    getPreviousCharacterNode(cell: ICellNode) {
+        return cell.speedy.previous;
     }
-    getNextCharacterNode(span) {
-        return span.speedy.next;
+    getNextCharacterNode(cell: ICellNode) {
+        return cell.speedy.next;
     }
-    getPropertyTypeNameFromShortcutKey(key) {
+    getPropertyTypeNameFromShortcutKey(key: string) {
         for (var propertyTypeName in this.propertyType) {
             var propertyType = this.propertyType[propertyTypeName];
             if (!propertyType) {
@@ -3445,7 +3481,7 @@ export class Editor {
         img.style.height = "20px";
         return img;
     }
-    handleSpecialChars(span, charCode) {
+    handleSpecialChars(span: ICellNode, charCode: number) {
         if (charCode == ENTER) {
             span.textContent = EOL;
             span.speedy.isLineBreak = true;
@@ -3489,7 +3525,7 @@ export class Editor {
             selection.addRange(range);
         }
     }
-    setCarotByIndex(index, offset) {
+    setCarotByIndex(index: number, offset: number) {
         const cells = this.getCells();
         const node = cells.find(c => c.speedy.index == index);
         if (!node) {
@@ -3497,12 +3533,12 @@ export class Editor {
         }
         this.setCarotByNode(node, offset);
     }
-    setCarotByNode(node: ICellNode, offset?: number) {
+    setCarotByNode(node: ICellNode, offset?: number, deltaY?: number) {
         if (!node) {
             return;
         }
-        var selection = document.getSelection();
-        var range = document.createRange();
+        const selection = document.getSelection() as globalThis.Selection;
+        const range = document.createRange();
         offset = (offset != null) ? offset : 1;
         var textNode = this.getTextNode(node);
         range.setStart(textNode, 1);
@@ -3516,20 +3552,19 @@ export class Editor {
             selection.addRange(range);
         }
     }
-    getTextNode(element) {
+    getTextNode(element: HTMLElement) {
         // Get the first TEXT NODE of the element
-        var node = element.firstChild;
+        let node = element.firstChild;
         if (!node) {
             return element;
-
         }
-        while (node.nodeType != 3) {
-            node = node.firstChild;
+        while (node?.nodeType != 3) {
+            node = node?.firstChild as ChildNode;
         }
         return node;
     }
-    getParentSpan(node) {
-        var current = node;
+    getParentSpan(node: GenericNode) {
+        let current = node;
         while (current) {
             if (current.speedy) {
                 if (current.speedy.role == ELEMENT_ROLE.CELL) {
@@ -3820,30 +3855,30 @@ export class Editor {
         this.data.properties.push(property);
         return property;
     }
-    createBlock(startNode, endNode, type) {
+    createBlock(startNode: ICellNode, endNode: ICellNode, type: string) {
         if (!startNode || !endNode) {
             console.log("Error: startNode or endNode were null", { startNode, endNode, type });
             return;
         }
-        var dummy = document.createElement("SPAN");
+        const dummy = document.createElement("SPAN");
         const snp = startNode.parentNode;
         const enp = endNode.parentNode;
         if (snp == enp) {
             var parent = snp;
             parent.insertBefore(dummy, startNode);
-            var block = document.createElement("DIV");
+            const block = document.createElement("DIV") as BlockNode;
             block.speedy = {
                 role: ELEMENT_ROLE.INNER_STYLE_BLOCK,
                 stream: TEXT_STREAM.OUT
-            };
+            } as ISpeedyBlockObject;
             block.classList.add(this.propertyType[type].className);
-            var container = document.createElement("DIV");
+            const container = document.createElement("DIV") as BlockNode;
             container.speedy = {
                 role: ELEMENT_ROLE.INNER_STYLE_BLOCK,
                 stream: TEXT_STREAM.OUT,
                 startNode: startNode,
                 endNode: endNode
-            };
+            } as ISpeedyBlockObject;
             var nodes = this.getAllNodesBetween(startNode, endNode);
             nodes.forEach(node => container.appendChild(node));
             block.appendChild(container);
@@ -3852,15 +3887,15 @@ export class Editor {
             this.updateOffsets();
             return block;
         } else {
-            var parent = snp.parentElement;
+            let parent = snp.parentElement as HTMLElement;
             parent.insertBefore(dummy, snp);
-            var wrapper = document.createElement("DIV");
+            var wrapper = document.createElement("DIV") as BlockNode;
             wrapper.speedy = {
                 role: ELEMENT_ROLE.INNER_STYLE_BLOCK,
                 stream: TEXT_STREAM.OUT,
                 startNode: startNode,
                 endNode: endNode
-            };
+            } as ISpeedyBlockObject;
             wrapper.classList.add(this.propertyType[type].className);
             var blocks = this.getAllNodesBetween(snp, enp);
             blocks.forEach(b => wrapper.appendChild(b));
@@ -3870,17 +3905,17 @@ export class Editor {
             return wrapper;
         }
     }
-    getAllNodesBetween(startNode, endNode) {
+    getAllNodesBetween(startNode: HTMLElement, endNode: HTMLElement) {
         var nodes = [];
         var current = startNode;
         while (!!current && current != endNode) {
             nodes.push(current);
-            current = current.nextElementSibling;
+            current = current.nextElementSibling as HTMLElement;
         }
         nodes.push(endNode);
         return nodes;
     }
-    createProperty(propertyTypeName, value, propertyRange) {
+    createProperty(propertyTypeName: string, value?: string, propertyRange?: Range) {
         var _this = this;
         if (propertyTypeName == "erase") {
             this.erase();
@@ -3897,7 +3932,7 @@ export class Editor {
                 return;
             }
         }
-        var range = propertyRange || this.getSelectionNodes();
+        const range = propertyRange || this.getSelectionNodes() as Range;
         var prop = new Property({
             editor: this,
             guid: null,
@@ -3926,7 +3961,7 @@ export class Editor {
         if (value) {
             prop.value = value;
         }
-        var process = function (p) {
+        var process = function (p: Property) {
             p.startNode.startProperties.push(p);
             p.endNode.endProperties.push(p);
             _this.data.properties.push(p);
@@ -3938,7 +3973,7 @@ export class Editor {
             _this.setMarked();
         }
         if (!value && type.propertyValueSelector) {
-            type.propertyValueSelector(prop, function (value, name) {
+            type.propertyValueSelector(prop, function (value: string, name: string) {
                 if (value) {
                     prop.value = value;
                     prop.name = name;
@@ -3951,10 +3986,10 @@ export class Editor {
         }
         return prop;
     }
-    createMetadataProperty(args) {
+    createMetadataProperty(args: any) {
         var type = this.propertyType[args.type];
         if (!type) {
-            log({ args, message: "No matching annotation for args.type was found" })
+            console.log({ args, message: "No matching annotation for args.type was found" })
             return;
         }
         var p = new Property({
@@ -3986,7 +4021,7 @@ export class Editor {
             _.paintSpanWithProperty(s, prop);
         });
     }
-    paintSpanWithProperty(s, prop) {
+    paintSpanWithProperty(s: ICellNode, prop: Property) {
         var propertyType = prop.getPropertyType();
         if (!propertyType) {
             return;
@@ -3999,11 +4034,11 @@ export class Editor {
             if (s.classList.contains("line-break")) {
                 return;
             }
-            var inner = document.createElement("SPAN");
+            const inner = document.createElement("SPAN") as ICellNode;
             inner.speedy = {
                 role: ELEMENT_ROLE.CELL_STYLE,
                 stream: TEXT_STREAM.OUT
-            };
+            } as ISpeedyObject;
             inner.classList.add("overlaid");
             if (propertyType.className) {
                 inner.classList.add(propertyType.className);
@@ -4014,7 +4049,7 @@ export class Editor {
             propertyType.styleRenderer([s], prop);
         }
     }
-    getTextContent(cell) {
+    getTextContent(cell: ICellNode) {
         if (cell.speedy.isSpace) {
             return " ";
         }
@@ -4025,20 +4060,20 @@ export class Editor {
     }
     unbind() {
         const _this = this;
-        var spans = this.mark().filter(x => x.speedy.stream == TEXT_STREAM.IN);
+        var spans = this.mark();
         var text = this.temp.text = spans.map(span => _this.getTextContent(span)).join("");
-        log({
+        console.log({
             method: "unbind", spans, text
         });
         var result = {
             text: text,
             properties: this.toPropertyNodes()
         };
-        log({ unbind: result });
+        console.log({ unbind: result });
         return result;
     }
     unbindText() {
-        const spans = this.mark().filter(x => x.speedy.role == ELEMENT_ROLE.CELL && x.speedy.stream == TEXT_STREAM.IN);
+        const spans = this.mark().filter(x => x.speedy.role == ELEMENT_ROLE.CELL);
         const text = spans.map(x => x.textContent).join("");
         return text;
     }
@@ -4050,13 +4085,13 @@ export class Editor {
             try {
                 list.push(p.toNode());
             } catch (ex) {
-                log({ ex, p });
+                console.log({ ex, p });
             }
         }
         return list;
     }
     getContainerCells(container: ICellNode) {
-        const spansArray = [].slice.call(container.getElementsByTagName("span"));
+        const spansArray = [].slice.call(container.getElementsByTagName("span")) as ICellNode[];
         const chars = this.data.spans = spansArray.filter(x => !!x.speedy && x.speedy.role == ELEMENT_ROLE.CELL);
         return chars as ICellNode[];
     }
@@ -4067,7 +4102,7 @@ export class Editor {
         //return chars;
     }
     getContainers() {
-        const blocksArray = [].slice.call(this.container.getElementsByTagName("div"));
+        const blocksArray = [].slice.call(this.container.getElementsByTagName("div")) as BlockNode[];
         const blocks = this.data.blocks = blocksArray.filter(x => !!x.speedy && x.speedy.role == ELEMENT_ROLE.TEXT_BLOCK);
         return blocks;
     }
@@ -4078,17 +4113,14 @@ export class Editor {
         while (c < len) {
             let span = chars[c];
             span.speedy.index = i;
-            if (span.speedy.stream == TEXT_STREAM.IN) {
-                let temp = this.getTextContent(span);
-                i += [...temp].length;
-            }
+            let temp = this.getTextContent(span);
+            i += [...temp].length;
             c++;
         }
         this.marked = true;
         return chars;
     }
-    bind(model) {
-        var _this = this;
+    bind(model: any) {
         model = model || {};
         model.text = model.text || "";
         model.properties = model.properties || [];
@@ -4102,33 +4134,33 @@ export class Editor {
         if (!model.properties) {
             return;
         }
-        var len = this.data.text.length;
-        log("Text length", len);
-        var properties = model.properties.filter(item => !item.isZeroPoint)
-            .sort((a, b) => a.index > b.index ? 1 : a.index < b.index ? -1 : 0);
-        var propertiesLength = properties.length;
+        const len = this.data.text.length;
+        console.log("Text length", len);
+        const properties = model.properties
+            .sort((a: Property, b: Property) => a.index > b.index ? 1 : a.index < b.index ? -1 : 0);
+        const propertiesLength = properties.length;
         var spans = this.container.querySelectorAll("span");
-        var spansArray = Array.from(spans);
+        var spansArray = Array.from(spans) as ICellNode[];
         for (var i = 0; i < propertiesLength; i++) {
             var p = properties[i];
-            log("Property", p);
+            console.log("Property", p);
             var type = this.propertyType[p.type];
             if (!type) {
                 console.warn("Property type not found.", p);
                 //continue;
             }
             if (p.startIndex < 0) {
-                warn("StartIndex less than zero.", p);
+                console.warn("StartIndex less than zero.", p);
                 continue;
             }
             if (p.endIndex > len - 1) {
-                warn("EndIndex out of bounds.", p);
+                console.warn("EndIndex out of bounds.", p);
                 continue;
             }
             var isMetadata = (p.startIndex == null && p.endIndex == null);
             var startNode = (isMetadata ? null : spansArray.find(s => s.speedy.index == p.startIndex));
             if (!isMetadata && startNode == null) {
-                warn("Start node not found.", p);
+                console.warn("Start node not found.", p);
                 continue;
             }
             var endNode = (isMetadata ? null : spansArray.find(s => s.speedy.index == p.endIndex));
@@ -4167,7 +4199,6 @@ export class Editor {
                                 prop.addLeftBracket(left);
                             }
                         }
-
                     }
                     if (type.bracket.right) {
                         if (endNode) {
@@ -4176,22 +4207,16 @@ export class Editor {
                                 prop.addRightBracket(right);
                             }
                         }
-
-
                     }
                 }
             }
             prop.setSpanRange();
             this.data.properties.push(prop);
             propCounter = this.data.properties.length;
-
         }
-        var _this = this;
-        this.handleZeroLengthAnnotations(model);
         this.handleBlocks(this.data.properties, spansArray);
         this.setAnimationFrame();
         const start = this.data.spans[0];
-        //this.setCarotByNode(start, CARET.LEFT);
         this.updateOffsets();
         this.attachDebugMouseoverEventHandler();
         this.attachChainBreakListener();
@@ -4200,29 +4225,25 @@ export class Editor {
         if (!debugChainBreaks) {
             return;
         }
-        const _this = this;
+        const self = this;
         const listener = window.setInterval(() => {
             if (chainBreakListenerPaused) {
                 return;
             }
-            const cells = _this.getCells();
+            const cells = self.getCells();
             const len = cells.length, maxIndex = len - 1;
-            var errors = [];
+            let errors = [];
             cells.forEach((cell, i) => {
                 if (!cell.speedy.previous) {
                     if (i > 0) {
-                        if (cell.speedy.stream == TEXT_STREAM.IN) {
-                            cell.style.backgroundColor = "pink";
-                            errors.push({ text: "... previous cell not found", cell, i });
-                        }
+                        cell.style.backgroundColor = "pink";
+                        errors.push({ text: "... previous cell not found", cell, i });
                     }
                 }
                 if (!cell.speedy.next) {
                     if (i < maxIndex) {
-                        if (cell.speedy.stream == TEXT_STREAM.IN) {
-                            cell.style.backgroundColor = "pink"; // NOTE: add a footnote number above the cell that refers to the error message in the logs or side panel
-                            errors.push({ text: "... next cell not found", cell, i });
-                        }
+                        cell.style.backgroundColor = "pink"; // NOTE: add a footnote number above the cell that refers to the error message in the logs or side panel
+                        errors.push({ text: "... next cell not found", cell, i });
                     }
                 }
                 if (cell.speedy.previous) {
@@ -4264,11 +4285,11 @@ export class Editor {
                     cell.style.backgroundColor = "pink";
                     errors.push({ text: "... cell has no parentNode", cell, i });
                 }
-                if (!_this.container.contains(cell)) {
+                if (!self.container.contains(cell)) {
                     cell.style.backgroundColor = "pink";
                     errors.push({ text: "... cell not found in the container", cell, i });
                 }
-                if (cell.parentNode == _this.container) {
+                if (cell.parentNode == self.container) {
                     cell.style.backgroundColor = "pink";
                     errors.push({ text: "... cell is out of its TextBlock", cell, i });
                 }
@@ -4281,11 +4302,11 @@ export class Editor {
 
             });
             if (errors.length) {
-                _this.logChainBreak({ errors, listener });
+                self.logChainBreak({ errors, listener });
             }
         }, debugChainBreakInterval);
     }
-    logChainBreak(args) {
+    logChainBreak(args: { errors: any[], listener: number}) {
         const { errors, listener } = args;
         console.log("logChainBreak", { errors });
         window.clearInterval(listener);
@@ -4303,7 +4324,7 @@ export class Editor {
         const last = this.data.blocks[this.data.blocks.length - 1];
         this.setCarotByNode(last.speedy.endNode, CARET.LEFT);
     }
-    setCarotByOffsetX(args) {
+    setCarotByOffsetX(args: any) {
         const { x, verticalPosition } = args;
         const cells = this.getCells();
         const rows = Array.from(groupBy(cells, x => x.speedy.offset && x.speedy.offset.y));
@@ -4320,7 +4341,7 @@ export class Editor {
             this.setCarotByNode(closestCell);
         }
     }
-    getCellClosestByOffsetX(args) {
+    getCellClosestByOffsetX(args: any) {
         const { x, cells } = args;
         const leftMatches = cells.filter(c => c.speedy.offset.x < x);
         const rightMatches = cells.filter(c => c.speedy.offset.x >= x);
@@ -4338,25 +4359,25 @@ export class Editor {
         this.setCarotByNode(node, CARET.LEFT);
         node.focus();
     }
-    createBracketNode(prop, bracket, parent, next) {
+    createBracketNode(prop: Property, bracket, parent, next) {
         var content = typeof bracket.content == "function" ? bracket.content(prop, this) : bracket.content;
         var bracketNode = this.newCell(content);
-        bracketNode.speedy.stream = TEXT_STREAM.OUT;
         if (bracket.className) {
             bracketNode.classList.add(bracket.className);
         }
         parent.insertBefore(bracketNode, next);
         return bracketNode;
     }
-    handleBlocks(properties, spans) {
-        var _this = this;
-        var blocks = properties.filter(item => !item.isDeleted && _this.propertyType[item.type] && _this.propertyType[item.type].format == "block")
+    handleBlocks(properties: Property[], spans: ICellNode[]) {
+        var self = this;
+        var blocks = properties
+            .filter(item => !item.isDeleted && self.propertyType[item.type] && self.propertyType[item.type].format == "block")
             .sort((a, b) => a.startIndex() > b.startIndex() ? -1 : a.startIndex() < b.startIndex() ? 1 : 0);
         if (blocks.length) {
             blocks.forEach(p => {
                 var sn = spans.find(s => s.speedy.index == p.startIndex());
                 var en = spans.find(s => s.speedy.index == p.endIndex());
-                var blockNode = _this.createBlock(sn, en, p.type);
+                var blockNode = self.createBlock(sn, en, p.type);
                 p.blockNode = blockNode;
             });
         }
@@ -4365,53 +4386,6 @@ export class Editor {
         const cells = this.getCells();
         const cell = cells.find(p => p.speedy.index == index);
         return cell;
-    }
-    handleZeroLengthAnnotations(model) {
-        var cells = this.mark().filter(x => x.speedy.stream == TEXT_STREAM.IN);
-        var len = model.text.length;
-        var zeroProperties = model.properties.filter(function (item) {
-            return item.isZeroPoint;
-        });
-        // Work backwards through the list of zero properties so we don't fetch a SPAN that hasn't been offset from a previous insertion.
-        zeroProperties = zeroProperties.sort((a, b) => a.startIndex > b.startIndex ? -1 : a.startIndex < b.startIndex ? 1 : 0);
-        var zeroPropertiesLength = zeroProperties.length;
-        log({ zeroProperties });
-        for (var i = 0; i < zeroPropertiesLength; i++) {
-            var p = zeroProperties[i];
-            log("Zero-point property", p);
-            var pt = this.propertyType[p.type];
-            if (!pt) {
-                warn("Property type not found.", p);
-                continue;
-            }
-            if (p.startIndex < 0) {
-                warn("StartIndex less than zero.", p);
-                continue;
-            }
-            if (p.endIndex > len) {
-                warn("EndIndex out of bounds.", p);
-                continue;
-            }
-            var cell = cells[p.startIndex - 1];
-            if (!cell) {
-                console.warn("ZPA node not found.", p);
-                continue;
-            }
-            var prop = this.addZeroPoint(p.type, p.text, cell);
-            prop.guid = p.guid;
-            prop.schema = pt;
-            prop.attributes = p.attributes;
-            prop.index = p.index;
-            prop.value = p.value;
-            prop.isDeleted = p.isDeleted;
-            prop.setSpanRange();
-            if (prop.isDeleted) {
-                prop.startNode.style.display = "none";
-            }
-            if (this.onPropertyCreated) {
-                this.onPropertyCreated(prop, p);
-            }
-        }
     }
     getWordsFromText(text) {
         var re = new RegExp(/\b[^\s]+\b/, "g");
