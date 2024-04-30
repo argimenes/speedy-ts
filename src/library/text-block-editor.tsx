@@ -16,7 +16,7 @@ export interface IStandoffPropertySchema {
     bindings: string[];
     decorate: {
         cellClass?: string;
-        propertyBlockClass?: string;
+        blockClass?: string;
         batchRender?: (args: { editor: TextBlockEditor, properties: StandoffProperty[] }) => void;
     }
 }
@@ -83,16 +83,84 @@ export class StandoffProperty {
     }
 }
 
+export interface IKeyboardInput {
+    control: boolean;
+    shift: boolean;
+    option: boolean;
+    command: boolean;
+    //function: boolean;
+    key: string;
+    keyCode: number;
+}
+export enum ActionKey {
+    DEL,
+    TAB,
+    ENTER,
+    ESC
+}
+
 export class TextBlockEditor {
     id: GUID;
     container: HTMLDivElement;
     cells: Cell[];
     properties: StandoffProperty[];
+    inputBuffer: IKeyboardInput[];
     constructor({ container }: { container: HTMLDivElement }) {
         this.id = "";
         this.cells = [];
         this.container = container;
+        this.container.setAttribute("contenteditable", "true");
         this.properties = [];
+        this.setupEventHandlers();
+        this.inputBuffer = [];
+    }
+    setupEventHandlers() {
+        /*
+        
+        We want to capture [a] keyboard input and [b] mouse input.
+
+        [a] Keyboard Input
+        - should be converted into a structure like this:
+
+        {
+            control: boolean;
+            shift: boolean;
+            option: boolean;
+            command: boolean;
+            function: boolean;
+            key: string;
+            keyCode: number;
+        }
+
+        We then send the IKeyboardInput object to a Chooser that decides which handler
+        should receive the event.
+
+        We also need to keep track of keyboard input combinations, e.g., [CTRL-K, CTRL-D].
+
+        */
+        this.container.addEventListener("keydown", this.handleKeyDown);
+    }
+    addToInputBuffer(key: IKeyboardInput) {
+        if (this.inputBuffer.length <= 1) {
+            this.inputBuffer.push(key);
+            return;
+        }
+        this.inputBuffer.splice(0, 1);
+        this.addToInputBuffer(key);
+    }
+    handleKeyDown(e: KeyboardEvent) {
+        const input = this.toKeyboardInput(e);
+    }
+    toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
+        const input: IKeyboardInput = {
+            shift: e.shiftKey,
+            control: e.ctrlKey,
+            command: e.metaKey,
+            option: e.altKey,
+            key: e.key,
+            keyCode: parseInt(e.code)
+        };
+        return input;
     }
     unbind() {
         const block = {} as ITextBlock;
@@ -290,7 +358,7 @@ editor.bind({
         },
         {
             type: "codex/entity-reference",
-            bindings: ["control-e", "double click"],
+            bindings: ["control-e", "control-r"],
             decorate: {
                 batchRender: (args) => {
                     const { editor, properties } = args;
@@ -303,7 +371,7 @@ editor.bind({
             type: "style/blur",
             bindings: ["control-b"],
             decorate: {
-                propertyBlockClass: "blur"
+                blockClass: "blur"
             }
         },
     ]
