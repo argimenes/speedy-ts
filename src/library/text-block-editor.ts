@@ -1,5 +1,7 @@
-import { Property } from "./speedy";
-
+export interface IRange {
+    start: Cell;
+    end: Cell;
+}
 export interface ICellConstructor {
     text: string;
     previous?: Cell;
@@ -73,14 +75,22 @@ export type GUID = string;
 
 export class StandoffProperty {
     id?: GUID;
+    type: string;
     start: Cell;
     end: Cell;
+    decorate: Record<string, string>;
     isDeleted: boolean;
     constructor({ start, end }: { start: Cell, end: Cell }) {
         this.isDeleted = false;
+        this.type = "";
         this.start = start;
         this.end = end;
+        this.decorate = {};
     }
+}
+
+export interface IKeyboardInput {
+
 }
 
 export class TextBlockEditor {
@@ -253,6 +263,33 @@ export class TextBlockEditor {
         }
         return this.removeCell({ cell, updateCaret });
     }
+    getCells(range: IRange) {
+        const cells: Cell[] = [];
+        let cell = range.start;
+        while (cell) {
+            cells.push(cell);
+            if (cell.next && !cell.isLineBreak) {
+                cell = cell.next;
+            }
+            break;
+        }
+        return cells;
+    }
+    styleProperty(p: StandoffProperty) {
+        if (!p.decorate) return;
+        if (p.decorate.cellClass) {
+            const cells = this.getCells({ start: p.start, end: p.end });
+            cells.forEach(c => {
+                if (!c.element) return;
+                c.element.classList.add(p.decorate.cellClass);
+            });
+        }
+    }
+    createProperty(type: string, range: IRange) {
+        const prop = new StandoffProperty(range);
+        prop.type = type;
+        this.properties.push(prop);
+    }
 }
 
 const log = (msg: string, data: Record<string,any>) => console.log(msg, data);
@@ -280,17 +317,53 @@ editor.bind({
             endIndex: 29
         },
     ],
+    modes: {
+        "auto-alias": {
+            bindingsToInvoke: ["(", "("],
+            handler: async (e: TextBlockEditor, selection: IRange) => {
+                e.setMode("auto-alias");
+                e.setOverrideBindings([
+
+                ]);
+                /*
+                
+                1. Collecting user text input and piping through to an API
+                and returning a list of matching entities.
+
+                2. User either selects a matching entity or closes the mode.
+
+                3. If entity is matched, create a new entity reference StandoffProperty
+                for the text enterered, and link it to the matching entity GUID.
+
+                */
+            }
+        }
+    },
     schemas: [
         {
             type: "style/italics",
             bindings: ["control-i"],
+            bindingHandler: (e: TextBlockEditor, selection: IRange) => {
+                if (selection) {
+                    e.createProperty("style/italics", selection);
+                } else {
+
+                }
+            },
             decorate: {
                 cellClass: "italics"
             }
         },
         {
             type: "codex/entity-reference",
-            bindings: ["control-e", "double click"],
+            bindings: ["control-e", "control-f"],
+            bindingHandler: async (e: TextBlockEditor, selection: IRange) => {
+                if (selection) {
+
+                } else {
+
+                }
+            },
             decorate: {
                 batchRender: (args) => {
                     const { editor, properties } = args;
@@ -308,3 +381,4 @@ editor.bind({
         },
     ]
 })
+
