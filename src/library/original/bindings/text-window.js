@@ -5,6 +5,9 @@
     const Bindings = {};
 
     Bindings["control-LEFT-ARROW"] = (args) => {
+        /**
+         * Skip cursor left by one word.
+         */
         const { editor, caret } = args;
         const { container } = caret;
         const ci = container.speedy.startNode.speedy.index;
@@ -29,6 +32,9 @@
     };
 
     Bindings["control-Y"] = (data) => {
+        /**
+         * Deletes the current text block.
+         */
         const { editor } = data;
         const caret = editor.getCaret();
         const anchorNode = caret.right || caret.left;
@@ -37,6 +43,9 @@
     };
 
     Bindings["click"] = (data) => {
+        /**
+         * Open the annotation bar.
+         */
         const { editor, e } = data;
         const { client } = editor;
         if (client.contextMenu && client.contextMenu.active) {
@@ -60,6 +69,9 @@
     };
 
     Bindings["shift-DELETE"] = (args) => {
+        /**
+         * Delete the last added standoff property at the cursor position.
+         */
         const { editor } = args;
         const caret = editor.getCaret();
         const mostRecent = editor.getMostRecentEnclosingProperty(caret.right);
@@ -70,14 +82,23 @@
     };
 
     Bindings["control-["] = (data, client) => {
+        /**
+         * Auto-complete.
+         */
         client.interceptor.handleControlSquareBracket();
     };
 
     Bindings["control-9"] = (data, client) => {
+        /**
+         * Auto-alias.
+         */
         client.interceptor.handleControlRoundBracket();
     };
 
     Bindings["control-RIGHT-ARROW"] = (args) => {
+        /**
+         * Skip cursor right by one word.
+         */
         console.log("control-RIGHT-ARROW", { args });
         const { editor, caret } = args;
         const { container } = caret;
@@ -97,6 +118,11 @@
     };
 
     Bindings["control-UP-ARROW"] = (args) => {
+        /**
+         * Skip cursor up to the previous block and try
+         * while trying to keep its horizontal position
+         * in alignment with the current position.
+         */
         const { editor, caret } = args;
         const { container } = caret;
         const current = caret.left || caret.right;
@@ -116,6 +142,11 @@
     };
 
     Bindings["control-DOWN-ARROW"] = (args) => {
+        /**
+         * Skip cursor down to the next block and try
+         * while trying to keep its horizontal position
+         * in alignment with the current position.
+         */
         const { editor, caret } = args;
         const { container } = caret;
         const current = caret.left || caret.right;

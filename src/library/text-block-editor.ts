@@ -68,9 +68,31 @@ export class Cell {
     }
 }
 
-export enum Caret {
-    Left = 0,
-    Right = 1
+export interface IBlockConstructor {
+    element: HTMLDivElement;
+}
+
+export class Block {
+    id?: GUID;
+    element: HTMLDivElement;
+    cells: Cell[];
+    properties: StandoffProperty[];
+    constructor({ element }: IBlockConstructor) {
+        this.cells = [];
+        this.properties = [];
+        this.element = element;
+        this.element.setAttribute("contenteditable", "true");
+    }
+}
+
+export enum CARET {
+    LEFT = 0,
+    RIGHT = 1
+}
+
+export enum SELECTION_DIRECTION {
+    LEFT = 0,
+    RIGHT = 1
 }
 
 export type GUID = string;
@@ -82,12 +104,60 @@ export class StandoffProperty {
     end: Cell;
     decorate: Record<string, string>;
     isDeleted: boolean;
+    bracket: { left?: HTMLElement; right?: HTMLElement };
     constructor({ start, end }: { start: Cell, end: Cell }) {
         this.isDeleted = false;
         this.type = "";
         this.start = start;
         this.end = end;
         this.decorate = {};
+        this.bracket = {
+            left: undefined,
+            right: undefined
+        };
+    }
+    scrollTo() {
+        this.start.element?.scrollIntoView();
+    }
+    applyCssClassToRange(className: string) {
+        if (this.isDeleted) return;
+        const cells = this.getCells();
+        cells.forEach(x => x.element?.classList.add(className));
+    }
+    removeCssClassFromRange(className: string) {
+        if (this.isDeleted) return;
+        const cells = this.getCells();
+        cells.forEach(x => x.element?.classList.remove(className));
+    }
+    getCells() {
+        const cells: Cell[] = [];
+        let cell = this.start;
+        let looping = true;
+        if (this.start == this.end) {
+            cells.push(this.start);
+            return cells;
+        }
+        while (looping && !!cell) {
+            cells.push(cell);
+            let next = cell.next;
+            if (!next) {
+                looping = false;
+            }
+            if (next == this.end) {
+                cells.push(next);
+                looping = false;
+            }
+            cell = next as Cell;
+        }
+        return cells;
+    }
+    showBrackets() {
+        if (this.bracket.left) this.bracket.left.style.display = "inline";
+        if (this.bracket.right) this.bracket.right.style.display = "inline";
+    }
+    hideBrackets() {
+        if (this.bracket.left) this.bracket.left.style.display = "none";
+        if (this.bracket.right) this.bracket.right.style.display = "none";
     }
 }
 
@@ -262,7 +332,7 @@ export class TextBlockEditor {
             // }
         }
     }
-    setCarotByNode(args: { node: Cell, offset?: Caret }) {
+    setCarotByNode(args: { node: Cell, offset?: CARET }) {
         /**
          * Might want to investigate setting the caret by absolutely positioning an SVG ...
          */
@@ -272,7 +342,7 @@ export class TextBlockEditor {
         }
         const selection = document.getSelection() as globalThis.Selection;
         const range = document.createRange();
-        const offset = (args.offset != null) ? args.offset : Caret.Right;
+        const offset = (args.offset != null) ? args.offset : CARET.RIGHT;
         const textNode = node.getTextNode();
         range.setStart(textNode, 1);
         range.collapse(true);
@@ -440,4 +510,3 @@ editor.bind({
         }
     ]
 })
-
