@@ -16,11 +16,11 @@ export interface IStandoffProperty {
 export interface IStandoffPropertySchema {
     type: string;
     bindings: string[];
-    bindingHandler: (e: TextBlockEditor, selection: IRange) => void;
+    bindingHandler: (e: StandoffTextBlock, selection: IRange) => void;
     decorate: {
         cellClass?: string;
         blockClass?: string;
-        batchRender?: (args: { editor: TextBlockEditor, properties: StandoffProperty[] }) => void;
+        batchRender?: (args: { editor: StandoffTextBlock, properties: StandoffProperty[] }) => void;
     }
 }
 export interface ITextBlock {
@@ -65,23 +65,6 @@ export class Cell {
             node = node?.firstChild as ChildNode;
         }
         return node;
-    }
-}
-
-export interface IBlockConstructor {
-    element: HTMLDivElement;
-}
-
-export class Block {
-    id?: GUID;
-    element: HTMLDivElement;
-    cells: Cell[];
-    properties: StandoffProperty[];
-    constructor({ element }: IBlockConstructor) {
-        this.cells = [];
-        this.properties = [];
-        this.element = element;
-        this.element.setAttribute("contenteditable", "true");
     }
 }
 
@@ -177,22 +160,44 @@ export enum ActionKey {
     ESC
 }
 
-export class TextBlockEditor {
+export interface IBlock {
     id: GUID;
+    relations: IBlockRelation[];
+}
+
+export interface IBlockRelation {
+    type: string;
+    start: IBlock;
+    end: IBlock;
+}
+
+export class StandoffTextBlock implements IBlock {
+    id: GUID;
+    relations: IBlockRelation[];
     container: HTMLDivElement;
     cells: Cell[];
     properties: StandoffProperty[];
     inputBuffer: IKeyboardInput[];
+    bindings: {};
     constructor({ container }: { container: HTMLDivElement }) {
         this.id = "";
-        this.cells = [];
         this.container = container;
         this.container.setAttribute("contenteditable", "true");
+        this.relations = [];
+        this.bindings = {
+            keyboard: {
+
+            },
+            mouse: {
+
+            }
+        };
+        this.cells = [];
         this.properties = [];
-        this.setupEventHandlers();
         this.inputBuffer = [];
+        this.attachBindings();
     }
-    setupEventHandlers() {
+    attachBindings() {
         /*
         
         We want to capture [a] keyboard input and [b] mouse input.
@@ -431,7 +436,7 @@ export class TextBlockEditor {
 const log = (msg: string, data: Record<string,any>) => console.log(msg, data);
 
 
-const editor = new TextBlockEditor({
+const editor = new StandoffTextBlock({
     container: document.createElement("DIV") as HTMLDivElement
 });
 editor.bind({
@@ -456,7 +461,7 @@ editor.bind({
     modes: {
         "auto-alias": {
             bindingsToInvoke: ["(", "("],
-            handler: (e: TextBlockEditor, selection: IRange) => {
+            handler: (e: StandoffTextBlock, selection: IRange) => {
                 // e.setMode("auto-alias");
                 // e.setOverrideBindings([
 
@@ -479,7 +484,7 @@ editor.bind({
         {
             type: "style/italics",
             bindings: ["control-i"],
-            bindingHandler: (e: TextBlockEditor, selection: IRange) => {
+            bindingHandler: (e: StandoffTextBlock, selection: IRange) => {
                 if (selection) {
                     e.createProperty("style/italics", selection);
                 } else {
@@ -493,7 +498,7 @@ editor.bind({
         {
             type: "codex/entity-reference",
             bindings: ["control-e", "control-f"],
-            bindingHandler: async (e: TextBlockEditor, selection: IRange) => {
+            bindingHandler: async (e: StandoffTextBlock, selection: IRange) => {
                 if (selection) {
 
                 } else {
