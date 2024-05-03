@@ -1,3 +1,5 @@
+import { KEYS, Platform } from "./keyboard";
+
 export interface IRange {
     start: Cell;
     end: Cell;
@@ -11,7 +13,7 @@ export interface IStandoffProperty {
     type: string;
     startIndex: number;
     endIndex: number;
-    value?: Record<string,string>;
+    value?: string;
 }
 export interface IStandoffPropertySchema {
     type: string;
@@ -42,6 +44,7 @@ export class Cell {
         this.index = 0;
         this.text = text;
         this.isLineBreak = false;
+        this.element = this.renderNode();
     }
     renderNode() {
         const span = document.createElement("SPAN");
@@ -87,12 +90,14 @@ export class StandoffProperty {
     end: Cell;
     decorate: Record<string, string>;
     isDeleted: boolean;
+    value: string;
     bracket: { left?: HTMLElement; right?: HTMLElement };
     constructor({ start, end }: { start: Cell, end: Cell }) {
         this.isDeleted = false;
         this.type = "";
         this.start = start;
         this.end = end;
+        this.value = "";
         this.decorate = {};
         this.bracket = {
             left: undefined,
@@ -259,6 +264,30 @@ export class StandoffEditorBlock implements IBlock {
         */
         this.container.addEventListener("keydown", this.handleKeyDown);
     }
+    createEmptyBlock() {
+        const linebreak = this.createLineBreakCell();
+        this.container.innerHTML = "";
+        this.cells = [linebreak];
+        const frag = document.createDocumentFragment();
+        this.cells.forEach(c => frag.append(c.element as HTMLElement));
+        this.container.appendChild(frag);
+    }
+    getKeyCode(name: string) {
+        const code = KEYS.ENTER.find(x => x.platform == Platform.Windows)?.code as number;
+        return code;
+    }
+    createLineBreakCell() {
+        const code = this.getKeyCode("ENTER");
+        const EOL = String.fromCharCode(code);
+        const cell = new Cell({ text: EOL });
+        cell.element?.classList.add("line-break");
+        return cell;
+    }
+    appendCellsToDOM(cells: Cell[]) {
+        window.requestAnimationFrame(() => {
+
+        });
+    }
     addToInputBuffer(key: IKeyboardInput) {
         if (this.inputBuffer.length <= 1) {
             this.inputBuffer.push(key);
@@ -290,8 +319,22 @@ export class StandoffEditorBlock implements IBlock {
         return this.cells.map(c => c.text).join();
     }
     bind(block: ITextBlock) {
+        const self = this;
         const cells = this.toCells(block.text);
         this.chainCellsTogether(cells);
+        const frag = document.createDocumentFragment();
+        cells.forEach(c => frag.append(c.element as HTMLElement));
+        requestAnimationFrame(() => {
+            this.container.innerHTML = "";
+            this.container.appendChild(frag);
+        });
+        block.properties.forEach(p => {
+            const start = self.cells[p.startIndex];
+            const end = self.cells[p.endIndex];
+            const sproc = new StandoffProperty({ start, end });
+            sproc.type = p.type;
+            sproc.value = p.value as string;
+        });
     }
     getCellAtIndex(index: number, cells: Cell[]) {
         const max = cells.length - 1;

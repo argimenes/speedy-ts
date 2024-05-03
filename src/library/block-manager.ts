@@ -32,9 +32,16 @@ export class BlockManager {
         });
         block.addKeyboardBinding("default", {
             "shift-ENTER": (args: IBindingHandlerArgs) => {
+                /**
+                 * Insert a NewLine character, styled such that it displaces following
+                 * SPANs onto the next line.
+                 */
+                const { block } = args;
                 
+
             }
         });
+        // block.createEmpty()
         return block;
     }
     appendSibling(anchor: HTMLElement, sibling: HTMLElement) {

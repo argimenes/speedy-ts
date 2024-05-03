@@ -1,4 +1,4 @@
-enum Platform {
+export enum Platform {
     Linux,
     Windows,
     Mac
