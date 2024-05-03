@@ -16,11 +16,11 @@ export interface IStandoffProperty {
 export interface IStandoffPropertySchema {
     type: string;
     bindings: string[];
-    bindingHandler: (e: StandoffTextBlock, selection: IRange) => void;
+    bindingHandler: (e: StandoffEditorBlock, selection: IRange) => void;
     decorate: {
         cellClass?: string;
         blockClass?: string;
-        batchRender?: (args: { editor: StandoffTextBlock, properties: StandoffProperty[] }) => void;
+        batchRender?: (args: { editor: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
     }
 }
 export interface ITextBlock {
@@ -160,42 +160,78 @@ export enum ActionKey {
     ESC
 }
 
+export enum BlockType {
+    StandoffEditor = "standoff-editor-block",
+    HTMLEditor = "html-editor-block",
+    IFrame = "iframe-block",
+    HTML = "html-block",
+    PDF = "pdf-block",
+    Image = "image-block",
+    Video = "video-block"
+}
+
 export interface IBlock {
     id: GUID;
-    relations: IBlockRelation[];
+    type: BlockType;
+    relations: Record<string, IBlockRelation>;
 }
 
 export interface IBlockRelation {
     type: string;
-    start: IBlock;
-    end: IBlock;
+    sourceId: GUID;
+    targetId: GUID;
 }
-
-export class StandoffTextBlock implements IBlock {
+export interface IBindingHandlerArgs {
+    block: StandoffEditorBlock;
+    caret: any;
+}
+export type BindingHandler = (args: IBindingHandlerArgs) => void;
+export type KeyboardBinding = Record<string, BindingHandler>;
+export type MouseBinding = KeyboardBinding;
+export type InputBindings = {
+    keyboard: KeyboardBinding[];
+    mouse: MouseBinding[];
+}
+export type Mode = Record<string, InputBindings>;
+export class StandoffEditorBlock implements IBlock {
     id: GUID;
-    relations: IBlockRelation[];
+    type: BlockType;
+    relations: Record<string, IBlockRelation>;
     container: HTMLDivElement;
     cells: Cell[];
     properties: StandoffProperty[];
     inputBuffer: IKeyboardInput[];
-    bindings: {};
-    constructor({ container }: { container: HTMLDivElement }) {
+    mode: Mode;
+    constructor(container?: HTMLDivElement) {
         this.id = "";
-        this.container = container;
+        this.type = BlockType.StandoffEditor;
+        this.container = container || (document.createElement("DIV") as HTMLDivElement);
         this.container.setAttribute("contenteditable", "true");
-        this.relations = [];
-        this.bindings = {
-            keyboard: {
-
-            },
-            mouse: {
-
-            }
-        };
+        this.relations = {};
+        this.mode = { } as any;
         this.cells = [];
         this.properties = [];
         this.inputBuffer = [];
         this.attachBindings();
+    }
+    focus() {
+        /**
+         * Sets the window focus on the block node.
+         * Also sets up the caret/cursor if needed (?).
+         */
+        this.container.focus();
+    }
+    getRelation(type: string) {
+        return this.relations[type];
+    }
+    setRelation(type: string, targetId: string) {
+        this.relations[type] = { type, sourceId: this.id, targetId };
+    }
+    addKeyboardBinding(mode: string, binding: KeyboardBinding) {
+        this.mode[mode].keyboard.push(binding);
+    }
+    addMouseBinding(mode: string, binding: MouseBinding) {
+        this.mode[mode].mouse.push(binding);
     }
     attachBindings() {
         /*
@@ -436,7 +472,7 @@ export class StandoffTextBlock implements IBlock {
 const log = (msg: string, data: Record<string,any>) => console.log(msg, data);
 
 
-const editor = new StandoffTextBlock({
+const editor = new StandoffEditorBlock({
     container: document.createElement("DIV") as HTMLDivElement
 });
 editor.bind({
@@ -461,7 +497,7 @@ editor.bind({
     modes: {
         "auto-alias": {
             bindingsToInvoke: ["(", "("],
-            handler: (e: StandoffTextBlock, selection: IRange) => {
+            handler: (e: StandoffEditorBlock, selection: IRange) => {
                 // e.setMode("auto-alias");
                 // e.setOverrideBindings([
 
@@ -484,7 +520,7 @@ editor.bind({
         {
             type: "style/italics",
             bindings: ["control-i"],
-            bindingHandler: (e: StandoffTextBlock, selection: IRange) => {
+            bindingHandler: (e: StandoffEditorBlock, selection: IRange) => {
                 if (selection) {
                     e.createProperty("style/italics", selection);
                 } else {
@@ -498,7 +534,7 @@ editor.bind({
         {
             type: "codex/entity-reference",
             bindings: ["control-e", "control-f"],
-            bindingHandler: async (e: StandoffTextBlock, selection: IRange) => {
+            bindingHandler: async (e: StandoffEditorBlock, selection: IRange) => {
                 if (selection) {
 
                 } else {
