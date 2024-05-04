@@ -18,31 +18,15 @@ export class BlockManager {
         parent.removeRelation("parent-of");
         block.removeRelation("child-of");
         const previous = parent;
-        previous.relations["followed-by"] = {
-            sourceId: previous.id,
-            targetId: block.id,
-            type: "followed-by"
-        };
-        block.relations["follows"] = {
-            type: "follows",
-            sourceId: block.id,
-            targetId: previous.id
-        };
+        previous.addRelation("followed-by", block.id);
+        block.addRelation("follows", previous.id);
         const level = block.metadata.indentLevel as number;
         block.metadata.indentLevel = level - 1;
         this.renderIndent(block);
     }
     indent(currentBlock: IBlock, newBlock: IBlock) {
-        newBlock.relations["child-of"] = {
-            sourceId: newBlock.id,
-            targetId: currentBlock.id,
-            type: "child-of"
-        };
-        currentBlock.relations["parent-of"] = {
-            sourceId: currentBlock.id,
-            targetId: newBlock.id,
-            type: "parent-of"
-        };
+        newBlock.addRelation("child-of", currentBlock.id);
+        currentBlock.addRelation("parent-of", newBlock.id);
         const level = currentBlock.metadata.indentLevel as number;
         newBlock.metadata.indentLevel = level + 1;
         this.renderIndent(newBlock);
@@ -97,8 +81,6 @@ export class BlockManager {
                  * SPANs onto the next line.
                  */
                 const { block } = args;
-                
-
             }
         });
         // block.createEmpty()

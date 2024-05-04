@@ -180,6 +180,7 @@ export interface IBlock {
     type: BlockType;
     container: HTMLDivElement;
     relations: Record<string, IBlockRelation>;
+    addRelation: (name: string, targetId: string) => void;
     removeRelation: (name: string) => void;
     metadata: Record<string, any>;
 }
@@ -233,6 +234,13 @@ export class StandoffEditorBlock implements IBlock {
         this.inputBuffer = [];
         this.overlays = [];
         this.attachBindings();
+    }
+    addRelation(name: string, targetId: string) {
+        this.relations[name] = {
+            type: name,
+            sourceId: this.id,
+            targetId: targetId
+        };
     }
     removeRelation(name: string) {
         delete this.relations[name];
@@ -347,19 +355,19 @@ export class StandoffEditorBlock implements IBlock {
     bind(block: ITextBlock) {
         const self = this;
         const cells = this.toCells(block.text);
-        this.chainCellsTogether(cells);
         const frag = document.createDocumentFragment();
         cells.forEach(c => frag.append(c.element as HTMLElement));
         requestAnimationFrame(() => {
             this.container.innerHTML = "";
             this.container.appendChild(frag);
         });
-        block.properties.forEach(p => {
-            const start = self.cells[p.startIndex];
-            const end = self.cells[p.endIndex];
+        this.properties = block.properties.map(p => {
+            const start = cells[p.startIndex];
+            const end = cells[p.endIndex];
             const sproc = new StandoffProperty({ start, end });
             sproc.type = p.type;
             sproc.value = p.value as string;
+            return sproc;
         });
     }
     getCellAtIndex(index: number, cells: Cell[]) {
@@ -393,6 +401,7 @@ export class StandoffEditorBlock implements IBlock {
             let cell = new Cell({ text: text[i] });
             cells.push(cell);
         }
+        this.chainCellsTogether(cells);
         return cells;
     }
     markCells() {
