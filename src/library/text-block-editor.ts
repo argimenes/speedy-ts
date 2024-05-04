@@ -91,13 +91,16 @@ export class StandoffProperty {
     decorate: Record<string, string>;
     isDeleted: boolean;
     value: string;
+    schema: any;
+    block: StandoffEditorBlock;
     bracket: { left?: HTMLElement; right?: HTMLElement };
-    constructor({ start, end }: { start: Cell, end: Cell }) {
+    constructor({ start, end, block }: { start: Cell, end: Cell, block: StandoffEditorBlock }) {
         this.isDeleted = false;
         this.type = "";
         this.start = start;
         this.end = end;
         this.value = "";
+        this.block = block;
         this.decorate = {};
         this.bracket = {
             left: undefined,
@@ -218,6 +221,7 @@ export class StandoffEditorBlock implements IBlock {
     cells: Cell[];
     properties: StandoffProperty[];
     inputBuffer: IKeyboardInput[];
+    schemas: IStandoffPropertySchema[];
     mode: Mode;
     metadata: {};
     overlays: Overlay[];
@@ -230,6 +234,7 @@ export class StandoffEditorBlock implements IBlock {
         this.mode = { } as any;
         this.cells = [];
         this.metadata = {};
+        this.schemas = [];
         this.properties = [];
         this.inputBuffer = [];
         this.overlays = [];
@@ -355,19 +360,22 @@ export class StandoffEditorBlock implements IBlock {
     bind(block: ITextBlock) {
         const self = this;
         const cells = this.toCells(block.text);
+        this.properties = block.properties.map(p => {
+            const start = cells[p.startIndex];
+            const end = cells[p.endIndex];
+            const sproc = new StandoffProperty({ start, end });
+            let schema = this.schemas.find(x => x.type == p.type);
+            sproc.block = self;
+            sproc.schema = schema;
+            sproc.type = p.type;
+            sproc.value = p.value as string;
+            return sproc;
+        });
         const frag = document.createDocumentFragment();
         cells.forEach(c => frag.append(c.element as HTMLElement));
         requestAnimationFrame(() => {
             this.container.innerHTML = "";
             this.container.appendChild(frag);
-        });
-        this.properties = block.properties.map(p => {
-            const start = cells[p.startIndex];
-            const end = cells[p.endIndex];
-            const sproc = new StandoffProperty({ start, end });
-            sproc.type = p.type;
-            sproc.value = p.value as string;
-            return sproc;
         });
     }
     getCellAtIndex(index: number, cells: Cell[]) {
