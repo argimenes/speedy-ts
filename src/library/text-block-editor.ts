@@ -22,7 +22,7 @@ export interface IStandoffPropertySchema {
     decorate: {
         cellClass?: string;
         blockClass?: string;
-        batchRender?: (args: { editor: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
+        batchRender?: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
     }
 }
 export interface ITextBlock {
@@ -178,7 +178,10 @@ export enum BlockType {
 export interface IBlock {
     id: GUID;
     type: BlockType;
+    container: HTMLDivElement;
     relations: Record<string, IBlockRelation>;
+    removeRelation: (name: string) => void;
+    metadata: Record<string, any>;
 }
 
 export interface IBlockRelation {
@@ -198,6 +201,14 @@ export type InputBindings = {
     mouse: MouseBinding[];
 }
 export type Mode = Record<string, InputBindings>;
+/**
+ * A place to store collections of absolutely-positioned SVG elements that 
+ * are overlaid on the text underneath, e.g., for overlapping underlines.
+ */
+export type Overlay = {
+    name: string;
+    container: HTMLDivElement;
+}
 export class StandoffEditorBlock implements IBlock {
     id: GUID;
     type: BlockType;
@@ -207,6 +218,8 @@ export class StandoffEditorBlock implements IBlock {
     properties: StandoffProperty[];
     inputBuffer: IKeyboardInput[];
     mode: Mode;
+    metadata: {};
+    overlays: Overlay[];
     constructor(container?: HTMLDivElement) {
         this.id = "";
         this.type = BlockType.StandoffEditor;
@@ -215,9 +228,22 @@ export class StandoffEditorBlock implements IBlock {
         this.relations = {};
         this.mode = { } as any;
         this.cells = [];
+        this.metadata = {};
         this.properties = [];
         this.inputBuffer = [];
+        this.overlays = [];
         this.attachBindings();
+    }
+    removeRelation(name: string) {
+        delete this.relations[name];
+    }
+    addOverlay(name: string, container: HTMLDivElement) {
+        this.overlays.push({ name, container });
+    }
+    removeOverlay(name: string) {
+        const o = this.overlays.find(x => x.name == name);
+        if (!o) return;
+        o.container.remove();
     }
     focus() {
         /**
@@ -372,6 +398,9 @@ export class StandoffEditorBlock implements IBlock {
     markCells() {
         this.cells.forEach((cell, index) => cell.index = index);
     }
+    insertCharacterBeforeIndex(char: string, index: number) {
+        // TBC
+    }
     insertCharacterAfterIndex(char: string, index: number) {
         const previous = this.cells[index];
         const next = this.cells[index+1];
@@ -512,12 +541,13 @@ export class StandoffEditorBlock implements IBlock {
     }
 }
 
-const log = (msg: string, data: Record<string,any>) => console.log(msg, data);
+const logs: { msg: string, data: Record<string,any>}[] = [];
+const log = (msg: string, data: Record<string,any>) => {
+    logs.push({ msg, data });
+    console.log(msg, data);
+}
 
-
-const editor = new StandoffEditorBlock({
-    container: document.createElement("DIV") as HTMLDivElement
-});
+const editor = new StandoffEditorBlock();
 editor.bind({
     text: "Once upon a midnight dreary ...",
     properties: [
@@ -586,7 +616,7 @@ editor.bind({
             },
             decorate: {
                 batchRender: (args) => {
-                    const { editor, properties } = args;
+                    const { block: editor, properties } = args;
                     const { container } = editor;
                     // Draw purple SVG underlines for entities, etc.
                 }

@@ -1,4 +1,4 @@
-import { IBindingHandlerArgs, StandoffEditorBlock } from "./text-block-editor";
+import { IBindingHandlerArgs, IBlock, StandoffEditorBlock } from "./text-block-editor";
 
 export class BlockManager {
     blocks: StandoffEditorBlock[];
@@ -10,9 +10,69 @@ export class BlockManager {
         const block = this.createNewBlock();        
         structure.appendChild(block.container);
     }
+    undent(block: IBlock) {
+        const parentEdge = block.relations["child-of"];
+        if (!parentEdge) return;
+        const parent = this.blocks.find(x => x.id == parentEdge.targetId);
+        if (!parent) return;
+        parent.removeRelation("parent-of");
+        block.removeRelation("child-of");
+        const previous = parent;
+        previous.relations["followed-by"] = {
+            sourceId: previous.id,
+            targetId: block.id,
+            type: "followed-by"
+        };
+        block.relations["follows"] = {
+            type: "follows",
+            sourceId: block.id,
+            targetId: previous.id
+        };
+        const level = block.metadata.indentLevel as number;
+        block.metadata.indentLevel = level - 1;
+        this.renderIndent(block);
+    }
+    indent(currentBlock: IBlock, newBlock: IBlock) {
+        newBlock.relations["child-of"] = {
+            sourceId: newBlock.id,
+            targetId: currentBlock.id,
+            type: "child-of"
+        };
+        currentBlock.relations["parent-of"] = {
+            sourceId: currentBlock.id,
+            targetId: newBlock.id,
+            type: "parent-of"
+        };
+        const level = currentBlock.metadata.indentLevel as number;
+        newBlock.metadata.indentLevel = level + 1;
+        this.renderIndent(newBlock);
+    }
+    renderIndent(block: IBlock) {
+        const defaultWidth = 20;
+        const level = block.metadata.indentLevel as number;
+        block.container.setAttribute("margin-left", (level * defaultWidth) + "px");
+    }
     createNewBlock() {
         const self = this;
         const block = new StandoffEditorBlock();
+        block.addKeyboardBinding("default", {
+            "TAB": (args: IBindingHandlerArgs) => {
+                /**
+                 * Inserts spaces or a TAB character. If the latter, will need to
+                 * see if it needs to be styled to a fixed width.
+                 */
+                const { block, caret } = args;
+                const ci = caret.right.index;
+                block.insertCharacterAfterIndex("    ", ci);
+            }
+        });
+        block.addKeyboardBinding("nested-list", {
+            "TAB": (args: IBindingHandlerArgs) => {
+                const { block } = args;
+                const newBlock = self.createNewBlock();
+                self.indent(block, newBlock);
+            }
+        });
         block.addKeyboardBinding("default", {
             "ENTER": (args: IBindingHandlerArgs) => {
                 /**
