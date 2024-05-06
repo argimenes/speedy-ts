@@ -92,7 +92,7 @@ export class StandoffProperty {
     isDeleted: boolean;
     value: string;
     schema: any;
-    block: StandoffEditorBlock;
+    block: StandoffEditorBlock; 
     bracket: { left?: HTMLElement; right?: HTMLElement };
     constructor({ start, end, block }: { start: Cell, end: Cell, block: StandoffEditorBlock }) {
         this.isDeleted = false;
@@ -213,6 +213,13 @@ export type Overlay = {
     name: string;
     container: HTMLDivElement;
 }
+export interface ISelection extends IRange {
+    direction: SELECTION_DIRECTION;
+}
+export interface ICursor {
+    anchorCell: Cell;
+    caret: CARET;
+}
 export class StandoffEditorBlock implements IBlock {
     id: GUID;
     type: BlockType;
@@ -220,10 +227,38 @@ export class StandoffEditorBlock implements IBlock {
     container: HTMLDivElement;
     cells: Cell[];
     properties: StandoffProperty[];
+    /**
+     * This will keep track of the last couple of key-combinations entered. The main purpose
+     * is for triggering two-part bindings, such as 'CTRL-K, CTRL-D'.
+     */
     inputBuffer: IKeyboardInput[];
     schemas: IStandoffPropertySchema[];
+    /**
+     * A Mode is a named collection of input bindings.
+     */
     mode: Mode;
+    /**
+     * Not unlike a StandoffProperty, a Selection denotes a highlighted range of text. Unlike a StandoffProperty,
+     * it is not intended to be committed to the document, but represents a transient intention.
+     * 
+     * A Selection could be a background-color highlight that is applied as a CSS style to each cell in the
+     * range, or it could be a collection of one or more SVG lines generated to match the shape of the text range.
+     */
+    selections: ISelection[];
+    /**
+     * A place to store data about the Block, especially the kind that may not be relevant to every instance
+     * of Block in every circumstance. For example, 'indentLevel: number' is relevant to a Block in a nested-list
+     * but not a chain of paragraph-like blocks. For now, this is a catch-all for Block data that hasn't yet been
+     * promoted to being a member of the class itself.
+     */
     metadata: {};
+    /**
+     * An Overlay is a named DIV container for storing generated elements - such as SVG underlines - which are meant
+     * to be overlaid (like a layer) on top of the text underneath. An Overlay 'container' should be absolutely
+     * positioned to be aligned to the top-left of the Block 'container' element, and generated elements inside the Overlay
+     * 'container' should be absolutely positioned. Such generated elements will be drawn/undrawn when the StandoffProperty
+     * is rendered, and when anything affects the alignment of cells in those properties, such as adding or removing text.
+     */
     overlays: Overlay[];
     constructor(container?: HTMLDivElement) {
         this.id = "";
@@ -236,6 +271,7 @@ export class StandoffEditorBlock implements IBlock {
         this.metadata = {};
         this.schemas = [];
         this.properties = [];
+        this.selections = [];
         this.inputBuffer = [];
         this.overlays = [];
         this.attachBindings();
@@ -470,7 +506,7 @@ export class StandoffEditorBlock implements IBlock {
         if (!node) {
             return;
         }
-        const selection = document.getSelection() as globalThis.Selection;
+        const selection = document.getSelection() as Selection;
         const range = document.createRange();
         const offset = (args.offset != null) ? args.offset : CARET.RIGHT;
         const textNode = node.getTextNode();
