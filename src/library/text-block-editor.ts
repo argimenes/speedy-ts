@@ -210,6 +210,7 @@ export type Mode = Record<string, InputBindings>;
  * are overlaid on the text underneath, e.g., for overlapping underlines.
  */
 export type Overlay = {
+    index: number;
     name: string;
     container: HTMLDivElement;
 }
@@ -286,8 +287,21 @@ export class StandoffEditorBlock implements IBlock {
     removeRelation(name: string) {
         delete this.relations[name];
     }
-    addOverlay(name: string, container: HTMLDivElement) {
-        this.overlays.push({ name, container });
+    addOverlay(name: string) {
+        const blockIndex = 100;
+        const container = document.createElement("DIV") as HTMLDivElement;
+        const indexes = this.overlays.map(x=> x.index);
+        const lastIndex = Math.max(...indexes);
+        const newIndex = lastIndex + 1;
+        container.setAttribute("position", "absolute");
+        container.setAttribute("x", "0");
+        container.setAttribute("y", "0");
+        container.setAttribute("width", "100%");
+        container.setAttribute("height", "100%");
+        container.setAttribute("z-index", (newIndex + blockIndex).toString());
+        const overlay = { name, container, index: newIndex };
+        this.overlays.push(overlay);
+        return overlay;
     }
     removeOverlay(name: string) {
         const o = this.overlays.find(x => x.name == name);
