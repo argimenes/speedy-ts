@@ -1,9 +1,25 @@
-import { IBindingHandlerArgs, IBlock, StandoffEditorBlock } from "./text-block-editor";
+import { BlockType, IBindingHandlerArgs, IBlock, IBlockRelation, StandoffEditorBlock } from "./text-block-editor";
 
-export class BlockManager {
+export class BlockManager implements IBlock {
+    id: string;
+    type: BlockType;
+    container: HTMLDivElement;
+    relations: Record<string, IBlockRelation>;
     blocks: StandoffEditorBlock[];
+    metadata: Record<string,any>;
     constructor() {
+        this.id = "";
+        this.type = BlockType.Outliner;
+        this.relations = {};
+        this.container = document.createElement("DIV") as HTMLDivElement;
         this.blocks = [];
+        this.metadata = {};
+    }
+    addRelation(name: string) {
+
+    }
+    removeRelation(name: string) {
+
     }
     loadDocument(doc: any) {
         const structure = document.createElement("DIV") as HTMLDivElement;

@@ -169,6 +169,7 @@ export enum ActionKey {
 }
 
 export enum BlockType {
+    Outliner = "outliner-block",
     StandoffEditor = "standoff-editor-block",
     HTMLEditor = "html-editor-block",
     IFrame = "iframe-block",
