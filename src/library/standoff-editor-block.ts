@@ -36,11 +36,24 @@ export class Cell {
     previous?: Cell;
     next?: Cell;
     text: string;
+    cache: {
+        offset: {
+            x: number;
+            y: number;
+            h: number;
+            w: number;
+        }
+    };
     element?: HTMLSpanElement;
     isLineBreak: boolean;
     constructor({ text }: ICellConstructor) {
         this.index = 0;
         this.text = text;
+        this.cache = {
+            offset: {
+                y: 0, h: 0, x: 0, w: 0
+            }
+        };
         this.isLineBreak = false;
         this.element = this.renderNode();
     }
@@ -88,6 +101,9 @@ export class StandoffProperty {
     end: Cell;
     decorate: Record<string, string>;
     isDeleted: boolean;
+    cache: {
+        svg?: SVGElement; 
+    };
     value: string;
     schema: any;
     block: StandoffEditorBlock; 
@@ -99,6 +115,7 @@ export class StandoffProperty {
         this.end = end;
         this.value = "";
         this.block = block;
+        this.cache = {};
         this.decorate = {};
         this.bracket = {
             left: undefined,

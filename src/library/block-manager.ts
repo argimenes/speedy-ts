@@ -1,4 +1,5 @@
-import { BlockType, CARET, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffProperty, IStandoffPropertySchema, Mode, StandoffEditorBlock } from "./text-block-editor";
+import { BlockType, CARET, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffProperty, IStandoffPropertySchema, Mode, StandoffEditorBlock } from "./standoff-editor-block";
+import { createUnderline } from "./svg";
 
 export type SpeedyStandoffProperty = {
     guid: string, start?: number, end?: number, type: string, value: string
@@ -57,9 +58,11 @@ export class BlockManager implements IBlockManager {
                 decorate: {
                     batchRender: (args) => {
                         const { block, properties } = args;
-                        const { container } = block;
                         const overlay = block.getOrSetOverlay("codex/entity-reference");
-                        // Draw purple SVG underlines for entities, etc.
+                        const underlines = properties.map(p => createUnderline(p, {} as any)) as SVGElement[];
+                        const frag = document.createDocumentFragment();
+                        frag.append(...underlines);
+                        overlay.container.appendChild(frag);
                     }
                 }
             }
