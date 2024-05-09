@@ -1,4 +1,4 @@
-import { BlockType, IBindingHandlerArgs, IBlock, IBlockRelation, IStandoffProperty, IStandoffPropertySchema, Mode, StandoffEditorBlock } from "./text-block-editor";
+import { BlockType, CARET, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffProperty, IStandoffPropertySchema, Mode, StandoffEditorBlock } from "./text-block-editor";
 
 export type SpeedyStandoffProperty = {
     guid: string, start?: number, end?: number, type: string, value: string
@@ -7,7 +7,7 @@ export type SpeedyDocument = {
     text: string;
     properties: SpeedyStandoffProperty[];
 }
-export class BlockManager implements IBlock {
+export class BlockManager implements IBlockManager {
     id: string;
     type: BlockType;
     container: HTMLDivElement;
@@ -29,7 +29,40 @@ export class BlockManager implements IBlock {
 
     }
     getSchemas() {
-        return [] as IStandoffPropertySchema[];
+        return [
+            {
+                type: "style/italics",
+                bindings: ["control-i"],
+                bindingHandler: (e: StandoffEditorBlock, selection: IRange) => {
+                    if (selection) {
+                        e.createProperty("style/italics", selection);
+                    } else {
+    
+                    }
+                },
+                decorate: {
+                    cellClass: "italics"
+                }
+            },
+            {
+                type: "codex/entity-reference",
+                bindings: ["control-e", "control-f"],
+                bindingHandler: async (e: StandoffEditorBlock, selection: IRange) => {
+                    if (selection) {
+    
+                    } else {
+    
+                    }
+                },
+                decorate: {
+                    batchRender: (args) => {
+                        const { block: editor, properties } = args;
+                        const { container } = editor;
+                        // Draw purple SVG underlines for entities, etc.
+                    }
+                }
+            }
+        ] as IStandoffPropertySchema[];
     }
     getModes() {
         const self = this;
@@ -38,6 +71,23 @@ export class BlockManager implements IBlock {
             "default": {
                 keyboard: [
                     {
+                        "HOME": (args: IBindingHandlerArgs) => {
+                            /**
+                             * Move the cursor to the start of the block.
+                             */
+                            const { block, caret } = args;
+                            const start = block.cells[0];
+                            block.setCarotByNode({ node: start, offset: CARET.LEFT });
+                        },
+                        "END": (args: IBindingHandlerArgs) => {
+                            /**
+                             * Move the cursor to the end of the block.
+                             */
+                            const { block, caret } = args;
+                            const len = block.cells.length;
+                            const end = block.cells[len - 1]; // This should be the CR character cell.
+                            block.setCarotByNode({ node: end, offset: CARET.LEFT });
+                        },
                         "TAB": (args: IBindingHandlerArgs) => {
                             /**
                              * Inserts spaces or a TAB character. If the latter, will need to
@@ -152,10 +202,9 @@ export class BlockManager implements IBlock {
         const level = block.metadata.indentLevel as number;
         block.container.setAttribute("margin-left", (level * defaultWidth) + "px");
     }
-    
     createNewBlock() {
         const self = this;
-        const block = new StandoffEditorBlock();
+        const block = new StandoffEditorBlock(this);
         
         // block.createEmpty()
         return block;

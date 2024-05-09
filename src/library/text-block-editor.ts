@@ -17,8 +17,8 @@ export interface IStandoffProperty {
 }
 export interface IStandoffPropertySchema {
     type: string;
-    bindings: string[];
-    bindingHandler: (e: StandoffEditorBlock, selection: IRange) => void;
+    bindings?: string[];
+    bindingHandler?: (e: StandoffEditorBlock, selection: IRange) => void;
     decorate: {
         cellClass?: string;
         blockClass?: string;
@@ -92,9 +92,9 @@ export class StandoffProperty {
     schema: any;
     block: StandoffEditorBlock; 
     bracket: { left?: HTMLElement; right?: HTMLElement };
-    constructor({ start, end, block }: { start: Cell, end: Cell, block: StandoffEditorBlock }) {
+    constructor({ type, start, end, block }: { type: string, start: Cell, end: Cell, block: StandoffEditorBlock }) {
         this.isDeleted = false;
-        this.type = "";
+        this.type = type;
         this.start = start;
         this.end = end;
         this.value = "";
@@ -105,6 +105,7 @@ export class StandoffProperty {
             right: undefined
         };
     }
+
     scrollTo() {
         this.start.element?.scrollIntoView();
     }
@@ -186,6 +187,9 @@ export interface IBlock {
     removeRelation: (name: string) => void;
     metadata: Record<string, any>;
 }
+export interface IBlockManager extends IBlock {
+
+}
 
 export interface IBlockRelation {
     type: string;
@@ -223,6 +227,7 @@ export interface ICursor {
 export class StandoffEditorBlock implements IBlock {
     id: GUID;
     type: BlockType;
+    owner: IBlockManager;
     relations: Record<string, IBlockRelation>;
     container: HTMLDivElement;
     cells: Cell[];
@@ -260,8 +265,9 @@ export class StandoffEditorBlock implements IBlock {
      * is rendered, and when anything affects the alignment of cells in those properties, such as adding or removing text.
      */
     overlays: Overlay[];
-    constructor(container?: HTMLDivElement) {
+    constructor(owner: IBlockManager, container?: HTMLDivElement) {
         this.id = "";
+        this.owner = owner;
         this.type = BlockType.StandoffEditor;
         this.container = container || (document.createElement("DIV") as HTMLDivElement);
         this.container.setAttribute("contenteditable", "true");
@@ -395,6 +401,14 @@ export class StandoffEditorBlock implements IBlock {
     }
     handleKeyDown(e: KeyboardEvent) {
         const input = this.toKeyboardInput(e);
+        /**
+         * Dispatch to a binding if there is a match.
+         * For now, assume no bindings.
+         */
+    }
+    setCaretByIndex(index: number) {
+        const cell = this.cells[index];
+        this.setCarotByNode({ node: cell, offset: CARET.LEFT });
     }
     toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
         const input: IKeyboardInput = {
@@ -610,9 +624,15 @@ export class StandoffEditorBlock implements IBlock {
         }
     }
     createProperty(type: string, range: IRange) {
-        const prop = new StandoffProperty(range);
+        const prop = new StandoffProperty({ type, block: this, ...range });
         prop.type = type;
         this.properties.push(prop);
+    }
+    syncPropertyEndToText() {
+
+    }
+    unsynchPropertyEndToText() {
+
     }
 }
 
