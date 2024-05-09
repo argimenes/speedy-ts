@@ -29,8 +29,6 @@ export interface ITextBlock {
     id?: GUID;
     text: string;
     properties: IStandoffProperty[];
-    schemas: IStandoffPropertySchema[];
-    modes: Record<string, any>;
 }
 
 export class Cell {
@@ -277,6 +275,15 @@ export class StandoffEditorBlock implements IBlock {
         this.inputBuffer = [];
         this.overlays = [];
         this.attachBindings();
+    }
+    setSchemas(schemas: IStandoffPropertySchema[]) {
+        this.schemas.push(...schemas);
+    }
+    setModes(modes: Mode[]) {
+        for (let i = 0; i < modes.length; i++) {
+            let mode = modes[i];
+            this.mode = {...mode};
+        }
     }
     addRelation(name: string, targetId: string) {
         this.relations[name] = {
