@@ -301,6 +301,11 @@ export class StandoffEditorBlock implements IBlock {
     removeRelation(name: string) {
         delete this.relations[name];
     }
+    getOrSetOverlay(name: string) {
+        const overlay = this.overlays.find(x=> x.name == name);
+        if (overlay) return overlay;
+        return this.addOverlay(name);
+    }
     addOverlay(name: string) {
         const blockIndex = 100;
         const container = document.createElement("DIV") as HTMLDivElement;

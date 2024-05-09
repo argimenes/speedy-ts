@@ -56,8 +56,9 @@ export class BlockManager implements IBlockManager {
                 },
                 decorate: {
                     batchRender: (args) => {
-                        const { block: editor, properties } = args;
-                        const { container } = editor;
+                        const { block, properties } = args;
+                        const { container } = block;
+                        const overlay = block.getOrSetOverlay("codex/entity-reference");
                         // Draw purple SVG underlines for entities, etc.
                     }
                 }
