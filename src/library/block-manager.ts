@@ -59,7 +59,13 @@ export class BlockManager implements IBlockManager {
                     batchRender: (args) => {
                         const { block, properties } = args;
                         const overlay = block.getOrSetOverlay("codex/entity-reference");
-                        const underlines = properties.map(p => createUnderline(p, {} as any)) as SVGElement[];
+                        const cw = block.cache.containerWidth;
+                        const underlines = properties.map(p =>
+                            createUnderline(p, {
+                                stroke: "purple",
+                                containerWidth: cw,
+                                offsetY: 3
+                            })) as SVGElement[];
                         const frag = document.createDocumentFragment();
                         frag.append(...underlines);
                         overlay.container.appendChild(frag);

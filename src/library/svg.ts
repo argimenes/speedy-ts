@@ -55,8 +55,8 @@ function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
 
 export const createUnderline = (p: StandoffProperty, options: DrawUnderlineOptions) => {
     options.offsetY = typeof (options.offsetY) == "undefined" ? 3 : options.offsetY;
-    if (p.cache.svg) {
-        p.cache.svg.remove();
+    if (p.cache.underline) {
+        p.cache.underline.remove();
     }
     const cells = p.getCells();
     if (cells.length == 0) {
@@ -69,7 +69,7 @@ export const createUnderline = (p: StandoffProperty, options: DrawUnderlineOptio
     const bottomH = cells[cells.length - 1].cache.offset!.h;
     const width = options.containerWidth;
     const height = bottomY + bottomH - topY + 10;
-    const underline = p.cache.svg = createSvg({
+    const underline = p.cache.underline = createSvg({
         style: {
             position: "absolute",
             left: 0,
@@ -79,27 +79,38 @@ export const createUnderline = (p: StandoffProperty, options: DrawUnderlineOptio
             "pointer-events": "none"
         }
     }) as SVGElement;
-    ordered.forEach(group => {
-        const _cells = group[1] as Cell[];
+    const segments = ordered.map(row => {
+        const _cells = row[1] as Cell[];
         const start = _cells[0],
               end = _cells[_cells.length - 1];
         const startOffset = start.cache.offset,
               endOffset = end.cache.offset;
-        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.style.stroke = options.stroke || "blue";
-        line.style.strokeWidth = options.strokeWidth || "2";
-        if (options.strokeOpacity) {
-            line.style.strokeOpacity = options.strokeOpacity;
-        }
         const x1 = startOffset.x;
         const y1 = startOffset.y + startOffset.h - topY + options.offsetY;
         const x2 = endOffset.x + endOffset.w;
         const y2 = endOffset.y + startOffset.h - topY + options.offsetY;
-        line.setAttribute("x1", x1+"");
-        line.setAttribute("y1", y1+"");
-        line.setAttribute("x2", x2+"");
-        line.setAttribute("y2", y2+"");
-        underline.appendChild(line);
+        var segment = createSvgLine({
+            style: {
+                stroke: options.stroke || "blue",
+                strokeWidth: options.strokeWidth || "2"
+            },
+            x1, y1,
+            x2, y2
+        });
+        if (options.strokeOpacity) {
+            updateSVGElement(segment, {
+                style: {
+                    strokeOpacity: options.strokeOpacity
+                }
+            });
+        }
+        return segment;
     });
+    underline.append(...segments);
     return underline;
+};
+
+export const createSvgLine = (config: any) => {
+    var el = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    return updateSVGElement(el, config);
 };

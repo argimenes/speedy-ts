@@ -102,7 +102,7 @@ export class StandoffProperty {
     decorate: Record<string, string>;
     isDeleted: boolean;
     cache: {
-        svg?: SVGElement; 
+        underline?: SVGElement; 
     };
     value: string;
     schema: any;
@@ -248,6 +248,9 @@ export class StandoffEditorBlock implements IBlock {
     relations: Record<string, IBlockRelation>;
     container: HTMLDivElement;
     cells: Cell[];
+    cache: {
+        containerWidth: number;
+    };
     properties: StandoffProperty[];
     /**
      * This will keep track of the last couple of key-combinations entered. The main purpose
@@ -288,6 +291,9 @@ export class StandoffEditorBlock implements IBlock {
         this.type = BlockType.StandoffEditor;
         this.container = container || (document.createElement("DIV") as HTMLDivElement);
         this.container.setAttribute("contenteditable", "true");
+        this.cache = {
+            containerWidth: 0
+        };
         this.relations = {};
         this.mode = { } as any;
         this.cells = [];
