@@ -4,7 +4,10 @@ export enum Platform {
     Mac
 }
 
-export const KEYS = {
+export type TPlatformKey = { code: number, platform: Platform; };
+export type TKEYS = Record<string, TPlatformKey[]>;
+
+export const KEYS: TKEYS  = {
     BACKSPACE: [
         { code: 8, platform: Platform.Windows }
     ],

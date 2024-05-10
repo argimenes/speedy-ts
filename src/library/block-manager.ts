@@ -1,6 +1,10 @@
-import { BlockType, CARET, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffProperty, IStandoffPropertySchema, Mode, StandoffEditorBlock } from "./standoff-editor-block";
+import { KEYS, Platform, TPlatformKey } from "./keyboard";
+import { BlockType, CARET, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, StandoffEditorBlock } from "./standoff-editor-block";
 import { createUnderline } from "./svg";
 
+export enum CssClass {
+    LineBreak = "codex__line-break"
+}
 export type SpeedyStandoffProperty = {
     guid: string, start?: number, end?: number, type: string, value: string
 }
@@ -74,6 +78,9 @@ export class BlockManager implements IBlockManager {
             }
         ] as IStandoffPropertySchema[];
     }
+    getPlatformKey(codes: TPlatformKey[]) {
+        return codes.find(x=> x.platform == Platform.Windows);
+    }
     getModes() {
         const self = this;
         const modes: Mode[] = [];
@@ -85,7 +92,7 @@ export class BlockManager implements IBlockManager {
                             /**
                              * Move the cursor to the start of the block.
                              */
-                            const { block, caret } = args;
+                            const { block } = args;
                             const start = block.cells[0];
                             block.setCarotByNode({ node: start, offset: CARET.LEFT });
                         },
@@ -93,9 +100,10 @@ export class BlockManager implements IBlockManager {
                             /**
                              * Move the cursor to the end of the block.
                              */
-                            const { block, caret } = args;
-                            const len = block.cells.length;
-                            const end = block.cells[len - 1]; // This should be the CR character cell.
+                            const { block } = args;
+                            const { cells } = block;
+                            const last = cells.length - 1;
+                            const end = cells[last]; // This should be the CR character cell.
                             block.setCarotByNode({ node: end, offset: CARET.LEFT });
                         },
                         "TAB": (args: IBindingHandlerArgs) => {
@@ -127,7 +135,11 @@ export class BlockManager implements IBlockManager {
                              * Insert a NewLine character, styled such that it displaces following
                              * SPANs onto the next line.
                              */
-                            const { block } = args;
+                            const { block, caret } = args;
+                            const ci = caret.right.index;
+                            const charCode = self.getPlatformKey(KEYS.ENTER)!.code;
+                            const lb = block.insertCharacterAfterIndex(String.fromCharCode(charCode), ci);
+                            lb.element?.classList.add(CssClass.LineBreak);
                         }
                     }
                 ],

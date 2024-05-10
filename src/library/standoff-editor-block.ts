@@ -87,6 +87,15 @@ export enum CARET {
     RIGHT = 1
 }
 
+export enum ELEMENT_ROLE {
+    CELL = 0,
+    INNER_STYLE_BLOCK = 1,
+    ROOT = 2,
+    CELL_STYLE = 3,
+    TEXT_BLOCK = 4,
+    OUTER_STYLE_BLOCK = 5
+}
+
 export enum SELECTION_DIRECTION {
     LEFT = 0,
     RIGHT = 1
@@ -217,6 +226,9 @@ export interface IBindingHandlerArgs {
     block: StandoffEditorBlock;
     caret: any;
 }
+export type SpeedyElement = {
+    role: ELEMENT_ROLE;
+}
 export type BindingHandler = (args: IBindingHandlerArgs) => void;
 export type KeyboardBinding = Record<string, BindingHandler>;
 export type MouseBinding = KeyboardBinding;
@@ -237,6 +249,9 @@ export type Overlay = {
 export interface ISelection extends IRange {
     direction: SELECTION_DIRECTION;
 }
+
+export type SpeedyNode = Node & { speedy: SpeedyElement };
+
 export interface ICursor {
     anchorCell: Cell;
     caret: CARET;
@@ -431,8 +446,37 @@ export class StandoffEditorBlock implements IBlock {
         const input = this.toKeyboardInput(e);
         /**
          * Dispatch to a binding if there is a match.
-         * For now, assume no bindings.
+         * 
+         * For now, assume no bindings and ignore text selection.
          */
+        e.preventDefault();
+        this.insertCharacter(input);
+    }
+    getCellFromAnchorNode(node: SpeedyNode) {
+        let current = node;
+        while (current) {
+            let speedy = current.speedy;
+            if (speedy) {
+                if (speedy.role == ELEMENT_ROLE.CELL) {
+                    let cell = this.getCellFromNode(current as any);
+                    return cell;
+                }
+            }
+            current = current.parentElement as any;
+        }
+        return undefined;
+    }
+    getCellFromNode(node: HTMLSpanElement) {
+        return this.cells.find(x => x.element == node);
+    }
+    getCaret() {
+        const sel = window.getSelection() as Selection;
+        const { anchorNode } = sel;
+        const anchor = this.getCellFromAnchorNode(anchorNode as SpeedyNode);
+        if (!anchor) return undefined;
+    }
+    insertCharacter(input: IKeyboardInput) {
+        const caret = this.getCaret();
     }
     setCaretByIndex(index: number) {
         const cell = this.cells[index];
@@ -463,7 +507,7 @@ export class StandoffEditorBlock implements IBlock {
         this.properties = block.properties.map(p => {
             const start = cells[p.startIndex];
             const end = cells[p.endIndex];
-            const sproc = new StandoffProperty({ start, end });
+            const sproc = new StandoffProperty({ type: p.type, block: self, start, end });
             let schema = this.schemas.find(x => x.type == p.type);
             sproc.block = self;
             sproc.schema = schema;
@@ -526,6 +570,7 @@ export class StandoffEditorBlock implements IBlock {
         cell.previous = previous;
         cell.next = next;
         next.previous = cell;
+        return cell;
     }
     removeCell(args: { cell: Cell, updateCaret?: boolean }) {
         const { cell} = args;
@@ -669,81 +714,3 @@ const log = (msg: string, data: Record<string,any>) => {
     logs.push({ msg, data });
     console.log(msg, data);
 }
-
-const editor = new StandoffEditorBlock();
-editor.bind({
-    text: "Once upon a midnight dreary ...",
-    properties: [
-        {
-            type: "style/italics",
-            startIndex: 5,
-            endIndex: 9
-        },
-        {
-            type: "codex/entity-reference",
-            startIndex: 13,
-            endIndex: 21
-        },
-        {
-            type: "style/blur",
-            startIndex: 23,
-            endIndex: 29
-        }
-    ],
-    modes: {
-        "auto-alias": {
-            bindingsToInvoke: ["(", "("],
-            handler: (e: StandoffEditorBlock, selection: IRange) => {
-                // e.setMode("auto-alias");
-                // e.setOverrideBindings([
-
-                // ]);
-                /*
-                
-                1. Collecting user text input and piping through to an API
-                and returning a list of matching entities.
-
-                2. User either selects a matching entity or closes the mode.
-
-                3. If entity is matched, create a new entity reference StandoffProperty
-                for the text enterered, and link it to the matching entity GUID.
-
-                */
-            }
-        }
-    },
-    schemas: [
-        {
-            type: "style/italics",
-            bindings: ["control-i"],
-            bindingHandler: (e: StandoffEditorBlock, selection: IRange) => {
-                if (selection) {
-                    e.createProperty("style/italics", selection);
-                } else {
-
-                }
-            },
-            decorate: {
-                cellClass: "italics"
-            }
-        },
-        {
-            type: "codex/entity-reference",
-            bindings: ["control-e", "control-f"],
-            bindingHandler: async (e: StandoffEditorBlock, selection: IRange) => {
-                if (selection) {
-
-                } else {
-
-                }
-            },
-            decorate: {
-                batchRender: (args) => {
-                    const { block: editor, properties } = args;
-                    const { container } = editor;
-                    // Draw purple SVG underlines for entities, etc.
-                }
-            }
-        }
-    ]
-})

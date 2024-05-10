@@ -64,9 +64,10 @@ export const createUnderline = (p: StandoffProperty, options: DrawUnderlineOptio
     }
     const rows = Array.from(groupBy(cells, x => x.cache.offset.y));
     const ordered = rows.sort((a, b) => a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0);
+    const last = cells.length - 1;
     const topY = cells[0].cache.offset!.y;
-    const bottomY = cells[cells.length - 1].cache.offset!.y;
-    const bottomH = cells[cells.length - 1].cache.offset!.h;
+    const bottomY = cells[last].cache.offset!.y;
+    const bottomH = cells[last].cache.offset!.h;
     const width = options.containerWidth;
     const height = bottomY + bottomH - topY + 10;
     const underline = p.cache.underline = createSvg({
@@ -81,8 +82,9 @@ export const createUnderline = (p: StandoffProperty, options: DrawUnderlineOptio
     }) as SVGElement;
     const segments = ordered.map(row => {
         const _cells = row[1] as Cell[];
-        const start = _cells[0],
-              end = _cells[_cells.length - 1];
+        const last = _cells.length = 1,
+              start = _cells[0],
+              end = _cells[last];
         const startOffset = start.cache.offset,
               endOffset = end.cache.offset;
         const x1 = startOffset.x;
