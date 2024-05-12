@@ -212,6 +212,7 @@ export interface IBlock {
     addRelation: (name: string, targetId: string) => void;
     removeRelation: (name: string) => void;
     metadata: Record<string, any>;
+    setFocus: () => void;
 }
 export interface IBlockManager extends IBlock {
 
@@ -222,9 +223,13 @@ export interface IBlockRelation {
     sourceId: GUID;
     targetId: GUID;
 }
+export type Caret = {
+    left?: Cell;
+    right?: Cell;
+};
 export interface IBindingHandlerArgs {
     block: StandoffEditorBlock;
-    caret: any;
+    caret: Caret;
 }
 export type SpeedyElement = {
     role: ELEMENT_ROLE;
@@ -301,7 +306,7 @@ export class StandoffEditorBlock implements IBlock {
      */
     overlays: Overlay[];
     constructor(owner: IBlockManager, container?: HTMLDivElement) {
-        this.id = "";
+        this.id = uuidv4();
         this.owner = owner;
         this.type = BlockType.StandoffEditor;
         this.container = container || (document.createElement("DIV") as HTMLDivElement);
@@ -360,12 +365,16 @@ export class StandoffEditorBlock implements IBlock {
         this.overlays.push(overlay);
         return overlay;
     }
+    getLastCell() {
+        const len = this.cells.length;
+        return this.cells[len-1];
+    }
     removeOverlay(name: string) {
         const o = this.overlays.find(x => x.name == name);
         if (!o) return;
         o.container.remove();
     }
-    focus() {
+    setFocus() {
         /**
          * Sets the window focus on the block node.
          * Also sets up the caret/cursor if needed (?).
@@ -713,4 +722,8 @@ const logs: { msg: string, data: Record<string,any>}[] = [];
 const log = (msg: string, data: Record<string,any>) => {
     logs.push({ msg, data });
     console.log(msg, data);
+}
+
+function uuidv4(): string {
+    throw new Error("Function not implemented.");
 }

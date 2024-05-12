@@ -1,6 +1,7 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { BlockType, CARET, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, StandoffEditorBlock } from "./standoff-editor-block";
+import { BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, StandoffEditorBlock } from "./standoff-editor-block";
 import { createUnderline } from "./svg";
+import { v4 as uuidv4 } from 'uuid';
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -19,8 +20,9 @@ export class BlockManager implements IBlockManager {
     relations: Record<string, IBlockRelation>;
     blocks: StandoffEditorBlock[];
     metadata: Record<string,any>;
+    focus?: IBlock;
     constructor() {
-        this.id = "";
+        this.id = uuidv4();
         this.type = BlockType.Outliner;
         this.relations = {};
         this.container = document.createElement("DIV") as HTMLDivElement;
@@ -32,6 +34,13 @@ export class BlockManager implements IBlockManager {
     }
     removeRelation(name: string) {
 
+    }
+    setFocus() {
+
+    }
+    setBlockFocus(block: IBlock) {
+        this.focus = block;
+        block.setFocus();
     }
     getSchemas() {
         return [
@@ -81,6 +90,9 @@ export class BlockManager implements IBlockManager {
     getPlatformKey(codes: TPlatformKey[]) {
         return codes.find(x=> x.platform == Platform.Windows);
     }
+    getBlock(id: GUID) {
+        return this.blocks.find(x => x.id == id);
+    }
     getModes() {
         const self = this;
         const modes: Mode[] = [];
@@ -88,6 +100,26 @@ export class BlockManager implements IBlockManager {
             "default": {
                 keyboard: [
                     {
+                        "LEFT-ARROW": (args: IBindingHandlerArgs) => {
+                            /**
+                             * Move the cursor back one cell ...
+                             */
+                            const { block, caret } = args;
+                            if (!!caret.left) {
+                                block.setCarotByNode({ node: caret.left, offset: CARET.LEFT });
+                                return;
+                            }
+                            /**
+                             * Or skip to the end of the previous block.
+                             */
+                            const previousEdge = block.getRelation("has-previous-sibling");
+                            if (!previousEdge) return;
+                            const previous = self.getBlock(previousEdge.targetId);
+                            if (!previous) return;
+                            const last = previous.getLastCell();
+                            previous.setCarotByNode({ node: last, offset: CARET.LEFT });
+                            self.setBlockFocus(previous);
+                        },
                         "HOME": (args: IBindingHandlerArgs) => {
                             /**
                              * Move the cursor to the start of the block.
@@ -112,7 +144,7 @@ export class BlockManager implements IBlockManager {
                              * see if it needs to be styled to a fixed width.
                              */
                             const { block, caret } = args;
-                            const ci = caret.right.index;
+                            const ci = caret.right!.index;
                             block.insertCharacterAfterIndex("    ", ci);
                         },
                         "ENTER": (args: IBindingHandlerArgs) => {
@@ -128,7 +160,7 @@ export class BlockManager implements IBlockManager {
                                 newBlock.setRelation("next", next.targetId);
                             }
                             self.appendSibling(block.container, newBlock.container);
-                            newBlock.focus();
+                            self.setBlockFocus(newBlock);
                         },
                         "shift-ENTER": (args: IBindingHandlerArgs) => {
                             /**
@@ -136,7 +168,7 @@ export class BlockManager implements IBlockManager {
                              * SPANs onto the next line.
                              */
                             const { block, caret } = args;
-                            const ci = caret.right.index;
+                            const ci = caret.right!.index;
                             const charCode = self.getPlatformKey(KEYS.ENTER)!.code;
                             const lb = block.insertCharacterAfterIndex(String.fromCharCode(charCode), ci);
                             lb.element?.classList.add(CssClass.LineBreak);
