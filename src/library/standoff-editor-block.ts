@@ -9,6 +9,12 @@ export interface ICellConstructor {
     previous?: Cell;
     next?: Cell;
 }
+export enum BLOCK_POSITION {
+    Inside,
+    Start,
+    End,
+    EmptyLine
+};
 export interface IStandoffProperty {
     type: string;
     startIndex: number;
@@ -478,11 +484,25 @@ export class StandoffEditorBlock implements IBlock {
     getCellFromNode(node: HTMLSpanElement) {
         return this.cells.find(x => x.element == node);
     }
+    getBlockPosition(left: Cell, right: Cell) {
+        if (right.isLineBreak) {
+            if (left == null) return BLOCK_POSITION.EmptyLine;
+            return BLOCK_POSITION.End;
+        }
+        if (left == null) return BLOCK_POSITION.Start;
+        return BLOCK_POSITION.Inside;
+    }
     getCaret() {
         const sel = window.getSelection() as Selection;
         const { anchorNode } = sel;
         const anchor = this.getCellFromAnchorNode(anchorNode as SpeedyNode);
-        if (!anchor) return undefined;
+        if (!anchor) return { left: null, right: null, blockPosition: null };
+        const offset = sel.anchorOffset;
+        const toTheLeft = offset == 0;
+        const left = (toTheLeft ? anchor.previous : anchor) as Cell;
+        const right = (toTheLeft ? anchor : anchor.next) as Cell;
+        const blockPosition = this.getBlockPosition(left, right);
+        return { left, right, blockPosition };
     }
     insertCharacter(input: IKeyboardInput) {
         const caret = this.getCaret();
