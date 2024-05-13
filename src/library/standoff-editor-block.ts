@@ -50,7 +50,7 @@ export class Cell {
             w: number;
         }
     };
-    element?: HTMLSpanElement;
+    element?: SpeedyHtmlElement;
     isLineBreak: boolean;
     constructor({ text }: ICellConstructor) {
         this.index = 0;
@@ -64,8 +64,11 @@ export class Cell {
         this.element = this.renderNode();
     }
     renderNode() {
-        const span = document.createElement("SPAN");
+        const span = document.createElement("SPAN") as SpeedyHtmlElement;
         span.innerText = this.text;
+        span.speedy = {
+            role: ELEMENT_ROLE.CELL
+        }
         return span;
     }
     replaceElement(el: HTMLElement) {
@@ -262,6 +265,7 @@ export interface ISelection extends IRange {
 }
 
 export type SpeedyNode = Node & { speedy: SpeedyElement };
+export type SpeedyHtmlElement = HTMLElement & { speedy: SpeedyElement };
 
 export interface ICursor {
     anchorCell: Cell;
@@ -467,22 +471,15 @@ export class StandoffEditorBlock implements IBlock {
         e.preventDefault();
         this.insertCharacter(input);
     }
-    getCellFromAnchorNode(node: SpeedyNode) {
+    getCellFromNode(node: SpeedyNode) {
         let current = node;
         while (current) {
-            let speedy = current.speedy;
-            if (speedy) {
-                if (speedy.role == ELEMENT_ROLE.CELL) {
-                    let cell = this.getCellFromNode(current as any);
-                    return cell;
-                }
+            if (current.speedy?.role == ELEMENT_ROLE.CELL) {
+                return this.cells.find(x => x.element == current);
             }
-            current = current.parentElement as any;
+            current = current.parentElement as SpeedyHtmlElement;
         }
         return undefined;
-    }
-    getCellFromNode(node: HTMLSpanElement) {
-        return this.cells.find(x => x.element == node);
     }
     getBlockPosition(left: Cell, right: Cell) {
         if (right.isLineBreak) {
@@ -495,7 +492,7 @@ export class StandoffEditorBlock implements IBlock {
     getCaret() {
         const sel = window.getSelection() as Selection;
         const { anchorNode } = sel;
-        const anchor = this.getCellFromAnchorNode(anchorNode as SpeedyNode);
+        const anchor = this.getCellFromNode(anchorNode as SpeedyNode);
         if (!anchor) return { left: null, right: null, blockPosition: null };
         const offset = sel.anchorOffset;
         const toTheLeft = offset == 0;
@@ -504,8 +501,32 @@ export class StandoffEditorBlock implements IBlock {
         const blockPosition = this.getBlockPosition(left, right);
         return { left, right, blockPosition };
     }
+    getCurrentRanges(cell: Cell) {
+        /**
+         * Rename to: getEnclosingProperties
+         */
+        if (!cell) return [];
+        const i = cell.index;
+        const props = this.properties.filter(prop => {
+            if (prop.isDeleted) return false;
+            const si = prop.start.index;
+            const ei = prop.end.index;
+            return si <= i && i <= ei;
+        });
+        return props;
+    }
+    getSelection() {
+        const range = window.getSelection()?.getRangeAt(0);
+        if (range?.collapsed) return undefined;
+        const start = this.getCellFromNode(range?.startContainer as SpeedyNode);
+        const end = this.getCellFromNode(range?.endContainer as SpeedyNode);
+        return { start, end } as IRange;
+    }
     insertCharacter(input: IKeyboardInput) {
         const caret = this.getCaret();
+        const anchor = (caret.left || caret.right) as Cell;
+        const props = this.getCurrentRanges(anchor);
+        const selection = this.getSelection();
     }
     setCaretByIndex(index: number) {
         const cell = this.cells[index];
