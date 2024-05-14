@@ -5,6 +5,7 @@ export interface IRange {
     end: Cell;
 }
 export interface ICellConstructor {
+    block: StandoffEditorBlock;
     text: string;
     previous?: Cell;
     next?: Cell;
@@ -52,9 +53,11 @@ export class Cell {
     };
     element?: SpeedyHtmlElement;
     isLineBreak: boolean;
-    constructor({ text }: ICellConstructor) {
+    block: StandoffEditorBlock;
+    constructor({ text, block }: ICellConstructor) {
         this.index = 0;
         this.text = text;
+        this.block = block;
         this.cache = {
             offset: {
                 y: 0, h: 0, x: 0, w: 0
@@ -466,7 +469,7 @@ export class StandoffEditorBlock implements IBlock {
         /**
          * Dispatch to a binding if there is a match.
          * 
-         * For now, assume no bindings and ignore text selection.
+         * For now, assume no bindings and ignore text selection and just add characters.
          */
         e.preventDefault();
         this.insertCharacter(input);
@@ -501,7 +504,7 @@ export class StandoffEditorBlock implements IBlock {
         const blockPosition = this.getBlockPosition(left, right);
         return { left, right, blockPosition };
     }
-    getCurrentRanges(cell: Cell) {
+    getEnclosingProperties(cell: Cell) {
         /**
          * Rename to: getEnclosingProperties
          */
@@ -525,8 +528,21 @@ export class StandoffEditorBlock implements IBlock {
     insertCharacter(input: IKeyboardInput) {
         const caret = this.getCaret();
         const anchor = (caret.left || caret.right) as Cell;
-        const props = this.getCurrentRanges(anchor);
         const selection = this.getSelection();
+        const cell = new Cell({ text: input.key, block: this });
+        const previous = caret.right?.previous;
+        if (previous) previous.next = cell;
+        cell.previous = previous;
+        cell.next = caret.right as Cell;
+        if (caret.right) {
+            caret.right.previous = cell;
+            caret.right.element!.insertBefore(cell.element as Node, caret.right.element as Node);
+        }
+        this.cells.push(cell);
+        this.updateEnclosingProperties(anchor);
+    }
+    updateEnclosingProperties(anchor: Cell) {
+        const props = this.getEnclosingProperties(anchor);
     }
     setCaretByIndex(index: number) {
         const cell = this.cells[index];
