@@ -114,6 +114,27 @@ export enum SELECTION_DIRECTION {
 }
 
 export type GUID = string;
+export interface IBlockPropertyConstructor {
+    block: StandoffEditorBlock;
+}
+export class BlockProperty {
+    id?: GUID;
+    type: string;
+    schema: any;
+    decorate: {
+        className: string;
+    }
+    block: StandoffEditorBlock; 
+    constructor({ block }: IBlockPropertyConstructor) {
+        this.id = uuidv4();
+        this.type = "";
+        this.schema = {};
+        this.block = block;
+        this.decorate = {
+            className: ""
+        }
+    }
+}
 
 export class StandoffProperty {
     id?: GUID;
@@ -285,6 +306,7 @@ export class StandoffEditorBlock implements IBlock {
         containerWidth: number;
     };
     properties: StandoffProperty[];
+    blockProperties: BlockProperty[];
     /**
      * This will keep track of the last couple of key-combinations entered. The main purpose
      * is for triggering two-part bindings, such as 'CTRL-K, CTRL-D'.
@@ -333,6 +355,7 @@ export class StandoffEditorBlock implements IBlock {
         this.metadata = {};
         this.schemas = [];
         this.properties = [];
+        this.blockProperties = [];
         this.selections = [];
         this.inputBuffer = [];
         this.overlays = [];
