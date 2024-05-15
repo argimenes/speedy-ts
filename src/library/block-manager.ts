@@ -1,5 +1,5 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, StandoffEditorBlock } from "./standoff-editor-block";
+import { BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock } from "./standoff-editor-block";
 import { createUnderline } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -30,6 +30,13 @@ export interface IBlockManagerConstructor {
     id?: GUID;
     container?: HTMLDivElement;
 }
+export interface IBlockRange {
+    start: IBlock;
+    end: IBlock;
+}
+export interface IBlockSelection extends IBlockRange {
+    direction: SELECTION_DIRECTION;
+}
 export class BlockManager implements IBlockManager {
     id: string;
     type: BlockType;
@@ -38,6 +45,7 @@ export class BlockManager implements IBlockManager {
     blocks: StandoffEditorBlock[];
     metadata: Record<string,any>;
     focus?: IBlock;
+    selections: IBlockSelection[];
     constructor({ id, container }: IBlockManagerConstructor) {
         this.id = id || uuidv4();
         this.type = BlockType.Outliner;
@@ -45,6 +53,7 @@ export class BlockManager implements IBlockManager {
         this.relations = {};
         this.blocks = [];
         this.metadata = {};
+        this.selections = [];
     }
     addRelation(name: string) {
 
