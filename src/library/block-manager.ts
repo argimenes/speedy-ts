@@ -42,14 +42,28 @@ export class BlockManager implements IBlockManager {
         this.focus = block;
         block.setFocus();
     }
-    getSchemas() {
+    getBlockSchemas() {
+        return [
+            {
+                type: "block/alignment/centre",
+                decorate: {
+                    blockClass: "block_alignment_centre"
+                },
+                bindings: ["control-a", "control-c"],
+                bindingHandler: (block: StandoffEditorBlock) => {
+                    const prop = block.createBlockProperty("style/alignment/centre");
+                }
+            }
+        ]
+    }
+    getStandoffSchemas() {
         return [
             {
                 type: "style/italics",
                 bindings: ["control-i"],
-                bindingHandler: (e: StandoffEditorBlock, selection: IRange) => {
+                bindingHandler: (block: StandoffEditorBlock, selection: IRange) => {
                     if (selection) {
-                        e.createProperty("style/italics", selection);
+                        block.createStandoffProperty("style/italics", selection);
                     } else {
     
                     }
@@ -195,7 +209,7 @@ export class BlockManager implements IBlockManager {
         return modes;
     }
     loadDocument(doc: SpeedyDocument) {
-        const schemas = this.getSchemas();
+        const schemas = this.getStandoffSchemas();
         const modes = this.getModes();
         const structure = document.createElement("DIV") as HTMLDivElement;
         const paragraphs = doc.text.split(/\r?\n/);

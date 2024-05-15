@@ -1,4 +1,5 @@
 import { KEYS, Platform } from "./keyboard";
+import { v4 as uuidv4 } from 'uuid';
 
 export interface IRange {
     start: Cell;
@@ -28,7 +29,6 @@ export interface IStandoffPropertySchema {
     bindingHandler?: (e: StandoffEditorBlock, selection: IRange) => void;
     decorate: {
         cellClass?: string;
-        blockClass?: string;
         batchRender?: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
     }
 }
@@ -114,51 +114,73 @@ export enum SELECTION_DIRECTION {
 }
 
 export type GUID = string;
+export interface IBlockPropertySchema {
+    type: string;
+    decorate?: {
+        blockClass?: string;
+    }
+}
 export interface IBlockPropertyConstructor {
+    id?: GUID;
+    type: string;
+    schema: IBlockPropertySchema;
     block: StandoffEditorBlock;
 }
 export class BlockProperty {
-    id?: GUID;
+    id: GUID;
     type: string;
-    schema: any;
-    decorate: {
-        className: string;
-    }
+    schema: IBlockPropertySchema;
     block: StandoffEditorBlock; 
-    constructor({ block }: IBlockPropertyConstructor) {
-        this.id = uuidv4();
-        this.type = "";
-        this.schema = {};
+    constructor({ id, type, block, schema }: IBlockPropertyConstructor) {
+        this.id = id || uuidv4();
+        this.type = type;
+        this.schema = schema;
         this.block = block;
-        this.decorate = {
-            className: ""
+    }
+    applyStyling() {
+        const schema = this.schema;
+        if (schema?.decorate?.blockClass) {
+            this.block.container.classList.add(schema.decorate.blockClass);
+        }
+    }
+    removeStyling() {
+        const schema = this.schema;
+        if (schema?.decorate?.blockClass) {
+            this.block.container.classList.remove(schema.decorate.blockClass);
         }
     }
 }
-
-export class StandoffProperty {
+export interface IStandoffPropertyConstructor {
     id?: GUID;
+    type: string,
+    start: Cell,
+    end: Cell,
+    block: StandoffEditorBlock,
+    schema: IStandoffPropertySchema
+}
+export class StandoffProperty {
+    id: GUID;
     type: string;
     start: Cell;
     end: Cell;
-    decorate: Record<string, string>;
     isDeleted: boolean;
     cache: {
         underline?: SVGElement; 
     };
     value: string;
-    schema: any;
+    schema: IStandoffPropertySchema;
     block: StandoffEditorBlock; 
     bracket: { left?: HTMLElement; right?: HTMLElement };
-    constructor({ type, start, end, block }: { type: string, start: Cell, end: Cell, block: StandoffEditorBlock }) {
+    constructor({ type, start, end, block, id, schema }: IStandoffPropertyConstructor) {
+        this.id = id || uuidv4();
         this.isDeleted = false;
         this.type = type;
         this.start = start;
         this.end = end;
+        this.schema = schema;
         this.value = "";
         this.block = block;
         this.cache = {};
-        this.decorate = {};
         this.bracket = {
             left: undefined,
             right: undefined
@@ -168,7 +190,12 @@ export class StandoffProperty {
     scrollTo() {
         this.start.element?.scrollIntoView();
     }
-    applyCssClassToRange(className: string) {
+    applyStyling() {
+        if (this.schema?.decorate?.cellClass) {
+            this.applyCssClass(this.schema.decorate.cellClass);
+        }
+    }
+    applyCssClass(className: string) {
         if (this.isDeleted) return;
         const cells = this.getCells();
         cells.forEach(x => x.element?.classList.add(className));
@@ -305,7 +332,7 @@ export class StandoffEditorBlock implements IBlock {
     cache: {
         containerWidth: number;
     };
-    properties: StandoffProperty[];
+    standoffProperties: StandoffProperty[];
     blockProperties: BlockProperty[];
     /**
      * This will keep track of the last couple of key-combinations entered. The main purpose
@@ -313,6 +340,7 @@ export class StandoffEditorBlock implements IBlock {
      */
     inputBuffer: IKeyboardInput[];
     schemas: IStandoffPropertySchema[];
+    blockSchemas: IBlockPropertySchema[];
     /**
      * A Mode is a named collection of input bindings.
      */
@@ -354,7 +382,8 @@ export class StandoffEditorBlock implements IBlock {
         this.cells = [];
         this.metadata = {};
         this.schemas = [];
-        this.properties = [];
+        this.blockSchemas = [];
+        this.standoffProperties = [];
         this.blockProperties = [];
         this.selections = [];
         this.inputBuffer = [];
@@ -470,7 +499,7 @@ export class StandoffEditorBlock implements IBlock {
     createLineBreakCell() {
         const code = this.getKeyCode("ENTER");
         const EOL = String.fromCharCode(code);
-        const cell = new Cell({ text: EOL });
+        const cell = new Cell({ text: EOL, block: this });
         cell.element?.classList.add("line-break");
         return cell;
     }
@@ -533,7 +562,7 @@ export class StandoffEditorBlock implements IBlock {
          */
         if (!cell) return [];
         const i = cell.index;
-        const props = this.properties.filter(prop => {
+        const props = this.standoffProperties.filter(prop => {
             if (prop.isDeleted) return false;
             const si = prop.start.index;
             const ei = prop.end.index;
@@ -593,14 +622,11 @@ export class StandoffEditorBlock implements IBlock {
     bind(block: ITextBlock) {
         const self = this;
         const cells = this.toCells(block.text);
-        this.properties = block.properties.map(p => {
+        this.standoffProperties = block.properties.map(p => {
             const start = cells[p.startIndex];
             const end = cells[p.endIndex];
-            const sproc = new StandoffProperty({ type: p.type, block: self, start, end });
-            let schema = this.schemas.find(x => x.type == p.type);
-            sproc.block = self;
-            sproc.schema = schema;
-            sproc.type = p.type;
+            const schema = this.schemas.find(x => x.type == p.type) as IStandoffPropertySchema;
+            const sproc = new StandoffProperty({ type: p.type, block: self, start, end, schema });
             sproc.value = p.value as string;
             return sproc;
         });
@@ -639,7 +665,7 @@ export class StandoffEditorBlock implements IBlock {
         const len = text.length;
         const cells: Cell[] = [];
         for (let i = 0; i < len; i ++) {
-            let cell = new Cell({ text: text[i] });
+            let cell = new Cell({ text: text[i], block: this });
             cells.push(cell);
         }
         this.chainCellsTogether(cells);
@@ -654,7 +680,7 @@ export class StandoffEditorBlock implements IBlock {
     insertCharacterAfterIndex(char: string, index: number) {
         const previous = this.cells[index];
         const next = this.cells[index+1];
-        var cell = new Cell({ text: char, previous, next });
+        var cell = new Cell({ text: char, previous, next, block: this });
         previous.next = cell;
         cell.previous = previous;
         cell.next = next;
@@ -725,7 +751,7 @@ export class StandoffEditorBlock implements IBlock {
     }
     shiftPropertyEndNodesLeft(cell: Cell) {
         const previousCell = cell.previous;
-        const properties = this.properties.filter(p => !p.isDeleted);
+        const properties = this.standoffProperties.filter(p => !p.isDeleted);
         const singles = properties.filter(p => p.start == p.end && p.start == cell);
         if (singles) {
             singles.forEach(p => p.isDeleted = true);
@@ -741,7 +767,7 @@ export class StandoffEditorBlock implements IBlock {
     }
     shiftPropertyStartNodesRight(cell: Cell) {
         const nextCell = cell.next;
-        const properties = this.properties.filter(p => !p.isDeleted);
+        const properties = this.standoffProperties.filter(p => !p.isDeleted);
         const singles = properties.filter(p => p.start == p.end && p.start == cell);
         if (singles.length) {
             singles.forEach(p => p.isDeleted = true);
@@ -776,19 +802,30 @@ export class StandoffEditorBlock implements IBlock {
         return cells;
     }
     styleProperty(p: StandoffProperty) {
-        if (!p.decorate) return;
-        if (p.decorate.cellClass) {
-            const cells = this.getCells({ start: p.start, end: p.end });
-            cells.forEach(c => {
-                if (!c.element) return;
-                c.element.classList.add(p.decorate.cellClass);
-            });
-        }
+        p.applyStyling();
     }
-    createProperty(type: string, range: IRange) {
-        const prop = new StandoffProperty({ type, block: this, ...range });
-        prop.type = type;
-        this.properties.push(prop);
+    createStandoffProperty(type: string, range: IRange) {
+        const schema = this.schemas.find(x => x.type == type) as IStandoffPropertySchema;
+        if (!schema) {
+            log("StandoffProperty schema of 'type' was not found.", { block: this, type, range });
+            return undefined;
+        }
+        const prop = new StandoffProperty({ type, block: this, ...range, schema });
+        prop.schema = schema;
+        prop.applyStyling();
+        this.standoffProperties.push(prop);
+        return prop;
+    }
+    createBlockProperty(type: string) {
+        const schema = this.blockSchemas.find(x => x.type == type) as IBlockPropertySchema;
+        if (!schema) {
+            log("StandoffProperty schema of 'type' was not found.", { block: this, type });
+            return undefined;
+        }
+        const prop = new BlockProperty({ type, block: this, schema });
+        this.blockProperties.push(prop);
+        prop.applyStyling();
+        return prop;
     }
     syncPropertyEndToText() {
 
@@ -802,8 +839,4 @@ const logs: { msg: string, data: Record<string,any>}[] = [];
 const log = (msg: string, data: Record<string,any>) => {
     logs.push({ msg, data });
     console.log(msg, data);
-}
-
-function uuidv4(): string {
-    throw new Error("Function not implemented.");
 }
