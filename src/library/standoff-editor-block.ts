@@ -1,99 +1,6 @@
 import { KEYS, Platform } from "./keyboard";
 import { v4 as uuidv4 } from 'uuid';
 
-export interface IRange {
-    start: Cell;
-    end: Cell;
-}
-export interface ICellConstructor {
-    block: StandoffEditorBlock;
-    text: string;
-    previous?: Cell;
-    next?: Cell;
-}
-export enum BLOCK_POSITION {
-    Inside,
-    Start,
-    End,
-    EmptyLine
-};
-export interface IStandoffProperty {
-    type: string;
-    startIndex: number;
-    endIndex: number;
-    value?: string;
-}
-export interface IStandoffPropertySchema {
-    type: string;
-    bindings?: string[];
-    bindingHandler?: (e: StandoffEditorBlock, selection: IRange) => void;
-    decorate: {
-        cellClass?: string;
-        batchRender?: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
-    }
-}
-export interface ITextBlock {
-    id?: GUID;
-    text: string;
-    properties: IStandoffProperty[];
-}
-
-export class Cell {
-    index: number;
-    previous?: Cell;
-    next?: Cell;
-    text: string;
-    cache: {
-        offset: {
-            x: number;
-            y: number;
-            h: number;
-            w: number;
-        }
-    };
-    element?: SpeedyHtmlElement;
-    isLineBreak: boolean;
-    block: StandoffEditorBlock;
-    constructor({ text, block }: ICellConstructor) {
-        this.index = 0;
-        this.text = text;
-        this.block = block;
-        this.cache = {
-            offset: {
-                y: 0, h: 0, x: 0, w: 0
-            }
-        };
-        this.isLineBreak = false;
-        this.element = this.renderNode();
-    }
-    renderNode() {
-        const span = document.createElement("SPAN") as SpeedyHtmlElement;
-        span.innerText = this.text;
-        span.speedy = {
-            role: ELEMENT_ROLE.CELL
-        }
-        return span;
-    }
-    replaceElement(el: HTMLElement) {
-        const previous = this.element?.previousElementSibling;
-        const next = this.element?.nextElementSibling;
-    }
-    removeNode() {
-        this.element?.remove();
-    }
-    getTextNode() {
-        // Get the first TEXT NODE of the element
-        let node = this.element?.firstChild;
-        if (!node) {
-            return this.element as ChildNode;
-        }
-        while (node?.nodeType != 3) {
-            node = node?.firstChild as ChildNode;
-        }
-        return node;
-    }
-}
-
 export enum CARET {
     LEFT = 0,
     RIGHT = 1
@@ -158,6 +65,103 @@ export interface IStandoffPropertyConstructor {
     block: StandoffEditorBlock,
     schema: IStandoffPropertySchema
 }
+export interface IRange {
+    start: Cell;
+    end: Cell;
+}
+export interface ICellConstructor {
+    block: StandoffEditorBlock;
+    text: string;
+    previous?: Cell;
+    next?: Cell;
+}
+export enum BLOCK_POSITION {
+    Inside,
+    Start,
+    End,
+    EmptyLine
+};
+export interface IStandoffProperty {
+    type: string;
+    startIndex: number;
+    endIndex: number;
+    value?: string;
+}
+export interface IStandoffPropertySchema {
+    type: string;
+    bindings?: string[];
+    bindingHandler?: (e: StandoffEditorBlock, selection: IRange) => void;
+    decorate: {
+        cssClass?: string;
+        batchRender?: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
+    }
+}
+export interface ITextBlock {
+    id?: GUID;
+    text: string;
+    properties: IStandoffProperty[];
+}
+
+export class Cell {
+    index: number;
+    previous?: Cell;
+    next?: Cell;
+    text: string;
+    cache: {
+        offset: {
+            x: number;
+            y: number;
+            h: number;
+            w: number;
+        }
+    };
+    element?: CellHtmlElement;
+    isLineBreak: boolean;
+    block: StandoffEditorBlock;
+    constructor({ text, block }: ICellConstructor) {
+        this.index = 0;
+        this.text = text;
+        this.block = block;
+        this.cache = {
+            offset: {
+                y: 0, h: 0, x: 0, w: 0
+            }
+        };
+        this.isLineBreak = false;
+        this.element = this.createElement();
+    }
+    createElement() {
+        /**
+         * Ideally we'd like to be able to override this from somewhere when we want to generate different kinds
+         * of elements, such as SVGs.
+         */
+        return this.createSpan();
+    }
+    createSpan() {
+        const span = document.createElement("SPAN") as CellHtmlElement;
+        span.innerText = this.text;
+        span.speedy = {
+            cell: this,
+            role: ELEMENT_ROLE.CELL
+        }
+        return span;
+    }
+    removeElement() {
+        this.element?.remove();
+    }
+    getTextNode() {
+        // Get the first TEXT NODE of the element
+        let node = this.element?.firstChild;
+        if (!node) {
+            return this.element as ChildNode;
+        }
+        while (node?.nodeType != 3) {
+            node = node?.firstChild as ChildNode;
+        }
+        return node;
+    }
+}
+
 export class StandoffProperty {
     id: GUID;
     type: string;
@@ -186,13 +190,12 @@ export class StandoffProperty {
             right: undefined
         };
     }
-
     scrollTo() {
         this.start.element?.scrollIntoView();
     }
     applyStyling() {
-        if (this.schema?.decorate?.cellClass) {
-            this.applyCssClass(this.schema.decorate.cellClass);
+        if (this.schema?.decorate?.cssClass) {
+            this.applyCssClass(this.schema.decorate.cssClass);
         }
     }
     applyCssClass(className: string) {
@@ -291,7 +294,8 @@ export interface IBindingHandlerArgs {
     block: StandoffEditorBlock;
     caret: Caret;
 }
-export type SpeedyElement = {
+export type CellElement = {
+    cell: Cell;
     role: ELEMENT_ROLE;
 }
 export type BindingHandler = (args: IBindingHandlerArgs) => void;
@@ -315,8 +319,8 @@ export interface ISelection extends IRange {
     direction: SELECTION_DIRECTION;
 }
 
-export type SpeedyNode = Node & { speedy: SpeedyElement };
-export type SpeedyHtmlElement = HTMLElement & { speedy: SpeedyElement };
+export type CellNode = Node & { speedy: CellElement };
+export type CellHtmlElement = HTMLElement & { speedy: CellElement };
 
 export interface ICursor {
     anchorCell: Cell;
@@ -526,13 +530,13 @@ export class StandoffEditorBlock implements IBlock {
         e.preventDefault();
         this.insertCharacter(input);
     }
-    getCellFromNode(node: SpeedyNode) {
+    getCellFromNode(node: CellNode) {
         let current = node;
         while (current) {
             if (current.speedy?.role == ELEMENT_ROLE.CELL) {
                 return this.cells.find(x => x.element == current);
             }
-            current = current.parentElement as SpeedyHtmlElement;
+            current = current.parentElement as CellHtmlElement;
         }
         return undefined;
     }
@@ -547,7 +551,7 @@ export class StandoffEditorBlock implements IBlock {
     getCaret() {
         const sel = window.getSelection() as Selection;
         const { anchorNode } = sel;
-        const anchor = this.getCellFromNode(anchorNode as SpeedyNode);
+        const anchor = this.getCellFromNode(anchorNode as CellNode);
         if (!anchor) return { left: null, right: null, blockPosition: null };
         const offset = sel.anchorOffset;
         const toTheLeft = offset == 0;
@@ -573,8 +577,8 @@ export class StandoffEditorBlock implements IBlock {
     getSelection() {
         const range = window.getSelection()?.getRangeAt(0);
         if (range?.collapsed) return undefined;
-        const start = this.getCellFromNode(range?.startContainer as SpeedyNode);
-        const end = this.getCellFromNode(range?.endContainer as SpeedyNode);
+        const start = this.getCellFromNode(range?.startContainer as CellNode);
+        const end = this.getCellFromNode(range?.endContainer as CellNode);
         return { start, end } as IRange;
     }
     insertCharacter(input: IKeyboardInput) {
@@ -704,7 +708,7 @@ export class StandoffEditorBlock implements IBlock {
         if (next) {
             next.previous = previous;
         }
-        cell.removeNode();
+        cell.removeElement();
         if (updateCaret) {
             // if (next) {
             //     this.setCarotByNode({ node: next, offset: Caret.Left });
@@ -807,7 +811,7 @@ export class StandoffEditorBlock implements IBlock {
     createStandoffProperty(type: string, range: IRange) {
         const schema = this.schemas.find(x => x.type == type) as IStandoffPropertySchema;
         if (!schema) {
-            log("StandoffProperty schema of 'type' was not found.", { block: this, type, range });
+            log(`StandoffProperty schema '${type}' was not found.`, { block: this, type, range });
             return undefined;
         }
         const prop = new StandoffProperty({ type, block: this, ...range, schema });
@@ -819,7 +823,7 @@ export class StandoffEditorBlock implements IBlock {
     createBlockProperty(type: string) {
         const schema = this.blockSchemas.find(x => x.type == type) as IBlockPropertySchema;
         if (!schema) {
-            log("StandoffProperty schema of 'type' was not found.", { block: this, type });
+            log(`BlockProperty schema '${type}' was not found.`, { block: this, type });
             return undefined;
         }
         const prop = new BlockProperty({ type, block: this, schema });

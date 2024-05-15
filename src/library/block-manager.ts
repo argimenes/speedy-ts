@@ -6,12 +6,29 @@ import { v4 as uuidv4 } from 'uuid';
 export enum CssClass {
     LineBreak = "codex__line-break"
 }
-export type SpeedyStandoffProperty = {
-    guid: string, start?: number, end?: number, type: string, value: string
+export type StandoffPropertyDto = {
+    id: GUID,
+    blockGuid: GUID,
+    start: number,
+    end: number,
+    type: string,
+    value: string
 }
-export type SpeedyDocument = {
-    text: string;
-    properties: SpeedyStandoffProperty[];
+export type BlockPropertyDto = {
+    id: GUID,
+    blockGuid: GUID,
+    type: string,
+    value: string
+}
+export type StandoffEditorBlockDto = {
+    id: GUID
+    text: string
+    standoffProperties: StandoffPropertyDto[]
+    blockProperties: BlockPropertyDto[]
+}
+export interface IBlockManagerConstructor {
+    id?: GUID;
+    container?: HTMLDivElement;
 }
 export class BlockManager implements IBlockManager {
     id: string;
@@ -21,11 +38,11 @@ export class BlockManager implements IBlockManager {
     blocks: StandoffEditorBlock[];
     metadata: Record<string,any>;
     focus?: IBlock;
-    constructor() {
-        this.id = uuidv4();
+    constructor({ id, container }: IBlockManagerConstructor) {
+        this.id = id || uuidv4();
         this.type = BlockType.Outliner;
+        this.container = container || document.createElement("DIV") as HTMLDivElement;
         this.relations = {};
-        this.container = document.createElement("DIV") as HTMLDivElement;
         this.blocks = [];
         this.metadata = {};
     }
@@ -69,7 +86,7 @@ export class BlockManager implements IBlockManager {
                     }
                 },
                 decorate: {
-                    cellClass: "italics"
+                    cssClass: "italics"
                 }
             },
             {
@@ -208,7 +225,7 @@ export class BlockManager implements IBlockManager {
         })
         return modes;
     }
-    loadDocument(doc: SpeedyDocument) {
+    loadDocument(doc: StandoffEditorBlockDto) {
         const schemas = this.getStandoffSchemas();
         const modes = this.getModes();
         const structure = document.createElement("DIV") as HTMLDivElement;
@@ -220,7 +237,7 @@ export class BlockManager implements IBlockManager {
             block.setModes(modes);
             let text = paragraphs[i];
             let end = start + text.length + 1; // + 1 to account for the CR stripped from the text
-            const props = doc.properties
+            const props = doc.standoffProperties
                 .filter(x=> x.start != undefined && x.end != undefined)
                 .filter(x=> x.start >= start && x.end <= end)
              ;
