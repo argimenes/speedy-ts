@@ -288,7 +288,7 @@ export interface IBlockRelation {
 }
 export type Caret = {
     left?: Cell;
-    right?: Cell;
+    right: Cell;
 };
 export interface IBindingHandlerArgs {
     block: StandoffEditorBlock;
@@ -318,10 +318,8 @@ export type Overlay = {
 export interface ISelection extends IRange {
     direction: SELECTION_DIRECTION;
 }
-
 export type CellNode = Node & { speedy: CellElement };
 export type CellHtmlElement = HTMLElement & { speedy: CellElement };
-
 export interface ICursor {
     anchorCell: Cell;
     caret: CARET;
@@ -521,14 +519,14 @@ export class StandoffEditorBlock implements IBlock {
         this.addToInputBuffer(key);
     }
     handleKeyDown(e: KeyboardEvent) {
+        e.preventDefault();
         const input = this.toKeyboardInput(e);
         /**
          * Dispatch to a binding if there is a match.
          * 
          * For now, assume no bindings and ignore text selection and just add characters.
          */
-        e.preventDefault();
-        this.insertCharacter(input);
+        this.insertCharacterAtCaret(input);
     }
     getCellFromNode(node: CellNode) {
         let current = node;
@@ -552,13 +550,13 @@ export class StandoffEditorBlock implements IBlock {
         const sel = window.getSelection() as Selection;
         const { anchorNode } = sel;
         const anchor = this.getCellFromNode(anchorNode as CellNode);
-        if (!anchor) return { left: null, right: null, blockPosition: null };
+        if (!anchor) return null;
         const offset = sel.anchorOffset;
         const toTheLeft = offset == 0;
         const left = (toTheLeft ? anchor.previous : anchor) as Cell;
         const right = (toTheLeft ? anchor : anchor.next) as Cell;
         const blockPosition = this.getBlockPosition(left, right);
-        return { left, right, blockPosition };
+        return { left, right, blockPosition } as Caret;
     }
     getEnclosingProperties(cell: Cell) {
         /**
@@ -581,21 +579,28 @@ export class StandoffEditorBlock implements IBlock {
         const end = this.getCellFromNode(range?.endContainer as CellNode);
         return { start, end } as IRange;
     }
-    insertCharacter(input: IKeyboardInput) {
+    insertCharacterAtCaret(input: IKeyboardInput) {
         const caret = this.getCaret();
+        if (!caret) return;
         const anchor = (caret.left || caret.right) as Cell;
         const selection = this.getSelection();
         const cell = new Cell({ text: input.key, block: this });
-        const previous = caret.right?.previous;
-        if (previous) previous.next = cell;
-        cell.previous = previous;
-        cell.next = caret.right as Cell;
-        if (caret.right) {
-            caret.right.previous = cell;
-            caret.right.element!.insertBefore(cell.element as Node, caret.right.element as Node);
-        }
-        this.cells.push(cell);
+        this.knitCells(caret.left, cell, caret.right as Cell);
+        caret.right.element!.insertBefore(cell.element as Node, caret.right.element as Node);
+        this.insertIntoCellArrayBefore(caret.right as Cell, cell);
         this.updateEnclosingProperties(anchor);
+    }
+    insertIntoCellArrayBefore(anchor: Cell, cell: Cell) {
+        const i = this.cells.findIndex(x=> x == anchor);
+        this.cells.splice(i, 0, cell);
+    }
+    knitCells(left: Cell|undefined, middle: Cell, right: Cell) {
+        if (left) {
+            left.next = middle;
+            middle.previous = left;
+        }
+        middle.next = right;
+        right.previous = middle;
     }
     updateEnclosingProperties(anchor: Cell) {
         const props = this.getEnclosingProperties(anchor);
