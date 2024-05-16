@@ -7,12 +7,12 @@ export enum CssClass {
     LineBreak = "codex__line-break"
 }
 export type StandoffPropertyDto = {
-    id: GUID,
-    blockGuid: GUID,
+    id?: GUID,
+    blockGuid?: GUID,
     start: number,
     end: number,
     type: string,
-    value: string
+    value?: string
 }
 export type BlockPropertyDto = {
     id: GUID,
@@ -21,10 +21,10 @@ export type BlockPropertyDto = {
     value: string
 }
 export type StandoffEditorBlockDto = {
-    id: GUID
+    id?: GUID
     text: string
     standoffProperties: StandoffPropertyDto[]
-    blockProperties: BlockPropertyDto[]
+    blockProperties?: BlockPropertyDto[]
 }
 export interface IBlockManagerConstructor {
     id?: GUID;
@@ -46,10 +46,10 @@ export class BlockManager implements IBlockManager {
     metadata: Record<string,any>;
     focus?: IBlock;
     selections: IBlockSelection[];
-    constructor({ id, container }: IBlockManagerConstructor) {
-        this.id = id || uuidv4();
+    constructor(props?: IBlockManagerConstructor) {
+        this.id = props?.id || uuidv4();
         this.type = BlockType.Outliner;
-        this.container = container || document.createElement("DIV") as HTMLDivElement;
+        this.container = props?.container || document.createElement("DIV") as HTMLDivElement;
         this.relations = {};
         this.blocks = [];
         this.metadata = {};
@@ -235,14 +235,15 @@ export class BlockManager implements IBlockManager {
         return modes;
     }
     loadDocument(doc: StandoffEditorBlockDto) {
-        const schemas = this.getStandoffSchemas();
+        const standoffSchemas = this.getStandoffSchemas();
+        const blockSchemas = this.getBlockSchemas();
         const modes = this.getModes();
         const structure = document.createElement("DIV") as HTMLDivElement;
         const paragraphs = doc.text.split(/\r?\n/);
         let start = 0;
         for (let i = 0; i< paragraphs.length; i ++) {
             let block = this.createNewBlock();
-            block.setSchemas(schemas);
+            block.setSchemas(standoffSchemas);
             block.setModes(modes);
             let text = paragraphs[i];
             let end = start + text.length + 1; // + 1 to account for the CR stripped from the text
