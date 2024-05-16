@@ -5,7 +5,26 @@ export enum CARET {
     LEFT = 0,
     RIGHT = 1
 }
-
+export type StandoffPropertyDto = {
+    id?: GUID,
+    blockGuid?: GUID,
+    start: number,
+    end: number,
+    type: string,
+    value?: string
+}
+export type BlockPropertyDto = {
+    id: GUID,
+    blockGuid: GUID,
+    type: string,
+    value: string
+}
+export type StandoffEditorBlockDto = {
+    id?: GUID
+    text: string
+    standoffProperties: StandoffPropertyDto[]
+    blockProperties?: BlockPropertyDto[]
+}
 export enum ELEMENT_ROLE {
     CELL = 0,
     INNER_STYLE_BLOCK = 1,
@@ -95,11 +114,6 @@ export interface IStandoffPropertySchema {
         cssClass?: string;
         batchRender?: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
     }
-}
-export interface ITextBlock {
-    id?: GUID;
-    text: string;
-    properties: IStandoffProperty[];
 }
 
 export class Cell {
@@ -433,8 +447,7 @@ export class StandoffEditorBlock implements IBlock {
         return overlay;
     }
     getLastCell() {
-        const len = this.cells.length;
-        return this.cells[len-1];
+        return this.cells[-1];
     }
     removeOverlay(name: string) {
         const o = this.overlays.find(x => x.name == name);
@@ -460,7 +473,7 @@ export class StandoffEditorBlock implements IBlock {
     addMouseBinding(mode: string, binding: MouseBinding) {
         this.mode[mode].mouse.push(binding);
     }
-    attachBindings() {
+    private attachBindings() {
         /*
         
         We want to capture [a] keyboard input and [b] mouse input.
@@ -495,7 +508,7 @@ export class StandoffEditorBlock implements IBlock {
         this.container.appendChild(frag);
     }
     getKeyCode(name: string) {
-        const code = KEYS.ENTER.find(x => x.platform == Platform.Windows)?.code as number;
+        const code = KEYS[name].find(x => x.platform == Platform.Windows)?.code as number;
         return code;
     }
     createLineBreakCell() {
@@ -505,11 +518,6 @@ export class StandoffEditorBlock implements IBlock {
         cell.element?.classList.add("line-break");
         return cell;
     }
-    appendCellsToDOM(cells: Cell[]) {
-        window.requestAnimationFrame(() => {
-
-        });
-    }
     addToInputBuffer(key: IKeyboardInput) {
         if (this.inputBuffer.length <= 1) {
             this.inputBuffer.push(key);
@@ -518,7 +526,7 @@ export class StandoffEditorBlock implements IBlock {
         this.inputBuffer.splice(0, 1);
         this.addToInputBuffer(key);
     }
-    handleKeyDown(e: KeyboardEvent) {
+    private handleKeyDown(e: KeyboardEvent) {
         e.preventDefault();
         const input = this.toKeyboardInput(e);
         /**
@@ -585,31 +593,43 @@ export class StandoffEditorBlock implements IBlock {
         const selection = this.getSelection();
         this.insertCharacterAfterIndex(input.key, caret.right.index);
     }
-    insertCharacterAtIndex(text: string, index: number) {
+    insertTextAtIndex(text: string, index: number) {
         const right = this.cells[index];
         const left = right.previous;
         const anchor = left || right;
-        const cell = new Cell({ text: text, block: this });
-        this.knitCells(left, cell, right);
-        right.element!.insertBefore(cell.element as Node, right.element as Node);
-        this.insertIntoCellArrayBefore(right, cell);
+        const cells = text.split('').map(c => new Cell({ text: c, block: this }));
+        this.knitCells(left, cells, right);
+        this.insertIntoCellArrayBefore(right, cells);
+        this.insertElementsBefore(right.element as HTMLElement, cells.map(c => c.element as HTMLElement));
         this.updateEnclosingProperties(anchor);
-        this.reindexCells();
     }
-    reindexCells() {
+    private insertElementsBefore(anchor: HTMLElement, elements: HTMLElement[]) {
+        const frag = document.createDocumentFragment();
+        frag.append(...elements);
+        requestAnimationFrame(() => anchor.insertBefore(frag, anchor));
+    }
+    private reindexCells() {
         this.cells.forEach((cell, index) => cell.index = index);
     }
-    insertIntoCellArrayBefore(anchor: Cell, cell: Cell) {
-        const i = this.cells.findIndex(x=> x == anchor);
-        this.cells.splice(i, 0, cell);
+    private insertIntoCellArrayBefore(anchor: Cell, cells: Cell[]) {
+        const i = this.cells.findIndex(x => x == anchor);
+        this.cells.splice(i, 0, ...cells);
+        this.reindexCells();
     }
-    knitCells(left: Cell|undefined, middle: Cell, right: Cell) {
-        if (left) {
-            left.next = middle;
-            middle.previous = left;
+    private knitCells(left: Cell|undefined, middle: Cell[], right: Cell) {
+        const len = middle.length;
+        if (len == 0) return;
+        for (let i = 0; i < len; i++) {
+            let current = middle[i];
+            let previous = (i > 0) ? middle[i-1] : left;
+            let next = (i < len - 1) ? middle[i+1] : right;
+            if (previous) {
+                previous.next = current;
+                current.previous = previous;
+            }
+            current.next = next;
+            next.previous = current;
         }
-        middle.next = right;
-        right.previous = middle;
     }
     updateEnclosingProperties(anchor: Cell) {
         const props = this.getEnclosingProperties(anchor);
@@ -618,7 +638,7 @@ export class StandoffEditorBlock implements IBlock {
         const cell = this.cells[index];
         this.setCarotByNode({ node: cell, offset: CARET.LEFT });
     }
-    toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
+    private toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
         const input: IKeyboardInput = {
             shift: e.shiftKey,
             control: e.ctrlKey,
@@ -630,19 +650,39 @@ export class StandoffEditorBlock implements IBlock {
         return input;
     }
     unbind() {
-        const block = {} as ITextBlock;
+        const block = {} as StandoffEditorBlockDto;
+        block.id = this.id;
         block.text = this.getText();
+        block.standoffProperties = this.getStandoffPropertiesDto();
+        block.blockProperties = this.getBlockPropertiesDto();
         return block;
+    }
+    private getStandoffPropertiesDto() {
+        const props = this.standoffProperties.map(x => ({
+            id: x.id,
+            type: x.type,
+            start: x.start.index,
+            end: x.end.index,
+            value: x.value
+        }) as StandoffPropertyDto);
+        return props;
+    }
+    private getBlockPropertiesDto() {
+        const props = this.blockProperties.map(x => ({
+            id: x.id,
+            type: x.type
+        }) as BlockPropertyDto);
+        return props;
     }
     getText() {
         return this.cells.map(c => c.text).join();
     }
-    bind(block: ITextBlock) {
+    bind(block: StandoffEditorBlockDto) {
         const self = this;
         const cells = this.toCells(block.text);
-        this.standoffProperties = block.properties.map(p => {
-            const start = cells[p.startIndex];
-            const end = cells[p.endIndex];
+        this.standoffProperties = block.standoffProperties.map(p => {
+            const start = cells[p.start];
+            const end = cells[p.end];
             const schema = this.schemas.find(x => x.type == p.type) as IStandoffPropertySchema;
             const sproc = new StandoffProperty({ type: p.type, block: self, start, end, schema });
             sproc.value = p.value as string;
@@ -650,6 +690,9 @@ export class StandoffEditorBlock implements IBlock {
         });
         const frag = document.createDocumentFragment();
         cells.forEach(c => frag.append(c.element as HTMLElement));
+        /**
+         * May want to check for a line-break character here?
+         */
         requestAnimationFrame(() => {
             this.container.innerHTML = "";
             this.container.appendChild(frag);
