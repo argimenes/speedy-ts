@@ -582,13 +582,22 @@ export class StandoffEditorBlock implements IBlock {
     insertCharacterAtCaret(input: IKeyboardInput) {
         const caret = this.getCaret();
         if (!caret) return;
-        const anchor = (caret.left || caret.right) as Cell;
         const selection = this.getSelection();
-        const cell = new Cell({ text: input.key, block: this });
-        this.knitCells(caret.left, cell, caret.right as Cell);
-        caret.right.element!.insertBefore(cell.element as Node, caret.right.element as Node);
-        this.insertIntoCellArrayBefore(caret.right as Cell, cell);
+        this.insertCharacterAfterIndex(input.key, caret.right.index);
+    }
+    insertCharacterAtIndex(text: string, index: number) {
+        const right = this.cells[index];
+        const left = right.previous;
+        const anchor = left || right;
+        const cell = new Cell({ text: text, block: this });
+        this.knitCells(left, cell, right);
+        right.element!.insertBefore(cell.element as Node, right.element as Node);
+        this.insertIntoCellArrayBefore(right, cell);
         this.updateEnclosingProperties(anchor);
+        this.reindexCells();
+    }
+    reindexCells() {
+        this.cells.forEach((cell, index) => cell.index = index);
     }
     insertIntoCellArrayBefore(anchor: Cell, cell: Cell) {
         const i = this.cells.findIndex(x=> x == anchor);
