@@ -146,7 +146,7 @@ export class BlockManager implements IBlockManager {
                              */
                             const { block, caret } = args;
                             if (!!caret.left) {
-                                block.setCarotByNode({ node: caret.left, offset: CARET.LEFT });
+                                block.setCaret(caret.left.index);
                                 return;
                             }
                             /**
@@ -157,7 +157,7 @@ export class BlockManager implements IBlockManager {
                             const previous = self.getBlock(previousEdge.targetId);
                             if (!previous) return;
                             const last = previous.getLastCell();
-                            previous.setCarotByNode({ node: last, offset: CARET.LEFT });
+                            previous.setCaret(last.index);
                             self.setBlockFocus(previous);
                         },
                         "HOME": (args: IBindingHandlerArgs) => {
@@ -166,7 +166,7 @@ export class BlockManager implements IBlockManager {
                              */
                             const { block } = args;
                             const start = block.cells[0];
-                            block.setCarotByNode({ node: start, offset: CARET.LEFT });
+                            block.setCaret(start.index);
                         },
                         "END": (args: IBindingHandlerArgs) => {
                             /**
@@ -174,9 +174,8 @@ export class BlockManager implements IBlockManager {
                              */
                             const { block } = args;
                             const { cells } = block;
-                            const last = cells.length - 1;
-                            const end = cells[last]; // This should be the CR character cell.
-                            block.setCarotByNode({ node: end, offset: CARET.LEFT });
+                            const end = cells[-1]; // This should be the CR character cell.
+                            block.setCaret(end.index);
                         },
                         "TAB": (args: IBindingHandlerArgs) => {
                             /**
@@ -185,7 +184,7 @@ export class BlockManager implements IBlockManager {
                              */
                             const { block, caret } = args;
                             const ci = caret.right!.index;
-                            block.insertCharacterAfterIndex("    ", ci);
+                            block.insertTextAtIndex("    ", ci);
                         },
                         "ENTER": (args: IBindingHandlerArgs) => {
                             /**

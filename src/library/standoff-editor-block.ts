@@ -34,12 +34,10 @@ export enum ELEMENT_ROLE {
     TEXT_BLOCK = 4,
     OUTER_STYLE_BLOCK = 5
 }
-
 export enum SELECTION_DIRECTION {
     LEFT = 0,
     RIGHT = 1
 }
-
 export type GUID = string;
 export interface IBlockPropertySchema {
     type: string;
@@ -133,23 +131,23 @@ function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     });
     return map;
 };
+interface ICoordOffsets {
+    x: number;
+    y: number;
+    h: number;
+    w: number;
+}
+interface ICellCoordOffsets extends ICoordOffsets {
+    cy: number;
+}
 export class Cell {
     index: number;
     previous?: Cell;
     next?: Cell;
     text: string;
     cache: {
-        previousOffset: {
-            cy: number,
-            x: number, y: number, h: number, w: number
-        },
-        offset: {
-            cy: number;
-            x: number;
-            y: number;
-            h: number;
-            w: number;
-        }
+        previousOffset: ICellCoordOffsets,
+        offset: ICellCoordOffsets
     };
     element?: CellHtmlElement;
     isLineBreak: boolean;
@@ -207,9 +205,7 @@ export class StandoffProperty {
     start: Cell;
     end: Cell;
     isDeleted: boolean;
-    cache: {
-        underline?: SVGElement; 
-    };
+    cache: Record<string, any>;
     value: string;
     schema: IStandoffPropertySchema;
     block: StandoffEditorBlock; 
@@ -392,18 +388,8 @@ export class StandoffEditorBlock implements IBlock {
     container: HTMLDivElement;
     cells: Cell[];
     cache: {
-        previousOffset: {
-            x: number;
-            y: number;
-            h: number;
-            w: number;
-        },
-        offset: {
-            x: number;
-            y: number;
-            h: number;
-            w: number;
-        },
+        previousOffset: ICoordOffsets,
+        offset: ICoordOffsets,
         verticalArrowNavigation: {
             lastX: number|null;
         },
@@ -704,10 +690,6 @@ export class StandoffEditorBlock implements IBlock {
     updateEnclosingProperties(anchor: Cell) {
         const props = this.getEnclosingProperties(anchor);
     }
-    setCaretByIndex(index: number) {
-        const cell = this.cells[index];
-        this.setCarotByNode({ node: cell, offset: CARET.LEFT });
-    }
     private toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
         const input: IKeyboardInput = {
             shift: e.shiftKey,
@@ -824,18 +806,15 @@ export class StandoffEditorBlock implements IBlock {
     removeCell(args: { cell: Cell, updateCaret?: boolean }) {
         
     }
-    setCarotByNode(args: { node: Cell, offset?: CARET }) {
+    setCaret(index: number, offset?: CARET) {
         /**
          * Might want to investigate setting the caret by absolutely positioning an SVG ...
          */
-        const { node } = args;
-        if (!node) {
-            return;
-        }
+        offset = offset || CARET.LEFT;
+        const cell = this.cells[index];
+        const textNode = cell.getTextNode();
         const selection = document.getSelection() as Selection;
         const range = document.createRange();
-        const offset = (args.offset != null) ? args.offset : CARET.RIGHT;
-        const textNode = node.getTextNode();
         range.setStart(textNode, 1);
         range.collapse(true);
         if (selection.setBaseAndExtent) {
@@ -904,7 +883,7 @@ export class StandoffEditorBlock implements IBlock {
             ;
         this.batch(toUpdate, (schema, props) => schema.render?.update({ block, properties: props }));
         const toDelete = this.standoffProperties
-            .filter(p => p.isDeleted && p.cache.underline && p.schema?.render?.destroy)
+            .filter(p => p.isDeleted && p.schema?.render?.destroy)
             ;
         this.batch(toDelete, (schema, props) => schema.render?.destroy({ block, properties: props }));
     }
@@ -915,7 +894,7 @@ export class StandoffEditorBlock implements IBlock {
             const typeName = group[0];
             const props = group[1] as StandoffProperty[];
             const schema = block.schemas[typeName];
-            if (!schema) continue;
+            if (!schema) return;
             action(schema, props);
         });
     }
@@ -939,7 +918,7 @@ export class StandoffEditorBlock implements IBlock {
                 };
             }
             const span = cell.element as HTMLElement;
-            if (!span) continue;
+            if (!span) return;
             const top = span.offsetTop || 0;
             cell.cache.offset = {
                 y: top,
@@ -963,9 +942,9 @@ export class StandoffEditorBlock implements IBlock {
         cell.removeElement();
         this.cells.splice(index, 1);
         this.reindexCells();
-        this.updateEnclosingProperties(cell.)
+        this.updateEnclosingProperties(cell);
         if (updateCaret) {
-            this.setCaretByIndex(index);
+            this.setCaret(index);
         }
     }
     getCells(range: IRange) {
