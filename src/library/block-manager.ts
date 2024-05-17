@@ -18,6 +18,7 @@ export interface IBlockRange {
 export interface IBlockSelection extends IBlockRange {
     direction: SELECTION_DIRECTION;
 }
+
 export class BlockManager implements IBlockManager {
     id: string;
     type: BlockType;
@@ -89,8 +90,11 @@ export class BlockManager implements IBlockManager {
     
                     }
                 },
-                decorate: {
-                    batchRender: (args) => {
+                render: {
+                    destroy: ({ properties }) => {
+                        properties.forEach(p => p.cache.underline?.remove())
+                    },
+                    update: (args) => {
                         const { block, properties } = args;
                         const overlay = block.getOrSetOverlay("codex/entity-reference");
                         const cw = block.cache.containerWidth;
@@ -121,6 +125,21 @@ export class BlockManager implements IBlockManager {
             "default": {
                 keyboard: [
                     {
+                        "DELETE": (args: IBindingHandlerArgs) => {
+                            /**
+                             * Delete the character to the left and move the cursor
+                             * to the left of the character to the right.
+                             * 
+                             * If at the start of the block (i.e., no character to the left)
+                             * then issue an event named "DELETE_CHARACTER_FROM_START_OF_BLOCK".
+                             */
+                            const { block, caret } = args;
+                            if (!caret.left) {
+                                block.trigger("DELETE_CHARACTER_FROM_START_OF_BLOCK");
+                                return;
+                            }
+                            block.removeCellAtIndex(caret.left.index, true);
+                        },
                         "LEFT-ARROW": (args: IBindingHandlerArgs) => {
                             /**
                              * Move the cursor back one cell ...

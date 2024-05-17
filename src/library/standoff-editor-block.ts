@@ -1,3 +1,4 @@
+import _ from "underscore";
 import { KEYS, Platform } from "./keyboard";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -110,19 +111,40 @@ export interface IStandoffPropertySchema {
     type: string;
     bindings?: string[];
     bindingHandler?: (e: StandoffEditorBlock, selection: IRange) => void;
-    decorate: {
+    decorate?: {
         cssClass?: string;
         batchRender?: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
+    },
+    render?: {
+        update: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
+        destroy: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
     }
 }
-
+function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
+    const map = new Map();
+    list.forEach((item) => {
+        const key = keyGetter(item);
+        const collection = map.get(key);
+        if (!collection) {
+            map.set(key, [item]);
+        } else {
+            collection.push(item);
+        }
+    });
+    return map;
+};
 export class Cell {
     index: number;
     previous?: Cell;
     next?: Cell;
     text: string;
     cache: {
+        previousOffset: {
+            cy: number,
+            x: number, y: number, h: number, w: number
+        },
         offset: {
+            cy: number;
             x: number;
             y: number;
             h: number;
@@ -137,8 +159,11 @@ export class Cell {
         this.text = text;
         this.block = block;
         this.cache = {
+            previousOffset: {
+                cy: 0,  y: 0, h: 0, x: 0, w: 0
+            },
             offset: {
-                y: 0, h: 0, x: 0, w: 0
+                cy: 0,  y: 0, h: 0, x: 0, w: 0
             }
         };
         this.isLineBreak = false;
@@ -203,6 +228,27 @@ export class StandoffProperty {
             left: undefined,
             right: undefined
         };
+    }
+    hasOffsetChanged() {
+        let spoff = this.start.cache.previousOffset;
+        let soff = this.start.cache.offset;
+        if (!soff || !spoff) {
+            return true;
+        }
+        let startSame = spoff.x == soff.x && spoff.y == soff.y;
+        if (!startSame) {
+            return true;
+        }
+        let epoff = this.end.cache.previousOffset;
+        let eoff = this.end.cache.offset;
+        if (!epoff || !eoff) {
+            return true;
+        }
+        let endSame = epoff.x == eoff.x && epoff.y == eoff.y;
+        if (!endSame) {
+            return true;
+        }
+        return false;
     }
     scrollTo() {
         this.start.element?.scrollIntoView();
@@ -346,6 +392,21 @@ export class StandoffEditorBlock implements IBlock {
     container: HTMLDivElement;
     cells: Cell[];
     cache: {
+        previousOffset: {
+            x: number;
+            y: number;
+            h: number;
+            w: number;
+        },
+        offset: {
+            x: number;
+            y: number;
+            h: number;
+            w: number;
+        },
+        verticalArrowNavigation: {
+            lastX: number|null;
+        },
         containerWidth: number;
     };
     standoffProperties: StandoffProperty[];
@@ -391,6 +452,15 @@ export class StandoffEditorBlock implements IBlock {
         this.container = container || (document.createElement("DIV") as HTMLDivElement);
         this.container.setAttribute("contenteditable", "true");
         this.cache = {
+            previousOffset: {
+                x: 0, y: 0, h: 0, w: 0
+            },
+            offset: {
+                x: 0, y: 0, h: 0, w: 0
+            },
+            verticalArrowNavigation: {
+                lastX: 0
+            },
             containerWidth: 0
         };
         this.relations = {};
@@ -748,40 +818,11 @@ export class StandoffEditorBlock implements IBlock {
         next.previous = cell;
         return cell;
     }
+    trigger(eventName: string) {
+
+    }
     removeCell(args: { cell: Cell, updateCaret?: boolean }) {
-        const { cell} = args;
-        const updateCaret = !!args.updateCaret;
-        const previous = cell.previous;
-        const next = cell.next;
-        if (cell.isLineBreak) {
-            /**
-             * Emit an event indicating this.
-             */
-            return;
-        }
-        if (previous) {
-            previous.next = next;
-        }
-        if (next) {
-            next.previous = previous;
-        }
-        cell.removeElement();
-        if (updateCaret) {
-            // if (next) {
-            //     this.setCarotByNode({ node: next, offset: Caret.Left });
-            // }
-            // this.mark();
-            // this.updateOffsets();
-            // if (this.onTextChanged) {
-            //     const caret = {
-            //         left: previous, right: next, container: currentTextBlock
-            //     };
-            //     const { text, cells } = this.getTextBlockData(currentTextBlock);
-            //     this.onTextChanged({
-            //         action: "deleted", editor: this, caret, text, cells
-            //     });
-            // }
-        }
+        
     }
     setCarotByNode(args: { node: Cell, offset?: CARET }) {
         /**
@@ -842,13 +883,90 @@ export class StandoffEditorBlock implements IBlock {
             }
         }
     }
-    removeCellAtIndex({ index, updateCaret }: { index: number, updateCaret?: boolean }) {
-        const cell = this.cells.find(c => c.index == index);
-        if (!cell) {
-            log("Cell could not be found for the index", { index, error: new Error() });
+    unknit(cell: Cell) {
+        const left = cell.previous;
+        const right = cell.next as Cell;
+        if (left) left.next = right;
+        right.previous = left;
+    }
+    updateOffsets() {
+        const block = this;
+        requestAnimationFrame(() => {
+            block.calculateCellOffsets();
+            block.cache.verticalArrowNavigation.lastX = null;
+            block.updateRenderers();
+        });
+    }
+    updateRenderers() {
+        const block = this;
+        const toUpdate = this.standoffProperties
+            .filter(p => !p.isDeleted && p.schema?.render?.update && p.start.cache.offset && p.hasOffsetChanged())
+            ;
+        this.batch(toUpdate, (schema, props) => schema.render?.update({ block, properties: props }));
+        const toDelete = this.standoffProperties
+            .filter(p => p.isDeleted && p.cache.underline && p.schema?.render?.destroy)
+            ;
+        this.batch(toDelete, (schema, props) => schema.render?.destroy({ block, properties: props }));
+    }
+    batch(properties: StandoffProperty[], action: (schema: IStandoffPropertySchema, props: StandoffProperty[]) => void) {
+        const block = this;
+        const groups = Array.from(groupBy(properties, p => p.type));
+        groups.forEach(group => {
+            const typeName = group[0];
+            const props = group[1] as StandoffProperty[];
+            const schema = block.schemas[typeName];
+            if (!schema) continue;
+            action(schema, props);
+        });
+    }
+    calculateCellOffsets() {
+        const self = this;
+        const container = this.container;
+        const offset = this.cache.offset;
+        this.cache.previousOffset = { ...offset };
+        this.cache.offset = {
+            y: container.offsetTop,
+            x: container.offsetLeft,
+            w: container.offsetWidth,
+            h: container.offsetHeight
+        };
+        this.cells.forEach(cell => {
+            const offset = cell.cache.offset;
+            const cy = self.cache.offset.y;
+            if (offset) {
+                cell.cache.previousOffset = {
+                    ...offset
+                };
+            }
+            const span = cell.element as HTMLElement;
+            if (!span) continue;
+            const top = span.offsetTop || 0;
+            cell.cache.offset = {
+                y: top,
+                cy: cy + top,
+                x: span.offsetLeft,
+                w: span.offsetWidth,
+                h: span.offsetHeight
+            };
+        });
+    }
+    removeCellAtIndex(index: number, updateCaret?: boolean) {
+        const cell = this.cells[index];
+        updateCaret = !!updateCaret;
+        if (cell.isLineBreak) {
+            /**
+             * Shouldn't be here.
+             */
             return;
         }
-        return this.removeCell({ cell, updateCaret });
+        this.unknit(cell);
+        cell.removeElement();
+        this.cells.splice(index, 1);
+        this.reindexCells();
+        this.updateEnclosingProperties(cell.)
+        if (updateCaret) {
+            this.setCaretByIndex(index);
+        }
     }
     getCells(range: IRange) {
         const cells: Cell[] = [];
