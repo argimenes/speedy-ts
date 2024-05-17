@@ -77,7 +77,21 @@ export class BlockManager implements IBlockManager {
                     }
                 },
                 decorate: {
-                    cssClass: "italics"
+                    cssClass: "style_italics"
+                }
+            },
+            {
+                type: "style/bold",
+                bindings: ["control-b"],
+                bindingHandler: (block: StandoffEditorBlock, selection: IRange) => {
+                    if (selection) {
+                        block.createStandoffProperty("style/bold", selection);
+                    } else {
+    
+                    }
+                },
+                decorate: {
+                    cssClass: "style_bold"
                 }
             },
             {
@@ -233,7 +247,13 @@ export class BlockManager implements IBlockManager {
         })
         return modes;
     }
+    reset() {
+        this.container.innerHTML = "";
+        this.blocks = [];
+        this.id = uuidv4();
+    }
     loadDocument(doc: StandoffEditorBlockDto) {
+        this.reset();
         const standoffSchemas = this.getStandoffSchemas();
         const blockSchemas = this.getBlockSchemas();
         const modes = this.getModes();

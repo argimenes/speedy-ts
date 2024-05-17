@@ -1,5 +1,6 @@
 import { Component } from "solid-js"
-import { BlockManager, StandoffEditorBlockDto } from "../library/block-manager"
+import { BlockManager } from "../library/block-manager"
+import { StandoffEditorBlockDto } from "../library/standoff-editor-block"
 
 type Props = {
     
@@ -19,7 +20,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
     }
     return (
         <>
-            <div ref={initialise} />
+            <div ref={initialise} contentEditable />
         </>
     )
 }
