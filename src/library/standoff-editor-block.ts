@@ -962,11 +962,14 @@ export class StandoffEditorBlock implements IBlock {
     styleProperty(p: StandoffProperty) {
         p.applyStyling();
     }
-    createStandoffProperty(type: string, range: IRange) {
+    createStandoffProperty(type: string, range?: IRange) {
+        range = range || this.getSelection();
+        if (!range) {
+            return log(`No range was provided or found.`, { block: this, type });
+        }
         const schema = this.schemas.find(x => x.type == type) as IStandoffPropertySchema;
         if (!schema) {
-            log(`StandoffProperty schema '${type}' was not found.`, { block: this, type, range });
-            return undefined;
+            return log(`StandoffProperty schema '${type}' was not found.`, { block: this, type, range });
         }
         const prop = new StandoffProperty({ type, block: this, ...range, schema });
         prop.schema = schema;
