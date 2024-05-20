@@ -319,6 +319,7 @@ export enum BlockType {
     IFrame = "iframe-block",
     HTML = "html-block",
     PDF = "pdf-block",
+    Grid = "grid-block",
     Image = "image-block",
     Video = "video-block"
 }
@@ -347,7 +348,7 @@ export type Caret = {
     right: Cell;
 };
 export interface IBindingHandlerArgs {
-    block: StandoffEditorBlock;
+    block: IBlock;
     caret: Caret;
 }
 export type CellElement = {

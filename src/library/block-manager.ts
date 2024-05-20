@@ -19,6 +19,57 @@ export interface IBlockSelection extends IBlockRange {
     direction: SELECTION_DIRECTION;
 }
 
+export class GridBlock implements IBlock {
+    id: GUID;
+    type: BlockType;
+    relations: Record<string, IBlockRelation>;
+    container: HTMLDivElement;
+    metadata: Record<string, any>;
+    grid: IBlock[][];
+    constructor(args: { id?: GUID, container?: HTMLDivElement }) {
+        this.id = args?.id || uuidv4();
+        this.type = BlockType.PDF;
+        this.relations = {};
+        this.container = args?.container || document.createElement("DIV") as HTMLDivElement;
+        this.metadata = {};
+        this.grid = [];
+    }
+    addKeyboardBindings() {
+
+    }
+    getSchemas() {
+
+    }
+    getModes() {
+        const self = this;
+        const modes: Mode[] = [];
+        modes.push({
+            "default": {
+                keyboard: [
+                    {
+                        "TAB": (args: IBindingHandlerArgs) => {
+
+                        }
+                    }
+                ],
+                mouse: [
+
+                ]
+            }
+        });
+        return modes;
+    }
+    setFocus() {
+        // Find the first block container and focus on that.
+    }
+    removeRelation(name: string) {
+        
+    }
+    addRelation(name: string, targetId: string){
+        
+    }
+}
+
 export class BlockManager implements IBlockManager {
     id: string;
     type: BlockType;
@@ -147,7 +198,8 @@ export class BlockManager implements IBlockManager {
                              * If at the start of the block (i.e., no character to the left)
                              * then issue an event named "DELETE_CHARACTER_FROM_START_OF_BLOCK".
                              */
-                            const { block, caret } = args;
+                            const { caret } = args;
+                            const block = args.block as StandoffEditorBlock;
                             if (!caret.left) {
                                 block.trigger("DELETE_CHARACTER_FROM_START_OF_BLOCK");
                                 return;
@@ -158,7 +210,8 @@ export class BlockManager implements IBlockManager {
                             /**
                              * Move the cursor back one cell ...
                              */
-                            const { block, caret } = args;
+                            const { caret } = args;
+                            const block = args.block as StandoffEditorBlock;
                             if (!!caret.left) {
                                 block.setCaret(caret.left.index);
                                 return;
@@ -178,7 +231,8 @@ export class BlockManager implements IBlockManager {
                             /**
                              * Move the cursor to the start of the block.
                              */
-                            const { block } = args;
+                            const { caret } = args;
+                            const block = args.block as StandoffEditorBlock;
                             const start = block.cells[0];
                             block.setCaret(start.index);
                         },
@@ -186,7 +240,8 @@ export class BlockManager implements IBlockManager {
                             /**
                              * Move the cursor to the end of the block.
                              */
-                            const { block } = args;
+                            const { caret } = args;
+                            const block = args.block as StandoffEditorBlock;
                             const { cells } = block;
                             const end = cells[-1]; // This should be the CR character cell.
                             block.setCaret(end.index);
@@ -196,7 +251,8 @@ export class BlockManager implements IBlockManager {
                              * Inserts spaces or a TAB character. If the latter, will need to
                              * see if it needs to be styled to a fixed width.
                              */
-                            const { block, caret } = args;
+                            const { caret } = args;
+                            const block = args.block as StandoffEditorBlock;
                             const ci = caret.right!.index;
                             block.insertTextAtIndex("    ", ci);
                         },
@@ -204,7 +260,8 @@ export class BlockManager implements IBlockManager {
                             /**
                              * Creates a new StandoffEditorBlock and adds it as a sibling after the current block.
                              */
-                            const { block } = args;
+                            const { caret } = args;
+                            const block = args.block as StandoffEditorBlock;
                             const newBlock = self.createNewBlock();
                             const next = block.getRelation("next");
                             block.setRelation("next", newBlock.id);
@@ -220,7 +277,8 @@ export class BlockManager implements IBlockManager {
                              * Insert a NewLine character, styled such that it displaces following
                              * SPANs onto the next line.
                              */
-                            const { block, caret } = args;
+                            const { caret } = args;
+                            const block = args.block as StandoffEditorBlock;
                             const ci = caret.right!.index;
                             const charCode = self.getPlatformKey(KEYS.ENTER)!.code;
                             const lb = block.insertCharacterAfterIndex(String.fromCharCode(charCode), ci);
