@@ -14,7 +14,13 @@ $ npm install # or pnpm install or yarn install
 
 In the project directory, you can run:
 
-### `npm run dev` or `npm start`
+### To deploy
+
+Delete any files under "/dist"
+```npm run build```
+copy files under "/dist" to "/public"
+```node index.js```
+browse to localhost:30000
 
 Runs the app in the development mode.<br>
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.

@@ -318,6 +318,7 @@ export class BlockManager implements IBlockManager {
         const structure = document.createElement("DIV") as HTMLDivElement;
         const paragraphs = doc.text.split(/\r?\n/);
         let start = 0;
+        console.log("BlockManager.loadDocument", { doc, paragraphs })
         for (let i = 0; i< paragraphs.length; i ++) {
             let block = this.createNewBlock();
             block.setSchemas(standoffSchemas);
@@ -327,12 +328,14 @@ export class BlockManager implements IBlockManager {
             const props = doc.standoffProperties
                 .filter(x=> x.start != undefined && x.end != undefined)
                 .filter(x=> x.start >= start && x.end <= end)
-             ;
+             ;             
             start += text.length;
-            block.bind({
+            const data = {
                 text: text,
                 standoffProperties: props as any[]
-            });
+            };
+            console.log("BlockManager.loadDocument", { i, data })
+            block.bind(data);
             structure.appendChild(block.container);
         }
         this.container.appendChild(structure);

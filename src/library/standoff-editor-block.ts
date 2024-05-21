@@ -755,8 +755,9 @@ export class StandoffEditorBlock implements IBlock {
          * May want to check for a line-break character here?
          */
         requestAnimationFrame(() => {
-            this.container.innerHTML = "";
-            this.container.appendChild(frag);
+            self.container.innerHTML = "";
+            self.container.appendChild(frag);
+            self.updateOffsets();
         });
     }
     getCellAtIndex(index: number, cells: Cell[]) {
