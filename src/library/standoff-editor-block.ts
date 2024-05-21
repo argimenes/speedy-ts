@@ -743,6 +743,7 @@ export class StandoffEditorBlock implements IBlock {
             const schema = this.schemas.find(x => x.type == p.type) as IStandoffPropertySchema;
             const sproc = new StandoffProperty({ type: p.type, block: self, start, end, schema });
             sproc.value = p.value as string;
+            sproc.applyStyling();
             return sproc;
         });
         const frag = document.createDocumentFragment();
@@ -753,8 +754,9 @@ export class StandoffEditorBlock implements IBlock {
         requestAnimationFrame(() => {
             self.container.innerHTML = "";
             self.container.appendChild(frag);
-            self.updateOffsets();
+            self.updateView();
         });
+        this.cells = cells;
         this.updateView();
     }
     getCellAtIndex(index: number, cells: Cell[]) {

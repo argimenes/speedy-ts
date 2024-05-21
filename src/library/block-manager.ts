@@ -342,6 +342,7 @@ export class BlockManager implements IBlockManager {
             console.log("BlockManager.loadDocument", { i, data })
             block.bind(data);
             structure.appendChild(block.container);
+            this.blocks.push(block);
         }
         this.container.appendChild(structure);
     }
