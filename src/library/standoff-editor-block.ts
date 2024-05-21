@@ -109,6 +109,7 @@ export interface IStandoffPropertySchema {
     type: string;
     bindings?: string[];
     bindingHandler?: (e: StandoffEditorBlock, selection: IRange) => void;
+    event: any;
     decorate?: {
         cssClass?: string;
         batchRender?: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
@@ -146,8 +147,8 @@ export class Cell {
     next?: Cell;
     text: string;
     cache: {
-        previousOffset: ICellCoordOffsets,
-        offset: ICellCoordOffsets
+        previousOffset?: ICellCoordOffsets,
+        offset?: ICellCoordOffsets
     };
     element?: CellHtmlElement;
     isLineBreak: boolean;
@@ -157,12 +158,7 @@ export class Cell {
         this.text = text;
         this.block = block;
         this.cache = {
-            previousOffset: {
-                cy: 0,  y: 0, h: 0, x: 0, w: 0
-            },
-            offset: {
-                cy: 0,  y: 0, h: 0, x: 0, w: 0
-            }
+            
         };
         this.isLineBreak = false;
         this.element = this.createElement();
@@ -750,6 +746,7 @@ export class StandoffEditorBlock implements IBlock {
             this.container.innerHTML = "";
             this.container.appendChild(frag);
         });
+        this.updateView();
     }
     getCellAtIndex(index: number, cells: Cell[]) {
         const max = cells.length - 1;
@@ -869,7 +866,7 @@ export class StandoffEditorBlock implements IBlock {
         if (left) left.next = right;
         right.previous = left;
     }
-    updateOffsets() {
+    updateView() {
         const block = this;
         requestAnimationFrame(() => {
             block.calculateCellOffsets();

@@ -155,6 +155,11 @@ export class BlockManager implements IBlockManager {
     
                     }
                 },
+                event: {
+                    beforeStyling: async (args: any) => {
+
+                    }
+                },
                 render: {
                     destroy: ({ properties }) => {
                         properties.forEach(p => p.cache.underline?.remove())
