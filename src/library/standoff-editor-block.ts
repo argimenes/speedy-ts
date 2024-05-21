@@ -686,6 +686,14 @@ export class StandoffEditorBlock implements IBlock {
     }
     updateEnclosingProperties(anchor: Cell) {
         const props = this.getEnclosingProperties(anchor);
+        const propertiesGroupedByType = _.groupBy(props, x=> x.type);
+        for (let typeName in propertiesGroupedByType) {
+            const props = propertiesGroupedByType[typeName];
+            let schema = this.schemas.find(x => x.type == typeName);
+            if (schema?.render?.update) {
+                schema.render?.update({ block: this, properties: props });
+            }
+        }
     }
     private toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
         const input: IKeyboardInput = {
@@ -743,8 +751,9 @@ export class StandoffEditorBlock implements IBlock {
          * May want to check for a line-break character here?
          */
         requestAnimationFrame(() => {
-            this.container.innerHTML = "";
-            this.container.appendChild(frag);
+            self.container.innerHTML = "";
+            self.container.appendChild(frag);
+            self.updateOffsets();
         });
         this.updateView();
     }
