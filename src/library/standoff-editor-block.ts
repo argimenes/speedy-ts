@@ -690,6 +690,14 @@ export class StandoffEditorBlock implements IBlock {
     }
     updateEnclosingProperties(anchor: Cell) {
         const props = this.getEnclosingProperties(anchor);
+        const propertiesGroupedByType = _.groupBy(props, x=> x.type);
+        for (let typeName in propertiesGroupedByType) {
+            const props = propertiesGroupedByType[typeName];
+            let schema = this.schemas.find(x => x.type == typeName);
+            if (schema?.render?.update) {
+                schema.render?.update({ block: this, properties: props });
+            }
+        }
     }
     private toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
         const input: IKeyboardInput = {

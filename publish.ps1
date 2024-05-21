@@ -1,6 +1,6 @@
 npm run build
 $TargetEnv_Desktop = "C:\Users\iiand\Documents\Projects\speedy-ts"
-$Target_Base = $TargetEnv_Desktop + "\wwwroot\"
+$Target_Base = $TargetEnv_Desktop + "\public\"
 $TargetPath = $Target_Base
 if (![System.IO.Directory]::Exists($TargetPath)) {   
     New-Item $TargetPath -ItemType Directory
