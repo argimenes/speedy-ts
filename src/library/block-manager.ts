@@ -335,6 +335,7 @@ export class BlockManager implements IBlockManager {
             });
             structure.appendChild(block.container);
         }
+        this.container.appendChild(structure);
     }
     undent(block: IBlock) {
         /**

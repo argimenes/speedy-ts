@@ -7,6 +7,7 @@ type Props = {
 }
 export const BlockManagerWindow : Component<Props> = (props) => {
     const initialise = (el: HTMLDivElement) => {
+        
         const testDoc: StandoffEditorBlockDto = {
             text: "Once upon a midnight dreary ...",
             standoffProperties: [
@@ -14,9 +15,11 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                 { type: "style/bold", start: 7, end: 14 }
             ]
         };
+        console.log("BlockManagerWindow.initialise", { testDoc })
         const manager = new BlockManager();
         manager.container = el;
         manager.loadDocument(testDoc);
+        console.log("BlockManagerWindow.initialise", { manager })
     }
     return (
         <>
