@@ -147,8 +147,8 @@ export class Cell {
     next?: Cell;
     text: string;
     cache: {
-        previousOffset?: ICellCoordOffsets,
-        offset?: ICellCoordOffsets
+        previousOffset: ICellCoordOffsets,
+        offset: ICellCoordOffsets
     };
     element?: CellHtmlElement;
     isLineBreak: boolean;
@@ -158,7 +158,12 @@ export class Cell {
         this.text = text;
         this.block = block;
         this.cache = {
-            
+            previousOffset: {
+                x:0,y:0,w:0,h:0,cy:0
+            },
+            offset: {
+                x:0,y:0,w:0,h:0,cy:0
+            }
         };
         this.isLineBreak = false;
         this.element = this.createElement();
@@ -751,12 +756,11 @@ export class StandoffEditorBlock implements IBlock {
         /**
          * May want to check for a line-break character here?
          */
+        this.cells = cells;
         requestAnimationFrame(() => {
             self.container.innerHTML = "";
             self.container.appendChild(frag);
-            self.updateView();
         });
-        this.cells = cells;
         this.updateView();
     }
     getCellAtIndex(index: number, cells: Cell[]) {
@@ -881,6 +885,7 @@ export class StandoffEditorBlock implements IBlock {
         const block = this;
         requestAnimationFrame(() => {
             block.calculateCellOffsets();
+            console.log("updateView", { block });
             block.cache.verticalArrowNavigation.lastX = null;
             block.updateRenderers();
         });
@@ -895,17 +900,20 @@ export class StandoffEditorBlock implements IBlock {
             .filter(p => p.isDeleted && p.schema?.render?.destroy)
             ;
         this.batch(toDelete, (schema, props) => schema.render?.destroy({ block, properties: props }));
+        console.log("updateRenderers", { block, toUpdate, toDelete })
     }
     batch(properties: StandoffProperty[], action: (schema: IStandoffPropertySchema, props: StandoffProperty[]) => void) {
         const block = this;
-        const groups = Array.from(groupBy(properties, p => p.type));
-        groups.forEach(group => {
-            const typeName = group[0];
-            const props = group[1] as StandoffProperty[];
-            const schema = block.schemas[typeName];
+        const groups = _.groupBy(properties, p => p.type);
+        console.log("batch", { block, groups, properties });
+        for (let key in groups) {
+            const typeName = key;
+            const props = groups[typeName];
+            const schema = block.schemas.find(x => x.type == typeName);
+            console.log("batch", { typeName, props, schema });
             if (!schema) return;
             action(schema, props);
-        });
+        }
     }
     calculateCellOffsets() {
         const self = this;

@@ -1,5 +1,5 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto } from "./standoff-editor-block";
+import { BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty } from "./standoff-editor-block";
 import { createUnderline } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,6 +18,50 @@ export interface IBlockRange {
 export interface IBlockSelection extends IBlockRange {
     direction: SELECTION_DIRECTION;
 }
+
+function newElement<T extends HTMLElement> (type: string, config: any) {
+    var el = document.createElement(type);
+     updateElement(el, config);
+     return el as T;
+};
+
+function updateElement<T extends HTMLElement>(el: T, config: any) {
+    if (config.innerHTML) {
+        el.innerHTML = config.innerHTML;
+    }
+    var pixelFields = ["left", "top", "width", "height", "x", "y"];
+    if (config.style) {
+        for (let key in config.style) {
+            var value = config.style[key];
+            el.style[key as any] = value;
+        }
+    }
+    if (config.children) {
+        config.children.forEach((n: HTMLElement) => el.appendChild(n));
+    }
+    if (config.handler) {
+        for (var key in config.handler) {
+            el.addEventListener(key, config.handler[key]);
+        }
+    }
+    if (config.attribute) {
+        for (var key in config.attribute) {
+            el.setAttribute(key, config.attribute[key]);
+        }
+    }
+    if (config.dataset) {
+        for (var key in config.dataset) {
+            el.dataset[key] = config.dataset[key];
+        }
+    }
+    if (config.classList) {
+        config.classList.forEach((x: string) => el.classList.add(x));
+    }
+    if (config.parent) {
+        config.parent.appendChild(el);
+    }
+    return el;
+};
 
 export class GridBlock implements IBlock {
     id: GUID;
@@ -116,6 +160,7 @@ export class BlockManager implements IBlockManager {
         ]
     }
     getStandoffSchemas() {
+        const self = this;
         return [
             {
                 type: "style/italics",
@@ -146,6 +191,32 @@ export class BlockManager implements IBlockManager {
                 }
             },
             {
+                type: "codex/block-reference",
+                bindings: ["control-e", "control-c"],
+                bindingHandler: async (e: StandoffEditorBlock, selection: IRange) => {
+                    if (selection) {
+    
+                    } else {
+    
+                    }
+                },
+                event: {
+                    beforeStyling: async (args: any) => {
+
+                    }
+                },
+                render: {
+                    destroy: ({ properties }) => {
+                        console.log("destroy", { properties });
+                        properties.forEach(p => p.cache.underline?.remove())
+                    },
+                    update: (args) => {
+                        const owner = args.block.owner as BlockManager;
+                        owner.renderUnderlines("codex/block-reference", args.properties, args.block, "orange", 1);
+                    }
+                }
+            },
+            {
                 type: "codex/entity-reference",
                 bindings: ["control-e", "control-f"],
                 bindingHandler: async (e: StandoffEditorBlock, selection: IRange) => {
@@ -162,25 +233,41 @@ export class BlockManager implements IBlockManager {
                 },
                 render: {
                     destroy: ({ properties }) => {
+                        console.log("destroy", { properties });
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
-                        const { block, properties } = args;
-                        const overlay = block.getOrSetOverlay("codex/entity-reference");
-                        const cw = block.cache.containerWidth;
-                        const underlines = properties.map(p =>
-                            createUnderline(p, {
-                                stroke: "purple",
-                                containerWidth: cw,
-                                offsetY: 3
-                            })) as SVGElement[];
-                        const frag = document.createDocumentFragment();
-                        frag.append(...underlines);
-                        overlay.container.appendChild(frag);
+                        const owner = args.block.owner as BlockManager;
+                        owner.renderUnderlines("codex/entity-reference", args.properties, args.block, "purple", 3);
                     }
                 }
             }
         ] as IStandoffPropertySchema[];
+    }
+    renderUnderlines(type: string, properties: StandoffProperty[], block: StandoffEditorBlock, colour: string, offsetY: number) {
+        console.log("renderUnderlines", { block, properties });
+        const overlay = block.getOrSetOverlay(type);
+        const cw = block.cache?.offset?.w || block.container.offsetWidth;
+        const underlines = properties.map(p =>
+            createUnderline(p, {
+                stroke: colour,
+                containerWidth: cw,
+                offsetY: offsetY
+            })) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...underlines);
+        updateElement(overlay.container, {
+            classList: ["overlay"],
+            style: {
+                position: "absolute",
+                width: "100%",
+                top: 0,
+                left: 0
+            },
+            parent: block.container,
+            children: [frag]
+        });
+        console.log("update", { overlay, cw, underlines });
     }
     getPlatformKey(codes: TPlatformKey[]) {
         return codes.find(x=> x.platform == Platform.Windows);

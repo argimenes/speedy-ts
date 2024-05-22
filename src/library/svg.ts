@@ -82,9 +82,8 @@ export const createUnderline = (p: StandoffProperty, options: DrawUnderlineOptio
     }) as SVGElement;
     const segments = ordered.map(row => {
         const _cells = row[1] as Cell[];
-        const last = _cells.length = 1,
-              start = _cells[0],
-              end = _cells[last];
+        const start = _cells[0],
+              end = _cells[_cells.length-1];
         const startOffset = start.cache.offset,
               endOffset = end.cache.offset;
         const x1 = startOffset.x;
@@ -96,8 +95,10 @@ export const createUnderline = (p: StandoffProperty, options: DrawUnderlineOptio
                 stroke: options.stroke || "blue",
                 strokeWidth: options.strokeWidth || "2"
             },
-            x1, y1,
-            x2, y2
+            attribute: {
+                x1, y1,
+                x2, y2
+            }
         });
         if (options.strokeOpacity) {
             updateSVGElement(segment, {
