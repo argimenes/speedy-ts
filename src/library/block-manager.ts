@@ -245,7 +245,6 @@ export class BlockManager implements IBlockManager {
         ] as IStandoffPropertySchema[];
     }
     renderUnderlines(type: string, properties: StandoffProperty[], block: StandoffEditorBlock, colour: string, offsetY: number) {
-        console.log("renderUnderlines", { block, properties });
         const overlay = block.getOrSetOverlay(type);
         const cw = block.cache?.offset?.w || block.container.offsetWidth;
         const underlines = properties.map(p =>
@@ -267,7 +266,6 @@ export class BlockManager implements IBlockManager {
             parent: block.container,
             children: [frag]
         });
-        console.log("update", { overlay, cw, underlines });
     }
     getPlatformKey(codes: TPlatformKey[]) {
         return codes.find(x=> x.platform == Platform.Windows);
