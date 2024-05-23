@@ -1,5 +1,5 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { BlockEventSource, BlockEventTrigger, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty } from "./standoff-editor-block";
+import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty } from "./standoff-editor-block";
 import { createUnderline } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -159,15 +159,15 @@ export class BlockManager implements IBlockManager {
             }
         ]
     }
-    getStandoffPropertyTriggers() {
-        const triggers: BlockEventTrigger[] = [
+    getStandoffPropertyEvents() {
+        const triggers: InputEvent[] = [
             {
                 mode: "default",
                 trigger: {
-                    source: BlockEventSource.Keyboard,
+                    source: InputEventSource.Keyboard,
                     match: "control-i"
                 },
-                event: {
+                action: {
                     name: "Italicise",
                     description: "Italicises text in the selection. If no text is selected, switches to/from italics text mode.",
                     handler: (args: IBindingHandlerArgs) => {
@@ -184,10 +184,10 @@ export class BlockManager implements IBlockManager {
             {
                 mode: "default",
                 trigger: {
-                    source: BlockEventSource.Keyboard,
+                    source: InputEventSource.Keyboard,
                     match: "control-b"
                 },
-                event: {
+                action: {
                     name: "Bold",
                     description: "Emboldens text in the selection. If no text is selected, switches to/from embolden text mode.",
                     handler: (args: IBindingHandlerArgs) => {
@@ -205,7 +205,6 @@ export class BlockManager implements IBlockManager {
         return triggers;
     }
     getStandoffSchemas() {
-        const self = this;
         return [
             {
                 type: "style/italics",
@@ -221,22 +220,13 @@ export class BlockManager implements IBlockManager {
             },
             {
                 type: "codex/block-reference",
-                bindings: ["control-e", "control-c"],
-                bindingHandler: async (e: StandoffEditorBlock, selection: IRange) => {
-                    if (selection) {
-    
-                    } else {
-    
-                    }
-                },
                 event: {
                     beforeStyling: async (args: any) => {
-
+                        // TBC : will show some interface where a block can be retrieved
                     }
                 },
                 render: {
                     destroy: ({ properties }) => {
-                        console.log("destroy", { properties });
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
@@ -247,22 +237,13 @@ export class BlockManager implements IBlockManager {
             },
             {
                 type: "codex/entity-reference",
-                bindings: ["control-e", "control-f"],
-                bindingHandler: async (e: StandoffEditorBlock, selection: IRange) => {
-                    if (selection) {
-    
-                    } else {
-    
-                    }
-                },
                 event: {
                     beforeStyling: async (args: any) => {
-
+                        // TBC : will show a panel where the entity can be searched for
                     }
                 },
                 render: {
                     destroy: ({ properties }) => {
-                        console.log("destroy", { properties });
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
@@ -433,7 +414,7 @@ export class BlockManager implements IBlockManager {
         this.reset();
         const standoffSchemas = this.getStandoffSchemas();
         const blockSchemas = this.getBlockSchemas();
-        const modes = this.getModes();
+        const events = this.getStandoffPropertyEvents();
         const structure = document.createElement("DIV") as HTMLDivElement;
         const paragraphs = doc.text.split(/\r?\n/);
         let start = 0;
@@ -441,7 +422,7 @@ export class BlockManager implements IBlockManager {
         for (let i = 0; i< paragraphs.length; i ++) {
             let block = this.createNewBlock();
             block.setSchemas(standoffSchemas);
-            block.setModes(modes);
+            block.setEvents(events);
             let text = paragraphs[i];
             let end = start + text.length + 1; // + 1 to account for the CR stripped from the text
             const props = doc.standoffProperties

@@ -386,23 +386,27 @@ export interface ICursor {
     caret: CARET;
 }
 
-export enum BlockEventSource {
+export enum InputEventSource {
     Keyboard,
     Mouse
 }
 
 export type Trigger = {
-    source: BlockEventSource;
-    match:  string;
+    source: InputEventSource;
+    match:  string|string[];
 }
 
-export type BlockEventTrigger = {
+export interface ModeTrigger {
+    mode: string;
+    trigger: Trigger;
+}
+export type InputEvent = {
     mode: string;                   // "default"
     trigger: Trigger;
-    event: BlockEvent;             // See the one below
+    action: InputAction;             // See the one below
 }
 
-export type BlockEvent = {
+export type InputAction = {
     name: string;                   // "copy"
     description?: string;           // "Copies text in the selection for pasting elsewhere."
     handler: BindingHandler;        // The function that carries out the task.
@@ -433,10 +437,6 @@ export class StandoffEditorBlock implements IBlock {
     schemas: IStandoffPropertySchema[];
     blockSchemas: IBlockPropertySchema[];
     /**
-     * A Mode is a named collection of input bindings.
-     */
-    mode: Mode;
-    /**
      * Not unlike a StandoffProperty, a Selection denotes a highlighted range of text. Unlike a StandoffProperty,
      * it is not intended to be committed to the document, but represents a transient intention.
      * 
@@ -459,8 +459,9 @@ export class StandoffEditorBlock implements IBlock {
      * is rendered, and when anything affects the alignment of cells in those properties, such as adding or removing text.
      */
     overlays: Overlay[];
-    triggers: BlockEventTrigger[];
-    activeModes: string[];
+    inputEvents: InputEvent[];
+    inputActions: InputAction[];
+    modes: string[];
     constructor(owner: IBlockManager, container?: HTMLDivElement) {
         this.id = uuidv4();
         this.owner = owner;
@@ -480,7 +481,6 @@ export class StandoffEditorBlock implements IBlock {
             containerWidth: 0
         };
         this.relations = {};
-        this.mode = { } as any;
         this.cells = [];
         this.metadata = {};
         this.schemas = [];
@@ -490,18 +490,44 @@ export class StandoffEditorBlock implements IBlock {
         this.selections = [];
         this.inputBuffer = [];
         this.overlays = [];
-        this.triggers = [];
-        this.activeModes = ["default"];
+        this.inputEvents = [];
+        this.inputActions = [];
+        this.modes = ["default"];
         this.attachBindings();
+    }
+    addMode(mode: string) {
+        this.modes.push(mode);
+    }
+    getMapOfActiveInputEvents() {
+        /**
+         * Events should be grouped by modes. The modes at the top of the modes array are higher in priority.
+         * If the same event trigger appears in the list more than once, the mode with the highest priority takes precedence
+         * and the event is dispatched to THAT handler.
+         */
+        const map = new Map<ModeTrigger, InputAction>();
+        for (let i = this.modes.length - 1; i >= 0; i--) {
+            let mode = this.modes[i];
+            const triggers = this.inputEvents.filter(x => x.mode == mode);
+            triggers.forEach(x => {
+                if (map.has(x as ModeTrigger)) return;
+                map.set(x as ModeTrigger, x.action);
+            });
+        }
+        return map;
+    }
+    removeMode(mode: string) {
+        if (mode == "default") return;
+        const index = this.modes.findIndex(x => x == mode);
+        if (index < 0) return;
+        this.modes.splice(index, 1);
+    }
+    setEvents(events: InputEvent[]){
+        this.inputEvents.push(...events);
+        const actions = events.map(x => x.action);
+        this.inputActions.push(...actions);
     }
     setSchemas(schemas: IStandoffPropertySchema[]) {
         this.schemas.push(...schemas);
-    }
-    setModes(modes: Mode[]) {
-        for (let i = 0; i < modes.length; i++) {
-            let mode = modes[i];
-            this.mode = {...mode};
-        }
     }
     addRelation(name: string, targetId: string) {
         this.relations[name] = {
@@ -554,12 +580,6 @@ export class StandoffEditorBlock implements IBlock {
     }
     setRelation(type: string, targetId: string) {
         this.relations[type] = { type, sourceId: this.id, targetId };
-    }
-    addKeyboardBinding(mode: string, binding: KeyboardBinding) {
-        this.mode[mode].keyboard.push(binding);
-    }
-    addMouseBinding(mode: string, binding: MouseBinding) {
-        this.mode[mode].mouse.push(binding);
     }
     private attachBindings() {
         /*
