@@ -363,6 +363,9 @@ export type InputBindings = {
     keyboard: KeyboardBinding[];
     mouse: MouseBinding[];
 }
+
+
+
 export type Mode = Record<string, InputBindings>;
 /**
  * A place to store collections of absolutely-positioned SVG elements that 
@@ -382,6 +385,29 @@ export interface ICursor {
     anchorCell: Cell;
     caret: CARET;
 }
+
+export enum BlockEventSource {
+    Keyboard,
+    Mouse
+}
+
+export type Trigger = {
+    source: BlockEventSource;
+    match:  string;
+}
+
+export type BlockEventTrigger = {
+    mode: string;                   // "default"
+    trigger: Trigger;
+    event: BlockEvent;             // See the one below
+}
+
+export type BlockEvent = {
+    name: string;                   // "copy"
+    description?: string;           // "Copies text in the selection for pasting elsewhere."
+    handler: BindingHandler;        // The function that carries out the task.
+}
+
 export class StandoffEditorBlock implements IBlock {
     id: GUID;
     type: BlockType;
@@ -433,6 +459,8 @@ export class StandoffEditorBlock implements IBlock {
      * is rendered, and when anything affects the alignment of cells in those properties, such as adding or removing text.
      */
     overlays: Overlay[];
+    triggers: BlockEventTrigger[];
+    activeModes: string[];
     constructor(owner: IBlockManager, container?: HTMLDivElement) {
         this.id = uuidv4();
         this.owner = owner;
@@ -462,6 +490,8 @@ export class StandoffEditorBlock implements IBlock {
         this.selections = [];
         this.inputBuffer = [];
         this.overlays = [];
+        this.triggers = [];
+        this.activeModes = ["default"];
         this.attachBindings();
     }
     setSchemas(schemas: IStandoffPropertySchema[]) {

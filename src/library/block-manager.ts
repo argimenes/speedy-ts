@@ -1,5 +1,5 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty } from "./standoff-editor-block";
+import { BlockEventSource, BlockEventTrigger, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty } from "./standoff-editor-block";
 import { createUnderline } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -159,33 +159,62 @@ export class BlockManager implements IBlockManager {
             }
         ]
     }
+    getStandoffPropertyTriggers() {
+        const triggers: BlockEventTrigger[] = [
+            {
+                mode: "default",
+                trigger: {
+                    source: BlockEventSource.Keyboard,
+                    match: "control-i"
+                },
+                event: {
+                    name: "Italicise",
+                    description: "Italicises text in the selection. If no text is selected, switches to/from italics text mode.",
+                    handler: (args: IBindingHandlerArgs) => {
+                        const block = args.block as StandoffEditorBlock;
+                        const selection = block.getSelection();
+                        if (selection) {
+                            block.createStandoffProperty("style/italics", selection);
+                        } else {
+                            // TBC
+                        }      
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: BlockEventSource.Keyboard,
+                    match: "control-b"
+                },
+                event: {
+                    name: "Bold",
+                    description: "Emboldens text in the selection. If no text is selected, switches to/from embolden text mode.",
+                    handler: (args: IBindingHandlerArgs) => {
+                        const block = args.block as StandoffEditorBlock;
+                        const selection = block.getSelection();
+                        if (selection) {
+                            block.createStandoffProperty("style/bold", selection);
+                        } else {
+                            // TBC
+                        }      
+                    }
+                }
+            }
+        ];
+        return triggers;
+    }
     getStandoffSchemas() {
         const self = this;
         return [
             {
                 type: "style/italics",
-                bindings: ["control-i"],
-                bindingHandler: (block: StandoffEditorBlock, selection: IRange) => {
-                    if (selection) {
-                        block.createStandoffProperty("style/italics", selection);
-                    } else {
-    
-                    }
-                },
                 decorate: {
                     cssClass: "style_italics"
                 }
             },
             {
                 type: "style/bold",
-                bindings: ["control-b"],
-                bindingHandler: (block: StandoffEditorBlock, selection: IRange) => {
-                    if (selection) {
-                        block.createStandoffProperty("style/bold", selection);
-                    } else {
-    
-                    }
-                },
                 decorate: {
                     cssClass: "style_bold"
                 }
