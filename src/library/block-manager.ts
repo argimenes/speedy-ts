@@ -1,5 +1,5 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty } from "./standoff-editor-block";
+import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit } from "./standoff-editor-block";
 import { createUnderline } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,50 +18,6 @@ export interface IBlockRange {
 export interface IBlockSelection extends IBlockRange {
     direction: SELECTION_DIRECTION;
 }
-
-function newElement<T extends HTMLElement> (type: string, config: any) {
-    var el = document.createElement(type);
-     updateElement(el, config);
-     return el as T;
-};
-
-function updateElement<T extends HTMLElement>(el: T, config: any) {
-    if (config.innerHTML) {
-        el.innerHTML = config.innerHTML;
-    }
-    var pixelFields = ["left", "top", "width", "height", "x", "y"];
-    if (config.style) {
-        for (let key in config.style) {
-            var value = config.style[key];
-            el.style[key as any] = value;
-        }
-    }
-    if (config.children) {
-        config.children.forEach((n: HTMLElement) => el.appendChild(n));
-    }
-    if (config.handler) {
-        for (var key in config.handler) {
-            el.addEventListener(key, config.handler[key]);
-        }
-    }
-    if (config.attribute) {
-        for (var key in config.attribute) {
-            el.setAttribute(key, config.attribute[key]);
-        }
-    }
-    if (config.dataset) {
-        for (var key in config.dataset) {
-            el.dataset[key] = config.dataset[key];
-        }
-    }
-    if (config.classList) {
-        config.classList.forEach((x: string) => el.classList.add(x));
-    }
-    if (config.parent) {
-        config.parent.appendChild(el);
-    }
-    return el;
-};
 
 export class GridBlock implements IBlock {
     id: GUID;
@@ -114,6 +70,8 @@ export class GridBlock implements IBlock {
     }
 }
 
+
+
 export class BlockManager implements IBlockManager {
     id: string;
     type: BlockType;
@@ -123,6 +81,7 @@ export class BlockManager implements IBlockManager {
     metadata: Record<string,any>;
     focus?: IBlock;
     selections: IBlockSelection[];
+    commits: Commit[];
     constructor(props?: IBlockManagerConstructor) {
         this.id = props?.id || uuidv4();
         this.type = BlockType.Outliner;
@@ -131,6 +90,13 @@ export class BlockManager implements IBlockManager {
         this.blocks = [];
         this.metadata = {};
         this.selections = [];
+        this.commits = [];
+    }
+    rollforward() {
+
+    }
+    rollback() {
+
     }
     addRelation(name: string) {
 
@@ -458,6 +424,9 @@ export class BlockManager implements IBlockManager {
         this.blocks = [];
         this.id = uuidv4();
     }
+    storeCommit(commit: Commit) {
+        this.commits.push(commit);
+    }
     loadDocument(doc: StandoffEditorBlockDto) {
         this.reset();
         const standoffSchemas = this.getStandoffSchemas();
@@ -473,6 +442,7 @@ export class BlockManager implements IBlockManager {
             block.setSchemas(standoffSchemas);
             block.setEvents(standoffEvents);
             block.setEvents(editorEvents);
+            block.setCommitHandler(this.storeCommit.bind(this));
             let text = paragraphs[i];
             let end = start + text.length + 1; // + 1 to account for the CR stripped from the text
             const props = doc.standoffProperties
@@ -484,6 +454,7 @@ export class BlockManager implements IBlockManager {
                 text: text,
                 standoffProperties: props as any[]
             };
+            const lb = block.createLineBreakCell();
             console.log("BlockManager.loadDocument", { i, data })
             block.bind(data);
             structure.appendChild(block.container);
@@ -542,4 +513,8 @@ export class BlockManager implements IBlockManager {
     startNewDocument() {
         
     }
+}
+
+function updateElement(container: HTMLDivElement, arg1: { classList: string[]; style: { position: string; width: string; top: number; left: number; }; parent: HTMLDivElement; children: DocumentFragment[]; }) {
+    throw new Error("Function not implemented.");
 }

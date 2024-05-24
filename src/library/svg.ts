@@ -6,6 +6,51 @@ export const createSvg = (config: any) => {
     return updateSVGElement(el, config);
 };
 
+function newElement<T extends HTMLElement> (type: string, config: any) {
+    var el = document.createElement(type);
+     updateElement(el, config);
+     return el as T;
+};
+
+export function updateElement<T extends HTMLElement>(el: T, config: any) {
+    if (config.innerHTML) {
+        el.innerHTML = config.innerHTML;
+    }
+    var pixelFields = ["left", "top", "width", "height", "x", "y"];
+    if (config.style) {
+        for (let key in config.style) {
+            var value = config.style[key];
+            el.style[key as any] = value;
+        }
+    }
+    if (config.children) {
+        config.children.forEach((n: HTMLElement) => el.appendChild(n));
+    }
+    if (config.handler) {
+        for (var key in config.handler) {
+            el.addEventListener(key, config.handler[key]);
+        }
+    }
+    if (config.attribute) {
+        for (var key in config.attribute) {
+            el.setAttribute(key, config.attribute[key]);
+        }
+    }
+    if (config.dataset) {
+        for (var key in config.dataset) {
+            el.dataset[key] = config.dataset[key];
+        }
+    }
+    if (config.classList) {
+        config.classList.forEach((x: string) => el.classList.add(x));
+    }
+    if (config.parent) {
+        config.parent.appendChild(el);
+    }
+    return el;
+};
+
+
 export const updateSVGElement = (el: any, config: any) => {
     if (config.property) {
         el.property = config.property;

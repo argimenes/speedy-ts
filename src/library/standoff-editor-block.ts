@@ -1,6 +1,7 @@
 import _ from "underscore";
 import { KEYS, Platform } from "./keyboard";
 import { v4 as uuidv4 } from 'uuid';
+import { updateElement } from "./svg";
 
 export enum CARET {
     LEFT = 0,
@@ -391,6 +392,15 @@ export enum InputEventSource {
     Mouse
 }
 
+export type Command = {
+    name: string;
+    value?: Record<string,any>;
+}
+export type ReverseCommand = Command;
+export type Commit = {
+    command: Command;
+    reverse: ReverseCommand;
+}
 export type Trigger = {
     source: InputEventSource;
     match:  string|string[];
@@ -461,13 +471,23 @@ export class StandoffEditorBlock implements IBlock {
     overlays: Overlay[];
     inputEvents: InputEvent[];
     inputActions: InputAction[];
+    commitHandler: (commit: Commit) => void;
     modes: string[];
     constructor(owner: IBlockManager, container?: HTMLDivElement) {
         this.id = uuidv4();
         this.owner = owner;
         this.type = BlockType.StandoffEditor;
         this.container = container || (document.createElement("DIV") as HTMLDivElement);
-        this.container.setAttribute("contenteditable", "true");
+        updateElement(this.container, {
+            attribute: {
+                contenteditable: "true"
+            },
+            style: {
+                margin: "0 10px",
+                border: "1px solid #ccc",
+                padding: "3px"
+            }
+        });
         this.cache = {
             previousOffset: {
                 x: 0, y: 0, h: 0, w: 0
@@ -520,6 +540,9 @@ export class StandoffEditorBlock implements IBlock {
         const index = this.modes.findIndex(x => x == mode);
         if (index < 0) return;
         this.modes.splice(index, 1);
+    }
+    setCommitHandler(handler: (commit: Commit) => void) {
+        this.commitHandler = handler;
     }
     setEvents(events: InputEvent[]){
         this.inputEvents.push(...events);
@@ -632,10 +655,10 @@ export class StandoffEditorBlock implements IBlock {
         const caret = this.getCaret() as Caret;
         console.log("handleMouseUpEvent", { caret, e })
         if (caret.left) {
-            caret.left.element?.style.setProperty("background-colour", "green");
+            updateElement(caret.left.element as HTMLElement, { "background-color": "pink" });
         }
         if (caret.right) {
-            caret.right.element?.style.setProperty("background-colour", "red");
+            updateElement(caret.right.element as HTMLElement, { "background-color": "green" });
         }
         // this.handleCaretMoveEvent(e, caret);
         // var props = this.getCurrentRanges(e.target);
@@ -654,7 +677,19 @@ export class StandoffEditorBlock implements IBlock {
         //     });
         // }
         // this.addCursorToHistory(e.target);
-    }
+        let commit: Commit = {
+            command: {
+                name: "set-cursor",
+                value: {
+                    anchorIndex: caret.left?.index
+                }
+            },
+            reverse: {
+                name: ""
+            }
+        };
+        this.commitHandler(commit);
+    }                         
     createEmptyBlock() {
         const linebreak = this.createLineBreakCell();
         this.container.innerHTML = "";
