@@ -393,13 +393,14 @@ export enum InputEventSource {
 }
 
 export type Command = {
+    id: GUID;
     name: string;
     value?: Record<string,any>;
 }
 export type ReverseCommand = Command;
 export type Commit = {
     command: Command;
-    reverse: ReverseCommand;
+    reverse?: ReverseCommand;
 }
 export type Trigger = {
     source: InputEventSource;
@@ -512,6 +513,7 @@ export class StandoffEditorBlock implements IBlock {
         this.overlays = [];
         this.inputEvents = [];
         this.inputActions = [];
+        this.commitHandler = () => { };
         this.modes = ["default"];
         this.attachBindings();
     }
@@ -794,6 +796,13 @@ export class StandoffEditorBlock implements IBlock {
         this.insertIntoCellArrayBefore(right, cells);
         this.insertElementsBefore(right.element as HTMLElement, cells.map(c => c.element as HTMLElement));
         this.updateEnclosingProperties(anchor);
+        this.commit({
+            command: {
+                id: this.id,
+                name: "insertTextAtIndex",
+                value: { text, index }
+            }
+        })
     }
     private insertElementsBefore(anchor: HTMLElement, elements: HTMLElement[]) {
         const frag = document.createDocumentFragment();
@@ -896,6 +905,13 @@ export class StandoffEditorBlock implements IBlock {
             self.container.appendChild(frag);
         });
         this.updateView();
+        this.commit({
+            command: {
+                id: this.id,
+                name: "bind",
+                value: { block }
+            }
+        });
     }
     getCellAtIndex(index: number, cells: Cell[]) {
         const max = cells.length - 1;
@@ -972,6 +988,16 @@ export class StandoffEditorBlock implements IBlock {
             selection.removeAllRanges();
             selection.addRange(range);
         }
+        this.commit({
+            command: {
+                id: this.id,
+                name: "setCaret",
+                value: { index, offset }
+            }
+        });
+    }
+    commit(msg: Commit) {
+        this.commitHandler(msg);
     }
     shiftPropertyBoundaries(cell: Cell) {
         this.shiftPropertyStartNodesRight(cell);
@@ -1097,6 +1123,13 @@ export class StandoffEditorBlock implements IBlock {
         if (updateCaret) {
             this.setCaret(index);
         }
+        this.commit({
+            command: {
+                id: this.id,
+                name: "removeCellAtIndex",
+                value: { index, updateCaret }
+            }
+        });
     }
     getCells(range: IRange) {
         const cells: Cell[] = [];
