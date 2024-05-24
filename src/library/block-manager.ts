@@ -184,6 +184,41 @@ export class BlockManager implements IBlockManager {
                         block.removeCellAtIndex(caret.left.index, true);
                     }
                 }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "LEFT-ARROW"
+                },
+                action: {
+                    name: "Move the cursor back one cell ...",
+                    description: `
+                        ... Or skip to the end of the previous block.
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        /**
+                         * Move the cursor back one cell ...
+                         */
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
+                        if (!!caret.left) {
+                            block.setCaret(caret.left.index);
+                            return;
+                        }
+                        /**
+                         * Or skip to the end of the previous block.
+                         */
+                        const previousEdge = block.getRelation("has-previous-sibling");
+                        if (!previousEdge) return;
+                        const previous = manager.getBlock(previousEdge.targetId);
+                        if (!previous) return;
+                        const last = previous.getLastCell();
+                        previous.setCaret(last.index);
+                        manager.setBlockFocus(previous);
+                    }
+                }
             }
         ];
         return events;
@@ -319,22 +354,6 @@ export class BlockManager implements IBlockManager {
             "default": {
                 keyboard: [
                     {
-                        "DELETE": (args: IBindingHandlerArgs) => {
-                            /**
-                             * Delete the character to the left and move the cursor
-                             * to the left of the character to the right.
-                             * 
-                             * If at the start of the block (i.e., no character to the left)
-                             * then issue an event named "DELETE_CHARACTER_FROM_START_OF_BLOCK".
-                             */
-                            const { caret } = args;
-                            const block = args.block as StandoffEditorBlock;
-                            if (!caret.left) {
-                                block.trigger("DELETE_CHARACTER_FROM_START_OF_BLOCK");
-                                return;
-                            }
-                            block.removeCellAtIndex(caret.left.index, true);
-                        },
                         "LEFT-ARROW": (args: IBindingHandlerArgs) => {
                             /**
                              * Move the cursor back one cell ...

@@ -605,7 +605,55 @@ export class StandoffEditorBlock implements IBlock {
         We also need to keep track of keyboard input combinations, e.g., [CTRL-K, CTRL-D].
 
         */
-        this.container.addEventListener("keydown", this.handleKeyDown);
+        this.container.addEventListener("keydown", this.handleKeyDown.bind(this));
+        this.container.addEventListener("mouseup", this.handleMouseUpEvent.bind(this));
+    }
+    handleMouseUpEvent(e: MouseEvent) {
+        const target = e.target as CellHtmlElement;
+        // if (!target || target.speedy?.role != ELEMENT_ROLE.CELL) {
+        //     return;
+        // }
+        // this.updateCurrentRanges(e.target);
+        // var selection = this.getSelectionNodes();
+        // if (selection) {
+        //     selection.text = this.getRangeText(selection);
+        //     this.mode.selection.start = selection.start;
+        //     this.mode.selection.end = selection.end;
+        //     if (this.event.mouse) {
+        //         if (this.event.mouse.selection) {
+        //             e.preventDefault();
+        //             this.event.mouse.selection({ editor: this, e, selection });
+        //         }
+        //     }
+        // } else {
+        //     this.mode.selection.start = null;
+        //     this.mode.selection.end = null;
+        // }
+        const caret = this.getCaret() as Caret;
+        console.log("handleMouseUpEvent", { caret, e })
+        if (caret.left) {
+            caret.left.element?.style.setProperty("background-colour", "green");
+        }
+        if (caret.right) {
+            caret.right.element?.style.setProperty("background-colour", "red");
+        }
+        // this.handleCaretMoveEvent(e, caret);
+        // var props = this.getCurrentRanges(e.target);
+        // if (props) {
+        //     props.forEach(p => {
+        //         try {
+        //             if (p.schema.event && p.schema.event.property) {
+        //                 var property = p.schema.event.property;
+        //                 if (property.mouseUp) {
+        //                     property.mouseUp(p);
+        //                 }
+        //             }
+        //         } catch (ex) {
+        //             log({ ex, p });
+        //         }
+        //     });
+        // }
+        // this.addCursorToHistory(e.target);
     }
     createEmptyBlock() {
         const linebreak = this.createLineBreakCell();
