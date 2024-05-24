@@ -22,7 +22,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
     }
     return (
         <>
-            <div ref={initialise} contentEditable />
+            <div ref={initialise} />
         </>
     )
 }
