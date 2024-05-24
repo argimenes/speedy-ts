@@ -11,3 +11,20 @@
 .style_bold {
     font-weight: 600;
 }
+
+.App {
+    text-align: center;
+    margin-top: 300px;
+    
+  }
+  
+  .block-window {
+    width: 800px;
+    height: 600px;
+    background-color: #eee;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 20px 15px;
+    margin: 0 300px;
+  }
+  

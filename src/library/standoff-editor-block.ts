@@ -691,6 +691,7 @@ export class StandoffEditorBlock implements IBlock {
          * For now, assume no bindings and ignore text selection and just add characters.
          */
         this.insertCharacterAtCaret(input);
+        return false;
     }
     getCellFromNode(node: CellNode) {
         let current = node;

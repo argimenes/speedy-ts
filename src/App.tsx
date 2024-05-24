@@ -4,7 +4,7 @@ import { BlockManagerWindow } from './components/BlockManagerWindow';
 
 const App: Component = () => {
   return (
-    <div class={styles.App}>
+    <div class="App">
       <BlockManagerWindow />
     </div>
   );
