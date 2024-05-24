@@ -159,8 +159,37 @@ export class BlockManager implements IBlockManager {
             }
         ]
     }
+    getEditorEvents() {
+        const events: InputEvent[] = [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "DELETE"
+                },
+                action: {
+                    name: "Delete preceding character",
+                    description: `
+                        Delete the character to the left and move the cursor to the left of the character to the right.
+                        If at the start of the block (i.e., no character to the left) then issues an event
+                        named "DELETE_CHARACTER_FROM_START_OF_BLOCK" (?).
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        if (!caret.left) {
+                            block.trigger("DELETE_CHARACTER_FROM_START_OF_BLOCK");
+                            return;
+                        }
+                        block.removeCellAtIndex(caret.left.index, true);
+                    }
+                }
+            }
+        ];
+        return events;
+    }
     getStandoffPropertyEvents() {
-        const triggers: InputEvent[] = [
+        const events: InputEvent[] = [
             {
                 mode: "default",
                 trigger: {
@@ -202,7 +231,7 @@ export class BlockManager implements IBlockManager {
                 }
             }
         ];
-        return triggers;
+        return events;
     }
     getStandoffSchemas() {
         return [
@@ -414,7 +443,8 @@ export class BlockManager implements IBlockManager {
         this.reset();
         const standoffSchemas = this.getStandoffSchemas();
         const blockSchemas = this.getBlockSchemas();
-        const events = this.getStandoffPropertyEvents();
+        const standoffEvents = this.getStandoffPropertyEvents();
+        const editorEvents = this.getEditorEvents();
         const structure = document.createElement("DIV") as HTMLDivElement;
         const paragraphs = doc.text.split(/\r?\n/);
         let start = 0;
@@ -422,7 +452,8 @@ export class BlockManager implements IBlockManager {
         for (let i = 0; i< paragraphs.length; i ++) {
             let block = this.createNewBlock();
             block.setSchemas(standoffSchemas);
-            block.setEvents(events);
+            block.setEvents(standoffEvents);
+            block.setEvents(editorEvents);
             let text = paragraphs[i];
             let end = start + text.length + 1; // + 1 to account for the CR stripped from the text
             const props = doc.standoffProperties
