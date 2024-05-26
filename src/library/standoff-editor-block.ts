@@ -679,18 +679,13 @@ export class StandoffEditorBlock implements IBlock {
         //     });
         // }
         // this.addCursorToHistory(e.target);
-        let commit: Commit = {
+        this.commit({
             command: {
+                id: this.id,
                 name: "set-cursor",
-                value: {
-                    anchorIndex: caret.left?.index
-                }
-            },
-            reverse: {
-                name: ""
+                value: { anchorIndex: caret.left?.index }
             }
-        };
-        this.commitHandler(commit);
+        });
     }                         
     createEmptyBlock() {
         const linebreak = this.createLineBreakCell();
@@ -785,13 +780,16 @@ export class StandoffEditorBlock implements IBlock {
         const caret = this.getCaret();
         if (!caret) return;
         const selection = this.getSelection();
-        this.insertCharacterAfterIndex(input.key, caret.right.index);
+        this.insertTextAtIndex(input.key, caret.right.index);
     }
+
     insertTextAtIndex(text: string, index: number) {
         const right = this.cells[index];
         const left = right.previous;
         const anchor = left || right;
         const cells = text.split('').map(c => new Cell({ text: c, block: this }));
+        const enclosing = this.getEnclosingProperties(anchor);
+        enclosing.forEach(p => p.applyStyling());
         this.knitCells(left, cells, right);
         this.insertIntoCellArrayBefore(right, cells);
         this.insertElementsBefore(right.element as HTMLElement, cells.map(c => c.element as HTMLElement));
@@ -889,6 +887,10 @@ export class StandoffEditorBlock implements IBlock {
             const start = cells[p.start];
             const end = cells[p.end];
             const schema = this.schemas.find(x => x.type == p.type) as IStandoffPropertySchema;
+            if (!schema) {
+                console.log("Schema not found for the standoff property type.", { p });
+                // Need to handle this properly ... can't just return early in a map().
+            }
             const sproc = new StandoffProperty({ type: p.type, block: self, start, end, schema });
             sproc.value = p.value as string;
             sproc.applyStyling();
