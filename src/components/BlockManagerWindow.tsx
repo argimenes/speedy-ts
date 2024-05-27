@@ -20,6 +20,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
         const manager = new BlockManager();
         manager.container = el;
         manager.loadDocument(testDoc);
+        console.log({ manager, block: manager.blocks[0] })
     }
     return (
         <>
