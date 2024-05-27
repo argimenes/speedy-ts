@@ -78,7 +78,7 @@ export class BlockManager implements IBlockManager {
     type: BlockType;
     container: HTMLDivElement;
     relations: Record<string, IBlockRelation>;
-    blocks: StandoffEditorBlock[];
+    blocks: IBlock[];
     metadata: Record<string,any>;
     focus?: IBlock;
     selections: IBlockSelection[];
@@ -89,7 +89,7 @@ export class BlockManager implements IBlockManager {
         this.type = BlockType.Outliner;
         this.container = props?.container || document.createElement("DIV") as HTMLDivElement;
         this.relations = {};
-        this.blocks = [];
+        this.blocks = [this];
         this.metadata = {};
         this.selections = [];
         this.commits = [];
@@ -120,6 +120,10 @@ export class BlockManager implements IBlockManager {
             case "removeCellAtIndex": {
                 let block = this.getBlock(command.id) as StandoffEditorBlock;
                 block.removeCellAtIndex(value.index, value.updateCaret);
+            }
+            case "removeCellsAtIndex": {
+                let block = this.getBlock(command.id) as StandoffEditorBlock;
+                block.removeCellsAtIndex(value.index, value.length, value.updateCaret);
             }
             default: {
                 break;
@@ -212,7 +216,7 @@ export class BlockManager implements IBlockManager {
                          */
                         const previousEdge = block.getRelation("has-previous-sibling");
                         if (!previousEdge) return;
-                        const previous = manager.getBlock(previousEdge.targetId);
+                        const previous = manager.getBlock(previousEdge.targetId) as StandoffEditorBlock;
                         if (!previous) return;
                         const last = previous.getLastCell();
                         previous.setCaret(last.index);
@@ -389,8 +393,8 @@ export class BlockManager implements IBlockManager {
          * 
          * None of this takes into account the case where 'second' is a *child block* in a nested list.
          */
-        const first = this.getBlock(firstBlockId);
-        const second = this.getBlock(secondBlockId);
+        const first = this.getBlock(firstBlockId) as StandoffEditorBlock;
+        const second = this.getBlock(secondBlockId) as StandoffEditorBlock;
         const lastIndex = (first?.cells.length as number) -1;
         first?.removeCellAtIndex(lastIndex);
         first?.cells.push(...second?.cells as Cell[]);
@@ -467,7 +471,7 @@ export class BlockManager implements IBlockManager {
                              */
                             const previousEdge = block.getRelation("has-previous-sibling");
                             if (!previousEdge) return;
-                            const previous = self.getBlock(previousEdge.targetId);
+                            const previous = self.getBlock(previousEdge.targetId) as StandoffEditorBlock;
                             if (!previous) return;
                             const last = previous.getLastCell();
                             previous.setCaret(last.index);
@@ -593,6 +597,13 @@ export class BlockManager implements IBlockManager {
             this.blocks.push(block);
         }
         this.container.appendChild(structure);
+        this.commit({
+            command: {
+                id: this.id,
+                name: "loadDocument",
+                value: { doc }
+            }
+        })
     }
     undent(block: IBlock) {
         /**

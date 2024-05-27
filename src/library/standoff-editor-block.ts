@@ -820,6 +820,11 @@ export class StandoffEditorBlock implements IBlock {
                 id: this.id,
                 name: "insertTextAtIndex",
                 value: { text, index }
+            },
+            reverse: {
+                id: this.id,
+                name: "removeCellsAtIndex",
+                value: { index, length: text.length }
             }
         })
     }
@@ -905,6 +910,16 @@ export class StandoffEditorBlock implements IBlock {
             sproc.applyStyling();
             return sproc;
         });
+        this.blockProperties = block.blockProperties?.map(p => {
+            const schema = this.schemas.find(x => x.type == p.type) as IBlockPropertySchema;
+            if (!schema) {
+                console.log("Schema not found for the standoff property type.", { p });
+                // Need to handle this properly ... can't just return early in a map().
+            }
+            const prop = new BlockProperty({ type: p.type, block: self, schema });
+            prop.applyStyling();
+            return prop;
+        }) as BlockProperty[];
         const frag = document.createDocumentFragment();
         cells.forEach(c => frag.append(c.element as HTMLElement));
         /**
@@ -977,9 +992,6 @@ export class StandoffEditorBlock implements IBlock {
     trigger(eventName: string) {
 
     }
-    removeCell(args: { cell: Cell, updateCaret?: boolean }) {
-        
-    }
     setCaret(index: number, offset?: CARET) {
         /**
          * Might want to investigate setting the caret by absolutely positioning an SVG ...
@@ -1007,14 +1019,14 @@ export class StandoffEditorBlock implements IBlock {
             }
         });
     }
-    commit(msg: Commit) {
+    private commit(msg: Commit) {
         this.commitHandler(msg);
     }
-    shiftPropertyBoundaries(cell: Cell) {
+    private shiftPropertyBoundaries(cell: Cell) {
         this.shiftPropertyStartNodesRight(cell);
         this.shiftPropertyEndNodesLeft(cell);
     }
-    shiftPropertyEndNodesLeft(cell: Cell) {
+    private shiftPropertyEndNodesLeft(cell: Cell) {
         const previousCell = cell.previous;
         const properties = this.standoffProperties.filter(p => !p.isDeleted);
         const singles = properties.filter(p => p.start == p.end && p.start == cell);
@@ -1117,6 +1129,23 @@ export class StandoffEditorBlock implements IBlock {
             };
         });
     }
+    clear() {
+        this.cells = [];
+        this.standoffProperties = [];
+        this.blockProperties = [];
+        this.inputBuffer = [];
+        this.schemas =[];
+        this.blockSchemas = [];
+        this.overlays = [];
+        if (this.container) this.container.innerHTML = "";
+    }
+    removeCellsAtIndex(index: number, length: number, updateCaret?: boolean) {
+        const start = index;
+        const end = index + length;
+        for (let i = 1; i <= length; i++) {
+            this.removeCellAtIndex(index, updateCaret);
+        }
+    }
     removeCellAtIndex(index: number, updateCaret?: boolean) {
         const cell = this.cells[index];
         updateCaret = !!updateCaret;
@@ -1127,6 +1156,7 @@ export class StandoffEditorBlock implements IBlock {
             return;
         }
         this.unknit(cell);
+        this.shiftPropertyBoundaries(cell);
         cell.removeElement();
         this.cells.splice(index, 1);
         this.reindexCells();
