@@ -1,6 +1,6 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
 import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty } from "./standoff-editor-block";
-import { createUnderline } from "./svg";
+import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 
 export enum CssClass {
@@ -613,6 +613,3 @@ export class BlockManager implements IBlockManager {
     }
 }
 
-function updateElement(container: HTMLDivElement, arg1: { classList: string[]; style: { position: string; width: string; top: number; left: number; }; parent: HTMLDivElement; children: DocumentFragment[]; }) {
-    throw new Error("Function not implemented.");
-}
