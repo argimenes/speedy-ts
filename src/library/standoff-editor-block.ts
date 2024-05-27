@@ -178,7 +178,7 @@ export class Cell {
     }
     createSpan() {
         const span = document.createElement("SPAN") as CellHtmlElement;
-        span.innerText = this.text;
+        span.innerHTML = this.text == " " ? "&nbsp;" : this.text;
         span.speedy = {
             cell: this,
             role: ELEMENT_ROLE.CELL
@@ -793,9 +793,10 @@ export class StandoffEditorBlock implements IBlock {
         const enclosing = this.getEnclosingProperties(anchor);
         enclosing.forEach(p => p.applyStyling());
         this.knitCells(left, cells, right);
-        this.insertIntoCellArrayBefore(right, cells);
+        this.insertIntoCellArrayBefore(index, cells);
         this.insertElementsBefore(right.element as HTMLElement, cells.map(c => c.element as HTMLElement));
         this.updateEnclosingProperties(anchor);
+        this.updateView();
         this.commit({
             command: {
                 id: this.id,
@@ -807,14 +808,13 @@ export class StandoffEditorBlock implements IBlock {
     private insertElementsBefore(anchor: HTMLElement, elements: HTMLElement[]) {
         const frag = document.createDocumentFragment();
         frag.append(...elements);
-        requestAnimationFrame(() => anchor.insertBefore(frag, anchor));
+        requestAnimationFrame(() => anchor.parentNode.insertBefore(frag, anchor));
     }
     private reindexCells() {
         this.cells.forEach((cell, index) => cell.index = index);
     }
-    private insertIntoCellArrayBefore(anchor: Cell, cells: Cell[]) {
-        const i = this.cells.findIndex(x => x == anchor);
-        this.cells.splice(i, 0, ...cells);
+    private insertIntoCellArrayBefore(index: number, cells: Cell[]) {
+        this.cells.splice(index, 0, ...cells);
         this.reindexCells();
     }
     private knitCells(left: Cell|undefined, middle: Cell[], right: Cell) {
@@ -1124,6 +1124,7 @@ export class StandoffEditorBlock implements IBlock {
         this.cells.splice(index, 1);
         this.reindexCells();
         this.updateEnclosingProperties(cell);
+        this.updateView();
         if (updateCaret) {
             this.setCaret(index);
         }
