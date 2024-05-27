@@ -793,7 +793,10 @@ export class StandoffEditorBlock implements IBlock {
                 c.element?.classList.add(e.schema.decorate.cssClass);
             });
         });
-        const propertiesGroupedByType = _.groupBy(enclosing, x=> x.type);
+        this.renderProperties(enclosing);
+    }
+    renderProperties(props: StandoffProperty[]) {
+        const propertiesGroupedByType = _.groupBy(props, x=> x.type);
         for (let typeName in propertiesGroupedByType) {
             const props = propertiesGroupedByType[typeName];
             let schema = this.schemas.find(x => x.type == typeName);
@@ -1127,7 +1130,8 @@ export class StandoffEditorBlock implements IBlock {
         cell.removeElement();
         this.cells.splice(index, 1);
         this.reindexCells();
-        this.updateEnclosingProperties(cell);
+        const enclosing = this.getEnclosingProperties(cell);
+        this.renderProperties(enclosing);
         this.updateView();
         if (updateCaret) {
             this.setCaret(index);
