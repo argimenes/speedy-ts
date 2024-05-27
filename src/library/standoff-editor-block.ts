@@ -785,17 +785,32 @@ export class StandoffEditorBlock implements IBlock {
     addStandoffProperties(props: StandoffProperty[]) {
         
     }
+    applyStylingAndRenderingToNewCells(anchor: Cell, cells: Cell[]) {
+        const enclosing = this.getEnclosingProperties(anchor);
+        cells.forEach(c => {
+            enclosing.forEach(e => {
+                if (!e?.schema?.decorate?.cssClass) return;
+                c.element?.classList.add(e.schema.decorate.cssClass);
+            });
+        });
+        const propertiesGroupedByType = _.groupBy(enclosing, x=> x.type);
+        for (let typeName in propertiesGroupedByType) {
+            const props = propertiesGroupedByType[typeName];
+            let schema = this.schemas.find(x => x.type == typeName);
+            if (schema?.render?.update) {
+                schema.render?.update({ block: this, properties: props });
+            }
+        }
+    }
     insertTextAtIndex(text: string, index: number) {
         const right = this.cells[index];
         const left = right.previous;
         const anchor = left || right;
         const cells = text.split('').map(c => new Cell({ text: c, block: this }));
-        const enclosing = this.getEnclosingProperties(anchor);
-        enclosing.forEach(p => p.applyStyling());
+        this.applyStylingAndRenderingToNewCells(anchor, cells);
         this.knitCells(left, cells, right);
         this.insertIntoCellArrayBefore(index, cells);
         this.insertElementsBefore(right.element as HTMLElement, cells.map(c => c.element as HTMLElement));
-        this.updateEnclosingProperties(anchor);
         this.updateView();
         this.commit({
             command: {
@@ -830,17 +845,6 @@ export class StandoffEditorBlock implements IBlock {
             }
             current.next = next;
             next.previous = current;
-        }
-    }
-    updateEnclosingProperties(anchor: Cell) {
-        const props = this.getEnclosingProperties(anchor);
-        const propertiesGroupedByType = _.groupBy(props, x=> x.type);
-        for (let typeName in propertiesGroupedByType) {
-            const props = propertiesGroupedByType[typeName];
-            let schema = this.schemas.find(x => x.type == typeName);
-            if (schema?.render?.update) {
-                schema.render?.update({ block: this, properties: props });
-            }
         }
     }
     private toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
