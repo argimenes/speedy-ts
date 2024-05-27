@@ -1,5 +1,5 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty } from "./standoff-editor-block";
+import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command } from "./standoff-editor-block";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -34,6 +34,7 @@ export class GridBlock implements IBlock {
         this.metadata = {};
         this.grid = [];
     }
+    
     addKeyboardBindings() {
 
     }
@@ -82,6 +83,7 @@ export class BlockManager implements IBlockManager {
     focus?: IBlock;
     selections: IBlockSelection[];
     commits: Commit[];
+    commitPointer: number;
     constructor(props?: IBlockManagerConstructor) {
         this.id = props?.id || uuidv4();
         this.type = BlockType.Outliner;
@@ -91,6 +93,38 @@ export class BlockManager implements IBlockManager {
         this.metadata = {};
         this.selections = [];
         this.commits = [];
+        this.commitPointer = 0;
+    }
+    setCommitPointer(index: number) {
+        this.commitPointer = index;
+    }
+    executeCommandAtPointer() {
+        const commit = this.commits[this.commitPointer];
+        this.executeCommand(commit.command);
+    }
+    executeCommand(command: Command) {
+        const value = command.value as any;
+        switch (command.name) {
+            case "bind": {
+                let block = this.getBlock(command.id) as StandoffEditorBlock;
+                block.bind(value);
+            }
+            case "insertTextAtIndex": {
+                let block = this.getBlock(command.id) as StandoffEditorBlock;
+                block.insertTextAtIndex(value.text, value.index);
+            }
+            case "setCaret": {
+                let block = this.getBlock(command.id) as StandoffEditorBlock;
+                block.setCaret(value.index, value.offset);
+            }
+            case "removeCellAtIndex": {
+                let block = this.getBlock(command.id) as StandoffEditorBlock;
+                block.removeCellAtIndex(value.index, value.updateCaret);
+            }
+            default: {
+                break;
+            }
+        }
     }
     rollforward() {
 
