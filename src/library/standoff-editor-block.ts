@@ -782,7 +782,9 @@ export class StandoffEditorBlock implements IBlock {
         const selection = this.getSelection();
         this.insertTextAtIndex(input.key, caret.right.index);
     }
-
+    addStandoffProperties(props: StandoffProperty[]) {
+        
+    }
     insertTextAtIndex(text: string, index: number) {
         const right = this.cells[index];
         const left = right.previous;

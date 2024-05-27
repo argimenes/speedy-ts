@@ -1,5 +1,5 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit } from "./standoff-editor-block";
+import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty } from "./standoff-editor-block";
 import { createUnderline } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -313,6 +313,58 @@ export class BlockManager implements IBlockManager {
     getBlock(id: GUID) {
         return this.blocks.find(x => x.id == id);
     }
+    commit(msg: Commit) {
+        this.commits.push(msg);
+    }
+    deleteBlock(blockId: GUID) {
+        this.commit({
+            command: {
+                id: this.id,
+                name: "deleteBlock",
+                value: {
+                    blockId
+                }
+            }
+        });
+    }
+    mergeBlocks(firstBlockId: GUID, secondBlockId: GUID) {
+        this.commit({
+            command: {
+                id: this.id,
+                name: "mergeBlocks",
+                value: {
+                    firstBlockId, secondBlockId
+                }
+            }
+        });
+        /**
+         * The following isn't really correct because we would also need to update the block references for each
+         * Standoff- and BlockProperty object to point to 'first' AND we need to propagate these changes to the
+         * StandoffProperty objects on 'second' to the objects in the data store, also.
+         * 
+         * So this is really no more than a high-level sketch of what's involved in merging two blocks.
+         * 
+         * We would also need to update relationships between first, second, and the 'next' block after 'second' (if there is one).
+         * It should look roughly as follows:
+         * 
+         * CREATE:
+         *      (first)-[:has_next]->(next), (next)-[:has_previous]->(first)
+         * 
+         * DELETE:
+         *      (first)-[:has_next]->(second), (second)-[:has_previous]->(first), (second)-[:has_next]->(next)
+         * 
+         * None of this takes into account the case where 'second' is a *child block* in a nested list.
+         */
+        const first = this.getBlock(firstBlockId);
+        const second = this.getBlock(secondBlockId);
+        const lastIndex = (first?.cells.length as number) -1;
+        first?.removeCellAtIndex(lastIndex);
+        first?.cells.push(...second?.cells as Cell[]);
+        first?.standoffProperties.push(...second?.standoffProperties as StandoffProperty[]);
+        first?.blockProperties.push(...second?.blockProperties as BlockProperty[]);
+        first?.updateView();
+        this.deleteBlock(secondBlockId);
+    }
     getModes() {
         const self = this;
         const modes: Mode[] = [];
@@ -320,6 +372,52 @@ export class BlockManager implements IBlockManager {
             "default": {
                 keyboard: [
                     {
+                        "DELETE": (args: IBindingHandlerArgs) => {
+                            /**
+                             * Delete the character to the right.
+                             */
+                            const { caret } = args;
+                            const block = args.block as StandoffEditorBlock;
+                            const len = block.cells.length;
+                            const last = block.cells[len-1];
+                            if (caret.right == last) {
+                                /**
+                                 * We're at the end of the text block, so we should merge the following block, if there is one.
+                                 * Assuming a list of blocks for now rather than a nested list.
+                                 */
+                                const next = block.getRelation("next");
+                                if (!next) {
+                                    // We're on the last block, so nothing left to DELETE.
+                                    return;
+                                }
+                                self.mergeBlocks(block.id, next.targetId);
+                            }
+                            else {
+                                block.removeCellAtIndex(caret.right.index);
+                            }                            
+                        },
+                        "BACKSPACE": (args: IBindingHandlerArgs) => {
+                            /**
+                             * Delete the character to the left.
+                             */
+                            const { caret } = args;
+                            const block = args.block as StandoffEditorBlock;
+                            const first = block.cells[0];
+                            if (caret.right == first) {
+                                /**
+                                 * We're at the start of the text block, so we should merge this block into the preceding, if there is one.
+                                 */
+                                const previous = block.getRelation("previous");
+                                if (!previous) {
+                                    // We're on the first block, so nothing left to BACKSPACE into.
+                                    return;
+                                }
+                                self.mergeBlocks(previous.targetId, block.id);
+                            }
+                            else {
+                                if (caret.left) block.removeCellAtIndex(caret.left.index);
+                            }                            
+                        },
                         "LEFT-ARROW": (args: IBindingHandlerArgs) => {
                             /**
                              * Move the cursor back one cell ...
