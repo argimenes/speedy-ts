@@ -491,7 +491,7 @@ export class StandoffEditorBlock implements IBlock {
             style: {
                 margin: "0 10px",
                 border: "1px solid #ccc",
-                padding: "3px"
+                padding: "10px"
             }
         });
         this.cache = {
@@ -1116,7 +1116,7 @@ export class StandoffEditorBlock implements IBlock {
     updateRenderers() {
         const block = this;
         const toUpdate = this.standoffProperties
-            .filter(p => !p.isDeleted && p.schema?.render?.update && p.start.cache.offset && p.hasOffsetChanged())
+            .filter(p => !p.isDeleted && p.schema?.render?.update && p.hasOffsetChanged())
             ;
         this.batch(toUpdate, (schema, props) => schema.render?.update({ block, properties: props }));
         const toDelete = this.standoffProperties
