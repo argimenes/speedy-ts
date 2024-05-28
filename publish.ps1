@@ -1,4 +1,9 @@
-$Root = "C:\Users\iiand\Documents\Projects\speedy-ts"
+if ($IsWindows) {
+    $Root = $ENV:USERPROFILE + "\Documents\Projects\speedy-ts"
+}
+if ($IsMacOS) {
+    $Root = "~/Documents/GitHub/speedy-ts"
+}
 $Source = $Root + "\dist\"
 $Target = $Root + "\public\"
 if (![System.IO.Directory]::Exists($Target)) {   
@@ -8,3 +13,4 @@ Get-ChildItem -Path $Source\*.* -Recurse | Remove-Item -Force
 Get-ChildItem -Path $Target\*.* -Recurse | Remove-Item -Force
 npm run build
 Copy-Item -Path $Source\* -Destination $Target -Recurse -Force
+node index.js
