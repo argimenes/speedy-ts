@@ -199,10 +199,10 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "DELETE"
+                    match: "BACKSPACE"
                 },
                 action: {
-                    name: "Delete preceding character",
+                    name: "Delete the character to the left",
                     description: `
                         Delete the character to the left and move the cursor to the left of the character to the right.
                         If at the start of the block (i.e., no character to the left) then issues an event
@@ -212,10 +212,35 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         if (!caret.left) {
-                            block.trigger("DELETE_CHARACTER_FROM_START_OF_BLOCK");
+                            // TBC: merge with the previous block
                             return;
                         }
                         block.removeCellAtIndex(caret.left.index, true);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "DELETE"
+                },
+                action: {
+                    name: "Delete the character to the right",
+                    description: `
+                        Delete the character to the right and move the cursor to the left of the character to the right.
+                        If at the start of the block (i.e., no character to the left) then issues an event
+                        named "DELETE_CHARACTER_FROM_START_OF_BLOCK" (?).
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const last = block.cells[-1];
+                        if (caret.right == last) {
+                            // TBC: merge with the next block.
+                            return;
+                        }
+                        block.removeCellAtIndex(caret.right.index, true);
                     }
                 }
             },
@@ -237,7 +262,7 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        if (!!caret.left) {
+                        if (caret.left) {
                             block.setCaret(caret.left.index);
                             return;
                         }
@@ -251,6 +276,41 @@ export class BlockManager implements IBlockManager {
                         const last = previous.getLastCell();
                         previous.setCaret(last.index);
                         manager.setBlockFocus(previous);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "RIGHT-ARROW"
+                },
+                action: {
+                    name: "Move the cursor forward one cell ...",
+                    description: `
+                        ... Or skip to the end of the previous block.
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        /**
+                         * Move the cursor back one cell ...
+                         */
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
+                        if (caret.right.index < block.cells.length - 1) {
+                            block.setCaret(caret.right.index + 1);
+                            return;
+                        }
+                        /**
+                         * Or skip to the start of the next block.
+                         */
+                        // const previousEdge = block.getRelation("has-previous-sibling");
+                        // if (!previousEdge) return;
+                        // const previous = manager.getBlock(previousEdge.targetId) as StandoffEditorBlock;
+                        // if (!previous) return;
+                        // const last = previous.getLastCell();
+                        // previous.setCaret(last.index);
+                        // manager.setBlockFocus(previous);
                     }
                 }
             }
@@ -440,73 +500,7 @@ export class BlockManager implements IBlockManager {
             "default": {
                 keyboard: [
                     {
-                        "DELETE": (args: IBindingHandlerArgs) => {
-                            /**
-                             * Delete the character to the right.
-                             */
-                            const { caret } = args;
-                            const block = args.block as StandoffEditorBlock;
-                            const len = block.cells.length;
-                            const last = block.cells[len-1];
-                            if (caret.right == last) {
-                                /**
-                                 * We're at the end of the text block, so we should merge the following block, if there is one.
-                                 * Assuming a list of blocks for now rather than a nested list.
-                                 */
-                                const next = block.getRelation("next");
-                                if (!next) {
-                                    // We're on the last block, so nothing left to DELETE.
-                                    return;
-                                }
-                                self.mergeBlocks(block.id, next.targetId);
-                            }
-                            else {
-                                block.removeCellAtIndex(caret.right.index);
-                            }                            
-                        },
-                        "BACKSPACE": (args: IBindingHandlerArgs) => {
-                            /**
-                             * Delete the character to the left.
-                             */
-                            const { caret } = args;
-                            const block = args.block as StandoffEditorBlock;
-                            const first = block.cells[0];
-                            if (caret.right == first) {
-                                /**
-                                 * We're at the start of the text block, so we should merge this block into the preceding, if there is one.
-                                 */
-                                const previous = block.getRelation("previous");
-                                if (!previous) {
-                                    // We're on the first block, so nothing left to BACKSPACE into.
-                                    return;
-                                }
-                                self.mergeBlocks(previous.targetId, block.id);
-                            }
-                            else {
-                                if (caret.left) block.removeCellAtIndex(caret.left.index);
-                            }                            
-                        },
-                        "LEFT-ARROW": (args: IBindingHandlerArgs) => {
-                            /**
-                             * Move the cursor back one cell ...
-                             */
-                            const { caret } = args;
-                            const block = args.block as StandoffEditorBlock;
-                            if (!!caret.left) {
-                                block.setCaret(caret.left.index);
-                                return;
-                            }
-                            /**
-                             * Or skip to the end of the previous block.
-                             */
-                            const previousEdge = block.getRelation("has-previous-sibling");
-                            if (!previousEdge) return;
-                            const previous = self.getBlock(previousEdge.targetId) as StandoffEditorBlock;
-                            if (!previous) return;
-                            const last = previous.getLastCell();
-                            previous.setCaret(last.index);
-                            self.setBlockFocus(previous);
-                        },
+                        
                         "HOME": (args: IBindingHandlerArgs) => {
                             /**
                              * Move the cursor to the start of the block.

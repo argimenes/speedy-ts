@@ -730,6 +730,40 @@ export class StandoffEditorBlock implements IBlock {
          * 
          * For now, assume no bindings and ignore text selection and just add characters.
          */
+        const args = { block: this, caret: this.getCaret() } as IBindingHandlerArgs;
+        const leftArrowCode = this.getKeyCode("LEFT_ARROW");
+        const rightArrowCode = this.getKeyCode("RIGHT_ARROW");
+        const deleteCode = this.getKeyCode("DELETE");
+        const backspaceCode = this.getKeyCode("DELETE");
+        console.log({ e, input, args, leftArrowCode, rightArrowCode, deleteCode, backspaceCode });
+        if (input.key == "Delete") {
+            const deleteEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "DELETE");
+            if (deleteEvent) {
+                deleteEvent.action.handler(args);
+                return false;
+            }
+        }
+        if (input.key == "Backspace") {
+            const backspaceEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "BACKSPACE");
+            if (backspaceEvent) {
+                backspaceEvent.action.handler(args);
+                return false;
+            }
+        }
+        if (input.key == "ArrowLeft") {
+            const leftArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "LEFT-ARROW");
+            if (leftArrowEvent) { 
+                leftArrowEvent.action.handler(args);
+                return false;
+            }
+        }
+        if (input.key == "ArrowRight") {
+            const rightArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "RIGHT-ARROW");
+            if (rightArrowEvent) {
+                rightArrowEvent.action.handler(args);
+                return false;
+            }
+        }
         this.insertCharacterAtCaret(input);
         return false;
     }
@@ -821,8 +855,10 @@ export class StandoffEditorBlock implements IBlock {
         this.applyStylingAndRenderingToNewCells(anchor, cells);
         this.knitCells(left, cells, right);
         this.insertIntoCellArrayBefore(index, cells);
+        this.reindexCells();
         this.insertElementsBefore(right.element as HTMLElement, cells.map(c => c.element as HTMLElement));
         this.updateView();
+        this.setCaret(index + 1);
         this.commit({
             command: {
                 id: this.id,
@@ -870,7 +906,7 @@ export class StandoffEditorBlock implements IBlock {
             command: e.metaKey,
             option: e.altKey,
             key: e.key,
-            keyCode: parseInt(e.code)
+            keyCode: parseInt(e.code || e.keyCode)
         };
         return input;
     }
@@ -941,6 +977,7 @@ export class StandoffEditorBlock implements IBlock {
          * May want to check for a line-break character here?
          */
         this.cells = cells;
+        this.reindexCells();
         requestAnimationFrame(() => {
             self.container.innerHTML = "";
             self.container.appendChild(frag);
@@ -996,6 +1033,7 @@ export class StandoffEditorBlock implements IBlock {
         /**
          * Might want to investigate setting the caret by absolutely positioning an SVG ...
          */
+        console.log("setCaret", { index, offset });
         offset = offset || CARET.LEFT;
         const cell = this.cells[index];
         const textNode = cell.getTextNode();
