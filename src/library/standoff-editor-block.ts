@@ -910,6 +910,7 @@ export class StandoffEditorBlock implements IBlock {
     }
     bind(block: StandoffEditorBlockDto) {
         const self = this;
+        if (this.container) this.container.innerHTML = "";
         const cells = this.toCells(block.text);
         this.standoffProperties = block.standoffProperties.map(p => {
             const start = cells[p.start];

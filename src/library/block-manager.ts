@@ -81,7 +81,8 @@ export class BlockManager implements IBlockManager {
     focus?: IBlock;
     selections: IBlockSelection[];
     commits: Commit[];
-    commitPointer: number;
+    pointer: number;
+    reversePointer: number;
     constructor(props?: IBlockManagerConstructor) {
         this.id = props?.id || uuidv4();
         this.type = BlockType.Outliner;
@@ -91,17 +92,29 @@ export class BlockManager implements IBlockManager {
         this.metadata = {};
         this.selections = [];
         this.commits = [];
-        this.commitPointer = 0;
+        this.pointer = 0;
+        this.reversePointer = 0;
+    }
+    redo() {
+        this.executeCommandAtPointer();
+        this.pointer++;
+        this.reversePointer = this.pointer - 1;
+    }
+    undo() {
+        this.executeReverseCommandAtPointer();
+        this.reversePointer--;
+        this.pointer = this.reversePointer + 1;
     }
     setCommitPointer(index: number) {
-        this.commitPointer = index;
+        this.pointer = index;
+        this.reversePointer = index;
     }
     executeCommandAtPointer() {
-        const commit = this.commits[this.commitPointer];
+        const commit = this.commits[this.pointer];
         this.executeCommand(commit.command);
     }
     executeReverseCommandAtPointer() {
-        const commit = this.commits[this.commitPointer];
+        const commit = this.commits[this.reversePointer];
         if (commit.reverse) this.executeCommand(commit.reverse);
     }
     executeCommand(command: Command) {
@@ -110,34 +123,42 @@ export class BlockManager implements IBlockManager {
             case "bind": {
                 let block = this.getBlock(command.id) as StandoffEditorBlock;
                 block.bind(value);
+                return;
             }
             case "unbind": {
                 let block = this.getBlock(command.id) as StandoffEditorBlock;
                 block.unbind();
+                return;
             }
             case "insertTextAtIndex": {
                 let block = this.getBlock(command.id) as StandoffEditorBlock;
                 block.insertTextAtIndex(value.text, value.index);
+                return;
             }
             case "setCaret": {
                 let block = this.getBlock(command.id) as StandoffEditorBlock;
                 block.setCaret(value.index, value.offset);
+                return;
             }
             case "removeCellAtIndex": {
                 let block = this.getBlock(command.id) as StandoffEditorBlock;
                 block.removeCellAtIndex(value.index, value.updateCaret);
+                return;
             }
             case "removeCellsAtIndex": {
                 let block = this.getBlock(command.id) as StandoffEditorBlock;
                 block.removeCellsAtIndex(value.index, value.length, value.updateCaret);
+                return;
             }
             case "createBlock": {
                 let block = this.getBlock(command.id) as BlockManager;
                 block.createBlock();
+                return;
             }
             case "uncreateBlock": {
                 let block = this.getBlock(command.id) as BlockManager;
                 block.uncreateBlock(value.id);
+                return;
             }
             default: {
                 console.log("Command not handled.", { command });
@@ -568,12 +589,12 @@ export class BlockManager implements IBlockManager {
         this.blocks = [];
         this.id = uuidv4();
     }
-    storeCommit(commit: Commit) {
+    storeCommit(commit: Commit) {        
         this.commits.push(commit);
+        this.setCommitPointer(this.commits.length - 1);
     }
     loadDocument(doc: StandoffEditorBlockDto) {
         this.reset();
-        
         const structure = document.createElement("DIV") as HTMLDivElement;
         const paragraphs = doc.text.split(/\r?\n/);
         let start = 0;
