@@ -118,6 +118,9 @@ export interface IStandoffPropertySchema {
     render?: {
         update: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
         destroy: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
+    },
+    animation?: {
+        init?: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
     }
 }
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
@@ -975,8 +978,17 @@ export class StandoffEditorBlock implements IBlock {
             const sproc = new StandoffProperty({ type: p.type, block: self, start, end, schema });
             sproc.value = p.value as string;
             sproc.applyStyling();
+            
             return sproc;
         });
+        // const types = _.uniq(this.standoffProperties.filter(x => x.schema.animation));
+        // types.forEach(t => {
+        //     const schema = t.schema;
+        //     const props = self.standoffProperties.filter(x => x.type == t.type);
+        //     if (schema.animation && schema.animation.init) {
+        //         schema.animation.init({ block: self, properties: props });
+        //     }
+        // });
         this.blockProperties = block.blockProperties?.map(p => {
             const schema = this.schemas.find(x => x.type == p.type) as IBlockPropertySchema;
             if (!schema) {

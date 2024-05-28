@@ -423,6 +423,83 @@ export class BlockManager implements IBlockManager {
                 }
             },
             {
+                type: "animation/spinner",
+                animation: {
+                    draw: function (p: StandoffProperty) {
+                        const block = p.start.element?.parentElement as HTMLElement;
+                        p.cache.animation.degrees += 2;
+                        if (p.cache.animation.degrees >= 360) {
+                            p.cache.animation.degrees = 0;
+                        }
+                        block.style.transform = "rotate(" + p.cache.animation.degrees + "deg)";
+                    },
+                    init: (args) => {
+                        const { block, properties } = args;
+                        properties.forEach(p => {
+                            p.cache.animation = {
+                                degrees: 0,
+                                element: null,
+                                stop: false
+                            };
+                            const cells = p.getCells();
+                            const container = document.createElement("DIV") as HTMLDivElement;
+                            container.speedy = {
+
+                            }
+                            const spans = cells.map(x => x.element as HTMLSpanElement);
+                            p.start.next?.element?.insertBefore(container, p.start.next?.element.parentElement);
+                            container.append(...spans);
+                            var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                            var x = p.start.cache.offset.x;
+                            var y = p.start.cache.offset.y;
+                            var w = (p.end.cache.offset.x + p.end.cache.offset.w) - p.start.cache.offset.x;
+                            var h = p.end.cache.offset.h;
+                            console.log({
+                                x, y, w, startNode: p.start, endNode: p.end
+                            });
+                            svg.speedy = {
+                                stream: 1
+                            };
+                            var cr = p.block.container.getBoundingClientRect() as DOMRect;
+                            var sr = p.start.element?.getBoundingClientRect() as DOMRect;
+                            var er = p.end.element?.getBoundingClientRect() as DOMRect;
+                            var w = er.x + er.width - sr.x;
+                            var x = sr.x - cr.x;
+                            var y = sr.y - cr.y - (w / 4);
+                            svg.style.position = "absolute";
+                            svg.style.left = x + "px";
+                            svg.style.top = y + "px";
+                            svg.style.width = w + "px";
+                            svg.style.height = w + "px";
+                            var svgNS = svg.namespaceURI;
+                            var circle = document.createElementNS(svgNS, 'circle');
+                            circle.setAttributeNS(null, 'cx', (w / 2)+"");
+                            circle.setAttributeNS(null, 'cy', (w / 2)+"");
+                            circle.setAttributeNS(null, 'r', (w / 2)+"");
+                            circle.setAttributeNS(null, 'fill', 'transparent');
+                            svg.appendChild(circle);
+                            //p.editor.container.insertBefore(svg, p.startNode.parentNode);
+                            p.cache.animation.element = svg;
+                        });
+                    },
+                    start: (p: StandoffProperty) => {
+                        p.cache.animation.timer = setInterval(function () {
+                            if (p.cache.animation.stop) {
+                                // clearInterval(p.animation.timer);
+                                return;
+                            }
+                            if (p.schema?.animation?.draw) p.schema?.animation?.draw(p);
+                        }, 125);
+                    },
+                    stop: (p: StandoffProperty) => {
+                        clearInterval(p.cache.animation.timer);
+                    },
+                    delete: (p: StandoffProperty) => {
+                        clearInterval(p.cache.animation.timer);
+                    }
+                }
+            },
+            {
                 type: "codex/block-reference",
                 event: {
                     beforeStyling: async (args: any) => {
