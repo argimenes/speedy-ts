@@ -71,6 +71,10 @@ export class GridBlock implements IBlock {
     }
 }
 
+enum PointerDirection {
+    Undo,
+    Redo
+}
 export class BlockManager implements IBlockManager {
     id: string;
     type: BlockType;
@@ -82,7 +86,7 @@ export class BlockManager implements IBlockManager {
     selections: IBlockSelection[];
     commits: Commit[];
     pointer: number;
-    reversePointer: number;
+    direction: PointerDirection;
     constructor(props?: IBlockManagerConstructor) {
         this.id = props?.id || uuidv4();
         this.type = BlockType.Outliner;
@@ -93,29 +97,23 @@ export class BlockManager implements IBlockManager {
         this.selections = [];
         this.commits = [];
         this.pointer = 0;
-        this.reversePointer = 0;
+        this.direction = PointerDirection.Undo;
     }
     redo() {
+        this.direction = PointerDirection.Redo;
         this.executeCommandAtPointer();
         this.pointer++;
-        this.reversePointer = this.pointer - 1;
     }
     undo() {
-        this.executeReverseCommandAtPointer();
-        this.reversePointer--;
-        this.pointer = this.reversePointer + 1;
-    }
-    setCommitPointer(index: number) {
-        this.pointer = index;
-        this.reversePointer = index;
+        this.direction = PointerDirection.Undo;
+        this.executeCommandAtPointer();
+        this.pointer--;
     }
     executeCommandAtPointer() {
         const commit = this.commits[this.pointer];
-        this.executeCommand(commit.command);
-    }
-    executeReverseCommandAtPointer() {
-        const commit = this.commits[this.reversePointer];
-        if (commit.reverse) this.executeCommand(commit.reverse);
+        const cmd = this.direction == PointerDirection.Undo ? commit.reverse : commit.command;
+        if (!cmd) return;
+        this.executeCommand(cmd as Command);
     }
     executeCommand(command: Command) {
         const value = command.value as any;
@@ -707,7 +705,7 @@ export class BlockManager implements IBlockManager {
     }
     storeCommit(commit: Commit) {        
         this.commits.push(commit);
-        this.setCommitPointer(this.commits.length - 1);
+        this.pointer++;
     }
     loadDocument(doc: StandoffEditorBlockDto) {
         this.reset();
