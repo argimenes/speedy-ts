@@ -778,7 +778,7 @@ export class StandoffEditorBlock implements IBlock {
         return undefined;
     }
     getBlockPosition(left: Cell, right: Cell) {
-        if (right.isLineBreak) {
+        if (right?.isLineBreak) {
             if (left == null) return BLOCK_POSITION.EmptyLine;
             return BLOCK_POSITION.End;
         }
@@ -925,6 +925,7 @@ export class StandoffEditorBlock implements IBlock {
         return block;
     }
     private getStandoffPropertiesDto() {
+        if (!this.standoffProperties) return [];
         const props = this.standoffProperties.map(x => ({
             id: x.id,
             type: x.type,
@@ -935,6 +936,7 @@ export class StandoffEditorBlock implements IBlock {
         return props;
     }
     private getBlockPropertiesDto() {
+        if (!this.blockProperties) return [];
         const props = this.blockProperties.map(x => ({
             id: x.id,
             type: x.type
@@ -942,7 +944,7 @@ export class StandoffEditorBlock implements IBlock {
         return props;
     }
     getText() {
-        return this.cells.map(c => c.text).join();
+        return this.cells.map(c => c.text).join("");
     }
     bind(block: StandoffEditorBlockDto) {
         const self = this;
