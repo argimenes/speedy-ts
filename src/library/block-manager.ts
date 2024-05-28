@@ -297,8 +297,14 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        if (caret.right.index < block.cells.length - 1) {
+                        const len = block.cells.length;
+                        const ri = caret.right.index;
+                        if (ri < len - 1) {
                             block.setCaret(caret.right.index + 1);
+                            return;
+                        }
+                        if (ri == len - 1) {
+                            block.setCaret(caret.right.index, CARET.RIGHT);
                             return;
                         }
                         /**
