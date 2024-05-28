@@ -71,8 +71,6 @@ export class GridBlock implements IBlock {
     }
 }
 
-
-
 export class BlockManager implements IBlockManager {
     id: string;
     type: BlockType;
@@ -102,12 +100,20 @@ export class BlockManager implements IBlockManager {
         const commit = this.commits[this.commitPointer];
         this.executeCommand(commit.command);
     }
+    executeReverseCommandAtPointer() {
+        const commit = this.commits[this.commitPointer];
+        if (commit.reverse) this.executeCommand(commit.reverse);
+    }
     executeCommand(command: Command) {
         const value = command.value as any;
         switch (command.name) {
             case "bind": {
                 let block = this.getBlock(command.id) as StandoffEditorBlock;
                 block.bind(value);
+            }
+            case "unbind": {
+                let block = this.getBlock(command.id) as StandoffEditorBlock;
+                block.unbind();
             }
             case "insertTextAtIndex": {
                 let block = this.getBlock(command.id) as StandoffEditorBlock;
@@ -125,16 +131,19 @@ export class BlockManager implements IBlockManager {
                 let block = this.getBlock(command.id) as StandoffEditorBlock;
                 block.removeCellsAtIndex(value.index, value.length, value.updateCaret);
             }
+            case "createBlock": {
+                let block = this.getBlock(command.id) as BlockManager;
+                block.createBlock();
+            }
+            case "uncreateBlock": {
+                let block = this.getBlock(command.id) as BlockManager;
+                block.uncreateBlock(value.id);
+            }
             default: {
+                console.log("Command not handled.", { command });
                 break;
             }
         }
-    }
-    rollforward() {
-
-    }
-    rollback() {
-
     }
     addRelation(name: string) {
 
@@ -510,9 +519,8 @@ export class BlockManager implements IBlockManager {
                             /**
                              * Creates a new StandoffEditorBlock and adds it as a sibling after the current block.
                              */
-                            const { caret } = args;
                             const block = args.block as StandoffEditorBlock;
-                            const newBlock = self.createNewBlock();
+                            const newBlock = self.createBlock();
                             const next = block.getRelation("next");
                             block.setRelation("next", newBlock.id);
                             newBlock.setRelation("previous", block.id);
@@ -543,7 +551,7 @@ export class BlockManager implements IBlockManager {
                     {
                         "TAB": (args: IBindingHandlerArgs) => {
                             const { block } = args;
-                            const newBlock = self.createNewBlock();
+                            const newBlock = self.createBlock();
                             self.indent(block, newBlock);
                         }
                     }
@@ -565,20 +573,13 @@ export class BlockManager implements IBlockManager {
     }
     loadDocument(doc: StandoffEditorBlockDto) {
         this.reset();
-        const standoffSchemas = this.getStandoffSchemas();
-        const blockSchemas = this.getBlockSchemas();
-        const standoffEvents = this.getStandoffPropertyEvents();
-        const editorEvents = this.getEditorEvents();
+        
         const structure = document.createElement("DIV") as HTMLDivElement;
         const paragraphs = doc.text.split(/\r?\n/);
         let start = 0;
         console.log("BlockManager.loadDocument", { doc, paragraphs })
-        for (let i = 0; i< paragraphs.length; i ++) {
-            let block = this.createNewBlock();
-            block.setSchemas(standoffSchemas);
-            block.setEvents(standoffEvents);
-            block.setEvents(editorEvents);
-            block.setCommitHandler(this.storeCommit.bind(this));
+        for (let i = 0; i < paragraphs.length; i ++) {
+            let block = this.createBlock();
             let text = paragraphs[i];
             let end = start + text.length + 1; // + 1 to account for the CR stripped from the text
             const props = doc.standoffProperties
@@ -590,8 +591,6 @@ export class BlockManager implements IBlockManager {
                 text: text,
                 standoffProperties: props as any[]
             };
-            const lb = block.createLineBreakCell();
-            console.log("BlockManager.loadDocument", { i, data })
             block.bind(data);
             structure.appendChild(block.container);
             this.blocks.push(block);
@@ -643,12 +642,41 @@ export class BlockManager implements IBlockManager {
         const level = block.metadata.indentLevel as number;
         block.container.setAttribute("margin-left", (level * defaultWidth) + "px");
     }
-    createNewBlock() {
-        const self = this;
-        const block = new StandoffEditorBlock(this);
-        
-        // block.createEmpty()
+    createBlock() {
+        const standoffSchemas = this.getStandoffSchemas();
+        const blockSchemas = this.getBlockSchemas();
+        const standoffEvents = this.getStandoffPropertyEvents();
+        const editorEvents = this.getEditorEvents();
+        const block = new StandoffEditorBlock({
+            owner: this
+        });
+        block.setSchemas(standoffSchemas);
+        block.setBlockSchemas(blockSchemas);
+        block.setEvents(standoffEvents);
+        block.setEvents(editorEvents);
+        block.setCommitHandler(this.storeCommit.bind(this));
+        this.commit({
+            command: {
+                id: block.id,
+                name: "createBlock"
+            },
+            reverse: {
+                id: block.id,
+                name: "uncreateBlock",
+                value: { id: block.id }
+            }
+        });
         return block;
+    }
+    uncreateBlock(id: GUID) {
+        const block = this.getBlock(id) as IBlock;
+        if (!block) {
+            // Error: block not found.
+            return;
+        }
+        block.container.innerHTML = "";
+        const i = this.blocks.findIndex(x=> x.id == id);
+        this.blocks.splice(i, 1);
     }
     appendSibling(anchor: HTMLElement, sibling: HTMLElement) {
         anchor.insertAdjacentElement("afterend", sibling);

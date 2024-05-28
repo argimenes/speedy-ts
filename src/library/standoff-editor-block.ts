@@ -422,6 +422,11 @@ export type InputAction = {
     description?: string;           // "Copies text in the selection for pasting elsewhere."
     handler: BindingHandler;        // The function that carries out the task.
 }
+export interface IStandoffEditorBlockConstructor {
+    id?: GUID,
+    owner: IBlockManager,
+    container?: HTMLDivElement
+}
 
 export class StandoffEditorBlock implements IBlock {
     id: GUID;
@@ -474,11 +479,11 @@ export class StandoffEditorBlock implements IBlock {
     inputActions: InputAction[];
     commitHandler: (commit: Commit) => void;
     modes: string[];
-    constructor(owner: IBlockManager, container?: HTMLDivElement) {
-        this.id = uuidv4();
-        this.owner = owner;
+    constructor(args: IStandoffEditorBlockConstructor) {
+        this.id = args.id || uuidv4();
+        this.owner = args.owner;
         this.type = BlockType.StandoffEditor;
-        this.container = container || (document.createElement("DIV") as HTMLDivElement);
+        this.container = args.container || (document.createElement("DIV") as HTMLDivElement);
         updateElement(this.container, {
             attribute: {
                 contenteditable: "true"
@@ -553,6 +558,9 @@ export class StandoffEditorBlock implements IBlock {
     }
     setSchemas(schemas: IStandoffPropertySchema[]) {
         this.schemas.push(...schemas);
+    }
+    setBlockSchemas(schemas: IBlockPropertySchema[]) {
+        this.blockSchemas.push(...schemas);
     }
     addRelation(name: string, targetId: string) {
         this.relations[name] = {
@@ -867,6 +875,12 @@ export class StandoffEditorBlock implements IBlock {
         return input;
     }
     unbind() {
+        this.cells = [];
+        this.standoffProperties = [];
+        this.blockProperties = [];
+        this.container.innerHTML = "";
+    }
+    serialize() {
         const block = {} as StandoffEditorBlockDto;
         block.id = this.id;
         block.text = this.getText();
@@ -936,6 +950,10 @@ export class StandoffEditorBlock implements IBlock {
                 id: this.id,
                 name: "bind",
                 value: { block }
+            },
+            reverse: {
+                id: this.id,
+                name: "unbind"
             }
         });
     }
@@ -1129,7 +1147,7 @@ export class StandoffEditorBlock implements IBlock {
             };
         });
     }
-    clear() {
+    destroy() {
         this.cells = [];
         this.standoffProperties = [];
         this.blockProperties = [];
