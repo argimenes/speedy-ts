@@ -199,6 +199,46 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "HOME"
+                },
+                action: {
+                    name: "Move the caret to the left of the first character.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const first = block.cells[0];
+                        if (!first) return;
+                        block.setCaret(0, CARET.LEFT);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "END"
+                },
+                action: {
+                    name: "Move the caret to the right of the last character.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const last = block.cells[block.cells.length-1];
+                        if (!last) return;
+                        block.setCaret(last.index, CARET.RIGHT);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "BACKSPACE"
                 },
                 action: {
@@ -506,7 +546,6 @@ export class BlockManager implements IBlockManager {
             "default": {
                 keyboard: [
                     {
-                        
                         "HOME": (args: IBindingHandlerArgs) => {
                             /**
                              * Move the cursor to the start of the block.

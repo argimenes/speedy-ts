@@ -764,6 +764,20 @@ export class StandoffEditorBlock implements IBlock {
                 return false;
             }
         }
+        if (input.key == "Home") {
+            const homeEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "HOME");
+            if (homeEvent) {
+                homeEvent.action.handler(args);
+                return false;
+            }
+        }
+        if (input.key == "End") {
+            const endEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "END");
+            if (endEvent) {
+                endEvent.action.handler(args);
+                return false;
+            }
+        }
         this.insertCharacterAtCaret(input);
         return false;
     }
