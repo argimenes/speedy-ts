@@ -1,11 +1,10 @@
-npm run build
-$TargetEnv_Desktop = "C:\Users\iiand\Documents\Projects\speedy-ts"
-$Target_Base = $TargetEnv_Desktop + "\public\"
-$TargetPath = $Target_Base
-if (![System.IO.Directory]::Exists($TargetPath)) {   
-    New-Item $TargetPath -ItemType Directory
+$Root = "C:\Users\iiand\Documents\Projects\speedy-ts"
+$Source = $Root + "\dist\"
+$Target = $Root + "\public\"
+if (![System.IO.Directory]::Exists($Target)) {   
+    New-Item $Target -ItemType Directory
 }
-Remove-Item $TargetPath\*.*
-Copy-Item -Path .\dist\*.* -Destination $TargetPath
-# Get-ChildItem -Path .\dist\assets\index.*.js | Select-Object -First 1 | Copy-Item -Destination $TargetPath\index.js -Force
-# Get-ChildItem -Path .\dist\assets\index.*.css | Select-Object -First 1 | Copy-Item -Destination $TargetPath\index.css -Force
+Get-ChildItem -Path $Source\*.* -Recurse | Remove-Item -Force
+Get-ChildItem -Path $Target\*.* -Recurse | Remove-Item -Force
+npm run build
+Copy-Item -Path $Source\* -Destination $Target -Recurse -Force
