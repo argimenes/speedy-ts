@@ -980,7 +980,7 @@ export class StandoffEditorBlock implements IBlock {
             }
         }
     }
-    toCells(text: string) {
+    private toCells(text: string) {
         if (!text) return [] as Cell[];
         const len = text.length;
         const cells: Cell[] = [];
@@ -990,25 +990,6 @@ export class StandoffEditorBlock implements IBlock {
         }
         this.chainCellsTogether(cells);
         return cells;
-    }
-    markCells() {
-        this.cells.forEach((cell, index) => cell.index = index);
-    }
-    insertCharacterBeforeIndex(char: string, index: number) {
-        // TBC
-    }
-    insertCharacterAfterIndex(char: string, index: number) {
-        const previous = this.cells[index];
-        const next = this.cells[index+1];
-        var cell = new Cell({ text: char, previous, next, block: this });
-        previous.next = cell;
-        cell.previous = previous;
-        cell.next = next;
-        next.previous = cell;
-        return cell;
-    }
-    trigger(eventName: string) {
-
     }
     setCaret(index: number, offset?: CARET) {
         /**
@@ -1060,7 +1041,7 @@ export class StandoffEditorBlock implements IBlock {
             }
         }
     }
-    shiftPropertyStartNodesRight(cell: Cell) {
+    private shiftPropertyStartNodesRight(cell: Cell) {
         const nextCell = cell.next;
         const properties = this.standoffProperties.filter(p => !p.isDeleted);
         const singles = properties.filter(p => p.start == p.end && p.start == cell);
@@ -1076,7 +1057,7 @@ export class StandoffEditorBlock implements IBlock {
             }
         }
     }
-    unknit(cell: Cell) {
+    private unknit(cell: Cell) {
         const left = cell.previous;
         const right = cell.next as Cell;
         if (left) left.next = right;
@@ -1158,14 +1139,17 @@ export class StandoffEditorBlock implements IBlock {
         if (this.container) this.container.innerHTML = "";
     }
     removeCellsAtIndex(index: number, length: number, updateCaret?: boolean) {
-        const start = index;
-        const end = index + length;
         for (let i = 1; i <= length; i++) {
             this.removeCellAtIndex(index, updateCaret);
         }
     }
     removeCellAtIndex(index: number, updateCaret?: boolean) {
         const cell = this.cells[index];
+        if (!cell) {
+            console.log("Cell not found at the index.", { index, updateCaret });
+            return;
+        }
+        const text = cell.text;
         updateCaret = !!updateCaret;
         if (cell.isLineBreak) {
             /**
@@ -1189,6 +1173,11 @@ export class StandoffEditorBlock implements IBlock {
                 id: this.id,
                 name: "removeCellAtIndex",
                 value: { index, updateCaret }
+            },
+            reverse: {
+                id: this.id,
+                name: "insertTextAtIndex",
+                value: { text, index }
             }
         });
     }
