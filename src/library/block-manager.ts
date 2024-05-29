@@ -305,7 +305,8 @@ export class BlockManager implements IBlockManager {
                         const nextEdge = block.getRelation(RelationType.has_next);
                         if (!nextEdge) {
                             const next = manager.createBlock();
-                            next.addBlockProperties([{ type: "block/alignment/left" }]); // We should probably copy the block props from '@block'
+                            const blockData = block.serialize();
+                            next.addBlockProperties(blockData.blockProperties || []);
                             next.applyBlockPropertyStyling();
                             manager.blocks.push(next);
                             manager.container.append(next.container);
@@ -321,6 +322,40 @@ export class BlockManager implements IBlockManager {
                             next.setCaret(0, CARET.LEFT);
                             next.setFocus();
                         }
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "TAB"
+                },
+                action: {
+                    name: "Indent the current text block if it hasn't already been indented.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
+                        const parentEdge = block.getRelation(RelationType.has_parent);
+                        if (parentEdge) return; // First child of another block.
+                        const previousEdge = block.getRelation(RelationType.has_previous);
+                        if (!previousEdge) return; // Top level block.
+                        /**
+                         * Convert the has_previous into a has_parent, etc.
+                         */
+                        const previous = manager.getBlock(previousEdge.targetId) as StandoffEditorBlock;
+                        block.removeRelation(RelationType.has_previous);
+                        previous.removeRelation(RelationType.has_next);
+                        block.addRelation(RelationType.has_parent, previous.id);
+                        previous.addRelation(RelationType.has_first_child, block.id);
+                        previous.container.appendChild(block.container);
+                        const level = block.metadata.indentLevel as number;
+                        block.metadata.indentLevel = level + 1;
+                        manager.renderIndent(block);
                     }
                 }
             },

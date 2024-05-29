@@ -472,7 +472,7 @@ export class StandoffEditorBlock implements IBlock {
      * but not a chain of paragraph-like blocks. For now, this is a catch-all for Block data that hasn't yet been
      * promoted to being a member of the class itself.
      */
-    metadata: {};
+    metadata: Record<string, any>;
     /**
      * An Overlay is a named DIV container for storing generated elements - such as SVG underlines - which are meant
      * to be overlaid (like a layer) on top of the text underneath. An Overlay 'container' should be absolutely
@@ -574,9 +574,37 @@ export class StandoffEditorBlock implements IBlock {
             sourceId: this.id,
             targetId: targetId
         };
+        this.commit({
+            command: {
+                id: this.id,
+                name: "addRelation",
+                value: { name, targetId }
+            },
+            reverse: {
+                id: this.id,
+                name: "removeRelation",
+                value: { name }
+            }
+        });
     }
     removeRelation(name: string) {
+        const relation = this.getRelation(name);
         delete this.relations[name];
+        this.commit({
+            command: {
+                id: this.id,
+                name: "removeRelation",
+                value: { name }
+            },
+            reverse: {
+                id: this.id,
+                name: "addRelation",
+                value: {
+                    name,
+                    targetId: relation.targetId
+                }
+            }
+        });
     }
     getOrSetOverlay(name: string) {
         const overlay = this.overlays.find(x=> x.name == name);
@@ -788,6 +816,13 @@ export class StandoffEditorBlock implements IBlock {
             const enterEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "ENTER");
             if (enterEvent) {
                 enterEvent.action.handler(args);
+                return false;
+            }
+        }
+        if (input.key == "Tab") {
+            const tabEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "TAB");
+            if (tabEvent) {
+                tabEvent.action.handler(args);
                 return false;
             }
         }
