@@ -784,6 +784,13 @@ export class StandoffEditorBlock implements IBlock {
                 return false;
             }
         }
+        if (input.key == "Enter") {
+            const enterEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "ENTER");
+            if (enterEvent) {
+                enterEvent.action.handler(args);
+                return false;
+            }
+        }
         this.insertCharacterAtCaret(input);
         return false;
     }
@@ -847,6 +854,11 @@ export class StandoffEditorBlock implements IBlock {
     addStandoffProperties(props: StandoffProperty[]) {
         
     }
+    addBlockProperties(properties: BlockPropertyDto[]) {
+        const self = this;
+        const props = properties.map(x => new BlockProperty({ type: x.type, block: self, schema: self.blockSchemas.find(x2 => x2.type == x.type) as IBlockPropertySchema }));
+        this.blockProperties.push(...props);
+    }
     applyStylingAndRenderingToNewCells(anchor: Cell, cells: Cell[]) {
         const enclosing = this.getEnclosingProperties(anchor);
         cells.forEach(c => {
@@ -868,6 +880,34 @@ export class StandoffEditorBlock implements IBlock {
         }
     }
     insertTextAtIndex(text: string, index: number) {
+        if (this.cells.length == 0) {
+            // Brand new character.
+            const cells = text.split('').map(c => new Cell({ text: c, block: this }));
+            const len = text.length;
+            if (len > 1) {
+                for (let i = 0; i <= len - 1; i++) {
+                    // knit the cells
+                }
+            }
+            this.cells = cells;
+            this.applyStylingAndRenderingToNewCells(cells[0], cells);
+            this.reindexCells();
+            this.container.append(...cells.map(x => x.element as HTMLSpanElement));
+            this.updateView();
+            this.commit({
+                command: {
+                    id: this.id,
+                    name: "insertTextAtIndex",
+                    value: { text, index }
+                },
+                reverse: {
+                    id: this.id,
+                    name: "removeCellsAtIndex",
+                    value: { index, length: text.length }
+                }
+            });
+            return;
+        }
         const right = this.cells[index];
         const left = right.previous;
         const anchor = left || right;
@@ -966,6 +1006,16 @@ export class StandoffEditorBlock implements IBlock {
     getText() {
         return this.cells.map(c => c.text).join("");
     }
+    applyStandoffPropertyStyling() {
+        this.standoffProperties.forEach(p => {
+            p.applyStyling();
+        });
+    }
+    applyBlockPropertyStyling() {
+        this.blockProperties.forEach(p => {
+            p.applyStyling();
+        });
+    }
     bind(block: StandoffEditorBlockDto) {
         const self = this;
         if (this.container) this.container.innerHTML = "";
@@ -980,8 +1030,6 @@ export class StandoffEditorBlock implements IBlock {
             }
             const sproc = new StandoffProperty({ type: p.type, block: self, start, end, schema });
             sproc.value = p.value as string;
-            sproc.applyStyling();
-            
             return sproc;
         });
         // const types = _.uniq(this.standoffProperties.filter(x => x.schema.animation));
@@ -999,9 +1047,10 @@ export class StandoffEditorBlock implements IBlock {
                 // Need to handle this properly ... can't just return early in a map().
             }
             const prop = new BlockProperty({ type: p.type, block: self, schema });
-            prop.applyStyling();
             return prop;
         }) as BlockProperty[];
+        this.applyBlockPropertyStyling();
+        this.applyStandoffPropertyStyling();
         const frag = document.createDocumentFragment();
         cells.forEach(c => frag.append(c.element as HTMLElement));
         /**
@@ -1095,7 +1144,7 @@ export class StandoffEditorBlock implements IBlock {
     }
     private shiftPropertyEndNodesLeft(cell: Cell) {
         const previousCell = cell.previous;
-        const properties = this.standoffProperties.filter(p => !p.isDeleted);
+        const properties = this.standoffProperties;
         const singles = properties.filter(p => p.start == p.end && p.start == cell);
         if (singles) {
             singles.forEach(p => p.isDeleted = true);
@@ -1227,8 +1276,8 @@ export class StandoffEditorBlock implements IBlock {
         cell.removeElement();
         this.cells.splice(index, 1);
         this.reindexCells();
-        const enclosing = this.getEnclosingProperties(cell);
-        this.renderProperties(enclosing);
+        // const enclosing = this.getEnclosingProperties(cell);
+        // this.renderProperties(enclosing);
         this.updateView();
         if (updateCaret) {
             this.setCaret(index);

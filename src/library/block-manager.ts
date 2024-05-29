@@ -7,6 +7,12 @@ export enum CssClass {
     LineBreak = "codex__line-break"
 }
 
+const RelationType = {
+    "has_next":"has_next",
+    "has_previous":"has_previous",
+    "has_parent":"has_parent",
+    "has_first_child":"has_first_child"
+}
 export interface IBlockManagerConstructor {
     id?: GUID;
     container?: HTMLDivElement;
@@ -285,6 +291,43 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "ENTER"
+                },
+                action: {
+                    name: "Move cursor to the start of the next text block. If one doesn't exist, create it.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
+                        const nextEdge = block.getRelation(RelationType.has_next);
+                        if (!nextEdge) {
+                            const next = manager.createBlock();
+                            next.addBlockProperties([{ type: "block/alignment/left" }]); // We should probably copy the block props from '@block'
+                            next.applyBlockPropertyStyling();
+                            manager.blocks.push(next);
+                            manager.container.append(next.container);
+                            block.setRelation(RelationType.has_next, next.id);
+                            next.setRelation(RelationType.has_previous, block.id);
+                            const charCode = manager.getPlatformKey(KEYS.ENTER)!.code;
+                            next.insertTextAtIndex(String.fromCharCode(charCode), 0);
+                            next.setCaret(0, CARET.LEFT);
+                            next.setFocus();
+                        } else {
+                            const next = manager.getBlock(nextEdge.targetId) as StandoffEditorBlock;
+                            if (!next) return;
+                            next.setCaret(0, CARET.LEFT);
+                            next.setFocus();
+                        }
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "HOME"
                 },
                 action: {
@@ -395,7 +438,7 @@ export class BlockManager implements IBlockManager {
                         /**
                          * Or skip to the end of the previous block.
                          */
-                        const previousEdge = block.getRelation("has-previous-sibling");
+                        const previousEdge = block.getRelation(RelationType.has_previous);
                         if (!previousEdge) return;
                         const previous = manager.getBlock(previousEdge.targetId) as StandoffEditorBlock;
                         if (!previous) return;
@@ -744,11 +787,11 @@ export class BlockManager implements IBlockManager {
                              */
                             const block = args.block as StandoffEditorBlock;
                             const newBlock = self.createBlock();
-                            const next = block.getRelation("next");
-                            block.setRelation("next", newBlock.id);
-                            newBlock.setRelation("previous", block.id);
+                            const next = block.getRelation(RelationType.has_next);
+                            block.setRelation(RelationType.has_next, newBlock.id);
+                            newBlock.setRelation(RelationType.has_previous, block.id);
                             if (next) {
-                                newBlock.setRelation("next", next.targetId);
+                                newBlock.setRelation(RelationType.has_next, next.targetId);
                             }
                             self.appendSibling(block.container, newBlock.container);
                             self.setBlockFocus(newBlock);
@@ -882,6 +925,7 @@ export class BlockManager implements IBlockManager {
         block.setEvents(standoffEvents);
         block.setEvents(editorEvents);
         block.setCommitHandler(this.storeCommit.bind(this));
+        block.applyBlockPropertyStyling();
         this.commit({
             command: {
                 id: block.id,
