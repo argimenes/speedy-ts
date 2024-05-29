@@ -180,16 +180,104 @@ export class BlockManager implements IBlockManager {
     getBlockSchemas() {
         return [
             {
+                type: "block/alignment/right",
+                name: "Right Alignment",
+                description: "Align text in the block to the right.",
+                decorate: {
+                    blockClass: "block_alignment_right"
+                }
+            },
+            {
                 type: "block/alignment/centre",
+                name: "Centre Alignment",
+                description: "Align text in the block to the middle.",
                 decorate: {
                     blockClass: "block_alignment_centre"
-                },
-                bindings: ["control-a", "control-c"],
-                bindingHandler: (block: StandoffEditorBlock) => {
-                    const prop = block.createBlockProperty("style/alignment/centre");
+                }
+            },
+            {
+                type: "block/alignment/left",
+                name: "Left Alignment",
+                description: "Align text in the block to the left",
+                decorate: {
+                    blockClass: "block_alignment_left"
+                }
+            },
+            {
+                type: "block/alignment/justify",
+                name: "Justified Alignment",
+                description: "Justifies the alignment of the text.",
+                decorate: {
+                    blockClass: "block_alignment_justify"
+                }
+            },
+            {
+                type: "block/animation/sine-wave",
+                name: "Sine Wave",
+                description: "Animates the paragraph as a text sine wave.",
+                animation: {
+                    init: (p: BlockProperty) => {
+                        const manager = p.block.owner as BlockManager;
+                        manager.animateSineWave(p);
+                    }
                 }
             }
         ]
+    }
+    animateSineWave(p: BlockProperty) {
+        let pos = 0;
+        let startTime = 0;
+        let previousTime = 0;
+        let pausedTime = 0;
+        let paused = false;
+        const width = p.block.cache.offset.w;
+        const height = p.block.cache.offset.h;
+        const centerY = height / 2;
+        const amplitude = height * 0.1;
+        const speed = 150;
+        const degrees = 45;
+        const cells = p.block.cells;
+        const text = cells.map(c => {
+            let w = c.cache.offset.w;
+            const data = {
+                cell: c, width: w, position: pos
+            };
+            pos += w;
+            return data;
+        });
+        const scrollText = (dt: number) => {
+            text.forEach((charObj) => {
+              charObj.position += dt * speed;
+          
+              if (charObj.position > width) {
+                charObj.position = -charObj.width;
+              }
+          
+              const y = Math.sin(charObj.position / degrees) * amplitude;
+              updateElement(charObj.cell.element as HTMLSpanElement, {
+                style: {
+                    position: "absolute",
+                    x: charObj.position + "px",
+                    y: (centerY + y) + "px"
+                }
+              });
+            }); 
+          };
+        const getTime = () => {
+            return paused 
+                 ? pausedTime 
+                 : Date.now() - startTime;
+          };
+        const animate = () => {
+            const now = getTime();
+            const dt = (now - previousTime) * 0.001 // delta time in seconds.
+            previousTime = now;
+            scrollText(dt);
+            if (!paused) {
+                requestAnimationFrame(animate);
+            }
+        };
+        animate();
     }
     getEditorEvents() {
         const events: InputEvent[] = [
@@ -674,7 +762,8 @@ export class BlockManager implements IBlockManager {
                             const block = args.block as StandoffEditorBlock;
                             const ci = caret.right!.index;
                             const charCode = self.getPlatformKey(KEYS.ENTER)!.code;
-                            const lb = block.insertCharacterAfterIndex(String.fromCharCode(charCode), ci);
+                            block.insertTextAtIndex(String.fromCharCode(charCode), ci);
+                            const lb = block.cells[ci];
                             lb.element?.classList.add(CssClass.LineBreak);
                         }
                     }
@@ -712,7 +801,6 @@ export class BlockManager implements IBlockManager {
         const structure = document.createElement("DIV") as HTMLDivElement;
         const paragraphs = doc.text.split(/\r?\n/);
         let start = 0;
-        console.log("BlockManager.loadDocument", { doc, paragraphs })
         for (let i = 0; i < paragraphs.length; i ++) {
             let block = this.createBlock();
             let text = paragraphs[i];
@@ -722,10 +810,14 @@ export class BlockManager implements IBlockManager {
                 .filter(x=> x.start >= start && x.end <= end)
              ;             
             start += text.length;
-            const data = {
+            let data = {
                 text: text,
-                standoffProperties: props as any[]
+                standoffProperties: props as any[],
+                blockProperties: [] as any[]
             };
+            if (i == 0) {
+                data = {...data, blockProperties: doc.blockProperties as any[] };
+            }
             block.bind(data);
             structure.appendChild(block.container);
             this.blocks.push(block);

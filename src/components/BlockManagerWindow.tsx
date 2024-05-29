@@ -15,6 +15,9 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                 { type: "animation/spinner", start: 10, end: 12 },
                 { type: "codex/entity-reference", start: 10, end: 18, value: "abd-def-ghi-123" },
                 { type: "codex/block-reference", start: 5, end: 14, value: "abd-def-ghi-321" }
+            ],
+            blockProperties: [
+                { type: "block/alignment/left" }
             ]
         };
         const manager = new BlockManager();

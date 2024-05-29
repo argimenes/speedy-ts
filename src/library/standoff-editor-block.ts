@@ -16,10 +16,10 @@ export type StandoffPropertyDto = {
     value?: string
 }
 export type BlockPropertyDto = {
-    id: GUID,
-    blockGuid: GUID,
+    id?: GUID,
+    blockGuid?: GUID,
     type: string,
-    value: string
+    value?: string
 }
 export type StandoffEditorBlockDto = {
     id?: GUID
@@ -44,6 +44,9 @@ export interface IBlockPropertySchema {
     type: string;
     decorate?: {
         blockClass?: string;
+    }
+    animation?: {
+        init: (p: BlockProperty) => void;
     }
 }
 export interface IBlockPropertyConstructor {
@@ -990,7 +993,7 @@ export class StandoffEditorBlock implements IBlock {
         //     }
         // });
         this.blockProperties = block.blockProperties?.map(p => {
-            const schema = this.schemas.find(x => x.type == p.type) as IBlockPropertySchema;
+            const schema = this.blockSchemas.find(x => x.type == p.type) as IBlockPropertySchema;
             if (!schema) {
                 console.log("Schema not found for the standoff property type.", { p });
                 // Need to handle this properly ... can't just return early in a map().
@@ -1006,10 +1009,8 @@ export class StandoffEditorBlock implements IBlock {
          */
         this.cells = cells;
         this.reindexCells();
-        requestAnimationFrame(() => {
-            self.container.innerHTML = "";
-            self.container.appendChild(frag);
-        });
+        this.container.innerHTML = "";
+        this.container.appendChild(frag);
         this.updateView();
         this.commit({
             command: {
@@ -1134,7 +1135,6 @@ export class StandoffEditorBlock implements IBlock {
         const block = this;
         requestAnimationFrame(() => {
             block.calculateCellOffsets();
-            console.log("updateView", { block });
             block.cache.verticalArrowNavigation.lastX = null;
             block.updateRenderers();
         });
@@ -1154,18 +1154,16 @@ export class StandoffEditorBlock implements IBlock {
     batch(properties: StandoffProperty[], action: (schema: IStandoffPropertySchema, props: StandoffProperty[]) => void) {
         const block = this;
         const groups = _.groupBy(properties, p => p.type);
-        console.log("batch", { block, groups, properties });
         for (let key in groups) {
             const typeName = key;
             const props = groups[typeName];
             const schema = block.schemas.find(x => x.type == typeName);
-            console.log("batch", { typeName, props, schema });
-            if (!schema) return;
+            if (!schema) continue;
             action(schema, props);
         }
     }
     calculateCellOffsets() {
-        const self = this;
+        const block = this;
         const container = this.container;
         const offset = this.cache.offset;
         this.cache.previousOffset = { ...offset };
@@ -1177,7 +1175,7 @@ export class StandoffEditorBlock implements IBlock {
         };
         this.cells.forEach(cell => {
             const offset = cell.cache.offset;
-            const cy = self.cache.offset.y;
+            const cy = block.cache.offset.y;
             if (offset) {
                 cell.cache.previousOffset = {
                     ...offset

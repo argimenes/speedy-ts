@@ -120,7 +120,8 @@ export const createUnderline = (p: StandoffProperty, options: DrawUnderlineOptio
             position: "absolute",
             left: 0,
             top: topY + "px",
-            width: width + "px",
+            // width: width + "px",
+            width: "100%",
             height: height + "px",
             "pointer-events": "none"
         }

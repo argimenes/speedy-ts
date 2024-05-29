@@ -3,6 +3,15 @@
 .block_alignment_centre {
     text-align: center;
 }
+.block_alignment_left {
+    text-align: left;
+}
+.block_alignment_right {
+  text-align: right;
+}
+.block_alignment_justify {
+  text-align: justify;
+}
 
 .style_italics {
     font-style: italic;
