@@ -882,6 +882,10 @@ export class StandoffEditorBlock implements IBlock {
         return BLOCK_POSITION.Inside;
     }
     getCaret() {
+        const len = this.cells.length;
+        if (len == 1) {
+            return { right: this.cells[0], blockPosition: BLOCK_POSITION.EmptyLine };
+        }
         const sel = window.getSelection() as Selection;
         const { anchorNode } = sel;
         const anchor = this.getCellFromNode(anchorNode as CellNode);
