@@ -308,7 +308,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "ESC"
+                    match: "Escape"
                 },
                 action: {
                     name: "Create a left margin block.",
@@ -350,7 +350,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "ENTER"
+                    match: "Enter"
                 },
                 action: {
                     name: "Move cursor to the start of the next text block. If one doesn't exist, create it.",
@@ -388,7 +388,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "TAB"
+                    match: "Tab"
                 },
                 action: {
                     name: "Indent the current text block if it hasn't already been indented.",
@@ -422,7 +422,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "HOME"
+                    match: "Home"
                 },
                 action: {
                     name: "Move the caret to the left of the first character.",
@@ -442,7 +442,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "END"
+                    match: "End"
                 },
                 action: {
                     name: "Move the caret to the right of the last character.",
@@ -462,7 +462,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "BACKSPACE"
+                    match: "Backspace"
                 },
                 action: {
                     name: "Delete the character to the left",
@@ -486,7 +486,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "DELETE"
+                    match: "Delete"
                 },
                 action: {
                     name: "Delete the character to the right",
@@ -511,7 +511,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "UP-ARROW"
+                    match: "ArrowUp"
                 },
                 action: {
                     name: "Move the cursor up one text block. If one isn't found, move to the start of the block.",
@@ -541,7 +541,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "DOWN-ARROW"
+                    match: "ArrowDown"
                 },
                 action: {
                     name: "Move the cursor down one text block. If one isn't found, move to the end of the block.",
@@ -572,7 +572,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "LEFT-ARROW"
+                    match: "ArrowLeft"
                 },
                 action: {
                     name: "Move the cursor back one cell ...",
@@ -607,7 +607,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "RIGHT-ARROW"
+                    match: "ArrowRight"
                 },
                 action: {
                     name: "Move the cursor forward one cell ...",
@@ -645,7 +645,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "control-i"
+                    match: "CONTROL-I"
                 },
                 action: {
                     name: "Italicise",
@@ -665,7 +665,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "control-b"
+                    match: "CONTROL-B"
                 },
                 action: {
                     name: "Bold",

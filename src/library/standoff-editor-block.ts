@@ -545,6 +545,8 @@ export class StandoffEditorBlock implements IBlock {
                 map.set(x as ModeTrigger, x.action);
             });
         }
+        const modeGroups = _.groupBy(this.inputEvents, x=> x.mode);
+        
         return map;
     }
     removeMode(mode: string) {
@@ -768,6 +770,40 @@ export class StandoffEditorBlock implements IBlock {
         this.inputBuffer.splice(0, 1);
         this.addToInputBuffer(key);
     }
+    private toChord(match: string) {
+        let chord: IKeyboardInput = {} as any;
+        const _match = match.toUpperCase();
+        if (_match.indexOf("CONTROL")) chord.control = true;
+        if (_match.indexOf("ALT")) chord.option = true;
+        if (_match.indexOf("META")) chord.command = true;
+        if (_match.indexOf("SHIFT")) chord.shift = true;
+        const parts = _match.split("-"), len = parts.length;
+        chord.key = parts[len-1];
+        return chord;
+    }
+    compareChords(input: IKeyboardInput, trigger: IKeyboardInput) {
+        if (input.command != trigger.command) return false;
+        if (input.option != trigger.option) return false;
+        if (input.shift != trigger.shift) return false;
+        if (input.control != trigger.control) return false;
+        if (input.key != trigger.key) return false;
+        return true;
+    }
+    getFirstMatchingInputEvent(input: IKeyboardInput) {
+        const self = this;
+        const modeEvents = _.groupBy(this.inputEvents, x=> x.mode);
+        for (let i = this.modes.length -1; i >= 0; i--) {
+            let mode = this.modes[i];
+            let events = modeEvents[mode];
+            if (events?.length == 0) continue;
+            let match = events.find(x => {
+                let trigger = self.toChord(x.trigger.match as string);
+                return self.compareChords(input, trigger);
+            });
+            if (match) return match;
+        }
+        return null;
+    }
     private handleKeyDown(e: KeyboardEvent) {
         e.preventDefault();
         const ALLOW = true, FORBID = false;
@@ -778,91 +814,92 @@ export class StandoffEditorBlock implements IBlock {
          * For now, assume no bindings and ignore text selection and just add characters.
          */
         const args = { block: this, caret: this.getCaret() } as IBindingHandlerArgs;
-        const leftArrowCode = this.getKeyCode("LEFT_ARROW");
-        const rightArrowCode = this.getKeyCode("RIGHT_ARROW");
-        const deleteCode = this.getKeyCode("DELETE");
-        const backspaceCode = this.getKeyCode("DELETE");
-        console.log({ e, input, args, leftArrowCode, rightArrowCode, deleteCode, backspaceCode });
-        if (input.key == "Shift") {
+        const modifiers = ["Shift", "Alt", "Meta"];
+        if (modifiers.some(x => x == input.key)) {
             return ALLOW;
         }
-        if (input.key == "Delete") {
-            const deleteEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "DELETE");
-            if (deleteEvent) {
-                deleteEvent.action.handler(args);
-                return FORBID;
-            }
+        const match = this.getFirstMatchingInputEvent(input);
+        if (match) {
+            match.action.handler(args);
+            return FORBID;
         }
-        if (input.key == "Backspace") {
-            const backspaceEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "BACKSPACE");
-            if (backspaceEvent) {
-                backspaceEvent.action.handler(args);
-                return FORBID;
-            }
-        }
-        if (input.key == "ArrowLeft") {
-            const leftArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "LEFT-ARROW");
-            if (leftArrowEvent) { 
-                leftArrowEvent.action.handler(args);
-                return FORBID;
-            }
-        }
-        if (input.key == "ArrowRight") {
-            const rightArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "RIGHT-ARROW");
-            if (rightArrowEvent) {
-                rightArrowEvent.action.handler(args);
-                return FORBID;
-            }
-        }
-        if (input.key == "ArrowUp") {
-            const upArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "UP-ARROW");
-            if (upArrowEvent) {
-                upArrowEvent.action.handler(args);
-                return FORBID;
-            }
-        }
-        if (input.key == "ArrowDown") {
-            const downArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "DOWN-ARROW");
-            if (downArrowEvent) {
-                downArrowEvent.action.handler(args);
-                return FORBID;
-            }
-        }
-        if (input.key == "Home") {
-            const homeEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "HOME");
-            if (homeEvent) {
-                homeEvent.action.handler(args);
-                return FORBID;
-            }
-        }
-        if (input.key == "End") {
-            const endEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "END");
-            if (endEvent) {
-                endEvent.action.handler(args);
-                return FORBID;
-            }
-        }
-        if (input.key == "Enter") {
-            const enterEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "ENTER");
-            if (enterEvent) {
-                enterEvent.action.handler(args);
-                return FORBID;
-            }
-        }
-        if (input.key == "Tab") {
-            const tabEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "TAB");
-            if (tabEvent) {
-                tabEvent.action.handler(args);
-                return FORBID;
-            }
-        }
-        if (input.key == "Escape") {
-            const escEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "ESC");
-            if (escEvent) {
-                escEvent.action.handler(args);
-                return FORBID;
-            }
-        }
+        // if (input.key == "Delete") {
+        //     const deleteEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "DELETE");
+        //     if (deleteEvent) {
+        //         deleteEvent.action.handler(args);
+        //         return FORBID;
+        //     }
+        // }
+        // if (input.key == "Backspace") {
+        //     const backspaceEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "BACKSPACE");
+        //     if (backspaceEvent) {
+        //         backspaceEvent.action.handler(args);
+        //         return FORBID;
+        //     }
+        // }
+        // if (input.key == "ArrowLeft") {
+        //     const leftArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "LEFT-ARROW");
+        //     if (leftArrowEvent) { 
+        //         leftArrowEvent.action.handler(args);
+        //         return FORBID;
+        //     }
+        // }
+        // if (input.key == "ArrowRight") {
+        //     const rightArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "RIGHT-ARROW");
+        //     if (rightArrowEvent) {
+        //         rightArrowEvent.action.handler(args);
+        //         return FORBID;
+        //     }
+        // }
+        // if (input.key == "ArrowUp") {
+        //     const upArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "UP-ARROW");
+        //     if (upArrowEvent) {
+        //         upArrowEvent.action.handler(args);
+        //         return FORBID;
+        //     }
+        // }
+        // if (input.key == "ArrowDown") {
+        //     const downArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "DOWN-ARROW");
+        //     if (downArrowEvent) {
+        //         downArrowEvent.action.handler(args);
+        //         return FORBID;
+        //     }
+        // }
+        // if (input.key == "Home") {
+        //     const homeEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "HOME");
+        //     if (homeEvent) {
+        //         homeEvent.action.handler(args);
+        //         return FORBID;
+        //     }
+        // }
+        // if (input.key == "End") {
+        //     const endEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "END");
+        //     if (endEvent) {
+        //         endEvent.action.handler(args);
+        //         return FORBID;
+        //     }
+        // }
+        // if (input.key == "Enter") {
+        //     const enterEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "ENTER");
+        //     if (enterEvent) {
+        //         enterEvent.action.handler(args);
+        //         return FORBID;
+        //     }
+        // }
+        // if (input.key == "Tab") {
+        //     const tabEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "TAB");
+        //     if (tabEvent) {
+        //         tabEvent.action.handler(args);
+        //         return FORBID;
+        //     }
+        // }
+        // if (input.key == "Escape") {
+        //     const escEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "ESC");
+        //     if (escEvent) {
+        //         escEvent.action.handler(args);
+        //         return FORBID;
+        //     }
+        // }
         this.insertCharacterAtCaret(input);
         return FORBID;
     }
