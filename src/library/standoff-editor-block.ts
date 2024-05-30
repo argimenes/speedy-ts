@@ -341,6 +341,8 @@ export interface IBlock {
     removeRelation: (name: string) => void;
     metadata: Record<string, any>;
     setFocus: () => void;
+    serialize: () => any;
+    deserialize: (json: any|any[]) => IBlock;
 }
 export interface IBlockManager extends IBlock {
 
@@ -625,7 +627,8 @@ export class StandoffEditorBlock implements IBlock {
         return overlay;
     }
     getLastCell() {
-        return this.cells[-1];
+        const len = this.cells.length;
+        return this.cells[len-1];
     }
     removeOverlay(name: string) {
         const o = this.overlays.find(x => x.name == name);
@@ -1088,6 +1091,10 @@ export class StandoffEditorBlock implements IBlock {
         this.blockProperties.forEach(p => {
             p.applyStyling();
         });
+    }
+    deserialize(json: any) {
+        this.bind(json as StandoffEditorBlockDto);
+        return this;
     }
     bind(block: StandoffEditorBlockDto) {
         const self = this;

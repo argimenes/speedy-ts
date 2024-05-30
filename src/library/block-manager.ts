@@ -42,7 +42,14 @@ export class GridBlock implements IBlock {
         this.metadata = {};
         this.grid = [];
     }
-    
+    serialize() {
+        // TBC
+        return {
+            id: this.id,
+            type: this.type,
+            metadata: this.metadata
+        };
+    }
     addKeyboardBindings() {
 
     }
@@ -315,8 +322,8 @@ export class BlockManager implements IBlockManager {
                         const leftMarginEdge = block.getRelation(RelationType.has_left_margin);
                         if (!leftMarginEdge) {
                             const leftMargin = manager.createBlock();
-                            leftMargin.setRelation(RelationType.has_margin_parent, block.id);
-                            block.setRelation(RelationType.has_left_margin, leftMargin.id);
+                            leftMargin.addRelation(RelationType.has_margin_parent, block.id);
+                            block.addRelation(RelationType.has_left_margin, leftMargin.id);
                             manager.blocks.push(leftMargin);
                             block.container.parentElement?.appendChild(leftMargin.container);
                             leftMargin.container.classList.add("block-window");
@@ -362,8 +369,8 @@ export class BlockManager implements IBlockManager {
                             next.applyBlockPropertyStyling();
                             manager.blocks.push(next);
                             manager.container.append(next.container);
-                            block.setRelation(RelationType.has_next, next.id);
-                            next.setRelation(RelationType.has_previous, block.id);
+                            block.addRelation(RelationType.has_next, next.id);
+                            next.addRelation(RelationType.has_previous, block.id);
                             const charCode = manager.getPlatformKey(KEYS.ENTER)!.code;
                             next.insertTextAtIndex(String.fromCharCode(charCode), 0);
                             next.setCaret(0, CARET.LEFT);
@@ -609,7 +616,7 @@ export class BlockManager implements IBlockManager {
                     `,
                     handler: (args: IBindingHandlerArgs) => {
                         /**
-                         * Move the cursor back one cell ...
+                         * Move the cursor right one cell ...
                          */
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
@@ -620,20 +627,12 @@ export class BlockManager implements IBlockManager {
                             block.setCaret(caret.right.index + 1);
                             return;
                         }
-                        if (ri == len - 1) {
-                            block.setCaret(caret.right.index, CARET.RIGHT);
-                            return;
-                        }
-                        /**
-                         * Or skip to the start of the next block.
-                         */
-                        // const previousEdge = block.getRelation("has-previous-sibling");
-                        // if (!previousEdge) return;
-                        // const previous = manager.getBlock(previousEdge.targetId) as StandoffEditorBlock;
-                        // if (!previous) return;
-                        // const last = previous.getLastCell();
-                        // previous.setCaret(last.index);
-                        // manager.setBlockFocus(previous);
+                        const nextEdge = block.getRelation(RelationType.has_next);
+                        if (!nextEdge) return;
+                        const next = manager.getBlock(nextEdge.targetId) as StandoffEditorBlock;
+                        if (!next) return;
+                        next.setCaret(0, CARET.LEFT);
+                        manager.setBlockFocus(next);
                     }
                 }
             }
@@ -738,6 +737,23 @@ export class BlockManager implements IBlockManager {
                 }
             }
         ] as IStandoffPropertySchema[];
+    }
+    deserialize(json: any) {
+        return {} as IBlock;
+    }
+    deserializeBlock(data: any) {
+        switch (data.type) {
+            case BlockType.StandoffEditor: {
+                const block = this.createBlock();
+                block.bind(data);
+                return block;
+            };
+            default: return {} as IBlock;
+        }
+    }
+    serialize() {
+        const json = this.blocks.map(b => b.serialize());
+        return json;
     }
     renderUnderlines(type: string, properties: StandoffProperty[], block: StandoffEditorBlock, colour: string, offsetY: number) {
         const overlay = block.getOrSetOverlay(type);
