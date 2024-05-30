@@ -647,6 +647,18 @@ export class StandoffEditorBlock implements IBlock {
     }
     setRelation(type: string, targetId: string) {
         this.relations[type] = { type, sourceId: this.id, targetId };
+        this.commit({
+            command: {
+                id: this.id,
+                name: "setRelation",
+                value: { type, targetId }
+            },
+            reverse: {
+                id: this.id,
+                name: "removeRelation",
+                value: { name: type }
+            }
+        })
     }
     private attachBindings() {
         /*
