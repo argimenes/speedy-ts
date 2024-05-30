@@ -1,5 +1,5 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command } from "./standoff-editor-block";
+import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement } from "./standoff-editor-block";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -504,6 +504,67 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "UP-ARROW"
+                },
+                action: {
+                    name: "Move the cursor up one text block. If one isn't found, move to the start of the block.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        /**
+                         * Move the cursor back one cell ...
+                         */
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
+                        const previousEdge = block.getRelation(RelationType.has_previous);
+                        if (!previousEdge) {
+                            block.setCaret(0, CARET.LEFT);
+                            return;
+                        }
+                        const previous = manager.getBlock(previousEdge.targetId) as StandoffEditorBlock;
+                        if (!previous) return;
+                        previous.setCaret(0, CARET.LEFT);
+                        manager.setBlockFocus(previous);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "DOWN-ARROW"
+                },
+                action: {
+                    name: "Move the cursor down one text block. If one isn't found, move to the end of the block.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        /**
+                         * Move the cursor back one cell ...
+                         */
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
+                        const nextEdit = block.getRelation(RelationType.has_next);
+                        const len = block.cells.length;
+                        if (!nextEdit) {
+                            block.setCaret(len - 1, CARET.LEFT);
+                            return;
+                        }
+                        const next = manager.getBlock(nextEdit.targetId) as StandoffEditorBlock;
+                        if (!next) return;
+                        next.setCaret(0, CARET.LEFT);
+                        manager.setBlockFocus(next);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "LEFT-ARROW"
                 },
                 action: {
@@ -628,95 +689,21 @@ export class BlockManager implements IBlockManager {
         return [
             {
                 type: "style/italics",
+                name: "Italics",
                 decorate: {
                     cssClass: "style_italics"
                 }
             },
             {
                 type: "style/bold",
+                name: "Bold",
                 decorate: {
                     cssClass: "style_bold"
                 }
             },
             {
-                type: "animation/spinner",
-                animation: {
-                    draw: function (p: StandoffProperty) {
-                        const block = p.start.element?.parentElement as HTMLElement;
-                        p.cache.animation.degrees += 2;
-                        if (p.cache.animation.degrees >= 360) {
-                            p.cache.animation.degrees = 0;
-                        }
-                        block.style.transform = "rotate(" + p.cache.animation.degrees + "deg)";
-                    },
-                    init: (args) => {
-                        const { block, properties } = args;
-                        properties.forEach(p => {
-                            p.cache.animation = {
-                                degrees: 0,
-                                element: null,
-                                stop: false
-                            };
-                            const cells = p.getCells();
-                            const container = document.createElement("DIV") as HTMLDivElement;
-                            container.speedy = {
-
-                            }
-                            const spans = cells.map(x => x.element as HTMLSpanElement);
-                            p.start.next?.element?.insertBefore(container, p.start.next?.element.parentElement);
-                            container.append(...spans);
-                            var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                            var x = p.start.cache.offset.x;
-                            var y = p.start.cache.offset.y;
-                            var w = (p.end.cache.offset.x + p.end.cache.offset.w) - p.start.cache.offset.x;
-                            var h = p.end.cache.offset.h;
-                            console.log({
-                                x, y, w, startNode: p.start, endNode: p.end
-                            });
-                            svg.speedy = {
-                                stream: 1
-                            };
-                            var cr = p.block.container.getBoundingClientRect() as DOMRect;
-                            var sr = p.start.element?.getBoundingClientRect() as DOMRect;
-                            var er = p.end.element?.getBoundingClientRect() as DOMRect;
-                            var w = er.x + er.width - sr.x;
-                            var x = sr.x - cr.x;
-                            var y = sr.y - cr.y - (w / 4);
-                            svg.style.position = "absolute";
-                            svg.style.left = x + "px";
-                            svg.style.top = y + "px";
-                            svg.style.width = w + "px";
-                            svg.style.height = w + "px";
-                            var svgNS = svg.namespaceURI;
-                            var circle = document.createElementNS(svgNS, 'circle');
-                            circle.setAttributeNS(null, 'cx', (w / 2)+"");
-                            circle.setAttributeNS(null, 'cy', (w / 2)+"");
-                            circle.setAttributeNS(null, 'r', (w / 2)+"");
-                            circle.setAttributeNS(null, 'fill', 'transparent');
-                            svg.appendChild(circle);
-                            //p.editor.container.insertBefore(svg, p.startNode.parentNode);
-                            p.cache.animation.element = svg;
-                        });
-                    },
-                    start: (p: StandoffProperty) => {
-                        p.cache.animation.timer = setInterval(function () {
-                            if (p.cache.animation.stop) {
-                                // clearInterval(p.animation.timer);
-                                return;
-                            }
-                            if (p.schema?.animation?.draw) p.schema?.animation?.draw(p);
-                        }, 125);
-                    },
-                    stop: (p: StandoffProperty) => {
-                        clearInterval(p.cache.animation.timer);
-                    },
-                    delete: (p: StandoffProperty) => {
-                        clearInterval(p.cache.animation.timer);
-                    }
-                }
-            },
-            {
                 type: "codex/block-reference",
+                name: "Block reference",
                 event: {
                     beforeStyling: async (args: any) => {
                         // TBC : will show some interface where a block can be retrieved
@@ -734,6 +721,7 @@ export class BlockManager implements IBlockManager {
             },
             {
                 type: "codex/entity-reference",
+                name: "Entity reference",
                 event: {
                     beforeStyling: async (args: any) => {
                         // TBC : will show a panel where the entity can be searched for
@@ -831,91 +819,6 @@ export class BlockManager implements IBlockManager {
         first?.blockProperties.push(...second?.blockProperties as BlockProperty[]);
         first?.updateView();
         this.deleteBlock(secondBlockId);
-    }
-    getModes() {
-        const self = this;
-        const modes: Mode[] = [];
-        modes.push({
-            "default": {
-                keyboard: [
-                    {
-                        "HOME": (args: IBindingHandlerArgs) => {
-                            /**
-                             * Move the cursor to the start of the block.
-                             */
-                            const { caret } = args;
-                            const block = args.block as StandoffEditorBlock;
-                            const start = block.cells[0];
-                            block.setCaret(start.index);
-                        },
-                        "END": (args: IBindingHandlerArgs) => {
-                            /**
-                             * Move the cursor to the end of the block.
-                             */
-                            const { caret } = args;
-                            const block = args.block as StandoffEditorBlock;
-                            const { cells } = block;
-                            const end = cells[-1]; // This should be the CR character cell.
-                            block.setCaret(end.index);
-                        },
-                        "TAB": (args: IBindingHandlerArgs) => {
-                            /**
-                             * Inserts spaces or a TAB character. If the latter, will need to
-                             * see if it needs to be styled to a fixed width.
-                             */
-                            const { caret } = args;
-                            const block = args.block as StandoffEditorBlock;
-                            const ci = caret.right!.index;
-                            block.insertTextAtIndex("    ", ci);
-                        },
-                        "ENTER": (args: IBindingHandlerArgs) => {
-                            /**
-                             * Creates a new StandoffEditorBlock and adds it as a sibling after the current block.
-                             */
-                            const block = args.block as StandoffEditorBlock;
-                            const newBlock = self.createBlock();
-                            const next = block.getRelation(RelationType.has_next);
-                            block.setRelation(RelationType.has_next, newBlock.id);
-                            newBlock.setRelation(RelationType.has_previous, block.id);
-                            if (next) {
-                                newBlock.setRelation(RelationType.has_next, next.targetId);
-                            }
-                            self.appendSibling(block.container, newBlock.container);
-                            self.setBlockFocus(newBlock);
-                        },
-                        "shift-ENTER": (args: IBindingHandlerArgs) => {
-                            /**
-                             * Insert a NewLine character, styled such that it displaces following
-                             * SPANs onto the next line.
-                             */
-                            const { caret } = args;
-                            const block = args.block as StandoffEditorBlock;
-                            const ci = caret.right!.index;
-                            const charCode = self.getPlatformKey(KEYS.ENTER)!.code;
-                            block.insertTextAtIndex(String.fromCharCode(charCode), ci);
-                            const lb = block.cells[ci];
-                            lb.element?.classList.add(CssClass.LineBreak);
-                        }
-                    }
-                ],
-                mouse: []
-            },
-            "nested-list": {
-                keyboard: [
-                    {
-                        "TAB": (args: IBindingHandlerArgs) => {
-                            const { block } = args;
-                            const newBlock = self.createBlock();
-                            self.indent(block, newBlock);
-                        }
-                    }
-                ],
-                mouse: [
-
-                ]
-            }
-        })
-        return modes;
     }
     reset() {
         this.container.innerHTML = "";

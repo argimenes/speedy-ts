@@ -111,8 +111,8 @@ export interface IStandoffProperty {
 }
 export interface IStandoffPropertySchema {
     type: string;
-    bindings?: string[];
-    bindingHandler?: (e: StandoffEditorBlock, selection: IRange) => void;
+    name?: string;
+    description?: string;
     event: any;
     decorate?: {
         cssClass?: string;
@@ -370,9 +370,6 @@ export type InputBindings = {
     keyboard: KeyboardBinding[];
     mouse: MouseBinding[];
 }
-
-
-
 export type Mode = Record<string, InputBindings>;
 /**
  * A place to store collections of absolutely-positioned SVG elements that 
@@ -770,6 +767,7 @@ export class StandoffEditorBlock implements IBlock {
     }
     private handleKeyDown(e: KeyboardEvent) {
         e.preventDefault();
+        const ALLOW = true, FORBID = false;
         const input = this.toKeyboardInput(e);
         /**
          * Dispatch to a binding if there is a match.
@@ -782,71 +780,88 @@ export class StandoffEditorBlock implements IBlock {
         const deleteCode = this.getKeyCode("DELETE");
         const backspaceCode = this.getKeyCode("DELETE");
         console.log({ e, input, args, leftArrowCode, rightArrowCode, deleteCode, backspaceCode });
+        if (input.key == "Shift") {
+            return ALLOW;
+        }
         if (input.key == "Delete") {
             const deleteEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "DELETE");
             if (deleteEvent) {
                 deleteEvent.action.handler(args);
-                return false;
+                return FORBID;
             }
         }
         if (input.key == "Backspace") {
             const backspaceEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "BACKSPACE");
             if (backspaceEvent) {
                 backspaceEvent.action.handler(args);
-                return false;
+                return FORBID;
             }
         }
         if (input.key == "ArrowLeft") {
             const leftArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "LEFT-ARROW");
             if (leftArrowEvent) { 
                 leftArrowEvent.action.handler(args);
-                return false;
+                return FORBID;
             }
         }
         if (input.key == "ArrowRight") {
             const rightArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "RIGHT-ARROW");
             if (rightArrowEvent) {
                 rightArrowEvent.action.handler(args);
-                return false;
+                return FORBID;
+            }
+        }
+        if (input.key == "ArrowUp") {
+            const upArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "UP-ARROW");
+            if (upArrowEvent) {
+                upArrowEvent.action.handler(args);
+                return FORBID;
+            }
+        }
+        if (input.key == "ArrowDown") {
+            const downArrowEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "DOWN-ARROW");
+            if (downArrowEvent) {
+                downArrowEvent.action.handler(args);
+                return FORBID;
             }
         }
         if (input.key == "Home") {
             const homeEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "HOME");
             if (homeEvent) {
                 homeEvent.action.handler(args);
-                return false;
+                return FORBID;
             }
         }
         if (input.key == "End") {
             const endEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "END");
             if (endEvent) {
                 endEvent.action.handler(args);
-                return false;
+                return FORBID;
             }
         }
         if (input.key == "Enter") {
             const enterEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "ENTER");
             if (enterEvent) {
                 enterEvent.action.handler(args);
-                return false;
+                return FORBID;
             }
         }
         if (input.key == "Tab") {
             const tabEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "TAB");
             if (tabEvent) {
                 tabEvent.action.handler(args);
-                return false;
+                return FORBID;
             }
         }
         if (input.key == "Escape") {
             const escEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "ESC");
             if (escEvent) {
                 escEvent.action.handler(args);
-                return false;
+                return FORBID;
             }
         }
         this.insertCharacterAtCaret(input);
-        return false;
+        return FORBID;
     }
     getCellFromNode(node: CellNode) {
         let current = node;
