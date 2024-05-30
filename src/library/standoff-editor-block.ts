@@ -826,6 +826,13 @@ export class StandoffEditorBlock implements IBlock {
                 return false;
             }
         }
+        if (input.key == "Escape") {
+            const escEvent = this.inputEvents.find(x => x.mode == "default" && x.trigger.match == "ESC");
+            if (escEvent) {
+                escEvent.action.handler(args);
+                return false;
+            }
+        }
         this.insertCharacterAtCaret(input);
         return false;
     }

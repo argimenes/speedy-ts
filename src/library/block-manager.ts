@@ -11,7 +11,9 @@ const RelationType = {
     "has_next":"has_next",
     "has_previous":"has_previous",
     "has_parent":"has_parent",
-    "has_first_child":"has_first_child"
+    "has_first_child":"has_first_child",
+    "has_left_margin": "has_left_margin",
+    "has_margin_parent": "has_margin_parent",
 }
 export interface IBlockManagerConstructor {
     id?: GUID;
@@ -186,6 +188,14 @@ export class BlockManager implements IBlockManager {
     getBlockSchemas() {
         return [
             {
+                type: "block/marginalia/left",
+                name: "Left margin block",
+                description: "Handles the alignment of a left margin block to the one to its right.",
+                decorate: {
+                    blockClass: "block_marginalia_left"
+                }
+            },
+            {
                 type: "block/alignment/right",
                 name: "Right Alignment",
                 description: "Align text in the block to the right.",
@@ -287,6 +297,48 @@ export class BlockManager implements IBlockManager {
     }
     getEditorEvents() {
         const events: InputEvent[] = [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "ESC"
+                },
+                action: {
+                    name: "Create a left margin block.",
+                    description: `
+                        Let's describe how this works ...
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
+                        const leftMarginEdge = block.getRelation(RelationType.has_left_margin);
+                        if (!leftMarginEdge) {
+                            const leftMargin = manager.createBlock();
+                            leftMargin.setRelation(RelationType.has_margin_parent, block.id);
+                            block.setRelation(RelationType.has_left_margin, leftMargin.id);
+                            manager.blocks.push(leftMargin);
+                            block.container.parentElement?.appendChild(leftMargin.container);
+                            leftMargin.container.classList.add("block-window");
+                            leftMargin.addBlockProperties([
+                                { type: "block/marginalia/left" },
+                                { type: "block/alignment/left" },
+                            ]);
+                            leftMargin.applyBlockPropertyStyling();
+                            const charCode = manager.getPlatformKey(KEYS.ENTER)!.code;
+                            leftMargin.insertTextAtIndex(String.fromCharCode(charCode), 0);
+                            leftMargin.setCaret(0, CARET.LEFT);
+                            leftMargin.setFocus();
+                            
+                        } else {
+                            const leftMargin = manager.getBlock(leftMarginEdge.targetId) as StandoffEditorBlock;
+                            if (!leftMargin) return;
+                            leftMargin.setCaret(0, CARET.LEFT);
+                            leftMargin.setFocus();
+                        }
+                    }
+                }
+            },
             {
                 mode: "default",
                 trigger: {
@@ -963,18 +1015,18 @@ export class BlockManager implements IBlockManager {
         block.applyBlockPropertyStyling();
         this.commit({
             command: {
-                id: block.id,
+                id: this.id,
                 name: "createBlock"
             },
             reverse: {
-                id: block.id,
+                id: this.id,
                 name: "uncreateBlock",
                 value: { id: block.id }
             }
         });
         return block;
     }
-    uncreateBlock(id: GUID) {
+    private uncreateBlock(id: GUID) {
         const block = this.getBlock(id) as IBlock;
         if (!block) {
             // Error: block not found.
