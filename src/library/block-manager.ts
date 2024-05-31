@@ -379,8 +379,9 @@ export class BlockManager implements IBlockManager {
                         const rightMarginEdge = block.getRelation(RelationType.has_right_margin);
                         if (!rightMarginEdge) {
                             const rightMargin = manager.createBlock();
-                            rightMargin.addRelation(RelationType.has_right_margin_parent, block.id);
-                            block.addRelation(RelationType.has_right_margin, rightMargin.id);
+                            manager.addTwoWayRelation(block.id, RelationType.has_right_margin, RelationType.has_right_margin_parent, rightMargin.id);
+                            // rightMargin.addRelation(RelationType.has_right_margin_parent, block.id);
+                            // block.addRelation(RelationType.has_right_margin, rightMargin.id);
                             manager.blocks.push(rightMargin);
                             updateElement(rightMargin.container, {
                                 style: {
@@ -996,6 +997,30 @@ export class BlockManager implements IBlockManager {
         const defaultWidth = 20;
         const level = block.metadata.indentLevel as number;
         block.container.setAttribute("margin-left", (level * defaultWidth) + "px");
+    }
+    addTwoWayRelation(sourceId: GUID, forward: string, backward: string, targetId: GUID)  {
+        this.relations[forward] = {
+            type: forward,
+            sourceId: sourceId,
+            targetId: targetId
+        };
+        this.relations[backward] = {
+            type: backward,
+            sourceId: targetId,
+            targetId: sourceId
+        };
+        this.commit({
+            command: {
+                id: this.id,
+                name: "addRelationDyad",
+                value: { sourceId, forward, backward, targetId }
+            },
+            reverse: {
+                id: this.id,
+                name: "removeRelationDyad", // TBC
+                value: { sourceId, forward, backward, targetId }
+            }
+        });
     }
     createBlock() {
         const standoffSchemas = this.getStandoffSchemas();
