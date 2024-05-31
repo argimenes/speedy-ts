@@ -14,6 +14,8 @@ const RelationType = {
     "has_first_child":"has_first_child",
     "has_left_margin": "has_left_margin",
     "has_left_margin_parent": "has_left_margin_parent",
+    "has_right_margin": "has_right_margin",
+    "has_right_margin_parent": "has_right_margin_parent",
 }
 export interface IBlockManagerConstructor {
     id?: GUID;
@@ -203,6 +205,14 @@ export class BlockManager implements IBlockManager {
                 }
             },
             {
+                type: "block/marginalia/right",
+                name: "Right margin block",
+                description: "Handles the alignment of a right margin block to the one to its left.",
+                decorate: {
+                    blockClass: "block_marginalia_right"
+                }
+            },
+            {
                 type: "block/alignment/right",
                 name: "Right Alignment",
                 description: "Align text in the block to the right.",
@@ -342,6 +352,48 @@ export class BlockManager implements IBlockManager {
                             if (!leftMargin) return;
                             leftMargin.setCaret(0, CARET.LEFT);
                             leftMargin.setFocus();
+                        }
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Shift-Escape"
+                },
+                action: {
+                    name: "Create a right margin block.",
+                    description: `
+                        Let's describe how this works ...
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
+                        const rightMarginEdge = block.getRelation(RelationType.has_right_margin);
+                        if (!rightMarginEdge) {
+                            const rightMargin = manager.createBlock();
+                            rightMargin.addRelation(RelationType.has_right_margin_parent, block.id);
+                            block.addRelation(RelationType.has_right_margin, rightMargin.id);
+                            manager.blocks.push(rightMargin);
+                            block.container.parentElement?.appendChild(rightMargin.container);
+                            rightMargin.container.classList.add("block-window");
+                            rightMargin.addBlockProperties([
+                                { type: "block/marginalia/right" },
+                                { type: "block/alignment/left" },
+                            ]);
+                            rightMargin.applyBlockPropertyStyling();
+                            const charCode = manager.getPlatformKey(KEYS.ENTER)!.code;
+                            rightMargin.insertTextAtIndex(String.fromCharCode(charCode), 0);
+                            rightMargin.setCaret(0, CARET.LEFT);
+                            rightMargin.setFocus();
+                            
+                        } else {
+                            const rightMargin = manager.getBlock(rightMarginEdge.targetId) as StandoffEditorBlock;
+                            if (!rightMargin) return;
+                            rightMargin.setCaret(0, CARET.LEFT);
+                            rightMargin.setFocus();
                         }
                     }
                 }
