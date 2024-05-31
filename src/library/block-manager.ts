@@ -13,7 +13,7 @@ const RelationType = {
     "has_parent":"has_parent",
     "has_first_child":"has_first_child",
     "has_left_margin": "has_left_margin",
-    "has_margin_parent": "has_margin_parent",
+    "has_left_margin_parent": "has_left_margin_parent",
 }
 export interface IBlockManagerConstructor {
     id?: GUID;
@@ -322,7 +322,7 @@ export class BlockManager implements IBlockManager {
                         const leftMarginEdge = block.getRelation(RelationType.has_left_margin);
                         if (!leftMarginEdge) {
                             const leftMargin = manager.createBlock();
-                            leftMargin.addRelation(RelationType.has_margin_parent, block.id);
+                            leftMargin.addRelation(RelationType.has_left_margin_parent, block.id);
                             block.addRelation(RelationType.has_left_margin, leftMargin.id);
                             manager.blocks.push(leftMargin);
                             block.container.parentElement?.appendChild(leftMargin.container);
@@ -594,7 +594,16 @@ export class BlockManager implements IBlockManager {
                          * Or skip to the end of the previous block.
                          */
                         const previousEdge = block.getRelation(RelationType.has_previous);
-                        if (!previousEdge) return;
+                        if (!previousEdge) {
+                            // Check for the central column.
+                            const leftMarginEdge = block.getRelation(RelationType.has_left_margin);
+                            if (!leftMarginEdge) return;
+                            const leftMargin = manager.getBlock(leftMarginEdge.targetId) as StandoffEditorBlock;
+                            const last = leftMargin.getLastCell();
+                            leftMargin.setCaret(last.index, CARET.LEFT);
+                            manager.setBlockFocus(leftMargin);
+                            return;
+                        }
                         const previous = manager.getBlock(previousEdge.targetId) as StandoffEditorBlock;
                         if (!previous) return;
                         const last = previous.getLastCell();
@@ -628,7 +637,15 @@ export class BlockManager implements IBlockManager {
                             return;
                         }
                         const nextEdge = block.getRelation(RelationType.has_next);
-                        if (!nextEdge) return;
+                        if (!nextEdge) {
+                            // Check for the central column.
+                            const leftMarginParentEdge = block.getRelation(RelationType.has_left_margin_parent);
+                            if (!leftMarginParentEdge) return;
+                            const leftMarginParent = manager.getBlock(leftMarginParentEdge.targetId) as StandoffEditorBlock;
+                            leftMarginParent.setCaret(0, CARET.LEFT);
+                            manager.setBlockFocus(leftMarginParent);
+                            return;
+                        }
                         const next = manager.getBlock(nextEdge.targetId) as StandoffEditorBlock;
                         if (!next) return;
                         next.setCaret(0, CARET.LEFT);
