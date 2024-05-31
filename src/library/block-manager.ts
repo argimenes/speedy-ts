@@ -536,10 +536,17 @@ export class BlockManager implements IBlockManager {
                     handler: (args: IBindingHandlerArgs) => {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
                         if (!caret.left) {
-                            if (caret.right.isEOL) {
+                            const previousEdge = block.getRelation(RelationType.has_previous);
+                            if (previousEdge) {
+                                const previous = manager.getBlock(previousEdge.targetId) as StandoffEditorBlock;
+                                manager.deleteBlock(previous.id);
+                                if (caret.right.isEOL) {
                                 
+                                }
                             }
+                            
                             return;
                         }
                         block.removeCellAtIndex(caret.left.index, true);
@@ -879,6 +886,10 @@ export class BlockManager implements IBlockManager {
         this.commits.push(msg);
     }
     deleteBlock(blockId: GUID) {
+        const block = this.getBlock(blockId) as StandoffEditorBlock;
+        const i = this.blocks.findIndex(x => x.id == blockId);
+        this.blocks.splice(i, 1);
+        block.destroy();
         this.commit({
             command: {
                 id: this.id,
