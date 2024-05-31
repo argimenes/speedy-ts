@@ -1,5 +1,5 @@
 import _ from "underscore";
-import { KEYS, Platform } from "./keyboard";
+import { KEYS, Platform, TPlatformKey } from "./keyboard";
 import { v4 as uuidv4 } from 'uuid';
 import { updateElement } from "./svg";
 
@@ -158,7 +158,7 @@ export class Cell {
         offset: ICellCoordOffsets
     };
     element?: CellHtmlElement;
-    isLineBreak: boolean;
+    isEOL: boolean;
     block: StandoffEditorBlock;
     constructor({ text, block }: ICellConstructor) {
         this.index = 0;
@@ -172,7 +172,7 @@ export class Cell {
                 x:0,y:0,w:0,h:0,cy:0
             }
         };
-        this.isLineBreak = false;
+        this.isEOL = false;
         this.element = this.createElement();
     }
     createElement() {
@@ -839,7 +839,7 @@ export class StandoffEditorBlock implements IBlock {
         return undefined;
     }
     getBlockPosition(left: Cell, right: Cell) {
-        if (right?.isLineBreak) {
+        if (right?.isEOL) {
             if (left == null) return BLOCK_POSITION.EmptyLine;
             return BLOCK_POSITION.End;
         }
@@ -917,6 +917,15 @@ export class StandoffEditorBlock implements IBlock {
             }
         }
     }
+    private getPlatformKey(codes: TPlatformKey[]) {
+        return codes.find(x=> x.platform == Platform.Windows);
+    }
+    addEOL() {
+        const charCode = this.getPlatformKey(KEYS.ENTER)!.code;
+        const cells = this.insertTextAtIndex(String.fromCharCode(charCode), 0);
+        const lb = cells[0];
+        lb.isEOL = true;
+    }
     insertTextAtIndex(text: string, index: number) {
         if (this.cells.length == 0) {
             // Brand new character.
@@ -944,7 +953,7 @@ export class StandoffEditorBlock implements IBlock {
                     value: { index, length: text.length }
                 }
             });
-            return;
+            return cells;
         }
         const right = this.cells[index];
         const left = right.previous;
@@ -968,7 +977,8 @@ export class StandoffEditorBlock implements IBlock {
                 name: "removeCellsAtIndex",
                 value: { index, length: text.length }
             }
-        })
+        });
+        return cells;
     }
     private insertElementsBefore(anchor: HTMLElement, elements: HTMLElement[]) {
         const frag = document.createDocumentFragment();
@@ -1307,7 +1317,7 @@ export class StandoffEditorBlock implements IBlock {
         }
         const text = cell.text;
         updateCaret = !!updateCaret;
-        if (cell.isLineBreak) {
+        if (cell.isEOL) {
             /**
              * Shouldn't be here.
              */
@@ -1342,7 +1352,7 @@ export class StandoffEditorBlock implements IBlock {
         let cell = range.start;
         while (cell) {
             cells.push(cell);
-            if (cell.next && !cell.isLineBreak) {
+            if (cell.next && !cell.isEOL) {
                 cell = cell.next;
             }
             break;

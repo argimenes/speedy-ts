@@ -347,8 +347,7 @@ export class BlockManager implements IBlockManager {
                                 { type: "block/alignment/left" },
                             ]);
                             leftMargin.applyBlockPropertyStyling();
-                            const charCode = manager.getPlatformKey(KEYS.ENTER)!.code;
-                            leftMargin.insertTextAtIndex(String.fromCharCode(charCode), 0);
+                            leftMargin.addEOL();
                             leftMargin.setCaret(0, CARET.LEFT);
                             leftMargin.setFocus();
                             
@@ -383,9 +382,11 @@ export class BlockManager implements IBlockManager {
                             // rightMargin.addRelation(RelationType.has_right_margin_parent, block.id);
                             // block.addRelation(RelationType.has_right_margin, rightMargin.id);
                             manager.blocks.push(rightMargin);
+                            const offset = block.cache.offset;
                             updateElement(rightMargin.container, {
                                 style: {
-                                    top: block.cache.offset.y + "px"
+                                    top: offset.y + "px",
+                                    left: (offset.x + offset.w + 20) + "px"
                                 }
                             });
                             block.container.parentElement?.appendChild(rightMargin.container);
@@ -395,8 +396,7 @@ export class BlockManager implements IBlockManager {
                                 { type: "block/alignment/left" },
                             ]);
                             rightMargin.applyBlockPropertyStyling();
-                            const charCode = manager.getPlatformKey(KEYS.ENTER)!.code;
-                            rightMargin.insertTextAtIndex(String.fromCharCode(charCode), 0);
+                            rightMargin.addEOL();
                             rightMargin.setCaret(0, CARET.LEFT);
                             rightMargin.setFocus();
                             
@@ -434,8 +434,7 @@ export class BlockManager implements IBlockManager {
                             manager.container.append(next.container);
                             block.addRelation(RelationType.has_next, next.id);
                             next.addRelation(RelationType.has_previous, block.id);
-                            const charCode = manager.getPlatformKey(KEYS.ENTER)!.code;
-                            next.insertTextAtIndex(String.fromCharCode(charCode), 0);
+                            next.addEOL();
                             next.setCaret(0, CARET.LEFT);
                             next.setFocus();
                         } else {
@@ -538,7 +537,9 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         if (!caret.left) {
-                            // TBC: merge with the previous block
+                            if (caret.right.isEOL) {
+                                
+                            }
                             return;
                         }
                         block.removeCellAtIndex(caret.left.index, true);
@@ -652,6 +653,16 @@ export class BlockManager implements IBlockManager {
                         if (caret.left) {
                             block.setCaret(caret.left.index);
                             return;
+                        }
+                        const rightMarginParentEdge = block.getRelation(RelationType.has_right_margin_parent);
+                        if (rightMarginParentEdge) {
+                            const rightMarginParent = manager.getBlock(rightMarginParentEdge.targetId) as StandoffEditorBlock;
+                            if (rightMarginParent) {
+                                const last = rightMarginParent.getLastCell();
+                                rightMarginParent.setCaret(last.index, CARET.LEFT);
+                                manager.setBlockFocus(rightMarginParent);
+                                return;
+                            }
                         }
                         /**
                          * Or skip to the end of the previous block.
