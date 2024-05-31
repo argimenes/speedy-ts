@@ -1,9 +1,4 @@
-if ($IsWindows) {
-    $Root = $ENV:USERPROFILE + "\Documents\Projects\speedy-ts"
-}
-if ($IsMacOS) {
-    $Root = "~/Documents/GitHub/speedy-ts"
-}
+$Root = $ENV:USERPROFILE + "\Documents\Projects\speedy-ts"  # Change this to the location of your own local repository
 $Source = $Root + "\dist\"
 $Target = $Root + "\public\"
 if (![System.IO.Directory]::Exists($Target)) {   

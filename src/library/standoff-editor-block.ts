@@ -616,12 +616,16 @@ export class StandoffEditorBlock implements IBlock {
         const indexes = this.overlays.map(x=> x.index);
         const lastIndex = Math.max(...indexes);
         const newIndex = lastIndex + 1;
-        container.setAttribute("position", "absolute");
-        container.setAttribute("x", "0");
-        container.setAttribute("y", "0");
-        container.setAttribute("width", "100%");
-        container.setAttribute("height", "100%");
-        container.setAttribute("z-index", (newIndex + blockIndex).toString());
+        updateElement(container, {
+            attribute: {
+                position: "absolute",
+                x: 0,
+                y: 0,
+                width: "100%",
+                height: "100%",
+                "z-index": newIndex + blockIndex
+            }
+        })
         const overlay = { name, container, index: newIndex };
         this.overlays.push(overlay);
         return overlay;
