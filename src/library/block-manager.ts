@@ -335,6 +335,11 @@ export class BlockManager implements IBlockManager {
                             leftMargin.addRelation(RelationType.has_left_margin_parent, block.id);
                             block.addRelation(RelationType.has_left_margin, leftMargin.id);
                             manager.blocks.push(leftMargin);
+                            updateElement(leftMargin.container, {
+                                style: {
+                                    top: block.cache.offset.y + "px"
+                                }
+                            });
                             block.container.parentElement?.appendChild(leftMargin.container);
                             leftMargin.container.classList.add("block-window");
                             leftMargin.addBlockProperties([
@@ -377,6 +382,11 @@ export class BlockManager implements IBlockManager {
                             rightMargin.addRelation(RelationType.has_right_margin_parent, block.id);
                             block.addRelation(RelationType.has_right_margin, rightMargin.id);
                             manager.blocks.push(rightMargin);
+                            updateElement(rightMargin.container, {
+                                style: {
+                                    top: block.cache.offset.y + "px"
+                                }
+                            });
                             block.container.parentElement?.appendChild(rightMargin.container);
                             rightMargin.container.classList.add("block-window");
                             rightMargin.addBlockProperties([

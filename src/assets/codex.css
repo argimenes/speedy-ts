@@ -37,7 +37,6 @@
   .block-window.block_marginalia_left { 
     position: absolute;
     left: 63px;
-    top: 20px;
     height: 30px;
     width: 200px;
   }
@@ -45,7 +44,6 @@
   .block-window.block_marginalia_right { 
     position: absolute;
     right: 552px;
-    top: 20px;
     height: 30px;
     width: 200px;
   }
