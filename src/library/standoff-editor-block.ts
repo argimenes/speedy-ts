@@ -939,7 +939,7 @@ export class StandoffEditorBlock implements IBlock {
             this.addEOL();
             return this.insertTextAtIndex(text, index);
         }
-        
+    
         const right = this.cells[index];
         const left = right.previous;
         const anchor = left || right;

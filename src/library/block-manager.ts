@@ -461,20 +461,18 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        const parentEdge = block.getRelation(RelationType.has_parent);
-                        if (parentEdge) return; // First child of another block.
-                        const previousEdge = block.getRelation(RelationType.has_previous);
-                        if (!previousEdge) return; // Top level block.
+                        const parent = manager.getParent(block);
+                        if (parent) return; // First child of another block.
+                        const previous = manager.getPrevious(block);
+                        if (!previous) return;
                         /**
                          * Convert the has_previous into a has_parent, etc.
                          */
-                        const previous = manager.getBlock(previousEdge.targetId) as StandoffEditorBlock;
                         block.removeRelation(RelationType.has_previous);
                         previous.removeRelation(RelationType.has_next);
                         block.addRelation(RelationType.has_parent, previous.id);
                         previous.addRelation(RelationType.has_first_child, block.id);
-                        previous.container.appendChild(block.container);
-                        const level = block.metadata.indentLevel as number;
+                        const level = block.metadata.indentLevel || 0 as number;
                         block.metadata.indentLevel = level + 1;
                         manager.renderIndent(block);
                     }
@@ -736,6 +734,29 @@ export class BlockManager implements IBlockManager {
             }
         ];
         return events;
+    }
+    getPrevious(block: StandoffEditorBlock) {
+        return this.getTargetBlock(block, RelationType.has_previous);
+    }
+    getFirstChild(block: StandoffEditorBlock) {
+        return this.getTargetBlock(block, RelationType.has_first_child);
+    }
+    getNext(block: StandoffEditorBlock) {
+        return this.getTargetBlock(block, RelationType.has_next);
+    }
+    getParent(block: StandoffEditorBlock) {
+        return this.getTargetBlock(block, RelationType.has_parent);
+    }
+    getLeftMargin(block: StandoffEditorBlock) {
+        return this.getTargetBlock(block, RelationType.has_left_margin);
+    }
+    getLeftMarginParent(block: StandoffEditorBlock) {
+        return this.getTargetBlock(block, RelationType.has_left_margin_parent);
+    }
+    getTargetBlock(block: StandoffEditorBlock, type: string) {
+        const edge = block.getRelation(type);
+        if (edge) return this.getBlock(edge.targetId) as StandoffEditorBlock;
+        return null;
     }
     getStandoffPropertyEvents() {
         const events: InputEvent[] = [
@@ -1016,9 +1037,13 @@ export class BlockManager implements IBlockManager {
          * Currently assumes that these are StandoffTextBlocks on the same BlockManager,
          * rather than IBlocks.
          */
-        const defaultWidth = 20;
+        const defaultWidth = 40;
         const level = block.metadata.indentLevel as number;
-        block.container.setAttribute("margin-left", (level * defaultWidth) + "px");
+        updateElement(block.container, {
+            style: {
+                "margin-left": (level * defaultWidth) + "px"
+            }
+        });
     }
     addTwoWayRelation(sourceId: GUID, forward: string, backward: string, targetId: GUID)  {
         this.relations[forward] = {
