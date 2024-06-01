@@ -516,7 +516,7 @@ export class BlockManager implements IBlockManager {
                         const block = args.block as StandoffEditorBlock;
                         const last = block.cells[block.cells.length-1];
                         if (!last) return;
-                        block.setCaret(last.index, CARET.RIGHT);
+                        block.setCaret(last.index, CARET.LEFT);
                     }
                 }
             },
