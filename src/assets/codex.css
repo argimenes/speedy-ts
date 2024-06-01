@@ -27,8 +27,7 @@
   
   .block-window {
     width: 800px;
-    /* background-color: #eee; */
-    border: 1px solid #ccc;
+    /* border: 1px solid #ccc; */
     border-radius: 10px;
     padding: 20px 15px;
     margin: 0 300px;

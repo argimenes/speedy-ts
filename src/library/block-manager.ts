@@ -991,6 +991,7 @@ export class BlockManager implements IBlockManager {
                 data = {...data, blockProperties: doc.blockProperties as any[] };
             }
             block.bind(data);
+            block.addEOL();
             structure.appendChild(block.container);
             this.blocks.push(block);
         }

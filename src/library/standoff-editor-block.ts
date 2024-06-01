@@ -495,7 +495,7 @@ export class StandoffEditorBlock implements IBlock {
             },
             style: {
                 margin: "0 10px",
-                border: "1px solid #ccc",
+                //border: "1px solid #ccc",
                 padding: "10px"
             }
         });
