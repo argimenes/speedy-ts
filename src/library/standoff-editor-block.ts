@@ -922,39 +922,24 @@ export class StandoffEditorBlock implements IBlock {
     }
     addEOL() {
         const charCode = this.getPlatformKey(KEYS.ENTER)!.code;
-        const cells = this.insertTextAtIndex(String.fromCharCode(charCode), 0);
-        const lb = cells[0];
-        lb.isEOL = true;
-    }
-    insertTextAtIndex(text: string, index: number) {
-        if (this.cells.length == 0) {
-            // Brand new character.
-            const cells = text.split('').map(c => new Cell({ text: c, block: this }));
-            const len = text.length;
-            if (len > 1) {
-                for (let i = 0; i <= len - 1; i++) {
-                    // knit the cells
-                }
-            }
-            this.cells = cells;
-            this.applyStylingAndRenderingToNewCells(cells[0], cells);
-            this.reindexCells();
-            this.container.append(...cells.map(x => x.element as HTMLSpanElement));
-            this.updateView();
-            this.commit({
-                command: {
-                    id: this.id,
-                    name: "insertTextAtIndex",
-                    value: { text, index }
-                },
-                reverse: {
-                    id: this.id,
-                    name: "removeCellsAtIndex",
-                    value: { index, length: text.length }
-                }
-            });
-            return cells;
+        if (this.cells.length > 0) {
+            return;
         }
+        const eol = new Cell({ text: String.fromCharCode(charCode), block: this });
+        this.cells = [eol];
+        eol.isEOL = true;
+        this.reindexCells();
+        this.container.append(eol.element as HTMLSpanElement);
+        this.updateView();
+        this.setCaret(0, CARET.LEFT);
+    }
+    insertTextAtIndex(text: string, index: number): Cell[] {
+        const len = this.cells.length;
+        if (len == 0) {
+            this.addEOL();
+            return this.insertTextAtIndex(text, index);
+        }
+        
         const right = this.cells[index];
         const left = right.previous;
         const anchor = left || right;
@@ -965,6 +950,10 @@ export class StandoffEditorBlock implements IBlock {
         this.reindexCells();
         this.insertElementsBefore(right.element as HTMLElement, cells.map(c => c.element as HTMLElement));
         this.updateView();
+        if (index == len-1) {
+            let caret = this.getCaret();
+            console.log("insertTextAtIndex", { text, index, cells: this.cells, caret });
+        }
         this.setCaret(index + 1);
         this.commit({
             command: {
@@ -991,6 +980,24 @@ export class StandoffEditorBlock implements IBlock {
     private insertIntoCellArrayBefore(index: number, cells: Cell[]) {
         this.cells.splice(index, 0, ...cells);
         this.reindexCells();
+    }
+    private knitAllCells(cells: Cell[]) {
+        const len = cells?.length;
+        const maxIndex = len - 1;
+        if (len == 0) return;
+        for (let i = 0; i <= maxIndex; i++) {
+            let current = cells[i];
+            if (i > 0) {
+                let previous = cells[i-1];
+                previous.next = current;
+                current.previous = previous;
+            }
+            if (i < maxIndex) {
+                let next = cells[i+ 1];
+                current.next = next;
+                next.previous = current;
+            }
+        }
     }
     private knitCells(left: Cell|undefined, middle: Cell[], right: Cell) {
         const len = middle.length;
