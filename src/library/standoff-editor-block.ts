@@ -907,6 +907,10 @@ export class StandoffEditorBlock implements IBlock {
         const caret = this.getCaret();
         if (!caret) return;
         const selection = this.getSelection();
+        if (selection) {
+            const len = (selection.end.index - selection.start.index) + 1;
+            this.removeCellsAtIndex(selection.start.index, len);
+        }
         this.insertTextAtIndex(input.key, caret.right.index);
     }
     addStandoffProperties(props: StandoffProperty[]) {
