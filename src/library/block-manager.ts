@@ -1,5 +1,5 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement } from "./standoff-editor-block";
+import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement, ISelection } from "./standoff-editor-block";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -482,6 +482,68 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Shift-ArrowRight"
+                },
+                action: {
+                    name: "Move the selection one character to the right.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const range = block.getSelection();
+                        if (!range) {
+                            const selection = {
+                                start: caret.right,
+                                end: caret.right,
+                                direction: SELECTION_DIRECTION.RIGHT
+                            } as ISelection;
+                            block.setSelection(selection);
+                        } else {
+                            const selection = {
+                                start: range.start,
+                                end: range.end.next,
+                                direction: SELECTION_DIRECTION.RIGHT
+                            } as ISelection;
+                            block.setSelection(selection);
+                        };
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Shift-ArrowLeft"
+                },
+                action: {
+                    name: "Move the selection one character to the left.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const range = block.getSelection();
+                        if (!range) {
+                            // Ignore for now.
+                            return;
+                        } else {
+                            const selection = {
+                                start: range.start,
+                                end: range.end.previous,
+                                direction: SELECTION_DIRECTION.LEFT
+                            } as ISelection;
+                            block.setSelection(selection);
+                        };
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "Home"
                 },
                 action: {
@@ -764,7 +826,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "CONTROL-I"
+                    match: "Control-I"
                 },
                 action: {
                     name: "Italicise",

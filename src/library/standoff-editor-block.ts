@@ -876,6 +876,26 @@ export class StandoffEditorBlock implements IBlock {
         });
         return props;
     }
+    // clearSelectionMode(selection: ISelection) {
+    //     selection.start = null;
+    //     selection.end = null;
+    //     selection.direction = null;
+    // }
+    clearSelection() {
+        // ref: https://stackoverflow.com/questions/3169786/clear-text-selection-with-javascript
+        const seletion = window.getSelection();
+        if (seletion) {
+            if (seletion.empty) {  // Chrome
+                seletion.empty();
+            } else if (seletion.removeAllRanges) {  // Firefox
+                seletion.removeAllRanges();
+            }
+        }
+        // else if (document.selection) {  // IE?
+        //     document.selection.empty();
+        // }
+        //this.clearSelectionMode();
+    }
     getSelection() {
         const range = window.getSelection()?.getRangeAt(0);
         if (range?.collapsed) return undefined;
@@ -1369,11 +1389,32 @@ export class StandoffEditorBlock implements IBlock {
     styleProperty(p: StandoffProperty) {
         p.applyStyling();
     }
-    createStandoffProperty(type: string, range?: IRange) {
-        range = range || this.getSelection();
-        if (!range) {
-            return log(`No range was provided or found.`, { block: this, type });
+    getTextNode(cell: Cell): ChildNode {
+        // Get the first TEXT NODE of the element
+        var node = cell.element.firstChild as ChildNode;
+        if (!node) {
+            return cell.element as ChildNode;
         }
+        while (node?.nodeType != 3) {
+            node = node?.firstChild as ChildNode;
+        }
+        return node;
+    }
+    setSelection(_range: IRange) {
+        var selection = document.getSelection() as Selection;
+        var range = document.createRange();
+        range.setStart(this.getTextNode(_range.start), 1);
+        range.setEnd(this.getTextNode(_range.end), 1)
+        if (selection.setBaseAndExtent) {
+            var startOffset = 0;    // range.startOffset;
+            var endOffset = 1;      // range.endOffset;
+            selection.setBaseAndExtent(range.startContainer, startOffset, range.endContainer, endOffset);
+        } else {
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+    }
+    createStandoffProperty(type: string, range: IRange) {
         const schema = this.schemas.find(x => x.type == type) as IStandoffPropertySchema;
         if (!schema) {
             return log(`StandoffProperty schema '${type}' was not found.`, { block: this, type, range });
@@ -1382,6 +1423,7 @@ export class StandoffEditorBlock implements IBlock {
         prop.schema = schema;
         prop.applyStyling();
         this.standoffProperties.push(prop);
+        this.updateView();
         return prop;
     }
     createBlockProperty(type: string) {
