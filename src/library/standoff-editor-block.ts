@@ -908,6 +908,7 @@ export class StandoffEditorBlock implements IBlock {
         if (!caret) return;
         const selection = this.getSelection();
         if (selection) {
+            this.clearSelection();
             const len = (selection.end.index - selection.start.index) + 1;
             this.removeCellsAtIndex(selection.start.index, len);
         }

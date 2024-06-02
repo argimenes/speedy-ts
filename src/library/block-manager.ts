@@ -770,11 +770,13 @@ export class BlockManager implements IBlockManager {
                          */
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
+                        const sel = block.getSelection() as IRange;
                         const manager = block.owner as BlockManager;
                         const len = block.cells.length;
-                        const ri = caret.right.index;
+                        if (sel) block.clearSelection();
+                        const ri = sel ? sel.end.index : caret.right.index;
                         if (ri < len - 1) {
-                            block.setCaret(caret.right.index + 1);
+                            block.setCaret(ri + 1);
                             return;
                         }
                         const nextEdge = block.getRelation(RelationType.has_next);
