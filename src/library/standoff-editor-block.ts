@@ -1412,7 +1412,7 @@ export class StandoffEditorBlock implements IBlock {
         range.setEnd(this.getTextNode(_range.end), 1)
         if (selection.setBaseAndExtent) {
             var startOffset = 0;    // range.startOffset;
-            var endOffset = 1;      // range.endOffset;
+            var endOffset = 1;      // range.endOfAfset;
             selection.setBaseAndExtent(range.startContainer, startOffset, range.endContainer, endOffset);
         } else {
             selection.removeAllRanges();
@@ -1428,7 +1428,9 @@ export class StandoffEditorBlock implements IBlock {
         prop.schema = schema;
         prop.applyStyling();
         this.standoffProperties.push(prop);
-        this.updateView();
+        if (prop.schema.render?.update) {
+            prop.schema.render?.update({ block: this, properties: [prop] });
+        }
         return prop;
     }
     createBlockProperty(type: string) {

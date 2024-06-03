@@ -318,7 +318,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Escape"
+                    match: "Shift-Control-ArrowLeft"
                 },
                 action: {
                     name: "Create a left margin block.",
@@ -364,7 +364,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Shift-Escape"
+                    match: "Shift-Control-ArrowRight"
                 },
                 action: {
                     name: "Create a right margin block.",
@@ -721,30 +721,10 @@ export class BlockManager implements IBlockManager {
                             block.setCaret(caret.left.index);
                             return;
                         }
-                        const rightMarginParentEdge = block.getRelation(RelationType.has_right_margin_parent);
-                        if (rightMarginParentEdge) {
-                            const rightMarginParent = manager.getBlock(rightMarginParentEdge.targetId) as StandoffEditorBlock;
-                            if (rightMarginParent) {
-                                const last = rightMarginParent.getLastCell();
-                                rightMarginParent.setCaret(last.index, CARET.LEFT);
-                                manager.setBlockFocus(rightMarginParent);
-                                return;
-                            }
-                        }
                         /**
                          * Or skip to the end of the previous block.
                          */
                         const previousEdge = block.getRelation(RelationType.has_previous);
-                        if (!previousEdge) {
-                            // Check for the central column.
-                            const leftMarginEdge = block.getRelation(RelationType.has_left_margin);
-                            if (!leftMarginEdge) return;
-                            const leftMargin = manager.getBlock(leftMarginEdge.targetId) as StandoffEditorBlock;
-                            const last = leftMargin.getLastCell();
-                            leftMargin.setCaret(last.index, CARET.LEFT);
-                            manager.setBlockFocus(leftMargin);
-                            return;
-                        }
                         const previous = manager.getBlock(previousEdge.targetId) as StandoffEditorBlock;
                         if (!previous) return;
                         const last = previous.getLastCell();
@@ -780,15 +760,6 @@ export class BlockManager implements IBlockManager {
                             return;
                         }
                         const nextEdge = block.getRelation(RelationType.has_next);
-                        if (!nextEdge) {
-                            // Check for the central column.
-                            const leftMarginParentEdge = block.getRelation(RelationType.has_left_margin_parent);
-                            if (!leftMarginParentEdge) return;
-                            const leftMarginParent = manager.getBlock(leftMarginParentEdge.targetId) as StandoffEditorBlock;
-                            leftMarginParent.setCaret(0, CARET.LEFT);
-                            manager.setBlockFocus(leftMarginParent);
-                            return;
-                        }
                         const next = manager.getBlock(nextEdge.targetId) as StandoffEditorBlock;
                         if (!next) return;
                         next.setCaret(0, CARET.LEFT);
@@ -848,7 +819,7 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "CONTROL-B"
+                    match: "Control-B"
                 },
                 action: {
                     name: "Bold",
@@ -858,6 +829,26 @@ export class BlockManager implements IBlockManager {
                         const selection = block.getSelection();
                         if (selection) {
                             block.createStandoffProperty("style/bold", selection);
+                        } else {
+                            // TBC
+                        }      
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-E"
+                },
+                action: {
+                    name: "Entity reference",
+                    description: "Links to an entity in the graph database.",
+                    handler: (args: IBindingHandlerArgs) => {
+                        const block = args.block as StandoffEditorBlock;
+                        const selection = block.getSelection();
+                        if (selection) {
+                            block.createStandoffProperty("codex/entity-reference", selection);
                         } else {
                             // TBC
                         }      
