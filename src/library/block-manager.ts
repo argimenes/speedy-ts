@@ -1000,6 +1000,23 @@ export class BlockManager implements IBlockManager {
             }
         });
     }
+    multiRelate(toDelete: any[], toAdd: any[]) {
+        /**
+         * Need to make an interface for these arrays of EdgeDtos ...
+         */
+        this.commit({
+            command: {
+                id: this.id,
+                name: "multiRelate",
+                value: { toDelete, toAdd }
+            },
+            reverse: {
+                id: this.id,
+                name: "multiRelate",
+                value: { toDelete: toAdd, toAdd: toDelete }
+            }
+        });
+    }
     mergeBlocks(firstBlockId: GUID, secondBlockId: GUID) {
         this.commit({
             command: {
