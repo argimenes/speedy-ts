@@ -337,8 +337,8 @@ export interface IBlock {
     type: BlockType;
     container: HTMLDivElement;
     relations: Record<string, IBlockRelation>;
-    addRelation: (name: string, targetId: string) => void;
-    removeRelation: (name: string) => void;
+    addRelation: (name: string, targetId: string, skipCommit?: boolean) => void;
+    removeRelation: (name: string, skipCommit?: boolean) => void;
     metadata: Record<string, any>;
     setFocus: () => void;
     serialize: () => any;
@@ -569,43 +569,47 @@ export class StandoffEditorBlock implements IBlock {
     setBlockSchemas(schemas: IBlockPropertySchema[]) {
         this.blockSchemas.push(...schemas);
     }
-    addRelation(name: string, targetId: string) {
+    addRelation(name: string, targetId: string, skipCommit?: boolean) {
         this.relations[name] = {
             type: name,
             sourceId: this.id,
             targetId: targetId
         };
-        this.commit({
-            command: {
-                id: this.id,
-                name: "addRelation",
-                value: { name, targetId }
-            },
-            reverse: {
-                id: this.id,
-                name: "removeRelation",
-                value: { name }
-            }
-        });
+        if (!skipCommit) {
+            this.commit({
+                command: {
+                    id: this.id,
+                    name: "addRelation",
+                    value: { name, targetId }
+                },
+                reverse: {
+                    id: this.id,
+                    name: "removeRelation",
+                    value: { name }
+                }
+            });
+        }
     }
-    removeRelation(name: string) {
+    removeRelation(name: string, skipCommit?: boolean) {
         const relation = this.getRelation(name);
         delete this.relations[name];
-        this.commit({
-            command: {
-                id: this.id,
-                name: "removeRelation",
-                value: { name }
-            },
-            reverse: {
-                id: this.id,
-                name: "addRelation",
-                value: {
-                    name,
-                    targetId: relation.targetId
+        if (!skipCommit) {
+            this.commit({
+                command: {
+                    id: this.id,
+                    name: "removeRelation",
+                    value: { name }
+                },
+                reverse: {
+                    id: this.id,
+                    name: "addRelation",
+                    value: {
+                        name,
+                        targetId: relation.targetId
+                    }
                 }
-            }
-        });
+            });
+        }
     }
     getOrSetOverlay(name: string) {
         const overlay = this.overlays.find(x=> x.name == name);

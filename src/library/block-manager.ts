@@ -6,6 +6,17 @@ import { v4 as uuidv4 } from 'uuid';
 export enum CssClass {
     LineBreak = "codex__line-break"
 }
+export interface IEdge {
+    sourceId: string;
+    name: string;
+}
+export interface IAddEdge extends IEdge {
+    targetId: string;
+}
+export interface IBatchRelateArgs {
+    toDelete?: IEdge[];
+    toAdd?: IAddEdge[];
+}
 
 const RelationType = {
     "has_next":"has_next",
@@ -339,8 +350,12 @@ export class BlockManager implements IBlockManager {
                         const leftMarginEdge = block.getRelation(RelationType.has_left_margin);
                         if (!leftMarginEdge) {
                             const leftMargin = manager.createBlock();
-                            leftMargin.addRelation(RelationType.has_left_margin_parent, block.id);
-                            block.addRelation(RelationType.has_left_margin, leftMargin.id);
+                            manager.batchRelate({
+                                toAdd: [
+                                    { sourceId: leftMargin.id, name: RelationType.has_left_margin_parent, targetId: block.id },
+                                    { sourceId: block.id, name: RelationType.has_left_margin, targetId: leftMargin.id },
+                                ]
+                            });
                             manager.blocks.push(leftMargin);
                             updateElement(leftMargin.container, {
                                 style: {
@@ -385,9 +400,12 @@ export class BlockManager implements IBlockManager {
                         const rightMarginEdge = block.getRelation(RelationType.has_right_margin);
                         if (!rightMarginEdge) {
                             const rightMargin = manager.createBlock();
-                            manager.addTwoWayRelation(block.id, RelationType.has_right_margin, RelationType.has_right_margin_parent, rightMargin.id);
-                            // rightMargin.addRelation(RelationType.has_right_margin_parent, block.id);
-                            // block.addRelation(RelationType.has_right_margin, rightMargin.id);
+                            manager.batchRelate({
+                                toAdd: [
+                                    { sourceId: rightMargin.id, name: RelationType.has_right_margin_parent, targetId: block.id },
+                                    { sourceId: block.id, name: RelationType.has_right_margin, targetId: rightMargin.id },
+                                ]
+                            });
                             manager.blocks.push(rightMargin);
                             const offset = block.cache.offset;
                             updateElement(rightMargin.container, {
@@ -439,8 +457,12 @@ export class BlockManager implements IBlockManager {
                             next.applyBlockPropertyStyling();
                             manager.blocks.push(next);
                             manager.container.append(next.container);
-                            block.addRelation(RelationType.has_next, next.id);
-                            next.addRelation(RelationType.has_previous, block.id);
+                            manager.batchRelate({
+                                toAdd: [
+                                    { sourceId: block.id, name: RelationType.has_next, targetId: next.id },
+                                    { sourceId: next.id, name: RelationType.has_previous, targetId: block.id }
+                                ]
+                            });
                             next.addEOL();
                             next.setCaret(0, CARET.LEFT);
                             next.setFocus();
@@ -475,10 +497,16 @@ export class BlockManager implements IBlockManager {
                         /**
                          * Convert the has_previous into a has_parent, etc.
                          */
-                        block.removeRelation(RelationType.has_previous);
-                        previous.removeRelation(RelationType.has_next);
-                        block.addRelation(RelationType.has_parent, previous.id);
-                        previous.addRelation(RelationType.has_first_child, block.id);
+                        manager.batchRelate({
+                            toDelete: [
+                                { sourceId: block.id, name: RelationType.has_previous },
+                                { sourceId: previous.id, name: RelationType.has_next },
+                            ],
+                            toAdd: [
+                                { sourceId: block.id, name: RelationType.has_parent, targetId: previous.id },
+                                { sourceId: previous.id, name: RelationType.has_first_child, targetId: block.id },
+                            ]
+                        });
                         const level = block.metadata.indentLevel || 0 as number;
                         block.metadata.indentLevel = level + 1;
                         manager.renderIndent(block);
@@ -766,8 +794,7 @@ export class BlockManager implements IBlockManager {
                             block.setCaret(ri + 1);
                             return;
                         }
-                        const nextEdge = block.getRelation(RelationType.has_next);
-                        const next = manager.getBlock(nextEdge.targetId) as StandoffEditorBlock;
+                        const next = manager.getNext(block.id);
                         if (!next) return;
                         next.setCaret(0, CARET.LEFT);
                         manager.setBlockFocus(next);
@@ -777,25 +804,27 @@ export class BlockManager implements IBlockManager {
         ];
         return events;
     }
-    getPrevious(block: StandoffEditorBlock) {
-        return this.getTargetBlock(block, RelationType.has_previous);
+    getPrevious(blockId: string) {
+        return this.getTargetBlock(blockId, RelationType.has_previous);
     }
-    getFirstChild(block: StandoffEditorBlock) {
-        return this.getTargetBlock(block, RelationType.has_first_child);
+    getFirstChild(blockId: string) {
+        return this.getTargetBlock(blockId, RelationType.has_first_child);
     }
-    getNext(block: StandoffEditorBlock) {
-        return this.getTargetBlock(block, RelationType.has_next);
+    getNext(blockId: string) {
+        return this.getTargetBlock(blockId, RelationType.has_next);
     }
-    getParent(block: StandoffEditorBlock) {
-        return this.getTargetBlock(block, RelationType.has_parent);
+    getParent(blockId: string) {
+        return this.getTargetBlock(blockId, RelationType.has_parent);
     }
-    getLeftMargin(block: StandoffEditorBlock) {
-        return this.getTargetBlock(block, RelationType.has_left_margin);
+    getLeftMargin(blockId: string) {
+        return this.getTargetBlock(blockId, RelationType.has_left_margin);
     }
-    getLeftMarginParent(block: StandoffEditorBlock) {
-        return this.getTargetBlock(block, RelationType.has_left_margin_parent);
+    getLeftMarginParent(blockId: string) {
+        return this.getTargetBlock(blockId, RelationType.has_left_margin_parent);
     }
-    getTargetBlock(block: StandoffEditorBlock, type: string) {
+    getTargetBlock(blockId: string, type: string) {
+        const block = this.getBlock(blockId) as StandoffEditorBlock;
+        if (!block) return null;
         const edge = block.getRelation(type);
         if (edge) return this.getBlock(edge.targetId) as StandoffEditorBlock;
         return null;
@@ -1000,20 +1029,30 @@ export class BlockManager implements IBlockManager {
             }
         });
     }
-    multiRelate(toDelete: any[], toAdd: any[]) {
-        /**
-         * Need to make an interface for these arrays of EdgeDtos ...
-         */
+    batchRelate(args: IBatchRelateArgs) {
+        const self = this;
+        if (args.toDelete) {
+            args.toDelete.forEach(edge => {
+                let block = self.getBlock(edge.sourceId);
+                block?.removeRelation(edge.name, true);
+            });
+        }
+        if (args.toAdd) {
+            args.toAdd.forEach(edge => {
+                let block = self.getBlock(edge.sourceId);
+                block?.addRelation(edge.name, edge.targetId, true);
+            })
+        }
         this.commit({
             command: {
                 id: this.id,
-                name: "multiRelate",
-                value: { toDelete, toAdd }
+                name: "batchRelate",
+                value: args
             },
             reverse: {
                 id: this.id,
-                name: "multiRelate",
-                value: { toDelete: toAdd, toAdd: toDelete }
+                name: "batchRelate",
+                value: { toDelete: args.toAdd, toAdd: args.toDelete }
             }
         });
     }
@@ -1100,35 +1139,6 @@ export class BlockManager implements IBlockManager {
             }
         })
     }
-    undent(block: IBlock) {
-        /**
-         * Currently assumes that these are StandoffTextBlocks on the same BlockManager,
-         * rather than IBlocks.
-         */
-        const parentEdge = block.relations["child-of"];
-        if (!parentEdge) return;
-        const parent = this.blocks.find(x => x.id == parentEdge.targetId);
-        if (!parent) return;
-        parent.removeRelation("parent-of");
-        block.removeRelation("child-of");
-        const previous = parent;
-        previous.addRelation("followed-by", block.id);
-        block.addRelation("follows", previous.id);
-        const level = block.metadata.indentLevel as number;
-        block.metadata.indentLevel = level - 1;
-        this.renderIndent(block);
-    }
-    indent(currentBlock: IBlock, newBlock: IBlock) {
-        /**
-         * Currently assumes that these are StandoffTextBlocks on the same BlockManager,
-         * rather than IBlocks.
-         */
-        newBlock.addRelation("child-of", currentBlock.id);
-        currentBlock.addRelation("parent-of", newBlock.id);
-        const level = currentBlock.metadata.indentLevel as number;
-        newBlock.metadata.indentLevel = level + 1;
-        this.renderIndent(newBlock);
-    }
     renderIndent(block: IBlock) {
         /**
          * Currently assumes that these are StandoffTextBlocks on the same BlockManager,
@@ -1139,30 +1149,6 @@ export class BlockManager implements IBlockManager {
         updateElement(block.container, {
             style: {
                 "margin-left": (level * defaultWidth) + "px"
-            }
-        });
-    }
-    addTwoWayRelation(sourceId: GUID, forward: string, backward: string, targetId: GUID)  {
-        this.relations[forward] = {
-            type: forward,
-            sourceId: sourceId,
-            targetId: targetId
-        };
-        this.relations[backward] = {
-            type: backward,
-            sourceId: targetId,
-            targetId: sourceId
-        };
-        this.commit({
-            command: {
-                id: this.id,
-                name: "addRelationDyad",
-                value: { sourceId, forward, backward, targetId }
-            },
-            reverse: {
-                id: this.id,
-                name: "removeRelationDyad", // TBC
-                value: { sourceId, forward, backward, targetId }
             }
         });
     }
