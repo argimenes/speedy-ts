@@ -1428,8 +1428,8 @@ export class StandoffEditorBlock implements IBlock {
         prop.schema = schema;
         prop.applyStyling();
         this.standoffProperties.push(prop);
-        if (prop.schema.render?.update) {
-            prop.schema.render?.update({ block: this, properties: [prop] });
+        if (schema.render?.update) {
+            schema.render?.update({ block: this, properties: [prop] });
         }
         return prop;
     }

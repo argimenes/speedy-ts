@@ -254,6 +254,13 @@ export class BlockManager implements IBlockManager {
                         manager.animateSineWave(p);
                     }
                 }
+            },
+            {
+                type: "block/blue-and-white",
+                name: "Blue and White",
+                decorate: {
+                    blockClass: "block_blue_and_white"
+                }
             }
         ]
     }
@@ -812,6 +819,23 @@ export class BlockManager implements IBlockManager {
                         } else {
                             // TBC
                         }      
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-L"
+                },
+                action: {
+                    name: "Blue and White",
+                    description: `
+                        Sets the background of the block to blue, and font to white.
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const block = args.block as StandoffEditorBlock;
+                        block.createBlockProperty("block/blue-and-white");     
                     }
                 }
             },
