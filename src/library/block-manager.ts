@@ -705,6 +705,34 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Control-Delete"
+                },
+                action: {
+                    name: "Delete all the characters to the right, up to the end of the text block.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        /**
+                         * NB: not working as expected. Check the removeCellsAtIndex method chain carefully.
+                         */
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        if (caret.right.isEOL) {
+                            return;
+                        }
+                        const last = block.getLastCell();
+                        const si = caret.right.index;
+                        const len = last.index - si;
+                        block.removeCellsAtIndex(si, len);
+                        block.setCaret(si, CARET.RIGHT);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "ArrowUp"
                 },
                 action: {
