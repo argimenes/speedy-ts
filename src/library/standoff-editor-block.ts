@@ -1390,6 +1390,50 @@ export class StandoffEditorBlock implements IBlock {
             this.removeCellAtIndex(index, updateCaret);
         }
     }
+    getRows() {
+        const cells = this.cells;
+        const rowGroups = Array.from(groupBy(cells, x => x.cache.offset.y));
+        const rows = rowGroups.sort((a, b) => a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0);
+        return rows;
+    }
+    getClosestRowOfCellsByOffset(args: any) {
+        const { x, y, verticalOffset } = args;
+        const nextRowOffsetY = y + verticalOffset;
+        if (nextRowOffsetY < 0) {
+            return [];
+        }
+        const nextCells = this.cells
+            .filter(x => verticalOffset > 0 ? x.cache.offset.cy >= nextRowOffsetY : x.cache.offset.cy <= nextRowOffsetY);
+        if (nextCells.length == 0) {
+            return [];
+        }
+        const rows = Array.from(groupBy(nextCells, x => x.cache.offset.cy));
+        const ordered = rows.sort((a, b) => a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0);
+        const group = verticalOffset > 0 ? ordered[0] : ordered[ordered.length - 1];
+        return group[1] as Cell[];
+    }
+    getCellClosestByOffsetX(args: any) {
+        const { x, cells } = args;
+        const leftMatches = cells.filter(c => c.speedy.offset.x < x);
+        const rightMatches = cells.filter(c => c.speedy.offset.x >= x);
+        if (leftMatches.length) {
+            return leftMatches[leftMatches.length - 1];
+        }
+        if (rightMatches.length) {
+            return rightMatches[0];
+        }
+        return null;
+    }
+    setCarotByOffsetX(args: any) {
+        const { x, verticalPosition } = args;
+        const rows = this.getRows();
+        const len = rows.length;
+        const rowCells = (verticalPosition == "TOP") ? rows[0] : rows[len - 1];
+        const closestCell = this.getCellClosestByOffsetX({ x, cells: rowCells[1] }) as Cell;
+        if (closestCell) {
+            this.setCaret(closestCell.index, CARET.LEFT);
+        }
+    }
     removeCellAtIndex(index: number, updateCaret?: boolean) {
         const cell = this.cells[index];
         if (!cell) {

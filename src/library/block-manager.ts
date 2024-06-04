@@ -753,9 +753,6 @@ export class BlockManager implements IBlockManager {
                         
                     `,
                     handler: (args: IBindingHandlerArgs) => {
-                        /**
-                         * Move the cursor back one cell ...
-                         */
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
@@ -778,27 +775,56 @@ export class BlockManager implements IBlockManager {
                     match: "ArrowDown"
                 },
                 action: {
-                    name: "Move the cursor down one text block. If one isn't found, move to the end of the block.",
+                    name: "Move the cursor down one row. If one isn't found, move to the next block.",
                     description: `
                         
                     `,
                     handler: (args: IBindingHandlerArgs) => {
-                        /**
-                         * Move the cursor back one cell ...
-                         */
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        const nextEdit = block.getRelation(RelationType.has_next);
-                        const len = block.cells.length;
-                        if (!nextEdit) {
-                            block.setCaret(len - 1, CARET.LEFT);
+                        const offset = caret.right.cache.offset;
+                        const vertical = block.cache.verticalArrowNavigation;
+                        if (vertical.lastX == null) {
+                            vertical.lastX = offset.x;
+                        }
+                        const lineHeight = offset.h || 14;
+                        const x = vertical.lastX;
+                        const y = offset.cy;
+                        const verticalOffset = lineHeight;
+                        const cells = block.getClosestRowOfCellsByOffset({ x, y, verticalOffset });
+                        if (cells.length ==0 ){
+                            const nextEdit = block.getRelation(RelationType.has_next);
+                            const len = block.cells.length;
+                            if (!nextEdit) {
+                                block.setCaret(len - 1, CARET.LEFT);
+                                return;
+                            }
+                            const next = manager.getBlock(nextEdit.targetId) as StandoffEditorBlock;
+                            if (!next) return;
+                            next.setCaret(0, CARET.LEFT);
+                            manager.setBlockFocus(next);
                             return;
                         }
-                        const next = manager.getBlock(nextEdit.targetId) as StandoffEditorBlock;
-                        if (!next) return;
-                        next.setCaret(0, CARET.LEFT);
-                        manager.setBlockFocus(next);
+                        const leftMatches = cells.filter(c => c.cache.offset.x < x) as Cell[];
+                        const lenL = leftMatches.length;
+                        if (lenL) {
+                            if (lenL == 2) {
+                                block.setCaret(leftMatches[lenL - 2].index, CARET.RIGHT);
+                                // this.setCarotAndScroll(leftMatches[leftMatches.length - 2], CARET.RIGHT, verticalOffset > 0);
+                            } else {
+                                block.setCaret(leftMatches[lenL - 1].index, CARET.LEFT);
+                                // this.setCarotAndScroll(leftMatches[leftMatches.length - 1], CARET.LEFT, verticalOffset > 0);
+                            }
+                            return true;
+                        }
+                        const rightMatches = cells.filter(c => c.cache.offset.x >= x) as Cell[];
+                        const lenR = rightMatches.length;
+                        if (lenR) {
+                            block.setCaret(rightMatches[0].index, CARET.LEFT);
+                            // this.setCarotAndScroll(rightMatches[0], CARET.LEFT, verticalOffset > 0);
+                            return true;
+                        }
                     }
                 }
             },
