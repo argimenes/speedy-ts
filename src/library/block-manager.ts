@@ -490,9 +490,9 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        const parent = manager.getParent(block);
+                        const parent = manager.getParentOf(block.id);
                         if (parent) return; // First child of another block.
-                        const previous = manager.getPrevious(block);
+                        const previous = manager.getPreviousOf(block.id);
                         if (!previous) return;
                         /**
                          * Convert the has_previous into a has_parent, etc.
@@ -661,18 +661,30 @@ export class BlockManager implements IBlockManager {
                     match: "Control-Backspace"
                 },
                 action: {
-                    name: "Delete all the characters to the left back to the beginning of the text block.",
+                    name: "Deletes leftwards one word at a time.",
                     description: `
                         
                     `,
                     handler: (args: IBindingHandlerArgs) => {
+                        /**
+                         * Not working properly yet.
+                         */
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         if (!caret.left) {
                             return;
                         }
-                        const len = caret.left.index + 1;
-                        block.removeCellsAtIndex(0, len);
+                        const i = caret.left.index;
+                        const text = block.getText();
+                        const words = block.getWordsFromText(text);
+                        const nearest = this.findNearestWord(i, words);
+                        if (!nearest) {
+                            return;
+                        }
+                        const start = !nearest.previous ? 0 : nearest.previous.start;
+                        const len = (i - start) + 1;
+                        block.removeCellsAtIndex(start, len);
+                        block.setCaret(start, CARET.LEFT);
                     }
                 }
             },
@@ -929,7 +941,7 @@ export class BlockManager implements IBlockManager {
         }
         return null;
     }
-    getPrevious(blockId: string) {
+    getPreviousOf(blockId: string) {
         return this.getTargetBlock(blockId, RelationType.has_previous);
     }
     getFirstChild(blockId: string) {
@@ -938,7 +950,7 @@ export class BlockManager implements IBlockManager {
     getNext(blockId: string) {
         return this.getTargetBlock(blockId, RelationType.has_next);
     }
-    getParent(blockId: string) {
+    getParentOf(blockId: string) {
         return this.getTargetBlock(blockId, RelationType.has_parent);
     }
     getLeftMargin(blockId: string) {
