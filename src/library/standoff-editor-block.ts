@@ -590,6 +590,26 @@ export class StandoffEditorBlock implements IBlock {
             });
         }
     }
+    getWordsFromText(text: string) {
+        const re = new RegExp(/\b[^\s]+\b/, "g");
+        const results = [];
+        let match;
+        while ((match = re.exec(text)) != null) {
+            let span = match[0];
+            results.push({ start: match.index, end: match.index + span.length - 1, text: span });
+        }
+        return results;
+    }
+    getSentencesFromText(text: string) {
+        const re = new RegExp(/[^.?!\r]+[.!?\r]+[\])'"`’”]*|.+/, "g");
+        const results = [];
+        let  match;
+        while ((match = re.exec(text)) != null) {
+            let span = match[0];
+            results.push({ start: match.index, end: match.index + span.length - 1, text: span });
+        }
+        return results;
+    }
     removeRelation(name: string, skipCommit?: boolean) {
         const relation = this.getRelation(name);
         delete this.relations[name];
@@ -968,7 +988,6 @@ export class StandoffEditorBlock implements IBlock {
             this.addEOL();
             return this.insertTextAtIndex(text, index);
         }
-    
         const right = this.cells[index];
         const left = right.previous;
         const anchor = left || right;

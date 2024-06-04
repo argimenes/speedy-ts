@@ -828,6 +828,38 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Control-ArrowLeft"
+                },
+                action: {
+                    name: "Skip back to the start of the previous word.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        if (!caret.left) {
+                            return;
+                        }
+                        const i = caret.left.index;
+                        const text = block.getText();
+                        const words = block.getWordsFromText(text);
+                        const ci = words.findIndex(x => x.end >= i);
+                        if (ci == -1) return;
+                        if (ci == 0) {
+                            block.setCaret(0, CARET.LEFT);
+                            return;
+                        }
+                        const word = words[ci];
+                        const start = (i <= word.start) ? words[ci-1].start : word.start;
+                        block.setCaret(start, CARET.LEFT);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "ArrowRight"
                 },
                 action: {
