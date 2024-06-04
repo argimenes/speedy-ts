@@ -836,14 +836,6 @@ export class BlockManager implements IBlockManager {
                         
                     `,
                     handler: (args: IBindingHandlerArgs) => {
-                        const findNearestWord = (index: number, words: Word[]) => {
-                            const lastIndex = words.length - 1;
-                            for (let i = lastIndex; i >= 0; i--) {
-                                let word = words[i];
-                                if (i >= word.start) return word;
-                            }
-                            return null;
-                        }
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         if (!caret.left) {
@@ -852,12 +844,12 @@ export class BlockManager implements IBlockManager {
                         const i = caret.left.index;
                         const text = block.getText();
                         const words = block.getWordsFromText(text);
-                        const nearest = findNearestWord(i, words);
+                        const nearest = this.findNearestWord(i, words);
                         if (!nearest) {
                             block.setCaret(0, CARET.LEFT);
                             return;
                         }
-                        const start = i > nearest.start ? nearest.start : nearest.previous?.start;
+                        const start = i >= nearest.start ? nearest.start : nearest.previous?.start;
                         block.setCaret(start as number, CARET.LEFT);
                     }
                 }
@@ -894,9 +886,48 @@ export class BlockManager implements IBlockManager {
                         manager.setBlockFocus(next);
                     }
                 }
-            }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-ArrowRight"
+                },
+                action: {
+                    name: "Skip back to the start of the previous word.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        if (caret.right.isEOL) {
+                            return;
+                        }
+                        const i = caret.right.index;
+                        const last = block.getLastCell();
+                        const text = block.getText();
+                        const words = block.getWordsFromText(text);
+                        const nearest = this.findNearestWord(i, words);
+                        if (!nearest) {
+                            block.setCaret(0, CARET.LEFT);
+                            return;
+                        }
+                        const start = !nearest.next ? last.index : nearest.next.start;
+                        block.setCaret(start as number, CARET.LEFT);
+                    }
+                }
+            },
         ];
         return events;
+    }
+    findNearestWord(index: number, words: Word[]) {
+        const lastIndex = words.length - 1;
+        for (let i = lastIndex; i >= 0; i--) {
+            let word = words[i];
+            if (index >= word.start) return word;
+        }
+        return null;
     }
     getPrevious(blockId: string) {
         return this.getTargetBlock(blockId, RelationType.has_previous);
