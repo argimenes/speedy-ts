@@ -1,5 +1,5 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement, ISelection, Word } from "./standoff-editor-block";
+import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement, ISelection, Word, RowPosition } from "./standoff-editor-block";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -756,6 +756,14 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
+                        if (block.cache.verticalArrowNavigation.lastX == null) {
+                            block.cache.verticalArrowNavigation.lastX = caret.right.cache.offset.x;
+                        }
+                        const match = block.getCellInRow(caret.right, RowPosition.Previous);
+                        if (match) {
+                            block.setCaret(match.cell.index, match.caret);
+                            return;
+                        }
                         const previousEdge = block.getRelation(RelationType.has_previous);
                         if (!previousEdge) {
                             block.setCaret(0, CARET.LEFT);
@@ -783,48 +791,24 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        const offset = caret.right.cache.offset;
-                        const vertical = block.cache.verticalArrowNavigation;
-                        if (vertical.lastX == null) {
-                            vertical.lastX = offset.x;
+                        if (block.cache.verticalArrowNavigation.lastX == null) {
+                            block.cache.verticalArrowNavigation.lastX = caret.right.cache.offset.x;
                         }
-                        const lineHeight = offset.h || 14;
-                        const x = vertical.lastX;
-                        const y = offset.cy;
-                        const verticalOffset = lineHeight;
-                        const cells = block.getClosestRowOfCellsByOffset({ x, y, verticalOffset });
-                        if (cells.length ==0 ){
-                            const nextEdit = block.getRelation(RelationType.has_next);
-                            const len = block.cells.length;
-                            if (!nextEdit) {
-                                block.setCaret(len - 1, CARET.LEFT);
-                                return;
-                            }
-                            const next = manager.getBlock(nextEdit.targetId) as StandoffEditorBlock;
-                            if (!next) return;
-                            next.setCaret(0, CARET.LEFT);
-                            manager.setBlockFocus(next);
+                        const match = block.getCellInRow(caret.right, RowPosition.Next);
+                        if (match) {
+                            block.setCaret(match.cell.index, match.caret);
                             return;
                         }
-                        const leftMatches = cells.filter(c => c.cache.offset.x < x) as Cell[];
-                        const lenL = leftMatches.length;
-                        if (lenL) {
-                            if (lenL == 2) {
-                                block.setCaret(leftMatches[lenL - 2].index, CARET.RIGHT);
-                                // this.setCarotAndScroll(leftMatches[leftMatches.length - 2], CARET.RIGHT, verticalOffset > 0);
-                            } else {
-                                block.setCaret(leftMatches[lenL - 1].index, CARET.LEFT);
-                                // this.setCarotAndScroll(leftMatches[leftMatches.length - 1], CARET.LEFT, verticalOffset > 0);
-                            }
-                            return true;
+                        const nextEdit = block.getRelation(RelationType.has_next);
+                        const len = block.cells.length;
+                        if (!nextEdit) {
+                            block.setCaret(len - 1, CARET.LEFT);
+                            return;
                         }
-                        const rightMatches = cells.filter(c => c.cache.offset.x >= x) as Cell[];
-                        const lenR = rightMatches.length;
-                        if (lenR) {
-                            block.setCaret(rightMatches[0].index, CARET.LEFT);
-                            // this.setCarotAndScroll(rightMatches[0], CARET.LEFT, verticalOffset > 0);
-                            return true;
-                        }
+                        const next = manager.getBlock(nextEdit.targetId) as StandoffEditorBlock;
+                        if (!next) return;
+                        next.setCaret(0, CARET.LEFT);
+                        manager.setBlockFocus(next);
                     }
                 }
             },
@@ -846,6 +830,7 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
+                        block.cache.verticalArrowNavigation.lastX = null;
                         if (caret.left) {
                             block.setCaret(caret.left.index);
                             return;
@@ -909,6 +894,7 @@ export class BlockManager implements IBlockManager {
                          */
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
+                        block.cache.verticalArrowNavigation.lastX = null;
                         const sel = block.getSelection() as IRange;
                         const manager = block.owner as BlockManager;
                         const len = block.cells.length;

@@ -39,6 +39,10 @@ export type StandoffEditorBlockDto = {
     standoffProperties: StandoffPropertyDto[]
     blockProperties?: BlockPropertyDto[]
 }
+export enum RowPosition {
+    Previous,
+    Next
+}
 export enum ELEMENT_ROLE {
     CELL = 0,
     INNER_STYLE_BLOCK = 1,
@@ -1414,13 +1418,39 @@ export class StandoffEditorBlock implements IBlock {
     }
     getCellClosestByOffsetX(args: any) {
         const { x, cells } = args;
-        const leftMatches = cells.filter(c => c.speedy.offset.x < x);
-        const rightMatches = cells.filter(c => c.speedy.offset.x >= x);
+        const leftMatches = cells.filter((c:Cell) => c.cache.offset.x < x);
+        const rightMatches = cells.filter((c:Cell) => c.cache.offset.x >= x);
         if (leftMatches.length) {
             return leftMatches[leftMatches.length - 1];
         }
         if (rightMatches.length) {
             return rightMatches[0];
+        }
+        return null;
+    }
+    getCellInRow(anchor: Cell, row: RowPosition) {
+        const offset = anchor.cache.offset;
+        const lineHeight = offset.h || 14;
+        const x = this.cache.verticalArrowNavigation.lastX || offset.x;
+        const y = offset.cy;
+        const verticalOffset = row == RowPosition.Previous ? -Math.abs(lineHeight) : lineHeight;
+        const cells = this.getClosestRowOfCellsByOffset({ x, y, verticalOffset });
+        if (cells.length == 0 ){
+            return null;
+        }
+        const leftMatches = cells.filter(c => c.cache.offset.x < x) as Cell[];
+        const lenL = leftMatches.length;
+        if (lenL) {
+            if (lenL == 2) {
+                return { cell: leftMatches[lenL - 2], caret: CARET.RIGHT };
+            } else {
+                return { cell: leftMatches[lenL - 1], caret: CARET.LEFT };
+            }
+        }
+        const rightMatches = cells.filter(c => c.cache.offset.x >= x) as Cell[];
+        const lenR = rightMatches.length;
+        if (lenR) {
+            return { cell:rightMatches[0], caret: CARET.LEFT};
         }
         return null;
     }
