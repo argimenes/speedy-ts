@@ -1,5 +1,5 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement, ISelection } from "./standoff-editor-block";
+import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement, ISelection, Word } from "./standoff-editor-block";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -836,6 +836,14 @@ export class BlockManager implements IBlockManager {
                         
                     `,
                     handler: (args: IBindingHandlerArgs) => {
+                        const findNearestWord = (index: number, words: Word[]) => {
+                            const lastIndex = words.length - 1;
+                            for (let i = lastIndex; i >= 0; i--) {
+                                let word = words[i];
+                                if (i >= word.start) return word;
+                            }
+                            return null;
+                        }
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         if (!caret.left) {
@@ -844,15 +852,13 @@ export class BlockManager implements IBlockManager {
                         const i = caret.left.index;
                         const text = block.getText();
                         const words = block.getWordsFromText(text);
-                        const ci = words.findIndex(x => x.end >= i);
-                        if (ci == -1) return;
-                        if (ci == 0) {
+                        const nearest = findNearestWord(i, words);
+                        if (!nearest) {
                             block.setCaret(0, CARET.LEFT);
                             return;
                         }
-                        const word = words[ci];
-                        const start = (i <= word.start) ? words[ci-1].start : word.start;
-                        block.setCaret(start, CARET.LEFT);
+                        const start = i > nearest.start ? nearest.start : nearest.previous?.start;
+                        block.setCaret(start as number, CARET.LEFT);
                     }
                 }
             },

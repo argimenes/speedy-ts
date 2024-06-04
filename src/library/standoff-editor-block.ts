@@ -7,6 +7,18 @@ export enum CARET {
     LEFT = 0,
     RIGHT = 1
 }
+export class Word {
+    start: number;
+    end: number;
+    text: string;
+    previous?: Word;
+    next?: Word
+    constructor(start: number, end: number, text: string) {
+        this.start = start;
+        this.end = end;
+        this.text = text;
+    }
+}
 export type StandoffPropertyDto = {
     id?: GUID,
     blockGuid?: GUID,
@@ -592,13 +604,27 @@ export class StandoffEditorBlock implements IBlock {
     }
     getWordsFromText(text: string) {
         const re = new RegExp(/\b[^\s]+\b/, "g");
-        const results = [];
+        const words: Word[] = [];
         let match;
         while ((match = re.exec(text)) != null) {
             let span = match[0];
-            results.push({ start: match.index, end: match.index + span.length - 1, text: span });
+            words.push({ start: match.index, end: match.index + span.length - 1, text: span });
         }
-        return results;
+        const lastIndex = words.length-1;
+        for (let i = 0; i <= lastIndex; i++) {
+            let word = words[i];
+            if (lastIndex == 1) {
+                continue;
+            }
+            if (i > 0) {
+                word.previous = words[i-1];
+            }
+            if (i < lastIndex) {
+                word.next = words[i + 1];
+            }
+            words.push(word);
+        }
+        return words;
     }
     getSentencesFromText(text: string) {
         const re = new RegExp(/[^.?!\r]+[.!?\r]+[\])'"`’”]*|.+/, "g");
