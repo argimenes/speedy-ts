@@ -1400,7 +1400,7 @@ export class StandoffEditorBlock implements IBlock {
     }
     getTextNode(cell: Cell): ChildNode {
         // Get the first TEXT NODE of the element
-        var node = cell.element.firstChild as ChildNode;
+        var node = cell.element?.firstChild as ChildNode;
         if (!node) {
             return cell.element as ChildNode;
         }

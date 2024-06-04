@@ -631,6 +631,12 @@ export class BlockManager implements IBlockManager {
                     handler: (args: IBindingHandlerArgs) => {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
+                        const selection = block.getSelection();
+                        if (selection) {
+                            const len = (selection.end.index - selection.start.index) + 1;
+                            block.removeCellsAtIndex(selection.start.index, len, true);
+                            return;
+                        }
                         const manager = block.owner as BlockManager;
                         if (!caret.left) {
                             const previousEdge = block.getRelation(RelationType.has_previous);
