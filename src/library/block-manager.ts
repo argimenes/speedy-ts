@@ -658,6 +658,28 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Control-Backspace"
+                },
+                action: {
+                    name: "Delete all the characters to the left back to the beginning of the text block.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        if (!caret.left) {
+                            return;
+                        }
+                        const len = caret.left.index + 1;
+                        block.removeCellsAtIndex(0, len);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "Delete"
                 },
                 action: {
