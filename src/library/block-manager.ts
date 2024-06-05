@@ -9,13 +9,14 @@ export enum CssClass {
 export interface IEdge {
     sourceId: string;
     name: string;
+    targetId: string;
 }
 export interface IAddEdge extends IEdge {
-    targetId: string;
+    
 }
 export interface IBatchRelateArgs {
     toDelete?: IEdge[];
-    toAdd?: IAddEdge[];
+    toAdd?: IEdge[];
 }
 
 const RelationType = {
@@ -499,8 +500,8 @@ export class BlockManager implements IBlockManager {
                          */
                         manager.batchRelate({
                             toDelete: [
-                                { sourceId: block.id, name: RelationType.has_previous },
-                                { sourceId: previous.id, name: RelationType.has_next },
+                                { sourceId: block.id, name: RelationType.has_previous, targetId: previous.id },
+                                { sourceId: previous.id, name: RelationType.has_next, targetId: block.id },
                             ],
                             toAdd: [
                                 { sourceId: block.id, name: RelationType.has_parent, targetId: previous.id },
@@ -745,6 +746,81 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Control-Y"
+                },
+                action: {
+                    name: "Delete the current text block.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
+                        const previous = manager.getPreviousOf(block.id);
+                        const next = manager.getNextOf(block.id);
+                        const parent = manager.getParentOf(block.id);
+                        if (!parent && !previous && !next) {
+                            return;
+                        }
+                        if (parent) {
+                            const batch: IBatchRelateArgs = {};
+                            batch.toDelete = [
+                                { sourceId: parent.id, name: RelationType.has_first_child, targetId: block.id },
+                                { sourceId: block.id, name: RelationType.has_parent, targetId: parent.id }
+                            ];
+                            if (next) {
+                                batch.toAdd = [
+                                    { sourceId: parent.id, name: RelationType.has_first_child, targetId: next.id },
+                                    { sourceId: next.id, name: RelationType.has_parent, targetId: parent.id },
+                                ]
+                            }
+                            manager.batchRelate(batch);
+                        }
+                        if (previous) {
+                            const batch: IBatchRelateArgs = {};
+                            batch.toDelete = [
+                                { sourceId: previous.id, name: RelationType.has_next, targetId: block.id },
+                                { sourceId: block.id, name: RelationType.has_previous, targetId: previous.id }
+                            ];
+                            if (next) {
+                                batch.toAdd = [
+                                    { sourceId: previous.id, name: RelationType.has_next, targetId: next.id },
+                                    { sourceId: next.id, name: RelationType.has_previous, targetId: previous.id },
+                                ]
+                            }
+                            manager.batchRelate(batch);
+                        }
+                        if (next && !previous && !parent) {
+                            const batch: IBatchRelateArgs = {};
+                            batch.toDelete = [
+                                { sourceId: block.id, name: RelationType.has_next, targetId: next.id },
+                                { sourceId: next.id, name: RelationType.has_previous, targetId: block.id }
+                            ];
+                            manager.batchRelate(batch);
+                        }
+                        manager.deleteBlock(block.id);
+                        if (next) {
+                            manager.setBlockFocus(next);
+                            next.setCaret(0, CARET.LEFT);
+                            return;
+                        }
+                        if (previous) {
+                            manager.setBlockFocus(previous);
+                            previous.setCaret(0, CARET.LEFT);
+                            return;
+                        }
+                        if (parent) {
+                            manager.setBlockFocus(parent);
+                            parent.setCaret(0, CARET.LEFT);
+                            return;
+                        }
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "ArrowUp"
                 },
                 action: {
@@ -756,8 +832,8 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        if (block.cache.verticalArrowNavigation.lastX == null) {
-                            block.cache.verticalArrowNavigation.lastX = caret.right.cache.offset.x;
+                        if (block.cache.caret.x == null) {
+                            block.cache.caret.x = caret.right.cache.offset.x;
                         }
                         const match = block.getCellInRow(caret.right, RowPosition.Previous);
                         if (match) {
@@ -791,8 +867,8 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        if (block.cache.verticalArrowNavigation.lastX == null) {
-                            block.cache.verticalArrowNavigation.lastX = caret.right.cache.offset.x;
+                        if (block.cache.caret.x == null) {
+                            block.cache.caret.x = caret.right.cache.offset.x;
                         }
                         const match = block.getCellInRow(caret.right, RowPosition.Next);
                         if (match) {
@@ -830,7 +906,7 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        block.cache.verticalArrowNavigation.lastX = null;
+                        block.cache.caret.x = null;
                         if (caret.left) {
                             block.setCaret(caret.left.index);
                             return;
@@ -894,7 +970,7 @@ export class BlockManager implements IBlockManager {
                          */
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
-                        block.cache.verticalArrowNavigation.lastX = null;
+                        block.cache.caret.x = null;
                         const sel = block.getSelection() as IRange;
                         const manager = block.owner as BlockManager;
                         const len = block.cells.length;
@@ -904,7 +980,7 @@ export class BlockManager implements IBlockManager {
                             block.setCaret(ri + 1);
                             return;
                         }
-                        const next = manager.getNext(block.id);
+                        const next = manager.getNextOf(block.id);
                         if (!next) return;
                         next.setCaret(0, CARET.LEFT);
                         manager.setBlockFocus(next);
@@ -959,7 +1035,7 @@ export class BlockManager implements IBlockManager {
     getFirstChild(blockId: string) {
         return this.getTargetBlock(blockId, RelationType.has_first_child);
     }
-    getNext(blockId: string) {
+    getNextOf(blockId: string) {
         return this.getTargetBlock(blockId, RelationType.has_next);
     }
     getParentOf(blockId: string) {

@@ -448,7 +448,23 @@ export interface IStandoffEditorBlockConstructor {
     owner: IBlockManager,
     container?: HTMLDivElement
 }
-
+export interface IRowConstructor {
+    index: number;
+    cells: Cell[]; 
+}
+export class Row {
+    index: number;
+    previous?: Row;
+    next?: Row;
+    cells: Cell[];
+    constructor(args: IRowConstructor) {
+        this.index = args.index;
+        this.cells = args.cells;
+    }
+    getLastCell() {
+        return this.cells[this.cells.length-1];
+    }
+}
 export class StandoffEditorBlock implements IBlock {
     id: GUID;
     type: BlockType;
@@ -456,11 +472,12 @@ export class StandoffEditorBlock implements IBlock {
     relations: Record<string, IBlockRelation>;
     container: HTMLDivElement;
     cells: Cell[];
+    rows: Row[];
     cache: {
         previousOffset: ICoordOffsets,
         offset: ICoordOffsets,
-        verticalArrowNavigation: {
-            lastX: number|null;
+        caret: {
+            x: number|null;
         },
         containerWidth: number;
     };
@@ -522,13 +539,14 @@ export class StandoffEditorBlock implements IBlock {
             offset: {
                 x: 0, y: 0, h: 0, w: 0
             },
-            verticalArrowNavigation: {
-                lastX: 0
+            caret: {
+                x: 0
             },
             containerWidth: 0
         };
         this.relations = {};
         this.cells = [];
+        this.rows = [];
         this.metadata = {};
         this.schemas = [];
         this.blockSchemas = [];
@@ -1321,7 +1339,7 @@ export class StandoffEditorBlock implements IBlock {
         const block = this;
         requestAnimationFrame(() => {
             block.calculateCellOffsets();
-            block.cache.verticalArrowNavigation.lastX = null;
+            block.cache.caret.x = null;
             block.updateRenderers();
         });
     }
@@ -1387,7 +1405,7 @@ export class StandoffEditorBlock implements IBlock {
         this.schemas =[];
         this.blockSchemas = [];
         this.overlays = [];
-        if (this.container) this.container.innerHTML = "";
+        if (this.container) this.container.remove();
     }
     removeCellsAtIndex(index: number, length: number, updateCaret?: boolean) {
         for (let i = 1; i <= length; i++) {
@@ -1431,7 +1449,7 @@ export class StandoffEditorBlock implements IBlock {
     getCellInRow(anchor: Cell, row: RowPosition) {
         const offset = anchor.cache.offset;
         const lineHeight = offset.h || 14;
-        const x = this.cache.verticalArrowNavigation.lastX || offset.x;
+        const x = this.cache.caret.x || offset.x;
         const y = offset.cy;
         const verticalOffset = row == RowPosition.Previous ? -Math.abs(lineHeight) : lineHeight;
         const cells = this.getClosestRowOfCellsByOffset({ x, y, verticalOffset });
