@@ -759,8 +759,18 @@ export class BlockManager implements IBlockManager {
                         const previous = manager.getPreviousOf(block.id);
                         const next = manager.getNextOf(block.id);
                         const parent = manager.getParentOf(block.id);
+                        const leftMargin = manager.getLeftMarginOf(block.id);
+                        const rightMargin = manager.getRightMarginOf(block.id);
                         if (!parent && !previous && !next) {
                             return;
+                        }
+                        if (leftMargin) {
+                            const batch: IBatchRelateArgs = {};
+                            batch.toDelete = [
+                                { sourceId: parent.id, name: RelationType.has_first_child, targetId: block.id },
+                                { sourceId: block.id, name: RelationType.has_parent, targetId: parent.id }
+                            ];
+                            manager.batchRelate(batch);
                         }
                         if (parent) {
                             const batch: IBatchRelateArgs = {};
@@ -1041,7 +1051,10 @@ export class BlockManager implements IBlockManager {
     getParentOf(blockId: string) {
         return this.getTargetBlock(blockId, RelationType.has_parent);
     }
-    getLeftMargin(blockId: string) {
+    getRightMarginOf(blockId: string) {
+        return this.getTargetBlock(blockId, RelationType.has_right_margin);
+    }
+    getLeftMarginOf(blockId: string) {
         return this.getTargetBlock(blockId, RelationType.has_left_margin);
     }
     getLeftMarginParent(blockId: string) {
