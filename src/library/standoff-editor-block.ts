@@ -351,6 +351,7 @@ export enum BlockType {
 export interface IBlock {
     id: GUID;
     type: BlockType;
+    updateView: () => void;
     container: HTMLDivElement;
     relations: Record<string, IBlockRelation>;
     addRelation: (name: string, targetId: string, skipCommit?: boolean) => void;

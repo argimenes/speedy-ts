@@ -128,6 +128,9 @@ export class BlockManager implements IBlockManager {
         this.pointer = 0;
         this.direction = PointerDirection.Undo;
     }
+    updateView() {
+        this.blocks.forEach(x => x.updateView());
+    }
     redo() {
         this.direction = PointerDirection.Redo;
         this.executeCommandAtPointer();
@@ -767,8 +770,16 @@ export class BlockManager implements IBlockManager {
                         if (leftMargin) {
                             const batch: IBatchRelateArgs = {};
                             batch.toDelete = [
-                                { sourceId: parent.id, name: RelationType.has_first_child, targetId: block.id },
-                                { sourceId: block.id, name: RelationType.has_parent, targetId: parent.id }
+                                { sourceId: block.id, name: RelationType.has_left_margin, targetId: leftMargin.id },
+                                { sourceId: leftMargin.id, name: RelationType.has_left_margin_parent, targetId: block.id }
+                            ];
+                            manager.batchRelate(batch);
+                        }
+                        if (rightMargin) {
+                            const batch: IBatchRelateArgs = {};
+                            batch.toDelete = [
+                                { sourceId: block.id, name: RelationType.has_right_margin, targetId: rightMargin.id },
+                                { sourceId: rightMargin.id, name: RelationType.has_right_margin_parent, targetId: block.id }
                             ];
                             manager.batchRelate(batch);
                         }
@@ -809,6 +820,7 @@ export class BlockManager implements IBlockManager {
                             manager.batchRelate(batch);
                         }
                         manager.deleteBlock(block.id);
+                        manager.updateView();
                         if (next) {
                             manager.setBlockFocus(next);
                             next.setCaret(0, CARET.LEFT);
