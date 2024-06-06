@@ -143,7 +143,7 @@ export class BlockManager implements IBlockManager {
     }
     executeCommandAtPointer() {
         const commit = this.commits[this.pointer];
-        const cmd = this.direction == PointerDirection.Undo ? commit.reverse : commit.command;
+        const cmd = this.direction == PointerDirection.Undo ? commit.undo : commit.redo;
         if (!cmd) return;
         this.executeCommand(cmd as Command);
     }
@@ -1270,7 +1270,7 @@ export class BlockManager implements IBlockManager {
         this.blocks.splice(i, 1);
         block.destroy();
         this.commit({
-            command: {
+            redo: {
                 id: this.id,
                 name: "deleteBlock",
                 value: {
@@ -1294,12 +1294,12 @@ export class BlockManager implements IBlockManager {
             })
         }
         this.commit({
-            command: {
+            redo: {
                 id: this.id,
                 name: "batchRelate",
                 value: args
             },
-            reverse: {
+            undo: {
                 id: this.id,
                 name: "batchRelate",
                 value: { toDelete: args.toAdd, toAdd: args.toDelete }
@@ -1308,7 +1308,7 @@ export class BlockManager implements IBlockManager {
     }
     mergeBlocks(firstBlockId: GUID, secondBlockId: GUID) {
         this.commit({
-            command: {
+            redo: {
                 id: this.id,
                 name: "mergeBlocks",
                 value: {
@@ -1382,7 +1382,7 @@ export class BlockManager implements IBlockManager {
         }
         this.container.appendChild(structure);
         this.commit({
-            command: {
+            redo: {
                 id: this.id,
                 name: "loadDocument",
                 value: { doc }
@@ -1417,11 +1417,11 @@ export class BlockManager implements IBlockManager {
         block.setCommitHandler(this.storeCommit.bind(this));
         block.applyBlockPropertyStyling();
         this.commit({
-            command: {
+            redo: {
                 id: this.id,
                 name: "createBlock"
             },
-            reverse: {
+            undo: {
                 id: this.id,
                 name: "uncreateBlock",
                 value: { id: block.id }

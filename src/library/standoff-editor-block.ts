@@ -176,6 +176,7 @@ export class Cell {
     element?: CellHtmlElement;
     isEOL: boolean;
     block: StandoffEditorBlock;
+    row?: Row;
     constructor({ text, block }: ICellConstructor) {
         this.index = 0;
         this.text = text;
@@ -421,8 +422,8 @@ export type Command = {
 }
 export type ReverseCommand = Command;
 export type Commit = {
-    command: Command;
-    reverse?: ReverseCommand;
+    redo: Command;
+    undo?: ReverseCommand;
 }
 export type Trigger = {
     source: InputEventSource;
@@ -612,12 +613,12 @@ export class StandoffEditorBlock implements IBlock {
         };
         if (!skipCommit) {
             this.commit({
-                command: {
+                redo: {
                     id: this.id,
                     name: "addRelation",
                     value: { name, targetId }
                 },
-                reverse: {
+                undo: {
                     id: this.id,
                     name: "removeRelation",
                     value: { name }
@@ -664,12 +665,12 @@ export class StandoffEditorBlock implements IBlock {
         delete this.relations[name];
         if (!skipCommit) {
             this.commit({
-                command: {
+                redo: {
                     id: this.id,
                     name: "removeRelation",
                     value: { name }
                 },
-                reverse: {
+                undo: {
                     id: this.id,
                     name: "addRelation",
                     value: {
@@ -727,12 +728,12 @@ export class StandoffEditorBlock implements IBlock {
     setRelation(type: string, targetId: string) {
         this.relations[type] = { type, sourceId: this.id, targetId };
         this.commit({
-            command: {
+            redo: {
                 id: this.id,
                 name: "setRelation",
                 value: { type, targetId }
             },
-            reverse: {
+            undo: {
                 id: this.id,
                 name: "removeRelation",
                 value: { name: type }
@@ -813,7 +814,7 @@ export class StandoffEditorBlock implements IBlock {
         // }
         // this.addCursorToHistory(e.target);
         this.commit({
-            command: {
+            redo: {
                 id: this.id,
                 name: "set-cursor",
                 value: { anchorIndex: caret.left?.index }
@@ -1053,12 +1054,12 @@ export class StandoffEditorBlock implements IBlock {
         }
         this.setCaret(index + 1);
         this.commit({
-            command: {
+            redo: {
                 id: this.id,
                 name: "insertTextAtIndex",
                 value: { text, index }
             },
-            reverse: {
+            undo: {
                 id: this.id,
                 name: "removeCellsAtIndex",
                 value: { index, length: text.length }
@@ -1077,24 +1078,6 @@ export class StandoffEditorBlock implements IBlock {
     private insertIntoCellArrayBefore(index: number, cells: Cell[]) {
         this.cells.splice(index, 0, ...cells);
         this.reindexCells();
-    }
-    private knitAllCells(cells: Cell[]) {
-        const len = cells?.length;
-        const maxIndex = len - 1;
-        if (len == 0) return;
-        for (let i = 0; i <= maxIndex; i++) {
-            let current = cells[i];
-            if (i > 0) {
-                let previous = cells[i-1];
-                previous.next = current;
-                current.previous = previous;
-            }
-            if (i < maxIndex) {
-                let next = cells[i+ 1];
-                current.next = next;
-                next.previous = current;
-            }
-        }
     }
     private knitCells(left: Cell|undefined, middle: Cell[], right: Cell) {
         const len = middle.length;
@@ -1218,12 +1201,12 @@ export class StandoffEditorBlock implements IBlock {
         this.container.appendChild(frag);
         this.updateView();
         this.commit({
-            command: {
+            redo: {
                 id: this.id,
                 name: "bind",
                 value: { block }
             },
-            reverse: {
+            undo: {
                 id: this.id,
                 name: "unbind"
             }
@@ -1284,7 +1267,7 @@ export class StandoffEditorBlock implements IBlock {
             selection.addRange(range);
         }
         this.commit({
-            command: {
+            redo: {
                 id: this.id,
                 name: "setCaret",
                 value: { index, offset }
@@ -1342,6 +1325,7 @@ export class StandoffEditorBlock implements IBlock {
             block.calculateCellOffsets();
             block.cache.caret.x = null;
             block.updateRenderers();
+            block.calculateRows();
         });
     }
     updateRenderers() {
@@ -1411,6 +1395,27 @@ export class StandoffEditorBlock implements IBlock {
     removeCellsAtIndex(index: number, length: number, updateCaret?: boolean) {
         for (let i = 1; i <= length; i++) {
             this.removeCellAtIndex(index, updateCaret);
+        }
+    }
+    calculateRows() {
+        const rows = this.getRows();
+        const len = rows.length;
+        this.rows = [];
+        for (let i = 0; i < len; i++) {
+            let group = rows[i];
+            const cells = group[1] as Cell[];
+            let row = new Row({ index: i, cells: cells });
+            cells.forEach(c => c.row = row);
+            this.rows.push(row);
+        }
+        for (let i = 0 ; i < len; i++) {
+            let row = this.rows[i];
+            if (i > 0) {
+                row.previous = this.rows[i - 1];
+            }
+            if (0 < i && i < len - 2) {
+                row.next = this.rows[i + 1];
+            }
         }
     }
     getRows() {
@@ -1509,12 +1514,12 @@ export class StandoffEditorBlock implements IBlock {
             this.setCaret(index);
         }
         this.commit({
-            command: {
+            redo: {
                 id: this.id,
                 name: "removeCellAtIndex",
                 value: { index, updateCaret }
             },
-            reverse: {
+            undo: {
                 id: this.id,
                 name: "insertTextAtIndex",
                 value: { text, index }
