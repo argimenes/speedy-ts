@@ -1259,6 +1259,16 @@ export class StandoffEditorBlock implements IBlock {
         this.chainCellsTogether(cells);
         return cells;
     }
+    getCellBelow(cell: Cell) {
+        const x = cell.cache.offset.x;
+        const rLen = this.rows.length;
+        const cri = cell.row?.index as number;
+        if (cri < rLen - 1) {
+            const row = this.rows[cri + 1]; 
+            return row.findNearestCell(x);
+        }
+        return null;
+    }
     setCaret(index: number, offset?: CARET) {
         /**
          * Might want to investigate setting the caret by absolutely positioning an SVG ...

@@ -892,16 +892,10 @@ export class BlockManager implements IBlockManager {
                         if (block.cache.caret.x == null) {
                             block.cache.caret.x = caret.right.cache.offset.x;
                         }
-                        const x = caret.right.cache.offset.x;
-                        const rLen = block.rows.length;
-                        const cri = caret.right.row?.index as number;
-                        if (cri < rLen - 1) {
-                            const row = block.rows[cri + 1]; 
-                            const match = row.findNearestCell(x);
-                            if (match) {
-                                block.setCaret(match.cell.index, CARET.LEFT);
-                                return;
-                            }
+                        const match = block.getCellBelow(caret.right);
+                        if (match) {
+                            block.setCaret(match.cell.index, CARET.LEFT);
+                            return;
                         }
                         // const match = block.getCellInRow(caret.right, RowPosition.Next);
                         // if (match) {
