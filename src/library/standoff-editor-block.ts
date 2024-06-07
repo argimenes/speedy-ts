@@ -82,6 +82,12 @@ export class BlockProperty {
         this.schema = schema;
         this.block = block;
     }
+    serialize() {
+        return {
+            id: this.id,
+            type: this.type
+        }
+    }
     applyStyling() {
         const schema = this.schema;
         if (schema?.decorate?.blockClass) {
@@ -311,6 +317,16 @@ export class StandoffProperty {
         }
         return cells;
     }
+    serialize() {
+        return {
+            id: this.id,
+            type: this.type,
+            start: this.start.index,
+            end: this.end.index,
+            value: this.value,
+            isDeleted: this.isDeleted
+        }
+    }
     showBrackets() {
         if (this.bracket.left) this.bracket.left.style.display = "inline";
         if (this.bracket.right) this.bracket.right.style.display = "inline";
@@ -345,14 +361,19 @@ export enum BlockType {
     HTML = "html-block",
     PDF = "pdf-block",
     Grid = "grid-block",
+    MarginBlock = "margin-block",
     Image = "image-block",
     Video = "video-block"
 }
 
 export interface IBlock {
     id: GUID;
+    owner?: IBlock;
     type: BlockType;
+    blockProperties: BlockProperty[];
+    blocks: IBlock[];
     updateView: () => void;
+    getBlock: (id: GUID) => IBlock;
     container: HTMLDivElement;
     relations: Record<string, IBlockRelation>;
     addRelation: (name: string, targetId: string, skipCommit?: boolean) => void;
@@ -361,6 +382,7 @@ export interface IBlock {
     setFocus: () => void;
     serialize: () => any;
     deserialize: (json: any|any[]) => IBlock;
+    applyBlockPropertyStyling: () => void;
 }
 export interface IBlockManager extends IBlock {
 
@@ -532,6 +554,7 @@ export class StandoffEditorBlock implements IBlock {
     inputActions: InputAction[];
     commitHandler: (commit: Commit) => void;
     modes: string[];
+    blocks: IBlock[];
     constructor(args: IStandoffEditorBlockConstructor) {
         this.id = args.id || uuidv4();
         this.owner = args.owner;
@@ -547,6 +570,7 @@ export class StandoffEditorBlock implements IBlock {
                 padding: "10px"
             }
         });
+        this.blocks = [];
         this.cache = {
             previousOffset: {
                 x: 0, y: 0, h: 0, w: 0
@@ -1004,6 +1028,9 @@ export class StandoffEditorBlock implements IBlock {
     addStandoffProperties(props: StandoffProperty[]) {
         
     }
+    getBlock(id: GUID) {
+        return this.blocks.find(x=> x.id == id) as IBlock;
+    }
     addBlockProperties(properties: BlockPropertyDto[]) {
         const self = this;
         const props = properties.map(x => new BlockProperty({ type: x.type, block: self, schema: self.blockSchemas.find(x2 => x2.type == x.type) as IBlockPropertySchema }));
@@ -1125,6 +1152,13 @@ export class StandoffEditorBlock implements IBlock {
         this.container.innerHTML = "";
     }
     serialize() {
+        return {
+            id: this.id,
+            type: this.type,
+            text: this.getText(),
+            standoffProperties: this.standoffProperties.map(x => x.serialize()),
+            blockProperties: this.getBlockPropertiesDto()
+        }
         const block = {} as StandoffEditorBlockDto;
         block.id = this.id;
         block.text = this.getText();

@@ -1,4 +1,5 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
+import { MarginBlock } from "./margin-block";
 import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement, ISelection, Word, RowPosition } from "./standoff-editor-block";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
@@ -41,65 +42,6 @@ export interface IBlockSelection extends IBlockRange {
     direction: DIRECTION;
 }
 
-export class GridBlock implements IBlock {
-    id: GUID;
-    type: BlockType;
-    relations: Record<string, IBlockRelation>;
-    container: HTMLDivElement;
-    metadata: Record<string, any>;
-    grid: IBlock[][];
-    constructor(args: { id?: GUID, container?: HTMLDivElement }) {
-        this.id = args?.id || uuidv4();
-        this.type = BlockType.PDF;
-        this.relations = {};
-        this.container = args?.container || document.createElement("DIV") as HTMLDivElement;
-        this.metadata = {};
-        this.grid = [];
-    }
-    serialize() {
-        // TBC
-        return {
-            id: this.id,
-            type: this.type,
-            metadata: this.metadata
-        };
-    }
-    addKeyboardBindings() {
-
-    }
-    getSchemas() {
-
-    }
-    getModes() {
-        const self = this;
-        const modes: Mode[] = [];
-        modes.push({
-            "default": {
-                keyboard: [
-                    {
-                        "TAB": (args: IBindingHandlerArgs) => {
-
-                        }
-                    }
-                ],
-                mouse: [
-
-                ]
-            }
-        });
-        return modes;
-    }
-    setFocus() {
-        // Find the first block container and focus on that.
-    }
-    removeRelation(name: string) {
-        
-    }
-    addRelation(name: string, targetId: string){
-        
-    }
-}
-
 enum PointerDirection {
     Undo,
     Redo
@@ -116,6 +58,8 @@ export class BlockManager implements IBlockManager {
     commits: Commit[];
     pointer: number;
     direction: PointerDirection;
+    owner?: IBlock | undefined;
+    blockProperties: BlockProperty[];
     constructor(props?: IBlockManagerConstructor) {
         this.id = props?.id || uuidv4();
         this.type = BlockType.Outliner;
@@ -127,6 +71,12 @@ export class BlockManager implements IBlockManager {
         this.commits = [];
         this.pointer = 0;
         this.direction = PointerDirection.Undo;
+        this.blockProperties= [];
+    }
+    applyBlockPropertyStyling() {
+        this.blockProperties.forEach(p => {
+            p.applyStyling();
+        });
     }
     updateView() {
         this.blocks.forEach(x => x.updateView());
@@ -180,14 +130,14 @@ export class BlockManager implements IBlockManager {
                 block.removeCellsAtIndex(value.index, value.length, value.updateCaret);
                 return;
             }
-            case "createBlock": {
+            case "createStandoffEditorBlock": {
                 let block = this.getBlock(command.id) as BlockManager;
-                block.createBlock();
+                block.createStandoffEditorBlock();
                 return;
             }
-            case "uncreateBlock": {
+            case "uncreateStandoffEditorBlock": {
                 let block = this.getBlock(command.id) as BlockManager;
-                block.uncreateBlock(value.id);
+                block.uncreateStandoffEditorBlock(value.id);
                 return;
             }
             default: {
@@ -353,7 +303,7 @@ export class BlockManager implements IBlockManager {
                         const manager = block.owner as BlockManager;
                         const leftMarginEdge = block.getRelation(RelationType.has_left_margin);
                         if (!leftMarginEdge) {
-                            const leftMargin = manager.createBlock();
+                            const leftMargin = manager.createStandoffEditorBlock();
                             manager.batchRelate({
                                 toAdd: [
                                     { sourceId: leftMargin.id, name: RelationType.has_left_margin_parent, targetId: block.id },
@@ -403,7 +353,7 @@ export class BlockManager implements IBlockManager {
                         const manager = block.owner as BlockManager;
                         const rightMarginEdge = block.getRelation(RelationType.has_right_margin);
                         if (!rightMarginEdge) {
-                            const rightMargin = manager.createBlock();
+                            const rightMargin = manager.createStandoffEditorBlock();
                             manager.batchRelate({
                                 toAdd: [
                                     { sourceId: rightMargin.id, name: RelationType.has_right_margin_parent, targetId: block.id },
@@ -455,7 +405,7 @@ export class BlockManager implements IBlockManager {
                         const manager = block.owner as BlockManager;
                         const nextEdge = block.getRelation(RelationType.has_next);
                         if (!nextEdge) {
-                            const next = manager.createBlock();
+                            const next = manager.createStandoffEditorBlock();
                             const blockData = block.serialize();
                             next.addBlockProperties(blockData.blockProperties || []);
                             next.applyBlockPropertyStyling();
@@ -1226,16 +1176,22 @@ export class BlockManager implements IBlockManager {
     deserializeBlock(data: any) {
         switch (data.type) {
             case BlockType.StandoffEditor: {
-                const block = this.createBlock();
+                const block = this.createStandoffEditorBlock();
                 block.bind(data);
                 return block;
             };
             default: return {} as IBlock;
         }
     }
-    serialize() {
-        const json = this.blocks.map(b => b.serialize());
-        return json;
+    serialize(){
+        return {
+            id: this.id,
+            type: this.type,
+            metadata: this.metadata,
+            relations: this.relations,
+            blockProperties: this.blockProperties.map(x => x.serialize()),
+            blocks: this.blocks.map(x => x.serialize())
+        }
     }
     renderUnderlines(type: string, properties: StandoffProperty[], block: StandoffEditorBlock, colour: string, offsetY: number) {
         const overlay = block.getOrSetOverlay(type);
@@ -1264,7 +1220,7 @@ export class BlockManager implements IBlockManager {
         return codes.find(x=> x.platform == Platform.Windows);
     }
     getBlock(id: GUID) {
-        return this.blocks.find(x => x.id == id);
+        return this.blocks.find(x => x.id == id) as IBlock;
     }
     commit(msg: Commit) {
         this.commits.push(msg);
@@ -1364,7 +1320,7 @@ export class BlockManager implements IBlockManager {
         const paragraphs = doc.text.split(/\r?\n/);
         let start = 0;
         for (let i = 0; i < paragraphs.length; i ++) {
-            let block = this.createBlock();
+            let block = this.createStandoffEditorBlock();
             let text = paragraphs[i];
             let end = start + text.length + 1; // + 1 to account for the CR stripped from the text
             const props = doc.standoffProperties
@@ -1407,7 +1363,12 @@ export class BlockManager implements IBlockManager {
             }
         });
     }
-    createBlock() {
+    createMarginBlock() {
+        const block = new MarginBlock({
+            owner: this
+        });
+    }
+    createStandoffEditorBlock() {
         const standoffSchemas = this.getStandoffSchemas();
         const blockSchemas = this.getBlockSchemas();
         const standoffEvents = this.getStandoffPropertyEvents();
@@ -1424,17 +1385,17 @@ export class BlockManager implements IBlockManager {
         this.commit({
             redo: {
                 id: this.id,
-                name: "createBlock"
+                name: "createStandoffEditorBlock"
             },
             undo: {
                 id: this.id,
-                name: "uncreateBlock",
+                name: "uncreateStandoffEditorBlock",
                 value: { id: block.id }
             }
         });
         return block;
     }
-    private uncreateBlock(id: GUID) {
+    private uncreateStandoffEditorBlock(id: GUID) {
         const block = this.getBlock(id) as IBlock;
         if (!block) {
             // Error: block not found.
