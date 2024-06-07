@@ -1,5 +1,5 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, SELECTION_DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement, ISelection, Word, RowPosition } from "./standoff-editor-block";
+import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement, ISelection, Word, RowPosition } from "./standoff-editor-block";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -38,7 +38,7 @@ export interface IBlockRange {
     end: IBlock;
 }
 export interface IBlockSelection extends IBlockRange {
-    direction: SELECTION_DIRECTION;
+    direction: DIRECTION;
 }
 
 export class GridBlock implements IBlock {
@@ -536,14 +536,14 @@ export class BlockManager implements IBlockManager {
                             const selection = {
                                 start: caret.right,
                                 end: caret.right,
-                                direction: SELECTION_DIRECTION.RIGHT
+                                direction: DIRECTION.RIGHT
                             } as ISelection;
                             block.setSelection(selection);
                         } else {
                             const selection = {
                                 start: range.start,
                                 end: range.end.next,
-                                direction: SELECTION_DIRECTION.RIGHT
+                                direction: DIRECTION.RIGHT
                             } as ISelection;
                             block.setSelection(selection);
                         };
@@ -572,7 +572,7 @@ export class BlockManager implements IBlockManager {
                             const selection = {
                                 start: range.start,
                                 end: range.end.previous,
-                                direction: SELECTION_DIRECTION.LEFT
+                                direction: DIRECTION.LEFT
                             } as ISelection;
                             block.setSelection(selection);
                         };
@@ -892,11 +892,22 @@ export class BlockManager implements IBlockManager {
                         if (block.cache.caret.x == null) {
                             block.cache.caret.x = caret.right.cache.offset.x;
                         }
-                        const match = block.getCellInRow(caret.right, RowPosition.Next);
-                        if (match) {
-                            block.setCaret(match.cell.index, match.caret);
-                            return;
+                        const x = caret.right.cache.offset.x;
+                        const rLen = block.rows.length;
+                        const cri = caret.right.row?.index as number;
+                        if (cri < rLen - 1) {
+                            const row = block.rows[cri + 1]; 
+                            const match = row.findNearestCell(x);
+                            if (match) {
+                                block.setCaret(match.cell.index, CARET.LEFT);
+                                return;
+                            }
                         }
+                        // const match = block.getCellInRow(caret.right, RowPosition.Next);
+                        // if (match) {
+                        //     block.setCaret(match.cell.index, match.caret);
+                        //     return;
+                        // }
                         const nextEdit = block.getRelation(RelationType.has_next);
                         const len = block.cells.length;
                         if (!nextEdit) {

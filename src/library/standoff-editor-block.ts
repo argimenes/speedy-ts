@@ -51,7 +51,7 @@ export enum ELEMENT_ROLE {
     TEXT_BLOCK = 4,
     OUTER_STYLE_BLOCK = 5
 }
-export enum SELECTION_DIRECTION {
+export enum DIRECTION {
     LEFT = 0,
     RIGHT = 1
 }
@@ -401,7 +401,7 @@ export type Overlay = {
     container: HTMLDivElement;
 }
 export interface ISelection extends IRange {
-    direction: SELECTION_DIRECTION;
+    direction: DIRECTION;
 }
 export type CellNode = Node & { speedy: CellElement };
 export type CellHtmlElement = HTMLElement & { speedy: CellElement };
@@ -462,6 +462,19 @@ export class Row {
     constructor(args: IRowConstructor) {
         this.index = args.index;
         this.cells = args.cells;
+    }
+    findNearestCell(x: number) {
+        const cellDiffs = this.cells.map(c => {
+            const diff = x - c.cache.offset.x;
+            return {
+                diff: Math.abs(diff),
+                side: diff <= 0 ? DIRECTION.LEFT : DIRECTION.RIGHT,
+                cell: c
+            }
+        });
+        const orderedDiffs = cellDiffs.sort((a, b) => a.diff > b.diff ? 1 : a.diff == b.diff ? 0 : -1);
+        const min = orderedDiffs[0];
+        return min;
     }
     getLastCell() {
         return this.cells[this.cells.length-1];
@@ -1413,7 +1426,7 @@ export class StandoffEditorBlock implements IBlock {
             if (i > 0) {
                 row.previous = this.rows[i - 1];
             }
-            if (0 < i && i < len - 2) {
+            if (0 < i && i < len - 1) {
                 row.next = this.rows[i + 1];
             }
         }
