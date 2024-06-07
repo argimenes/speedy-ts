@@ -1,4 +1,4 @@
-import { BlockProperty, BlockType, Commit, GUID, IBlock, IBlockRelation } from "./standoff-editor-block";
+import { BlockProperty, BlockPropertyDto, BlockType, Commit, GUID, IBlock, IBlockPropertySchema, IBlockRelation } from "./standoff-editor-block";
 import { v4 as uuidv4 } from 'uuid';
 
 interface IMarginBlockConstructor {
@@ -13,6 +13,7 @@ export class MarginBlock implements IBlock {
     blocks: IBlock[];
     owner: IBlock;
     blockProperties: BlockProperty[];
+    blockSchemas: IBlockPropertySchema[];
     container: HTMLDivElement;
     relations: Record<string, IBlockRelation>;
     metadata: Record<string, any>;
@@ -26,7 +27,17 @@ export class MarginBlock implements IBlock {
         this.commitHandler = () => { };
         this.metadata = {};
         this.blockProperties =[];
+        this.blockSchemas = [];
         this.blocks=[];
+    }
+    addBlockProperties(properties: BlockPropertyDto[]) {
+        const self = this;
+        const props = properties.map(x => new BlockProperty({
+            type: x.type,
+            block: self,
+            schema: self.blockSchemas.find(x2 => x2.type == x.type) as IBlockPropertySchema })
+        );
+        this.blockProperties.push(...props);
     }
     applyBlockPropertyStyling() {
         this.blockProperties.forEach(p => {

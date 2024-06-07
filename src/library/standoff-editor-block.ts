@@ -69,13 +69,13 @@ export interface IBlockPropertyConstructor {
     id?: GUID;
     type: string;
     schema: IBlockPropertySchema;
-    block: StandoffEditorBlock;
+    block: IBlock;
 }
 export class BlockProperty {
     id: GUID;
     type: string;
     schema: IBlockPropertySchema;
-    block: StandoffEditorBlock; 
+    block: IBlock; 
     constructor({ id, type, block, schema }: IBlockPropertyConstructor) {
         this.id = id || uuidv4();
         this.type = type;
@@ -371,12 +371,14 @@ export interface IBlock {
     owner?: IBlock;
     type: BlockType;
     blockProperties: BlockProperty[];
+    addBlockProperties: (props: BlockPropertyDto[]) => void;
     blocks: IBlock[];
     updateView: () => void;
     getBlock: (id: GUID) => IBlock;
     container: HTMLDivElement;
     relations: Record<string, IBlockRelation>;
     addRelation: (name: string, targetId: string, skipCommit?: boolean) => void;
+    getRelation: (name: string) => IBlockRelation;
     removeRelation: (name: string, skipCommit?: boolean) => void;
     metadata: Record<string, any>;
     setFocus: () => void;
@@ -1157,7 +1159,9 @@ export class StandoffEditorBlock implements IBlock {
             type: this.type,
             text: this.getText(),
             standoffProperties: this.standoffProperties.map(x => x.serialize()),
-            blockProperties: this.getBlockPropertiesDto()
+            blockProperties: this.blockProperties.map(x => x.serialize()),
+            metadata: this.metadata,
+            relations: this.relations
         }
         const block = {} as StandoffEditorBlockDto;
         block.id = this.id;
