@@ -323,57 +323,36 @@ export class BlockManager implements IBlockManager {
                                     { sourceId: child.id, name: RelationType.has_parent, targetId: leftMargin.id },
                                 ]
                             });
+                            
+                            updateElement(leftMargin.container, {
+                                style: {
+                                    top: block.cache.offset.y + "px",
+                                    left: "-200px"
+                                }
+                            });
+                            child.addEOL();
+                            leftMargin.container.classList.add("block-window");
+                            child.container.classList.add("block-window");
                             child.addBlockProperties([
                                 { type: "block/alignment/left" }
                             ]);
                             leftMargin.addBlockProperties([
                                 { type: "block/marginalia/left" }
                             ]);
+                            child.applyBlockPropertyStyling();
                             leftMargin.applyBlockPropertyStyling();
-                            updateElement(leftMargin.container, {
-                                style: {
-                                    top: block.cache.offset.y + "px"
-                                }
-                            });
-                            child.addEOL();
-                            child.container.classList.add("block-window");
                             block.container.parentElement?.appendChild(leftMargin.container);
                             leftMargin.container.appendChild(child.container);
                             manager.blocks.push(leftMargin);
                             manager.blocks.push(child);
-                            
-                        }
-                        const leftMarginEdge = block.getRelation(RelationType.has_left_margin);
-                        if (!leftMarginEdge) {
-                            const leftMargin = manager.createStandoffEditorBlock();
-                            manager.batchRelate({
-                                toAdd: [
-                                    { sourceId: leftMargin.id, name: RelationType.has_left_margin_parent, targetId: block.id },
-                                    { sourceId: block.id, name: RelationType.has_left_margin, targetId: leftMargin.id },
-                                ]
-                            });
-                            manager.blocks.push(leftMargin);
-                            updateElement(leftMargin.container, {
-                                style: {
-                                    top: block.cache.offset.y + "px"
-                                }
-                            });
-                            block.container.parentElement?.appendChild(leftMargin.container);
-                            leftMargin.container.classList.add("block-window");
-                            leftMargin.addBlockProperties([
-                                { type: "block/marginalia/left" },
-                                { type: "block/alignment/left" },
-                            ]);
-                            leftMargin.applyBlockPropertyStyling();
-                            leftMargin.addEOL();
-                            leftMargin.setCaret(0, CARET.LEFT);
-                            leftMargin.setFocus();
-                            
+                            child.setCaret(0, CARET.LEFT);
+                            manager.setBlockFocus(child);
+                            return;
                         } else {
-                            const leftMargin = manager.getBlock(leftMarginEdge.targetId) as StandoffEditorBlock;
-                            if (!leftMargin) return;
-                            leftMargin.setCaret(0, CARET.LEFT);
-                            leftMargin.setFocus();
+                            const childEdge = leftMargin.getRelation(RelationType.has_first_child);
+                            const child = manager.getBlock(childEdge.targetId) as StandoffEditorBlock;
+                            child.setCaret(0, CARET.LEFT);
+                            manager.setBlockFocus(child);
                         }
                     }
                 }
@@ -1406,9 +1385,12 @@ export class BlockManager implements IBlockManager {
         });
     }
     createMarginBlock() {
+        const blockSchemas = this.getBlockSchemas();
         const block = new MarginBlock({
             owner: this
         });
+        block.setBlockSchemas(blockSchemas);
+        block.applyBlockPropertyStyling();
         this.commit({
             redo: {
                 id: this.id,

@@ -30,6 +30,9 @@ export class MarginBlock implements IBlock {
         this.blockSchemas = [];
         this.blocks=[];
     }
+    setBlockSchemas(schemas: IBlockPropertySchema[]) {
+        this.blockSchemas.push(...schemas);
+    }
     addBlockProperties(properties: BlockPropertyDto[]) {
         const self = this;
         const props = properties.map(x => new BlockProperty({
