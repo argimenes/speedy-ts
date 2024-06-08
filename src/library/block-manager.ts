@@ -5,6 +5,7 @@ import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 import { MarginBlock } from "./margin-block";
 import { MainListBlock } from "./main-list-block";
+import { IndentedListBlock } from "./indented-list-block";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -472,10 +473,11 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        const parent = manager.getParentOf(block.id);
+                        const parent = manager.getParentOf(block.id) as IndentedListBlock;
                         if (parent) return; // First child of another block.
                         const previous = manager.getPreviousOf(block.id);
                         if (!previous) return;
+                        const indentedList = manager.createIndentedListBlock();
                         /**
                          * Convert the has_previous into a has_parent, etc.
                          */
@@ -485,13 +487,19 @@ export class BlockManager implements IBlockManager {
                                 { sourceId: previous.id, name: RelationType.has_next, targetId: block.id },
                             ],
                             toAdd: [
-                                { sourceId: block.id, name: RelationType.has_parent, targetId: previous.id },
-                                { sourceId: previous.id, name: RelationType.has_first_child, targetId: block.id },
+                                { sourceId: block.id, name: RelationType.has_parent, targetId: indentedList.id },
+                                { sourceId: indentedList.id, name: RelationType.has_first_child, targetId: block.id },
+                                { sourceId: previous.id, name: RelationType.has_first_child, targetId: indentedList.id },
+                                { sourceId: indentedList.id, name: RelationType.has_parent, targetId: previous.id }
                             ]
                         });
-                        const level = block.metadata.indentLevel || 0 as number;
-                        block.metadata.indentLevel = level + 1;
-                        manager.renderIndent(block);
+                        indentedList.blocks.push(block);
+                        manager.blocks.push(indentedList);
+                        const level = indentedList.metadata.indentLevel || 0 as number;
+                        indentedList.metadata.indentLevel = level + 1;
+                        indentedList.container.appendChild(block.container);
+                        previous.container.parentElement?.appendChild(indentedList.container);
+                        manager.renderIndent(indentedList);
                     }
                 }
             },
@@ -1422,6 +1430,26 @@ export class BlockManager implements IBlockManager {
             undo: {
                 id: this.id,
                 name: "uncreateMainListBlock",
+                value: { id: block.id }
+            }
+        });
+        return block;
+    }
+    createIndentedListBlock() {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new IndentedListBlock({
+            owner: this
+        });
+        block.setBlockSchemas(blockSchemas);
+        block.applyBlockPropertyStyling();
+        this.commit({
+            redo: {
+                id: this.id,
+                name: "createIndentedListBlock"
+            },
+            undo: {
+                id: this.id,
+                name: "createIndentedListBlock",
                 value: { id: block.id }
             }
         });
