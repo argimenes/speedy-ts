@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { MarginBlock } from "./margin-block";
 import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
+import { nextHydrateContext } from "solid-js/types/render/hydration";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -446,14 +447,14 @@ export class BlockManager implements IBlockManager {
                             /**
                              * This should be done by fetching the container on the root MainList
                              */
-                            block.container.parentElement?.append(next.container);
+                            block.container.insertAdjacentElement("afterend", next.container);
                             next.setCaret(0, CARET.LEFT);
-                            next.setFocus();
+                            manager.setBlockFocus(next);
                         } else {
                             const next = manager.getBlock(nextEdge.targetId) as StandoffEditorBlock;
                             if (!next) return;
                             next.setCaret(0, CARET.LEFT);
-                            next.setFocus();
+                            manager.setBlockFocus(next);
                         }
                     }
                 }
@@ -481,16 +482,21 @@ export class BlockManager implements IBlockManager {
                         /**
                          * Convert the has_previous into a has_parent, etc.
                          */
+                        const next = manager.getNextOf(block.id) as IBlock;
                         manager.batchRelate({
                             toDelete: [
                                 { sourceId: block.id, name: RelationType.has_previous, targetId: previous.id },
                                 { sourceId: previous.id, name: RelationType.has_next, targetId: block.id },
+                                { sourceId: block.id, name: RelationType.has_next, targetId: next.id },
+                                { sourceId: next.id, name: RelationType.has_previous, targetId: block.id }
                             ],
                             toAdd: [
+                                { sourceId: previous.id, name: RelationType.has_first_child, targetId: indentedList.id },
+                                { sourceId: indentedList.id, name: RelationType.has_parent, targetId: previous.id },
+
                                 { sourceId: block.id, name: RelationType.has_parent, targetId: indentedList.id },
                                 { sourceId: indentedList.id, name: RelationType.has_first_child, targetId: block.id },
-                                { sourceId: previous.id, name: RelationType.has_first_child, targetId: indentedList.id },
-                                { sourceId: indentedList.id, name: RelationType.has_parent, targetId: previous.id }
+                                
                             ]
                         });
                         indentedList.blocks.push(block);
@@ -498,8 +504,10 @@ export class BlockManager implements IBlockManager {
                         const level = indentedList.metadata.indentLevel || 0 as number;
                         indentedList.metadata.indentLevel = level + 1;
                         indentedList.container.appendChild(block.container);
-                        previous.container.parentElement?.appendChild(indentedList.container);
+                        previous.container.insertAdjacentElement("afterend", indentedList.container);
                         manager.renderIndent(indentedList);
+                        block.setCaret(0, CARET.LEFT);
+                        manager.setBlockFocus(block);
                     }
                 }
             },
