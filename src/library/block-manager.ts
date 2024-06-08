@@ -1,8 +1,10 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { MarginBlock } from "./margin-block";
+import { AbstractBlock } from "./abstract-block";
 import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement, ISelection, Word, RowPosition, BlockPropertyDto, IBlockPropertySchema } from "./standoff-editor-block";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
+import { MarginBlock } from "./margin-block";
+import { MainListBlock } from "./main-list-block";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -245,13 +247,14 @@ export class BlockManager implements IBlockManager {
         let previousTime = 0;
         let pausedTime = 0;
         let paused = false;
-        const width = p.block.cache.offset.w;
-        const height = p.block.cache.offset.h;
+        const block = p.block as StandoffEditorBlock;
+        const width = block.cache.offset.w;
+        const height = block.cache.offset.h;
         const centerY = height / 2;
         const amplitude = height * 0.1;
         const speed = 150;
         const degrees = 45;
-        const cells = p.block.cells;
+        const cells = block.cells;
         const text = cells.map(c => {
             let w = c.cache.offset.w;
             const data = {
@@ -425,13 +428,13 @@ export class BlockManager implements IBlockManager {
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
                         const nextEdge = block.getRelation(RelationType.has_next);
+                        const parent = manager.getParentOf(block.id);
                         if (!nextEdge) {
                             const next = manager.createStandoffEditorBlock();
                             const blockData = block.serialize();
                             next.addBlockProperties(blockData.blockProperties || []);
                             next.applyBlockPropertyStyling();
                             manager.blocks.push(next);
-                            manager.container.append(next.container);
                             manager.batchRelate({
                                 toAdd: [
                                     { sourceId: block.id, name: RelationType.has_next, targetId: next.id },
@@ -439,6 +442,10 @@ export class BlockManager implements IBlockManager {
                                 ]
                             });
                             next.addEOL();
+                            /**
+                             * This should be done by fetching the container on the root MainList
+                             */
+                            block.container.parentElement?.append(next.container);
                             next.setCaret(0, CARET.LEFT);
                             next.setFocus();
                         } else {
@@ -802,11 +809,11 @@ export class BlockManager implements IBlockManager {
                             previous.setCaret(0, CARET.LEFT);
                             return;
                         }
-                        if (parent) {
-                            manager.setBlockFocus(parent);
-                            parent.setCaret(0, CARET.LEFT);
-                            return;
-                        }
+                        // if (parent) {
+                        //     manager.setBlockFocus(parent);
+                        //     parent.setCaret(0, CARET.LEFT);
+                        //     return;
+                        // }
                     }
                 }
             },
@@ -1037,13 +1044,13 @@ export class BlockManager implements IBlockManager {
         return this.getTargetBlock<StandoffEditorBlock>(blockId, RelationType.has_next);
     }
     getParentOf(blockId: string) {
-        return this.getTargetBlock<StandoffEditorBlock>(blockId, RelationType.has_parent);
+        return this.getTargetBlock<MainListBlock>(blockId, RelationType.has_parent) as MainListBlock;
     }
     getRightMarginOf(blockId: string) {
-        return this.getTargetBlock<MarginBlock>(blockId, RelationType.has_right_margin);
+        return this.getTargetBlock<MarginBlock>(blockId, RelationType.has_right_margin) as MarginBlock;
     }
     getLeftMarginOf(blockId: string) {
-        return this.getTargetBlock<MarginBlock>(blockId, RelationType.has_left_margin);
+        return this.getTargetBlock<MarginBlock>(blockId, RelationType.has_left_margin) as MarginBlock;
     }
     getLeftMarginParent(blockId: string) {
         return this.getTargetBlock<StandoffEditorBlock>(blockId, RelationType.has_left_margin_parent);
@@ -1337,11 +1344,11 @@ export class BlockManager implements IBlockManager {
     }
     loadDocument(doc: StandoffEditorBlockDto) {
         this.reset();
-        const structure = document.createElement("DIV") as HTMLDivElement;
         const paragraphs = doc.text.split(/\r?\n/);
+        const mainList = this.createMainListBlock();
         let start = 0;
         for (let i = 0; i < paragraphs.length; i ++) {
-            let block = this.createStandoffEditorBlock();
+            let textBlock = this.createStandoffEditorBlock();
             let text = paragraphs[i];
             let end = start + text.length + 1; // + 1 to account for the CR stripped from the text
             const props = doc.standoffProperties
@@ -1357,12 +1364,28 @@ export class BlockManager implements IBlockManager {
             if (i == 0) {
                 data = {...data, blockProperties: doc.blockProperties as any[] };
             }
-            block.bind(data);
-            block.addEOL();
-            structure.appendChild(block.container);
-            this.blocks.push(block);
+            textBlock.bind(data);
+            textBlock.addEOL();
+            mainList.container.appendChild(textBlock.container);
+            mainList.blocks.push(textBlock);
+            this.blocks.push(textBlock);
         }
-        this.container.appendChild(structure);
+        const firstChild = mainList.blocks[0];
+        const adds = [
+            { sourceId: mainList.id, name: RelationType.has_first_child, targetId: firstChild.id },
+            { sourceId: firstChild.id, name: RelationType.has_parent, targetId: mainList.id }
+        ];
+        if (paragraphs.length > 1) {
+            for (let i = 0; i < paragraphs.length; i ++) { 
+                // Setup previous/next relations between blocks.
+            }
+        }
+        this.batchRelate({
+            toAdd: adds
+        });
+        mainList.applyBlockPropertyStyling();
+        this.container.appendChild(mainList.container);
+        this.blocks.push(mainList);
         this.commit({
             redo: {
                 id: this.id,
@@ -1383,6 +1406,26 @@ export class BlockManager implements IBlockManager {
                 "margin-left": (level * defaultWidth) + "px"
             }
         });
+    }
+    createMainListBlock() {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new MainListBlock({
+            owner: this
+        });
+        block.setBlockSchemas(blockSchemas);
+        block.applyBlockPropertyStyling();
+        this.commit({
+            redo: {
+                id: this.id,
+                name: "createMainListBlock"
+            },
+            undo: {
+                id: this.id,
+                name: "uncreateMainListBlock",
+                value: { id: block.id }
+            }
+        });
+        return block;
     }
     createMarginBlock() {
         const blockSchemas = this.getBlockSchemas();

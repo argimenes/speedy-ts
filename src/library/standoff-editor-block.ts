@@ -2,6 +2,7 @@ import _ from "underscore";
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
 import { v4 as uuidv4 } from 'uuid';
 import { updateElement } from "./svg";
+import { AbstractBlock, IAbstractBlockConstructor } from "./abstract-block";
 
 export enum CARET {
     LEFT = 0,
@@ -469,10 +470,7 @@ export type InputAction = {
     description?: string;           // "Copies text in the selection for pasting elsewhere."
     handler: BindingHandler;        // The function that carries out the task.
 }
-export interface IStandoffEditorBlockConstructor {
-    id?: GUID,
-    owner: IBlockManager,
-    container?: HTMLDivElement
+export interface IStandoffEditorBlockConstructor extends IAbstractBlockConstructor {
 }
 export interface IRowConstructor {
     index: number;
@@ -504,12 +502,9 @@ export class Row {
         return this.cells[this.cells.length-1];
     }
 }
-export class StandoffEditorBlock implements IBlock {
-    id: GUID;
+export class StandoffEditorBlock extends AbstractBlock {
     type: BlockType;
-    owner: IBlockManager;
     relations: Record<string, IBlockRelation>;
-    container: HTMLDivElement;
     cells: Cell[];
     rows: Row[];
     cache: {
@@ -521,14 +516,12 @@ export class StandoffEditorBlock implements IBlock {
         containerWidth: number;
     };
     standoffProperties: StandoffProperty[];
-    blockProperties: BlockProperty[];
     /**
      * This will keep track of the last couple of key-combinations entered. The main purpose
      * is for triggering two-part bindings, such as 'CTRL-K, CTRL-D'.
      */
     inputBuffer: IKeyboardInput[];
     schemas: IStandoffPropertySchema[];
-    blockSchemas: IBlockPropertySchema[];
     /**
      * Not unlike a StandoffProperty, a Selection denotes a highlighted range of text. Unlike a StandoffProperty,
      * it is not intended to be committed to the document, but represents a transient intention.
@@ -554,14 +547,11 @@ export class StandoffEditorBlock implements IBlock {
     overlays: Overlay[];
     inputEvents: InputEvent[];
     inputActions: InputAction[];
-    commitHandler: (commit: Commit) => void;
     modes: string[];
     blocks: IBlock[];
     constructor(args: IStandoffEditorBlockConstructor) {
-        this.id = args.id || uuidv4();
-        this.owner = args.owner;
+        super(args);
         this.type = BlockType.StandoffEditor;
-        this.container = args.container || (document.createElement("DIV") as HTMLDivElement);
         updateElement(this.container, {
             attribute: {
                 contenteditable: "true"
@@ -590,15 +580,13 @@ export class StandoffEditorBlock implements IBlock {
         this.rows = [];
         this.metadata = {};
         this.schemas = [];
-        this.blockSchemas = [];
         this.standoffProperties = [];
-        this.blockProperties = [];
         this.selections = [];
         this.inputBuffer = [];
         this.overlays = [];
         this.inputEvents = [];
         this.inputActions = [];
-        this.commitHandler = () => { };
+        
         this.modes = ["default"];
         this.attachBindings();
     }
@@ -699,27 +687,6 @@ export class StandoffEditorBlock implements IBlock {
         }
         return results;
     }
-    removeRelation(name: string, skipCommit?: boolean) {
-        const relation = this.getRelation(name);
-        delete this.relations[name];
-        if (!skipCommit) {
-            this.commit({
-                redo: {
-                    id: this.id,
-                    name: "removeRelation",
-                    value: { name }
-                },
-                undo: {
-                    id: this.id,
-                    name: "addRelation",
-                    value: {
-                        name,
-                        targetId: relation.targetId
-                    }
-                }
-            });
-        }
-    }
     getOrSetOverlay(name: string) {
         const overlay = this.overlays.find(x=> x.name == name);
         if (overlay) return overlay;
@@ -753,31 +720,6 @@ export class StandoffEditorBlock implements IBlock {
         const o = this.overlays.find(x => x.name == name);
         if (!o) return;
         o.container.remove();
-    }
-    setFocus() {
-        /**
-         * Sets the window focus on the block node.
-         * Also sets up the caret/cursor if needed (?).
-         */
-        this.container.focus();
-    }
-    getRelation(type: string) {
-        return this.relations[type];
-    }
-    setRelation(type: string, targetId: string) {
-        this.relations[type] = { type, sourceId: this.id, targetId };
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "setRelation",
-                value: { type, targetId }
-            },
-            undo: {
-                id: this.id,
-                name: "removeRelation",
-                value: { name: type }
-            }
-        })
     }
     private attachBindings() {
         /*
@@ -1030,14 +972,6 @@ export class StandoffEditorBlock implements IBlock {
     addStandoffProperties(props: StandoffProperty[]) {
         
     }
-    getBlock(id: GUID) {
-        return this.blocks.find(x=> x.id == id) as IBlock;
-    }
-    addBlockProperties(properties: BlockPropertyDto[]) {
-        const self = this;
-        const props = properties.map(x => new BlockProperty({ type: x.type, block: self, schema: self.blockSchemas.find(x2 => x2.type == x.type) as IBlockPropertySchema }));
-        this.blockProperties.push(...props);
-    }
     applyStylingAndRenderingToNewCells(anchor: Cell, cells: Cell[]) {
         const enclosing = this.getEnclosingProperties(anchor);
         cells.forEach(c => {
@@ -1163,42 +1097,12 @@ export class StandoffEditorBlock implements IBlock {
             metadata: this.metadata,
             relations: this.relations
         }
-        const block = {} as StandoffEditorBlockDto;
-        block.id = this.id;
-        block.text = this.getText();
-        block.standoffProperties = this.getStandoffPropertiesDto();
-        block.blockProperties = this.getBlockPropertiesDto();
-        return block;
-    }
-    private getStandoffPropertiesDto() {
-        if (!this.standoffProperties) return [];
-        const props = this.standoffProperties.map(x => ({
-            id: x.id,
-            type: x.type,
-            start: x.start.index,
-            end: x.end.index,
-            value: x.value
-        }) as StandoffPropertyDto);
-        return props;
-    }
-    private getBlockPropertiesDto() {
-        if (!this.blockProperties) return [];
-        const props = this.blockProperties.map(x => ({
-            id: x.id,
-            type: x.type
-        }) as BlockPropertyDto);
-        return props;
     }
     getText() {
         return this.cells.map(c => c.text).join("");
     }
     applyStandoffPropertyStyling() {
         this.standoffProperties.forEach(p => {
-            p.applyStyling();
-        });
-    }
-    applyBlockPropertyStyling() {
-        this.blockProperties.forEach(p => {
             p.applyStyling();
         });
     }
@@ -1334,9 +1238,6 @@ export class StandoffEditorBlock implements IBlock {
                 value: { index, offset }
             }
         });
-    }
-    private commit(msg: Commit) {
-        this.commitHandler(msg);
     }
     private shiftPropertyBoundaries(cell: Cell) {
         this.shiftPropertyStartNodesRight(cell);

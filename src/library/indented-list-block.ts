@@ -1,7 +1,7 @@
-import { AbstractBlock, IAbstractBlockConstructor  } from "./abstract-block"
+import { AbstractBlock, IAbstractBlockConstructor } from "./abstract-block";
 import { IBlock } from "./standoff-editor-block";
 
-export class MarginBlock extends AbstractBlock {
+export class IndentedListBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
     }
@@ -12,6 +12,6 @@ export class MarginBlock extends AbstractBlock {
         throw new Error("Method not implemented.");
     }
     destroy(): void {
-        throw new Error("Method not implemented.");
+        this.container.innerHTML = "";
     }
 }
