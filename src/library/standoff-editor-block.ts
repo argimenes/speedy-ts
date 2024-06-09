@@ -353,18 +353,37 @@ export enum ActionKey {
     ENTER,
     ESC
 }
+export interface IBlockRelationDto extends IBlockRelation {}
+export interface IBlockDto {
+    id: GUID;
+    type: BlockType;
+    relations: Record<string, IBlockRelationDto>;
+    blocks: IBlockDto[];
+    metadata: Record<string, any>;
+    blockProperties: BlockPropertyDto[];
+}
+export interface IStandoffEditorBlockDto extends IBlockDto {
+    standoffProperties: IStandoffPropertyDto[];
+}
+export interface IDocumentDto {
+    id: GUID;
+    name: string;
+    blocks: IBlockDto[];
+    metadata: Record<string, any>;
+}
 
 export enum BlockType {
-    Outliner = "outliner-block",
-    StandoffEditor = "standoff-editor-block",
-    HTMLEditor = "html-editor-block",
-    IFrame = "iframe-block",
-    HTML = "html-block",
-    PDF = "pdf-block",
-    Grid = "grid-block",
+    MainListBlock = "main-list-block",
+    IndentedListBlock = "indented-list-block",
+    StandoffEditorBlock = "standoff-editor-block",
+    HTMLEditorBlock = "html-editor-block",
+    IFrameBlock = "iframe-block",
+    HTMLBlock = "html-block",
+    PDFBlock = "pdf-block",
+    GridBlock = "grid-block",
     MarginBlock = "margin-block",
-    Image = "image-block",
-    Video = "video-block"
+    ImageBlock = "image-block",
+    VideoBlock = "video-block"
 }
 
 export interface IBlock {
@@ -551,7 +570,7 @@ export class StandoffEditorBlock extends AbstractBlock {
     blocks: IBlock[];
     constructor(args: IStandoffEditorBlockConstructor) {
         super(args);
-        this.type = BlockType.StandoffEditor;
+        this.type = BlockType.StandoffEditorBlock;
         updateElement(this.container, {
             attribute: {
                 contenteditable: "true"

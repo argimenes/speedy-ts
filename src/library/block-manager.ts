@@ -1,6 +1,6 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
 import { AbstractBlock } from "./abstract-block";
-import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement, ISelection, Word, RowPosition, BlockPropertyDto, IBlockPropertySchema } from "./standoff-editor-block";
+import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement, ISelection, Word, RowPosition, BlockPropertyDto, IBlockPropertySchema, IDocumentDto } from "./standoff-editor-block";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 import { MarginBlock } from "./margin-block";
@@ -67,7 +67,7 @@ export class BlockManager implements IBlockManager {
     blockSchemas: IBlockPropertySchema[];
     constructor(props?: IBlockManagerConstructor) {
         this.id = props?.id || uuidv4();
-        this.type = BlockType.Outliner;
+        this.type = BlockType.IndentedListBlock;
         this.container = props?.container || document.createElement("DIV") as HTMLDivElement;
         this.relations = {};
         this.blocks = [this];
@@ -1219,7 +1219,7 @@ export class BlockManager implements IBlockManager {
     }
     deserializeBlock(data: any) {
         switch (data.type) {
-            case BlockType.StandoffEditor: {
+            case BlockType.StandoffEditorBlock: {
                 const block = this.createStandoffEditorBlock();
                 block.bind(data);
                 return block;
@@ -1358,6 +1358,29 @@ export class BlockManager implements IBlockManager {
         this.commits.push(commit);
         this.pointer++;
     }
+    testLoadDocument(doc: IDocumentDto) {
+        this.id = doc.id;
+        const self = this;
+        doc.blocks.forEach(b => {
+            if (b.type == BlockType.MainListBlock) {
+                const block = self.createMainListBlock();
+                block.bind(b);
+                self.blocks.push(block);
+            }
+            if (b.type == BlockType.MarginBlock) {
+                const block = self.createMarginBlock();
+                self.blocks.push(block);
+            }
+            if (b.type == BlockType.IndentedListBlock) {
+                const block = self.createIndentedListBlock();
+                self.blocks.push(block);
+            }
+            if (b.type == BlockType.StandoffEditorBlock) {
+                const block = self.createStandoffEditorBlock();
+                self.blocks.push(block);
+            }
+        });
+    }
     loadDocument(doc: StandoffEditorBlockDto) {
         this.reset();
         const paragraphs = doc.text.split(/\r?\n/);
@@ -1457,7 +1480,7 @@ export class BlockManager implements IBlockManager {
             },
             undo: {
                 id: this.id,
-                name: "createIndentedListBlock",
+                name: "uncreateIndentedListBlock",
                 value: { id: block.id }
             }
         });
