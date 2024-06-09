@@ -363,7 +363,7 @@ export interface IBlockDto {
     blockProperties: BlockPropertyDto[];
 }
 export interface IStandoffEditorBlockDto extends IBlockDto {
-    standoffProperties: IStandoffPropertyDto[];
+    standoffProperties: StandoffPropertyDto[];
 }
 export interface IDocumentDto {
     id: GUID;
