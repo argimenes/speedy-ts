@@ -12,7 +12,11 @@ export class MainListBlock extends AbstractBlock {
     }
     bind(data: IMainListBlockDto) {
         this.id = data.id;
-        
+        this.addBlockProperties(data.blockProperties);
+        this.applyBlockPropertyStyling();
+        this.blocks.forEach(b => {
+
+        });
     }
     serialize(): {} {
         throw new Error("Method not implemented.");

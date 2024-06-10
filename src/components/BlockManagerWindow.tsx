@@ -1,6 +1,6 @@
 import { Component } from "solid-js"
 import { BlockManager, RelationType } from "../library/block-manager"
-import { BlockType, IDocumentDto, StandoffEditorBlockDto } from "../library/standoff-editor-block"
+import { BlockType, IBlockDto, StandoffEditorBlockDto } from "../library/standoff-editor-block"
 import { v4 as uuidv4 } from 'uuid';
 import { first } from "underscore";
 
@@ -28,16 +28,15 @@ export const BlockManagerWindow : Component<Props> = (props) => {
         const secondTextBlockId = uuidv4();
         const marginBlockId = uuidv4();
         const marginFirstTextBlockId = uuidv4();
-        const nextDoc: IDocumentDto = {
+        const nextDoc: IBlockDto = {
             id: documentId,
-            name: "Test Document",
+            type: BlockType.RootBlock,
             blocks: [
                 {
                     id: mainListBlockId,
                     type: BlockType.MainListBlock,
                     relations: [
-                        { sourceId: mainListBlockId, name: RelationType.has_first_child, targetId: firstTextBlockId },
-                        { sourceId: firstTextBlockId, name: RelationType.has_next, targetId: secondTextBlockId }
+                        { sourceId: mainListBlockId, name: RelationType.has_first_child, targetId: firstTextBlockId }
                     ],
                     blocks: [
                         {
@@ -55,6 +54,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                 { type: "block/alignment/left" }
                             ],
                             relations: [
+                                { sourceId: firstTextBlockId, name: RelationType.has_next, targetId: secondTextBlockId },
                                 { sourceId: firstTextBlockId, name: RelationType.has_parent, targetId: mainListBlockId }  
                             ],
                             blocks: [
@@ -106,7 +106,8 @@ export const BlockManagerWindow : Component<Props> = (props) => {
         };
         const manager = new BlockManager();
         manager.container = el;
-        manager.loadDocument(testDoc);
+        manager.testLoadDocument(nextDoc);
+        // manager.loadDocument(testDoc);
         console.log({ manager, block: manager.blocks[0] })
     }
     return (

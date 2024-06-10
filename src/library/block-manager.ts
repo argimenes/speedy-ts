@@ -1,12 +1,14 @@
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
-import { AbstractBlock } from "./abstract-block";
-import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock, IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, DIRECTION, StandoffEditorBlock, StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, CellHtmlElement, ISelection, Word, RowPosition, BlockPropertyDto, IBlockPropertySchema, IDocumentDto } from "./standoff-editor-block";
+import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock,
+    IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, DIRECTION, StandoffEditorBlock,
+    StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, ISelection, Word, RowPosition,
+    BlockPropertyDto, IBlockPropertySchema, 
+    IBlockDto} from "./standoff-editor-block";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 import { MarginBlock } from "./margin-block";
 import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
-import { nextHydrateContext } from "solid-js/types/render/hydration";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -1358,13 +1360,13 @@ export class BlockManager implements IBlockManager {
         this.commits.push(commit);
         this.pointer++;
     }
-    testLoadDocument(doc: IDocumentDto) {
-        this.id = doc.id || uuidv4();
+    recursivelyBuildBlocks(container: HTMLDivElement, blocks: IBlockDto[]) {
         const self = this;
-        doc.blocks.forEach(b => {
+        blocks.forEach(b => {
             if (b.type == BlockType.MainListBlock) {
                 const block = self.createMainListBlock();
                 block.bind(b);
+                container.appendChild(block.container);
                 self.blocks.push(block);
             }
             if (b.type == BlockType.MarginBlock) {
@@ -1380,6 +1382,12 @@ export class BlockManager implements IBlockManager {
                 self.blocks.push(block);
             }
         });
+    }
+    testLoadDocument(doc: IBlockDto) {
+        const self = this;
+        this.id = doc.id || uuidv4();
+        const container = document.createElement("DIV") as HTMLDivElement;
+        this.recursivelyBuildBlocks(container, doc.blocks);
     }
     loadDocument(doc: StandoffEditorBlockDto) {
         this.reset();

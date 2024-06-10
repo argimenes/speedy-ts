@@ -357,7 +357,7 @@ export interface IBlockRelationDto extends IBlockRelation {}
 export interface IBlockDto {
     id: GUID;
     type: BlockType;
-    relations: Record<string, IBlockRelationDto>;
+    relations?: IBlockRelationDto[];
     blocks: IBlockDto[];
     metadata: Record<string, any>;
     blockProperties: BlockPropertyDto[];
@@ -365,14 +365,9 @@ export interface IBlockDto {
 export interface IStandoffEditorBlockDto extends IBlockDto {
     standoffProperties: StandoffPropertyDto[];
 }
-export interface IDocumentDto {
-    id?: GUID;
-    name?: string;
-    blocks: IBlockDto[];
-    metadata?: Record<string, any>;
-}
 
 export enum BlockType {
+    RootBlock = "root-block",
     MainListBlock = "main-list-block",
     IndentedListBlock = "indented-list-block",
     StandoffEditorBlock = "standoff-editor-block",
