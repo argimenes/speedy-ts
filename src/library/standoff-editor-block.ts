@@ -366,10 +366,10 @@ export interface IStandoffEditorBlockDto extends IBlockDto {
     standoffProperties: StandoffPropertyDto[];
 }
 export interface IDocumentDto {
-    id: GUID;
-    name: string;
+    id?: GUID;
+    name?: string;
     blocks: IBlockDto[];
-    metadata: Record<string, any>;
+    metadata?: Record<string, any>;
 }
 
 export enum BlockType {

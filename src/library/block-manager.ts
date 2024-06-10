@@ -24,7 +24,7 @@ export interface IBatchRelateArgs {
     toAdd?: IEdge[];
 }
 
-const RelationType = {
+export const RelationType = {
     "has_next":"has_next",
     "has_previous":"has_previous",
     "has_parent":"has_parent",
@@ -1359,7 +1359,7 @@ export class BlockManager implements IBlockManager {
         this.pointer++;
     }
     testLoadDocument(doc: IDocumentDto) {
-        this.id = doc.id;
+        this.id = doc.id || uuidv4();
         const self = this;
         doc.blocks.forEach(b => {
             if (b.type == BlockType.MainListBlock) {
