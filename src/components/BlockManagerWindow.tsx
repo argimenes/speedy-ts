@@ -35,9 +35,10 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                 {
                     id: mainListBlockId,
                     type: BlockType.MainListBlock,
-                    relations: {
-                        [RelationType.has_first_child]: { sourceId: mainListBlockId, name: RelationType.has_first_child, targetId: firstTextBlockId }
-                    },
+                    relations: [
+                        { sourceId: mainListBlockId, name: RelationType.has_first_child, targetId: firstTextBlockId },
+                        { sourceId: firstTextBlockId, name: RelationType.has_next, targetId: secondTextBlockId }
+                    ],
                     blocks: [
                         {
                             id: firstTextBlockId,
@@ -53,18 +54,17 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             blockProperties: [
                                 { type: "block/alignment/left" }
                             ],
-                            relations: {
-                                [RelationType.has_parent]: { sourceId: firstTextBlockId, name: RelationType.has_parent, targetId: mainListBlockId },
-                                [RelationType.has_next]: { sourceId: firstTextBlockId, name: RelationType.has_next, targetId: secondTextBlockId },
-                            },
+                            relations: [
+                                { sourceId: firstTextBlockId, name: RelationType.has_parent, targetId: mainListBlockId }  
+                            ],
                             blocks: [
                                 {
                                     id: marginBlockId,
                                     type: BlockType.MarginBlock,
-                                    relations: {
-                                        [RelationType.has_left_margin_parent]: { sourceId: marginBlockId, name: RelationType.has_left_margin_parent, targetId: firstTextBlockId },
-                                        [RelationType.has_first_child]: { sourceId: marginBlockId, name: RelationType.has_first_child, targetId: marginFirstTextBlockId }
-                                    },
+                                    relations: [
+                                        { sourceId: marginBlockId, name: RelationType.has_left_margin_parent, targetId: firstTextBlockId },
+                                        { sourceId: marginBlockId, name: RelationType.has_first_child, targetId: marginFirstTextBlockId }
+                                    ],
                                     blocks: [
                                         {
                                             id: marginFirstTextBlockId,
@@ -76,9 +76,9 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                             blockProperties: [
                                                 { type: "block/alignment/left" }
                                             ],
-                                            relations: {
-                                                [RelationType.has_parent]: { sourceId: marginFirstTextBlockId, name: RelationType.has_parent, targetId: marginBlockId },
-                                            }
+                                            relations: [
+                                                { sourceId: marginFirstTextBlockId, name: RelationType.has_parent, targetId: marginBlockId }
+                                            ]
                                         } as any
                                     ]
                                 }
