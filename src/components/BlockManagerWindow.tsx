@@ -39,30 +39,11 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                 { sourceId: marginFirstTextBlockId, name: RelationType.has_parent, targetId: marginBlockId },
                 { sourceId: secondTextBlockId, name: RelationType.has_previous, targetId: firstTextBlockId },
             ],
-            blocks: [
+            children: [
                 {
-                    id: mainListBlockId,
                     type: BlockType.MainListBlock,
-                    blocks: [
+                    children: [
                         {
-                            id: marginBlockId,
-                            type: BlockType.MarginBlock,
-                            blocks: [
-                                {
-                                    id: marginFirstTextBlockId,
-                                    type: BlockType.StandoffEditorBlock,
-                                    text: "Left marginalia ...",
-                                    standoffProperties: [
-                                        { type: "style/italics", start: 7, end: 12 }
-                                    ],
-                                    blockProperties: [
-                                        { type: "block/alignment/left" }
-                                    ]
-                                }
-                            ]
-                        },
-                        {
-                            id: firstTextBlockId,
                             type: BlockType.StandoffEditorBlock,
                             text: "Once upon a midnight dreary ...",
                             standoffProperties: [
@@ -74,19 +55,60 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             ],
                             blockProperties: [
                                 { type: "block/alignment/left" }
-                            ]
+                            ],
+                            relation: {
+                                hasLeftMargin: {
+                                    type: BlockType.MarginBlock,
+                                    children: [
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Left margin - line 1 ..."
+                                        },
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Left margin - line 2 ..."
+                                        }
+                                    ]
+                                }
+                            }
                         } as any,
                         {
-                            id: secondTextBlockId,
                             type: BlockType.StandoffEditorBlock,
                             text: "While I pondered weak and weary ...",
                             standoffProperties: [
                                 { type: "style/italics", start: 7, end: 12 },
                                 { type: "style/bold", start: 10, end: 16 }
-
                             ],
                             blockProperties: [
                                 { type: "block/alignment/right" }
+                            ]
+                        },
+                        {
+                            type: BlockType.IndentedListBlock,
+                            children: [
+                                {
+                                    type: BlockType.StandoffEditorBlock,
+                                    text: "List item 1.1",
+                                    children: [
+                                        {
+                                            type: BlockType.IndentedListBlock,
+                                            children: [
+                                                {
+                                                    type: BlockType.StandoffEditorBlock,
+                                                    text: "List item 1.1.1"
+                                                },
+                                                {
+                                                    type: BlockType.StandoffEditorBlock,
+                                                    text: "List item 1.1.2"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    type: BlockType.StandoffEditorBlock,
+                                    text: "List item 2"
+                                }
                             ]
                         }
                     ]

@@ -1387,7 +1387,7 @@ export class BlockManager implements IBlockManager {
         const self = this;
         this.id = doc.id || uuidv4();
         const container = document.createElement("DIV") as HTMLDivElement;
-        this.recursivelyBuildBlocks(container, doc.blocks);
+        this.recursivelyBuildBlocks(container, doc.children);
     }
     loadDocument(doc: StandoffEditorBlockDto) {
         this.reset();

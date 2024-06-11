@@ -355,10 +355,10 @@ export enum ActionKey {
 }
 export interface IBlockRelationDto extends IBlockRelation {}
 export interface IBlockDto {
-    id: GUID;
+    id?: GUID;
     type: BlockType;
     relations?: IBlockRelationDto[];
-    blocks: IBlockDto[];
+    children: IBlockDto[];
     metadata?: Record<string, any>;
     blockProperties?: BlockPropertyDto[];
 }
