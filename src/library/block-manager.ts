@@ -1362,7 +1362,9 @@ export class BlockManager implements IBlockManager {
     }
     recursivelyBuildBlocks(container: HTMLDivElement, blocks: IBlockDto[]) {
         const self = this;
-        blocks.forEach(b => {
+        const len = blocks.length;
+        const max = len - 1;
+        blocks.forEach((b, i) => {
             if (b.type == BlockType.MainListBlock) {
                 const block = self.createMainListBlock();
                 block.bind(b);
@@ -1379,6 +1381,11 @@ export class BlockManager implements IBlockManager {
             }
             if (b.type == BlockType.StandoffEditorBlock) {
                 const block = self.createStandoffEditorBlock();
+                if (i > 0) {
+                    let previous = self.blocks[i-1];
+                    block.previous = previous;
+                    previous.next = block;
+                }
                 self.blocks.push(block);
             }
         });
