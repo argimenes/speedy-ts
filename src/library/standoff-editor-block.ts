@@ -359,8 +359,8 @@ export interface IBlockDto {
     type: BlockType;
     relations?: IBlockRelationDto[];
     blocks: IBlockDto[];
-    metadata: Record<string, any>;
-    blockProperties: BlockPropertyDto[];
+    metadata?: Record<string, any>;
+    blockProperties?: BlockPropertyDto[];
 }
 export interface IStandoffEditorBlockDto extends IBlockDto {
     standoffProperties: StandoffPropertyDto[];
@@ -406,7 +406,7 @@ export interface IBlockManager extends IBlock {
 }
 
 export interface IBlockRelation {
-    type: string;
+    name: string;
     sourceId: GUID;
     targetId: GUID;
 }

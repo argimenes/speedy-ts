@@ -2,7 +2,6 @@ import { Component } from "solid-js"
 import { BlockManager, RelationType } from "../library/block-manager"
 import { BlockType, IBlockDto, StandoffEditorBlockDto } from "../library/standoff-editor-block"
 import { v4 as uuidv4 } from 'uuid';
-import { first } from "underscore";
 
 type Props = {
     
@@ -31,14 +30,37 @@ export const BlockManagerWindow : Component<Props> = (props) => {
         const nextDoc: IBlockDto = {
             id: documentId,
             type: BlockType.RootBlock,
+            relations: [
+                { sourceId: mainListBlockId, name: RelationType.has_first_child, targetId: firstTextBlockId },
+                { sourceId: firstTextBlockId, name: RelationType.has_parent, targetId: mainListBlockId },
+                { sourceId: firstTextBlockId, name: RelationType.has_next, targetId: secondTextBlockId },
+                { sourceId: marginBlockId, name: RelationType.has_left_margin_parent, targetId: firstTextBlockId },
+                { sourceId: marginBlockId, name: RelationType.has_first_child, targetId: marginFirstTextBlockId },
+                { sourceId: marginFirstTextBlockId, name: RelationType.has_parent, targetId: marginBlockId },
+                { sourceId: secondTextBlockId, name: RelationType.has_previous, targetId: firstTextBlockId },
+            ],
             blocks: [
                 {
                     id: mainListBlockId,
                     type: BlockType.MainListBlock,
-                    relations: [
-                        { sourceId: mainListBlockId, name: RelationType.has_first_child, targetId: firstTextBlockId }
-                    ],
                     blocks: [
+                        {
+                            id: marginBlockId,
+                            type: BlockType.MarginBlock,
+                            blocks: [
+                                {
+                                    id: marginFirstTextBlockId,
+                                    type: BlockType.StandoffEditorBlock,
+                                    text: "Left marginalia ...",
+                                    standoffProperties: [
+                                        { type: "style/italics", start: 7, end: 12 }
+                                    ],
+                                    blockProperties: [
+                                        { type: "block/alignment/left" }
+                                    ]
+                                }
+                            ]
+                        },
                         {
                             id: firstTextBlockId,
                             type: BlockType.StandoffEditorBlock,
@@ -52,36 +74,6 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             ],
                             blockProperties: [
                                 { type: "block/alignment/left" }
-                            ],
-                            relations: [
-                                { sourceId: firstTextBlockId, name: RelationType.has_next, targetId: secondTextBlockId },
-                                { sourceId: firstTextBlockId, name: RelationType.has_parent, targetId: mainListBlockId }  
-                            ],
-                            blocks: [
-                                {
-                                    id: marginBlockId,
-                                    type: BlockType.MarginBlock,
-                                    relations: [
-                                        { sourceId: marginBlockId, name: RelationType.has_left_margin_parent, targetId: firstTextBlockId },
-                                        { sourceId: marginBlockId, name: RelationType.has_first_child, targetId: marginFirstTextBlockId }
-                                    ],
-                                    blocks: [
-                                        {
-                                            id: marginFirstTextBlockId,
-                                            type: BlockType.StandoffEditorBlock,
-                                            text: "Left marginalia ...",
-                                            standoffProperties: [
-                                                { type: "style/italics", start: 7, end: 12 }
-                                            ],
-                                            blockProperties: [
-                                                { type: "block/alignment/left" }
-                                            ],
-                                            relations: [
-                                                { sourceId: marginFirstTextBlockId, name: RelationType.has_parent, targetId: marginBlockId }
-                                            ]
-                                        } as any
-                                    ]
-                                }
                             ]
                         } as any,
                         {
@@ -95,13 +87,10 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             ],
                             blockProperties: [
                                 { type: "block/alignment/right" }
-                            ],
-                            relations: {
-                                [RelationType.has_previous]: { sourceId: secondTextBlockId, name: RelationType.has_previous, targetId: firstTextBlockId },
-                            }
-                        } as any
+                            ]
+                        }
                     ]
-                } as any
+                }
             ]
         };
         const manager = new BlockManager();
