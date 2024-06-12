@@ -1425,16 +1425,19 @@ export class BlockManager implements IBlockManager {
         const mainBlock = this.createMainListBlock();
         mainBlock.bind(dto);
         this.blocks.push(mainBlock);
+        let blocks: IBlock[] = [];
         if (dto.children) {
             const len = dto.children.length;
             for (let i = 0; i <= len - 1; i++) {
                 let block = this.recursivelyBuildBlock(container, dto.children[i]) as IBlock;
                 console.log("testLoadDocument", { block });
+                blocks.push(block);
+                if (i > 0) {
+                    let previous = blocks[i - 1];
+                    previous.relation.next = block;
+                    block.relation.previous = previous;
+                }
             }
-        }
-        const start = this.blocks[0];
-        if (start.children) {
-            
         }
         container.appendChild(mainBlock.container);
         this.container.appendChild(container);

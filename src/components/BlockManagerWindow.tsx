@@ -36,6 +36,18 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                     ],
                     blockProperties: [
                         { type: "block/alignment/left" }
+                    ]
+                    
+                } as IStandoffEditorBlockDto,
+                {
+                    type: BlockType.StandoffEditorBlock,
+                    text: "While I pondered weak and weary ...",
+                    standoffProperties: [
+                        { type: "style/italics", start: 7, end: 12 },
+                        { type: "style/bold", start: 10, end: 16 }
+                    ],
+                    blockProperties: [
+                        { type: "block/alignment/right" }
                     ],
                     relation: {
                         leftMargin: {
@@ -54,17 +66,6 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             ]
                         }
                     }
-                } as IStandoffEditorBlockDto,
-                {
-                    type: BlockType.StandoffEditorBlock,
-                    text: "While I pondered weak and weary ...",
-                    standoffProperties: [
-                        { type: "style/italics", start: 7, end: 12 },
-                        { type: "style/bold", start: 10, end: 16 }
-                    ],
-                    blockProperties: [
-                        { type: "block/alignment/right" }
-                    ]
                 } as IStandoffEditorBlockDto,
                 {
                     type: BlockType.IndentedListBlock,
