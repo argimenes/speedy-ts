@@ -357,13 +357,15 @@ export interface IBlockRelationDto extends IBlockRelation {}
 export interface IBlockDto {
     id?: GUID;
     type: BlockType;
-    relations?: IBlockRelationDto[];
-    children: IBlockDto[];
+    relation?: Record<string, IBlockDto>;
+    children?: IBlockDto[];
     metadata?: Record<string, any>;
     blockProperties?: BlockPropertyDto[];
 }
+export interface IMainListBlockDto extends IBlockDto {}
 export interface IStandoffEditorBlockDto extends IBlockDto {
-    standoffProperties: StandoffPropertyDto[];
+    text: string;
+    standoffProperties?: StandoffPropertyDto[];
 }
 
 export enum BlockType {
@@ -518,6 +520,7 @@ export class Row {
 }
 export class StandoffEditorBlock extends AbstractBlock {
     type: BlockType;
+    
     relations: Record<string, IBlockRelation>;
     cells: Cell[];
     rows: Row[];
@@ -566,6 +569,7 @@ export class StandoffEditorBlock extends AbstractBlock {
     constructor(args: IStandoffEditorBlockConstructor) {
         super(args);
         this.type = BlockType.StandoffEditorBlock;
+        this.relation = {};
         updateElement(this.container, {
             attribute: {
                 contenteditable: "true"
@@ -576,6 +580,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                 padding: "10px"
             }
         });
+        
         this.blocks = [];
         this.cache = {
             previousOffset: {
@@ -648,7 +653,7 @@ export class StandoffEditorBlock extends AbstractBlock {
     }
     addRelation(name: string, targetId: string, skipCommit?: boolean) {
         this.relations[name] = {
-            type: name,
+            name: name,
             sourceId: this.id,
             targetId: targetId
         };
@@ -1121,25 +1126,27 @@ export class StandoffEditorBlock extends AbstractBlock {
         });
     }
     deserialize(json: any) {
-        this.bind(json as StandoffEditorBlockDto);
+        this.bind(json as IStandoffEditorBlockDto);
         return this;
     }
-    bind(block: StandoffEditorBlockDto) {
+    bind(block: IStandoffEditorBlockDto) {
         const self = this;
         if (this.container) this.container.innerHTML = "";
         const cells = this.toCells(block.text);
-        this.standoffProperties = block.standoffProperties.map(p => {
-            const start = cells[p.start];
-            const end = cells[p.end];
-            const schema = this.schemas.find(x => x.type == p.type) as IStandoffPropertySchema;
-            if (!schema) {
-                console.log("Schema not found for the standoff property type.", { p });
-                // Need to handle this properly ... can't just return early in a map().
-            }
-            const sproc = new StandoffProperty({ type: p.type, block: self, start, end, schema });
-            sproc.value = p.value as string;
-            return sproc;
-        });
+        if (block.standoffProperties) {
+            this.standoffProperties = block.standoffProperties.map(p => {
+                const start = cells[p.start];
+                const end = cells[p.end];
+                const schema = this.schemas.find(x => x.type == p.type) as IStandoffPropertySchema;
+                if (!schema) {
+                    console.log("Schema not found for the standoff property type.", { p });
+                    // Need to handle this properly ... can't just return early in a map().
+                }
+                const sproc = new StandoffProperty({ type: p.type, block: self, start, end, schema });
+                sproc.value = p.value as string;
+                return sproc;
+            });
+        }
         // const types = _.uniq(this.standoffProperties.filter(x => x.schema.animation));
         // types.forEach(t => {
         //     const schema = t.schema;

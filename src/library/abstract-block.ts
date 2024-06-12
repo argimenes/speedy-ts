@@ -16,12 +16,14 @@ export abstract class AbstractBlock implements IBlock {
     blockSchemas: IBlockPropertySchema[];
     container: HTMLDivElement;
     relations: Record<string, IBlockRelation>;
+    relation: Record<string, IBlock>;
     metadata: Record<string, any>;
     commitHandler: (commit: Commit) => void;
     constructor(args: IAbstractBlockConstructor) {
         this.id = args?.id || uuidv4();
         this.owner = args.owner;
         this.relations = {};
+        this.relation = {};
         this.type = BlockType.MarginBlock;
         this.container = args?.container || document.createElement("DIV") as HTMLDivElement;
         this.commitHandler = () => { };
@@ -44,9 +46,11 @@ export abstract class AbstractBlock implements IBlock {
         this.blockProperties.push(...props);
     }
     applyBlockPropertyStyling() {
-        this.blockProperties.forEach(p => {
-            p.applyStyling();
-        });
+        if (this.blockProperties) {
+            this.blockProperties.forEach(p => {
+                p.applyStyling();
+            });
+        }
     }
     getBlock(id: GUID) {
         return this.blocks.find(x => x.id == id) as IBlock;

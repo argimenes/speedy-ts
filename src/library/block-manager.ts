@@ -3,7 +3,9 @@ import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerAr
     IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, DIRECTION, StandoffEditorBlock,
     StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, ISelection, Word, RowPosition,
     BlockPropertyDto, IBlockPropertySchema, 
-    IBlockDto} from "./standoff-editor-block";
+    IBlockDto,
+    IMainListBlockDto,
+    IStandoffEditorBlockDto} from "./standoff-editor-block";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 import { MarginBlock } from "./margin-block";
@@ -1360,41 +1362,73 @@ export class BlockManager implements IBlockManager {
         this.commits.push(commit);
         this.pointer++;
     }
-    recursivelyBuildBlocks(container: HTMLDivElement, blocks: IBlockDto[]) {
+    recursivelyBuildBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+        console.log("recursivelyBuildBlock", { container, blockDto });
         const self = this;
-        const len = blocks.length;
-        const max = len - 1;
-        blocks.forEach((b, i) => {
-            if (b.type == BlockType.MainListBlock) {
-                const block = self.createMainListBlock();
-                block.bind(b);
-                container.appendChild(block.container);
-                self.blocks.push(block);
+        if (blockDto.type == BlockType.StandoffEditorBlock) {
+            const textBlock = this.createStandoffEditorBlock();
+            textBlock.bind(blockDto as IStandoffEditorBlockDto);
+            if (blockDto.relation?.leftMargin) {
+                const leftMargin = this.recursivelyBuildBlock(container, blockDto.relation.leftMargin) as MarginBlock;
+                textBlock.relation.leftMargin = leftMargin;
+                leftMargin.relation.parent = textBlock;
+                updateElement(leftMargin.container, {
+                    style: {
+                        position: "absolute",
+                        top: textBlock.cache.offset.h + "px",
+                        left: 0
+                    }
+                })
             }
-            if (b.type == BlockType.MarginBlock) {
-                const block = self.createMarginBlock();
-                self.blocks.push(block);
+            if (blockDto.children) {
+                blockDto.children.forEach(b => self.recursivelyBuildBlock(textBlock.container, b));
             }
-            if (b.type == BlockType.IndentedListBlock) {
-                const block = self.createIndentedListBlock();
-                self.blocks.push(block);
+            this.blocks.push(textBlock);
+            container.appendChild(textBlock.container);
+            return textBlock;
+        }
+        if (blockDto.type == BlockType.MarginBlock) {
+            const marginBlock = this.createMarginBlock();
+            marginBlock.addBlockProperties([ { type: "block/marginalia/left" } ]);
+            marginBlock.applyBlockPropertyStyling();
+            if (blockDto.children) {
+                blockDto.children.forEach(b => self.recursivelyBuildBlock(marginBlock.container, b));
             }
-            if (b.type == BlockType.StandoffEditorBlock) {
-                const block = self.createStandoffEditorBlock();
-                if (i > 0) {
-                    let previous = self.blocks[i-1];
-                    block.previous = previous;
-                    previous.next = block;
-                }
-                self.blocks.push(block);
+            this.blocks.push(marginBlock);
+            container.appendChild(marginBlock.container);
+            return marginBlock;
+        }
+        if (blockDto.type == BlockType.IndentedListBlock) {
+            const indentedListBlock = this.createIndentedListBlock();
+            if (blockDto.children) {
+                blockDto.children.forEach(b => self.recursivelyBuildBlock(indentedListBlock.container, b));
             }
-        });
+            this.blocks.push(indentedListBlock);
+            container.appendChild(indentedListBlock.container);
+            return indentedListBlock;
+        }
+        return null;
     }
-    testLoadDocument(doc: IBlockDto) {
-        const self = this;
-        this.id = doc.id || uuidv4();
+    testLoadDocument(dto: IMainListBlockDto) {
+        console.log("testLoadDocument", { dto });
+        if (dto.type != BlockType.MainListBlock) {
+            console.error("Expected doc.type to be a MainListBlock");
+            return;
+        }
+        this.id = dto.id || uuidv4();
         const container = document.createElement("DIV") as HTMLDivElement;
-        this.recursivelyBuildBlocks(container, doc.children);
+        const mainBlock = this.createMainListBlock();
+        mainBlock.bind(dto);
+        this.blocks.push(mainBlock);
+        if (dto.children) {
+            const len = dto.children.length;
+            for (let i = 0; i < len - 1; i++) {
+                let block = this.recursivelyBuildBlock(container, dto.children[i]);
+                console.log("testLoadDocument", { block });
+            }
+        }
+        container.appendChild(mainBlock.container);
+        this.container.appendChild(container);
     }
     loadDocument(doc: StandoffEditorBlockDto) {
         this.reset();
