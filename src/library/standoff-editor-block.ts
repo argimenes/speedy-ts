@@ -567,11 +567,13 @@ export class StandoffEditorBlock extends AbstractBlock {
     inputActions: InputAction[];
     modes: string[];
     blocks: IBlock[];
+    wrapper: HTMLDivElement;
     constructor(args: IStandoffEditorBlockConstructor) {
         super(args);
         this.type = BlockType.StandoffEditorBlock;
         this.relation = {};
-        updateElement(this.container, {
+        this.wrapper = document.createElement("DIV") as HTMLDivElement;
+        updateElement(this.wrapper, {
             attribute: {
                 contenteditable: "true"
             },
@@ -582,6 +584,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             }
         });
         
+        this.container.appendChild(this.wrapper);
         this.blocks = [];
         this.cache = {
             previousOffset: {
@@ -765,8 +768,8 @@ export class StandoffEditorBlock extends AbstractBlock {
         We also need to keep track of keyboard input combinations, e.g., [CTRL-K, CTRL-D].
 
         */
-        this.container.addEventListener("keydown", this.handleKeyDown.bind(this));
-        this.container.addEventListener("mouseup", this.handleMouseUpEvent.bind(this));
+        this.wrapper.addEventListener("keydown", this.handleKeyDown.bind(this));
+        this.wrapper.addEventListener("mouseup", this.handleMouseUpEvent.bind(this));
     }
     handleMouseUpEvent(e: MouseEvent) {
         const target = e.target as CellHtmlElement;
@@ -824,11 +827,11 @@ export class StandoffEditorBlock extends AbstractBlock {
     }                         
     createEmptyBlock() {
         const linebreak = this.createLineBreakCell();
-        this.container.innerHTML = "";
+        this.wrapper.innerHTML = "";
         this.cells = [linebreak];
         const frag = document.createDocumentFragment();
         this.cells.forEach(c => frag.append(c.element as HTMLElement));
-        this.container.appendChild(frag);
+        this.wrapper.appendChild(frag);
     }
     getKeyCode(name: string) {
         const code = KEYS[name].find(x => x.platform == Platform.Windows)?.code as number;
@@ -1024,7 +1027,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.cells = [eol];
         eol.isEOL = true;
         this.reindexCells();
-        this.container.append(eol.element as HTMLSpanElement);
+        this.wrapper.append(eol.element as HTMLSpanElement);
         this.updateView();
         this.setCaret(0, CARET.LEFT);
     }
@@ -1105,7 +1108,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.cells = [];
         this.standoffProperties = [];
         this.blockProperties = [];
-        this.container.innerHTML = "";
+        this.wrapper.innerHTML = "";
     }
     serialize() {
         const relation: Record<string,any> = {
@@ -1138,7 +1141,7 @@ export class StandoffEditorBlock extends AbstractBlock {
     }
     bind(block: IStandoffEditorBlockDto) {
         const self = this;
-        if (this.container) this.container.innerHTML = "";
+        if (this.wrapper) this.wrapper.innerHTML = "";
         const cells = this.toCells(block.text);
         if (block.standoffProperties) {
             this.standoffProperties = block.standoffProperties.map(p => {
@@ -1180,8 +1183,8 @@ export class StandoffEditorBlock extends AbstractBlock {
          */
         this.cells = cells;
         this.reindexCells();
-        this.container.innerHTML = "";
-        this.container.appendChild(frag);
+        this.wrapper.innerHTML = "";
+        this.wrapper.appendChild(frag);
         this.updateView();
         this.commit({
             redo: {

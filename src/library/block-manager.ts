@@ -1274,16 +1274,21 @@ export class BlockManager implements IBlockManager {
             const textBlock = this.createStandoffEditorBlock();
             textBlock.bind(blockDto as IStandoffEditorBlockDto);
             if (blockDto.relation?.leftMargin) {
-                const leftMargin = this.recursivelyBuildBlock(container, blockDto.relation.leftMargin) as MarginBlock;
+                const leftMargin = this.recursivelyBuildBlock(textBlock.container, blockDto.relation.leftMargin) as MarginBlock;
                 textBlock.relation.leftMargin = leftMargin;
                 leftMargin.relation.parent = textBlock;
+                updateElement(textBlock.container, {
+                    style: {
+                        position: "relative"
+                    }
+                });
                 updateElement(leftMargin.container, {
                     style: {
                         position: "absolute",
                         top: textBlock.cache.offset.h,
                         width: "200px",
                         "max-width": "200px",
-                        left: 0
+                        left: "-250px"
                     }
                 })
             }
