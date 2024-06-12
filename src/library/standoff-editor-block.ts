@@ -1108,6 +1108,12 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.container.innerHTML = "";
     }
     serialize() {
+        const relation: Record<string,any> = {
+
+        };
+        if (this.relation.leftMargin) {
+            relation.leftMargin = this.relation.leftMargin.serialize();
+        }
         return {
             id: this.id,
             type: this.type,
@@ -1115,8 +1121,8 @@ export class StandoffEditorBlock extends AbstractBlock {
             standoffProperties: this.standoffProperties.map(x => x.serialize()),
             blockProperties: this.blockProperties.map(x => x.serialize()),
             metadata: this.metadata,
-            relations: this.relations
-        }
+            relation: relation
+        } as IStandoffEditorBlockDto;
     }
     getText() {
         return this.cells.map(c => c.text).join("");
