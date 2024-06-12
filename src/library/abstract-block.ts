@@ -15,14 +15,13 @@ export abstract class AbstractBlock implements IBlock {
     blockProperties: BlockProperty[];
     blockSchemas: IBlockPropertySchema[];
     container: HTMLDivElement;
-    relations: Record<string, IBlockRelation>;
+    //relations: Record<string, IBlockRelation>;
     relation: Record<string, IBlock>;
     metadata: Record<string, any>;
     commitHandler: (commit: Commit) => void;
     constructor(args: IAbstractBlockConstructor) {
         this.id = args?.id || uuidv4();
         this.owner = args.owner;
-        this.relations = {};
         this.relation = {};
         this.type = BlockType.RootBlock;
         this.container = args?.container || document.createElement("DIV") as HTMLDivElement;
@@ -64,66 +63,66 @@ export abstract class AbstractBlock implements IBlock {
     updateView() {
 
     }
-    removeRelation(name: string, skipCommit?: boolean) {
-        const relation = this.getRelation(name);
-        delete this.relations[name];
-        if (!skipCommit) {
-            this.commit({
-                redo: {
-                    id: this.id,
-                    name: "removeRelation",
-                    value: { name }
-                },
-                undo: {
-                    id: this.id,
-                    name: "addRelation",
-                    value: {
-                        name,
-                        targetId: relation.targetId
-                    }
-                }
-            });
-        }
-    }
-    getRelation(name: string) {
-        return this.relations[name];
-    }
-    setRelation(type: string, targetId: string) {
-        this.relations[type] = { type, sourceId: this.id, targetId };
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "setRelation",
-                value: { type, targetId }
-            },
-            undo: {
-                id: this.id,
-                name: "removeRelation",
-                value: { name: type }
-            }
-        })
-    }
-    addRelation(name: string, targetId: string, skipCommit?: boolean) {
-        this.relations[name] = {
-            type: name,
-            sourceId: this.id,
-            targetId: targetId
-        };
-        if (!skipCommit) {
-            this.commit({
-                redo: {
-                    id: this.id,
-                    name: "addRelation",
-                    value: { name, targetId }
-                },
-                undo: {
-                    id: this.id,
-                    name: "removeRelation",
-                    value: { name }
-                }
-            });
-        }
-    }
+    // removeRelation(name: string, skipCommit?: boolean) {
+    //     const relation = this.getRelation(name);
+    //     delete this.relations[name];
+    //     if (!skipCommit) {
+    //         this.commit({
+    //             redo: {
+    //                 id: this.id,
+    //                 name: "removeRelation",
+    //                 value: { name }
+    //             },
+    //             undo: {
+    //                 id: this.id,
+    //                 name: "addRelation",
+    //                 value: {
+    //                     name,
+    //                     targetId: relation.targetId
+    //                 }
+    //             }
+    //         });
+    //     }
+    // }
+    // getRelation(name: string) {
+    //     return this.relations[name];
+    // }
+    // setRelation(type: string, targetId: string) {
+    //     this.relations[type] = { type, sourceId: this.id, targetId };
+    //     this.commit({
+    //         redo: {
+    //             id: this.id,
+    //             name: "setRelation",
+    //             value: { type, targetId }
+    //         },
+    //         undo: {
+    //             id: this.id,
+    //             name: "removeRelation",
+    //             value: { name: type }
+    //         }
+    //     })
+    // }
+    // addRelation(name: string, targetId: string, skipCommit?: boolean) {
+    //     this.relations[name] = {
+    //         type: name,
+    //         sourceId: this.id,
+    //         targetId: targetId
+    //     };
+    //     if (!skipCommit) {
+    //         this.commit({
+    //             redo: {
+    //                 id: this.id,
+    //                 name: "addRelation",
+    //                 value: { name, targetId }
+    //             },
+    //             undo: {
+    //                 id: this.id,
+    //                 name: "removeRelation",
+    //                 value: { name }
+    //             }
+    //         });
+    //     }
+    // }
     setFocus(){
         this.container.focus();
     }

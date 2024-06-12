@@ -28,16 +28,6 @@ export interface IBatchRelateArgs {
     toAdd?: IEdge[];
 }
 
-export const RelationType = {
-    "has_next":"has_next",
-    "has_previous":"has_previous",
-    "has_parent":"has_parent",
-    "has_first_child":"has_first_child",
-    "has_left_margin": "has_left_margin",
-    "has_left_margin_parent": "has_left_margin_parent",
-    "has_right_margin": "has_right_margin",
-    "has_right_margin_parent": "has_right_margin_parent",
-}
 export interface IBlockManagerConstructor {
     id?: GUID;
     container?: HTMLDivElement;
@@ -58,8 +48,8 @@ export class BlockManager implements IBlockManager {
     id: string;
     type: BlockType;
     container: HTMLDivElement;
-    relations: Record<string, IBlockRelation>;
     blocks: IBlock[];
+    relation: Record<string, IBlock>;
     metadata: Record<string,any>;
     focus?: IBlock;
     selections: IBlockSelection[];
@@ -73,9 +63,9 @@ export class BlockManager implements IBlockManager {
         this.id = props?.id || uuidv4();
         this.type = BlockType.IndentedListBlock;
         this.container = props?.container || document.createElement("DIV") as HTMLDivElement;
-        this.relations = {};
         this.blocks = [this];
         this.metadata = {};
+        this.relation = {};
         this.selections = [];
         this.commits = [];
         this.pointer = 0;
@@ -87,9 +77,6 @@ export class BlockManager implements IBlockManager {
         const self = this;
         const props = properties.map(x => new BlockProperty({ type: x.type, block: self, schema: self.blockSchemas.find(x2 => x2.type == x.type) as IBlockPropertySchema }));
         this.blockProperties.push(...props);
-    }
-    getRelation(name: string) {
-        return this.relations[name];
     }
     applyBlockPropertyStyling() {
         this.blockProperties.forEach(p => {
@@ -320,19 +307,10 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        let leftMargin = manager.getLeftMarginOf(block.id);
+                        let leftMargin = block.relation.leftMargin;
                         if (!leftMargin) {
                             leftMargin = manager.createMarginBlock();
                             const child = manager.createStandoffEditorBlock();
-                            manager.batchRelate({
-                                toAdd: [
-                                    { sourceId: block.id, name: RelationType.has_left_margin, targetId: leftMargin.id },
-                                    { sourceId: leftMargin.id, name: RelationType.has_left_margin_parent, targetId: block.id },
-                                    { sourceId: leftMargin.id, name: RelationType.has_first_child, targetId: child.id },
-                                    { sourceId: child.id, name: RelationType.has_parent, targetId: leftMargin.id },
-                                ]
-                            });
-                            
                             updateElement(leftMargin.container, {
                                 style: {
                                     top: block.cache.offset.y + "px",
@@ -348,8 +326,12 @@ export class BlockManager implements IBlockManager {
                             leftMargin.addBlockProperties([
                                 { type: "block/marginalia/left" }
                             ]);
+                            leftMargin.relation.firstChild = child;
+                            child.relation.parent = leftMargin;
                             child.applyBlockPropertyStyling();
                             leftMargin.applyBlockPropertyStyling();
+                            block.relation.leftMargin = leftMargin;
+                            leftMargin.relation.parent = block;
                             block.container.parentElement?.appendChild(leftMargin.container);
                             leftMargin.container.appendChild(child.container);
                             manager.blocks.push(leftMargin);
@@ -358,8 +340,7 @@ export class BlockManager implements IBlockManager {
                             manager.setBlockFocus(child);
                             return;
                         } else {
-                            const childEdge = leftMargin.getRelation(RelationType.has_first_child);
-                            const child = manager.getBlock(childEdge.targetId) as StandoffEditorBlock;
+                            const child = leftMargin.relation.firstChild as StandoffEditorBlock;
                             child.setCaret(0, CARET.LEFT);
                             manager.setBlockFocus(child);
                         }
@@ -381,15 +362,11 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        const rightMarginEdge = block.getRelation(RelationType.has_right_margin);
-                        if (!rightMarginEdge) {
-                            const rightMargin = manager.createStandoffEditorBlock();
-                            manager.batchRelate({
-                                toAdd: [
-                                    { sourceId: rightMargin.id, name: RelationType.has_right_margin_parent, targetId: block.id },
-                                    { sourceId: block.id, name: RelationType.has_right_margin, targetId: rightMargin.id },
-                                ]
-                            });
+                        let rightMargin = block.relation.rightMargin as MarginBlock;
+                        if (!rightMargin) {
+                            rightMargin = this.createMarginBlock();
+                            rightMargin.relation.parent = block;
+                            block.relation.rightMargin = rightMargin;
                             manager.blocks.push(rightMargin);
                             const offset = block.cache.offset;
                             updateElement(rightMargin.container, {
@@ -405,15 +382,19 @@ export class BlockManager implements IBlockManager {
                                 { type: "block/alignment/left" },
                             ]);
                             rightMargin.applyBlockPropertyStyling();
-                            rightMargin.addEOL();
-                            rightMargin.setCaret(0, CARET.LEFT);
+                            const firstChild = this.createStandoffEditorBlock();
+                            rightMargin.relation.firstChild = firstChild;
+                            firstChild.relation.parent = rightMargin;
+                            rightMargin.container.appendChild(firstChild.container);
+                            firstChild.addEOL();
+                            firstChild.setCaret(0, CARET.LEFT);
                             rightMargin.setFocus();
                             
                         } else {
-                            const rightMargin = manager.getBlock(rightMarginEdge.targetId) as StandoffEditorBlock;
-                            if (!rightMargin) return;
-                            rightMargin.setCaret(0, CARET.LEFT);
-                            rightMargin.setFocus();
+                            const firstChild = rightMargin.relation.firstChild as StandoffEditorBlock;
+                            if (!firstChild) return;
+                            firstChild.setCaret(0, CARET.LEFT);
+                            firstChild.setFocus();
                         }
                     }
                 }
@@ -433,20 +414,15 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        const nextEdge = block.getRelation(RelationType.has_next);
-                        const parent = manager.getParentOf(block.id);
-                        if (!nextEdge) {
-                            const next = manager.createStandoffEditorBlock();
+                        let next = block.relation.next as StandoffEditorBlock;
+                        if (!next) {
+                            next = manager.createStandoffEditorBlock();
                             const blockData = block.serialize();
                             next.addBlockProperties(blockData.blockProperties || []);
                             next.applyBlockPropertyStyling();
                             manager.blocks.push(next);
-                            manager.batchRelate({
-                                toAdd: [
-                                    { sourceId: block.id, name: RelationType.has_next, targetId: next.id },
-                                    { sourceId: next.id, name: RelationType.has_previous, targetId: block.id }
-                                ]
-                            });
+                            next.relation.previous = block;
+                            block.relation.next = next;
                             next.addEOL();
                             /**
                              * This should be done by fetching the container on the root MainList
@@ -455,8 +431,6 @@ export class BlockManager implements IBlockManager {
                             next.setCaret(0, CARET.LEFT);
                             manager.setBlockFocus(next);
                         } else {
-                            const next = manager.getBlock(nextEdge.targetId) as StandoffEditorBlock;
-                            if (!next) return;
                             next.setCaret(0, CARET.LEFT);
                             manager.setBlockFocus(next);
                         }
@@ -478,31 +452,23 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        const parent = manager.getParentOf(block.id) as IndentedListBlock;
-                        if (parent) return; // First child of another block.
-                        const previous = manager.getPreviousOf(block.id);
+                        const parent = block.relation.parent as IndentedListBlock;
+                        if (parent?.type == BlockType.IndentedListBlock) return; // First child of another block.
+                        const previous = block.relation.previous;
                         if (!previous) return;
                         const indentedList = manager.createIndentedListBlock();
                         /**
                          * Convert the has_previous into a has_parent, etc.
                          */
-                        const next = manager.getNextOf(block.id) as IBlock;
-                        manager.batchRelate({
-                            toDelete: [
-                                { sourceId: block.id, name: RelationType.has_previous, targetId: previous.id },
-                                { sourceId: previous.id, name: RelationType.has_next, targetId: block.id },
-                                { sourceId: block.id, name: RelationType.has_next, targetId: next.id },
-                                { sourceId: next.id, name: RelationType.has_previous, targetId: block.id }
-                            ],
-                            toAdd: [
-                                { sourceId: previous.id, name: RelationType.has_first_child, targetId: indentedList.id },
-                                { sourceId: indentedList.id, name: RelationType.has_parent, targetId: previous.id },
-
-                                { sourceId: block.id, name: RelationType.has_parent, targetId: indentedList.id },
-                                { sourceId: indentedList.id, name: RelationType.has_first_child, targetId: block.id },
-                                
-                            ]
-                        });
+                        const next = block.relation.next;
+                        previous.relation.firstChild = indentedList;
+                        indentedList.relation.parent = previous;
+                        block.relation.parent = indentedList;
+                        indentedList.relation.firstChild = block;
+                        delete previous.relation.next;
+                        delete block.relation.previous;
+                        delete block.relation.next;
+                        delete next.relation.previous;
                         indentedList.blocks.push(block);
                         manager.blocks.push(indentedList);
                         const level = indentedList.metadata.indentLevel || 0 as number;
@@ -641,9 +607,8 @@ export class BlockManager implements IBlockManager {
                         }
                         const manager = block.owner as BlockManager;
                         if (!caret.left) {
-                            const previousEdge = block.getRelation(RelationType.has_previous);
-                            if (previousEdge) {
-                                const previous = manager.getBlock(previousEdge.targetId) as StandoffEditorBlock;
+                            let previous = block.relation.previous;
+                            if (previous) {
                                 manager.deleteBlock(previous.id);
                                 if (caret.right.isEOL) {
                                 
@@ -757,78 +722,78 @@ export class BlockManager implements IBlockManager {
                     handler: (args: IBindingHandlerArgs) => {
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        const previous = manager.getPreviousOf(block.id);
-                        const next = manager.getNextOf(block.id);
-                        const parent = manager.getParentOf(block.id);
-                        const leftMargin = manager.getLeftMarginOf(block.id);
-                        const rightMargin = manager.getRightMarginOf(block.id);
-                        if (!parent && !previous && !next) {
-                            return;
-                        }
-                        if (leftMargin) {
-                            const batch: IBatchRelateArgs = {};
-                            batch.toDelete = [
-                                { sourceId: block.id, name: RelationType.has_left_margin, targetId: leftMargin.id },
-                                { sourceId: leftMargin.id, name: RelationType.has_left_margin_parent, targetId: block.id }
-                            ];
-                            manager.batchRelate(batch);
-                        }
-                        if (rightMargin) {
-                            const batch: IBatchRelateArgs = {};
-                            batch.toDelete = [
-                                { sourceId: block.id, name: RelationType.has_right_margin, targetId: rightMargin.id },
-                                { sourceId: rightMargin.id, name: RelationType.has_right_margin_parent, targetId: block.id }
-                            ];
-                            manager.batchRelate(batch);
-                        }
-                        if (parent) {
-                            const batch: IBatchRelateArgs = {};
-                            batch.toDelete = [
-                                { sourceId: parent.id, name: RelationType.has_first_child, targetId: block.id },
-                                { sourceId: block.id, name: RelationType.has_parent, targetId: parent.id }
-                            ];
-                            if (next) {
-                                batch.toAdd = [
-                                    { sourceId: parent.id, name: RelationType.has_first_child, targetId: next.id },
-                                    { sourceId: next.id, name: RelationType.has_parent, targetId: parent.id },
-                                ]
-                            }
-                            manager.batchRelate(batch);
-                        }
-                        if (previous) {
-                            const batch: IBatchRelateArgs = {};
-                            batch.toDelete = [
-                                { sourceId: previous.id, name: RelationType.has_next, targetId: block.id },
-                                { sourceId: block.id, name: RelationType.has_previous, targetId: previous.id }
-                            ];
-                            if (next) {
-                                batch.toAdd = [
-                                    { sourceId: previous.id, name: RelationType.has_next, targetId: next.id },
-                                    { sourceId: next.id, name: RelationType.has_previous, targetId: previous.id },
-                                ]
-                            }
-                            manager.batchRelate(batch);
-                        }
-                        if (next && !previous && !parent) {
-                            const batch: IBatchRelateArgs = {};
-                            batch.toDelete = [
-                                { sourceId: block.id, name: RelationType.has_next, targetId: next.id },
-                                { sourceId: next.id, name: RelationType.has_previous, targetId: block.id }
-                            ];
-                            manager.batchRelate(batch);
-                        }
-                        manager.deleteBlock(block.id);
-                        manager.updateView();
-                        if (next) {
-                            manager.setBlockFocus(next);
-                            next.setCaret(0, CARET.LEFT);
-                            return;
-                        }
-                        if (previous) {
-                            manager.setBlockFocus(previous);
-                            previous.setCaret(0, CARET.LEFT);
-                            return;
-                        }
+                        // const previous = manager.getPreviousOf(block.id);
+                        // const next = manager.getNextOf(block.id);
+                        // const parent = manager.getParentOf(block.id);
+                        // const leftMargin = manager.getLeftMarginOf(block.id);
+                        // const rightMargin = manager.getRightMarginOf(block.id);
+                        // if (!parent && !previous && !next) {
+                        //     return;
+                        // }
+                        // if (leftMargin) {
+                        //     const batch: IBatchRelateArgs = {};
+                        //     batch.toDelete = [
+                        //         { sourceId: block.id, name: RelationType.has_left_margin, targetId: leftMargin.id },
+                        //         { sourceId: leftMargin.id, name: RelationType.has_left_margin_parent, targetId: block.id }
+                        //     ];
+                        //     manager.batchRelate(batch);
+                        // }
+                        // if (rightMargin) {
+                        //     const batch: IBatchRelateArgs = {};
+                        //     batch.toDelete = [
+                        //         { sourceId: block.id, name: RelationType.has_right_margin, targetId: rightMargin.id },
+                        //         { sourceId: rightMargin.id, name: RelationType.has_right_margin_parent, targetId: block.id }
+                        //     ];
+                        //     manager.batchRelate(batch);
+                        // }
+                        // if (parent) {
+                        //     const batch: IBatchRelateArgs = {};
+                        //     batch.toDelete = [
+                        //         { sourceId: parent.id, name: RelationType.has_first_child, targetId: block.id },
+                        //         { sourceId: block.id, name: RelationType.has_parent, targetId: parent.id }
+                        //     ];
+                        //     if (next) {
+                        //         batch.toAdd = [
+                        //             { sourceId: parent.id, name: RelationType.has_first_child, targetId: next.id },
+                        //             { sourceId: next.id, name: RelationType.has_parent, targetId: parent.id },
+                        //         ]
+                        //     }
+                        //     manager.batchRelate(batch);
+                        // }
+                        // if (previous) {
+                        //     const batch: IBatchRelateArgs = {};
+                        //     batch.toDelete = [
+                        //         { sourceId: previous.id, name: RelationType.has_next, targetId: block.id },
+                        //         { sourceId: block.id, name: RelationType.has_previous, targetId: previous.id }
+                        //     ];
+                        //     if (next) {
+                        //         batch.toAdd = [
+                        //             { sourceId: previous.id, name: RelationType.has_next, targetId: next.id },
+                        //             { sourceId: next.id, name: RelationType.has_previous, targetId: previous.id },
+                        //         ]
+                        //     }
+                        //     manager.batchRelate(batch);
+                        // }
+                        // if (next && !previous && !parent) {
+                        //     const batch: IBatchRelateArgs = {};
+                        //     batch.toDelete = [
+                        //         { sourceId: block.id, name: RelationType.has_next, targetId: next.id },
+                        //         { sourceId: next.id, name: RelationType.has_previous, targetId: block.id }
+                        //     ];
+                        //     manager.batchRelate(batch);
+                        // }
+                        // manager.deleteBlock(block.id);
+                        // manager.updateView();
+                        // if (next) {
+                        //     manager.setBlockFocus(next);
+                        //     next.setCaret(0, CARET.LEFT);
+                        //     return;
+                        // }
+                        // if (previous) {
+                        //     manager.setBlockFocus(previous);
+                        //     previous.setCaret(0, CARET.LEFT);
+                        //     return;
+                        // }
                         // if (parent) {
                         //     manager.setBlockFocus(parent);
                         //     parent.setCaret(0, CARET.LEFT);
@@ -860,13 +825,11 @@ export class BlockManager implements IBlockManager {
                             block.setCaret(match.cell.index, match.caret);
                             return;
                         }
-                        const previousEdge = block.getRelation(RelationType.has_previous);
-                        if (!previousEdge) {
+                        let previous = block.relation.previous as StandoffEditorBlock;
+                        if (!previous) {
                             block.setCaret(0, CARET.LEFT);
                             return;
                         }
-                        const previous = manager.getBlock(previousEdge.targetId) as StandoffEditorBlock;
-                        if (!previous) return;
                         previous.setCaret(0, CARET.LEFT);
                         manager.setBlockFocus(previous);
                     }
@@ -900,14 +863,12 @@ export class BlockManager implements IBlockManager {
                         //     block.setCaret(match.cell.index, match.caret);
                         //     return;
                         // }
-                        const nextEdit = block.getRelation(RelationType.has_next);
+                        let next = block.relation.next as StandoffEditorBlock;
                         const len = block.cells.length;
-                        if (!nextEdit) {
+                        if (!next) {
                             block.setCaret(len - 1, CARET.LEFT);
                             return;
                         }
-                        const next = manager.getBlock(nextEdit.targetId) as StandoffEditorBlock;
-                        if (!next) return;
                         next.setCaret(0, CARET.LEFT);
                         manager.setBlockFocus(next);
                     }
@@ -939,8 +900,7 @@ export class BlockManager implements IBlockManager {
                         /**
                          * Or skip to the end of the previous block.
                          */
-                        const previousEdge = block.getRelation(RelationType.has_previous);
-                        const previous = manager.getBlock(previousEdge.targetId) as StandoffEditorBlock;
+                        let previous = block.relation.previous as StandoffEditorBlock;
                         if (!previous) return;
                         const last = previous.getLastCell();
                         previous.setCaret(last.index);
@@ -1005,7 +965,7 @@ export class BlockManager implements IBlockManager {
                             block.setCaret(ri + 1);
                             return;
                         }
-                        const next = manager.getNextOf(block.id);
+                        const next = block.relation.next as StandoffEditorBlock;
                         if (!next) return;
                         next.setCaret(0, CARET.LEFT);
                         manager.setBlockFocus(next);
@@ -1052,34 +1012,6 @@ export class BlockManager implements IBlockManager {
             let word = words[i];
             if (index >= word.start) return word;
         }
-        return null;
-    }
-    getPreviousOf(blockId: string) {
-        return this.getTargetBlock<StandoffEditorBlock>(blockId, RelationType.has_previous);
-    }
-    getFirstChild(blockId: string) {
-        return this.getTargetBlock<StandoffEditorBlock>(blockId, RelationType.has_first_child);
-    }
-    getNextOf(blockId: string) {
-        return this.getTargetBlock<StandoffEditorBlock>(blockId, RelationType.has_next);
-    }
-    getParentOf(blockId: string) {
-        return this.getTargetBlock<MainListBlock>(blockId, RelationType.has_parent) as MainListBlock;
-    }
-    getRightMarginOf(blockId: string) {
-        return this.getTargetBlock<MarginBlock>(blockId, RelationType.has_right_margin) as MarginBlock;
-    }
-    getLeftMarginOf(blockId: string) {
-        return this.getTargetBlock<MarginBlock>(blockId, RelationType.has_left_margin) as MarginBlock;
-    }
-    getLeftMarginParent(blockId: string) {
-        return this.getTargetBlock<StandoffEditorBlock>(blockId, RelationType.has_left_margin_parent);
-    }
-    getTargetBlock<T extends IBlock>(blockId: string, type: string) {
-        const block = this.getBlock(blockId) as T;
-        if (!block) return null;
-        const edge = block.getRelation(type);
-        if (edge) return this.getBlock(edge.targetId) as T;
         return null;
     }
     getStandoffPropertyEvents() {
@@ -1236,7 +1168,7 @@ export class BlockManager implements IBlockManager {
             id: this.id,
             type: this.type,
             metadata: this.metadata,
-            relations: this.relations,
+            relation: this.relation,
             blockProperties: this.blockProperties.map(x => x.serialize()),
             blocks: this.blocks.map(x => x.serialize())
         }                                                                                  
@@ -1285,33 +1217,6 @@ export class BlockManager implements IBlockManager {
                 value: {
                     blockId
                 }
-            }
-        });
-    }
-    batchRelate(args: IBatchRelateArgs) {
-        const self = this;
-        if (args.toDelete) {
-            args.toDelete.forEach(edge => {
-                let block = self.getBlock(edge.sourceId);
-                block?.removeRelation(edge.name, true);
-            });
-        }
-        if (args.toAdd) {
-            args.toAdd.forEach(edge => {
-                let block = self.getBlock(edge.sourceId);
-                block?.addRelation(edge.name, edge.targetId, true);
-            })
-        }
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "batchRelate",
-                value: args
-            },
-            undo: {
-                id: this.id,
-                name: "batchRelate",
-                value: { toDelete: args.toAdd, toAdd: args.toDelete }
             }
         });
     }
@@ -1441,58 +1346,6 @@ export class BlockManager implements IBlockManager {
         }
         container.appendChild(mainBlock.container);
         this.container.appendChild(container);
-    }
-    loadDocument(doc: StandoffEditorBlockDto) {
-        this.reset();
-        const paragraphs = doc.text.split(/\r?\n/);
-        const mainList = this.createMainListBlock();
-        let start = 0;
-        for (let i = 0; i < paragraphs.length; i ++) {
-            let textBlock = this.createStandoffEditorBlock();
-            let text = paragraphs[i];
-            let end = start + text.length + 1; // + 1 to account for the CR stripped from the text
-            const props = doc.standoffProperties
-                .filter(x=> x.start != undefined && x.end != undefined)
-                .filter(x=> x.start >= start && x.end <= end)
-             ;             
-            start += text.length;
-            let data = {
-                text: text,
-                standoffProperties: props as any[],
-                blockProperties: [] as any[]
-            };
-            if (i == 0) {
-                data = {...data, blockProperties: doc.blockProperties as any[] };
-            }
-            textBlock.bind(data);
-            textBlock.addEOL();
-            mainList.container.appendChild(textBlock.container);
-            mainList.blocks.push(textBlock);
-            this.blocks.push(textBlock);
-        }
-        const firstChild = mainList.blocks[0];
-        const adds = [
-            { sourceId: mainList.id, name: RelationType.has_first_child, targetId: firstChild.id },
-            { sourceId: firstChild.id, name: RelationType.has_parent, targetId: mainList.id }
-        ];
-        if (paragraphs.length > 1) {
-            for (let i = 0; i < paragraphs.length; i ++) { 
-                // Setup previous/next relations between blocks.
-            }
-        }
-        this.batchRelate({
-            toAdd: adds
-        });
-        mainList.applyBlockPropertyStyling();
-        this.container.appendChild(mainList.container);
-        this.blocks.push(mainList);
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "loadDocument",
-                value: { doc }
-            }
-        })
     }
     renderIndent(block: IBlock) {
         /**
