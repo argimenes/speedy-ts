@@ -43,11 +43,13 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             children: [
                                 {
                                     type: BlockType.StandoffEditorBlock,
-                                    text: "Left margin - line 1 ..."
+                                    text: "Left margin - line 1 ...",
+                                    blockProperties: [ { type: "block/alignment/left" }]
                                 } as IStandoffEditorBlockDto,
                                 {
                                     type: BlockType.StandoffEditorBlock,
-                                    text: "Left margin - line 2 ..."
+                                    text: "Left margin - line 2 ...",
+                                    blockProperties: [ { type: "block/alignment/left" }]
                                 } as IStandoffEditorBlockDto
                             ]
                         }
@@ -70,17 +72,20 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         {
                             type: BlockType.StandoffEditorBlock,
                             text: "List item 1.1",
+                            blockProperties: [ { type: "block/alignment/left" }],
                             children: [
                                 {
                                     type: BlockType.IndentedListBlock,
                                     children: [
                                         {
                                             type: BlockType.StandoffEditorBlock,
-                                            text: "List item 1.1.1"
+                                            text: "List item 1.1.1",
+                                            blockProperties: [ { type: "block/alignment/left" }]
                                         } as IStandoffEditorBlockDto,
                                         {
                                             type: BlockType.StandoffEditorBlock,
-                                            text: "List item 1.1.2"
+                                            text: "List item 1.1.2",
+                                            blockProperties: [ { type: "block/alignment/left" }]
                                         } as IStandoffEditorBlockDto
                                     ]
                                 }
@@ -88,7 +93,8 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         } as IStandoffEditorBlockDto,
                         {
                             type: BlockType.StandoffEditorBlock,
-                            text: "List item 2"
+                            text: "List item 2",
+                            blockProperties: [ { type: "block/alignment/left" }]
                         } as IStandoffEditorBlockDto
                     ]
                 }

@@ -24,7 +24,7 @@ export abstract class AbstractBlock implements IBlock {
         this.owner = args.owner;
         this.relations = {};
         this.relation = {};
-        this.type = BlockType.MarginBlock;
+        this.type = BlockType.RootBlock;
         this.container = args?.container || document.createElement("DIV") as HTMLDivElement;
         this.commitHandler = () => { };
         this.metadata = {};

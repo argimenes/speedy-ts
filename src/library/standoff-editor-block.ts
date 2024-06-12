@@ -393,6 +393,7 @@ export interface IBlock {
     updateView: () => void;
     getBlock: (id: GUID) => IBlock;
     container: HTMLDivElement;
+    relation: Record<string, IBlock>;
     relations: Record<string, IBlockRelation>;
     addRelation: (name: string, targetId: string, skipCommit?: boolean) => void;
     getRelation: (name: string) => IBlockRelation;

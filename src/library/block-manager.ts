@@ -1375,7 +1375,9 @@ export class BlockManager implements IBlockManager {
                 updateElement(leftMargin.container, {
                     style: {
                         position: "absolute",
-                        top: textBlock.cache.offset.h + "px",
+                        top: textBlock.cache.offset.h,
+                        width: "200px",
+                        "max-width": "200px",
                         left: 0
                     }
                 })
@@ -1404,6 +1406,9 @@ export class BlockManager implements IBlockManager {
                 blockDto.children.forEach(b => self.recursivelyBuildBlock(indentedListBlock.container, b));
             }
             this.blocks.push(indentedListBlock);
+            const level = indentedListBlock.metadata.indentLevel || 0 as number;
+            indentedListBlock.metadata.indentLevel = level + 1;
+            this.renderIndent(indentedListBlock);
             container.appendChild(indentedListBlock.container);
             return indentedListBlock;
         }
@@ -1422,10 +1427,14 @@ export class BlockManager implements IBlockManager {
         this.blocks.push(mainBlock);
         if (dto.children) {
             const len = dto.children.length;
-            for (let i = 0; i < len - 1; i++) {
-                let block = this.recursivelyBuildBlock(container, dto.children[i]);
+            for (let i = 0; i <= len - 1; i++) {
+                let block = this.recursivelyBuildBlock(container, dto.children[i]) as IBlock;
                 console.log("testLoadDocument", { block });
             }
+        }
+        const start = this.blocks[0];
+        if (start.children) {
+            
         }
         container.appendChild(mainBlock.container);
         this.container.appendChild(container);
