@@ -932,11 +932,21 @@ export class BlockManager implements IBlockManager {
                         /**
                          * Or skip to the end of the previous block.
                          */
-                        let previous = block.relation.previous as StandoffEditorBlock;
-                        if (!previous) return;
-                        const last = previous.getLastCell();
-                        previous.setCaret(last.index);
-                        manager.setBlockFocus(previous);
+                        let indentedList = block.relation.parent as IndentedListBlock;
+                        if (indentedList?.type == BlockType.IndentedListBlock) {
+                            const previous = indentedList.relation.previous as StandoffEditorBlock;
+                            const last = previous.getLastCell();
+                            previous.setCaret(last.index);
+                            manager.setBlockFocus(previous);
+                            return;
+                        }
+                        const previous = block.relation.previous as StandoffEditorBlock;
+                        if (previous?.type == BlockType.StandoffEditorBlock) {
+                            const last = previous.getLastCell();
+                            previous.setCaret(last.index, CARET.LEFT);
+                            manager.setBlockFocus(previous);
+                            return;
+                        }
                     }
                 }
             },
@@ -997,10 +1007,18 @@ export class BlockManager implements IBlockManager {
                             block.setCaret(ri + 1);
                             return;
                         }
-                        const next = block.relation.next as StandoffEditorBlock;
-                        if (!next) return;
-                        next.setCaret(0, CARET.LEFT);
-                        manager.setBlockFocus(next);
+                        const next = block.relation.next as IndentedListBlock;
+                        if (next?.type == BlockType.IndentedListBlock) {
+                            const first = next.relation.firstChild as StandoffEditorBlock;
+                            first.setCaret(0, CARET.LEFT)
+                            manager.setBlockFocus(first);
+                            return;
+                        }
+                        if (next?.type == BlockType.StandoffEditorBlock) {
+                            (next as StandoffEditorBlock).setCaret(0, CARET.LEFT);
+                            manager.setBlockFocus(next);
+                            return;
+                        }
                     }
                 }
             },
