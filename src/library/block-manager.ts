@@ -452,29 +452,40 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        const parent = block.relation.parent as IndentedListBlock;
-                        if (parent?.type == BlockType.IndentedListBlock) return; // First child of another block.
+                        const parent = block.relation.parent;
+                        if (parent) {
+                            /**
+                             * Quit if this is the first child of another block.
+                             */
+                            return;
+                        }
                         const previous = block.relation.previous;
-                        if (!previous) return;
+                        if (!previous) {
+                            /**
+                             * Quit if this is the first block.
+                             */
+                            return;
+                        }
                         const indentedList = manager.createIndentedListBlock();
                         /**
-                         * Convert the has_previous into a has_parent, etc.
+                         * Convert the previous block into a parent of the indented list block.
                          */
                         const next = block.relation.next;
                         previous.relation.firstChild = indentedList;
                         indentedList.relation.parent = previous;
                         block.relation.parent = indentedList;
                         indentedList.relation.firstChild = block;
-                        delete previous.relation.next;
+                        previous.relation.next = next;
+                        next.relation.previous = previous;
                         delete block.relation.previous;
                         delete block.relation.next;
-                        delete next.relation.previous;
+                        previous.blocks.push(indentedList);
                         indentedList.blocks.push(block);
                         manager.blocks.push(indentedList);
                         const level = indentedList.metadata.indentLevel || 0 as number;
                         indentedList.metadata.indentLevel = level + 1;
                         indentedList.container.appendChild(block.container);
-                        previous.container.insertAdjacentElement("afterend", indentedList.container);
+                        previous.container.appendChild(indentedList.container);
                         manager.renderIndent(indentedList);
                         block.setCaret(0, CARET.LEFT);
                         manager.setBlockFocus(block);
@@ -1293,9 +1304,14 @@ export class BlockManager implements IBlockManager {
                 })
             }
             if (blockDto.children) {
-                blockDto.children.forEach(b => {
+                blockDto.children.forEach((b,i) => {
                     let block = self.recursivelyBuildBlock(textBlock.container, b) as IBlock;
                     textBlock.blocks.push(block);
+                    if (i > 0) {
+                        let previous = textBlock.blocks[i-1];
+                        block.relation.previous = previous;
+                        previous.relation.next = block;
+                    }
                 });
             }
             this.blocks.push(textBlock);
@@ -1307,9 +1323,14 @@ export class BlockManager implements IBlockManager {
             marginBlock.addBlockProperties([ { type: "block/marginalia/left" } ]);
             marginBlock.applyBlockPropertyStyling();
             if (blockDto.children) {
-                blockDto.children.forEach(b => { 
+                blockDto.children.forEach((b,i) => { 
                     let block = self.recursivelyBuildBlock(marginBlock.container, b) as IBlock;
                     marginBlock.blocks.push(block);
+                    if (i > 0) {
+                        let previous = marginBlock.blocks[i-1];
+                        block.relation.previous = previous;
+                        previous.relation.next = block;
+                    }
                 });
             }
             this.blocks.push(marginBlock);
@@ -1319,7 +1340,7 @@ export class BlockManager implements IBlockManager {
         if (blockDto.type == BlockType.IndentedListBlock) {
             const indentedListBlock = this.createIndentedListBlock();
             if (blockDto.children) {
-                blockDto.children.forEach(b => {
+                blockDto.children.forEach((b,i) => {
                     let block = self.recursivelyBuildBlock(indentedListBlock.container, b) as IBlock;
                     indentedListBlock.blocks.push(block);
                     updateElement(block.container, {
@@ -1328,11 +1349,15 @@ export class BlockManager implements IBlockManager {
                             "list-style": "square"
                         }
                     });
+                    if (i > 0) {
+                        let previous = indentedListBlock.blocks[i-1];
+                        block.relation.previous = previous;
+                        previous.relation.next = block;
+                    }
                 });
             }
             this.blocks.push(indentedListBlock);
             const level = indentedListBlock.metadata.indentLevel || 0 as number;
-            
             indentedListBlock.metadata.indentLevel = level + 1;
             this.renderIndent(indentedListBlock);
             container.appendChild(indentedListBlock.container);
