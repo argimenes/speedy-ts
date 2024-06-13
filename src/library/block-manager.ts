@@ -1293,7 +1293,10 @@ export class BlockManager implements IBlockManager {
                 })
             }
             if (blockDto.children) {
-                blockDto.children.forEach(b => self.recursivelyBuildBlock(textBlock.container, b));
+                blockDto.children.forEach(b => {
+                    let block = self.recursivelyBuildBlock(textBlock.container, b) as IBlock;
+                    textBlock.blocks.push(block);
+                });
             }
             this.blocks.push(textBlock);
             container.appendChild(textBlock.container);
@@ -1304,7 +1307,10 @@ export class BlockManager implements IBlockManager {
             marginBlock.addBlockProperties([ { type: "block/marginalia/left" } ]);
             marginBlock.applyBlockPropertyStyling();
             if (blockDto.children) {
-                blockDto.children.forEach(b => self.recursivelyBuildBlock(marginBlock.container, b));
+                blockDto.children.forEach(b => { 
+                    let block = self.recursivelyBuildBlock(marginBlock.container, b) as IBlock;
+                    marginBlock.blocks.push(block);
+                });
             }
             this.blocks.push(marginBlock);
             container.appendChild(marginBlock.container);
@@ -1313,62 +1319,20 @@ export class BlockManager implements IBlockManager {
         if (blockDto.type == BlockType.IndentedListBlock) {
             const indentedListBlock = this.createIndentedListBlock();
             if (blockDto.children) {
-                blockDto.children.forEach(b => self.recursivelyBuildBlock(indentedListBlock.container, b));
+                blockDto.children.forEach(b => {
+                    let block = self.recursivelyBuildBlock(indentedListBlock.container, b) as IBlock;
+                    indentedListBlock.blocks.push(block);
+                    updateElement(block.container, {
+                        style: {
+                            display: "list-item",
+                            "list-style": "square"
+                        }
+                    });
+                });
             }
             this.blocks.push(indentedListBlock);
             const level = indentedListBlock.metadata.indentLevel || 0 as number;
-            indentedListBlock.metadata.indentLevel = level + 1;
-            this.renderIndent(indentedListBlock);
-            container.appendChild(indentedListBlock.container);
-            return indentedListBlock;
-        }
-        return null;
-    }
-    recursivelyGetBlock(block: IBlock) {
-        console.log("recursivelyGetBlock", { blockDto: block });
-        const self = this;
-        if (block.type == BlockType.StandoffEditorBlock) {
-            const test = block.serialize();
-            textBlock.bind(block as IStandoffEditorBlockDto);
-            if (block.relation?.leftMargin) {
-                const leftMargin = this.recursivelyBuildBlock(container, block.relation.leftMargin) as MarginBlock;
-                textBlock.relation.leftMargin = leftMargin;
-                leftMargin.relation.parent = textBlock;
-                updateElement(leftMargin.container, {
-                    style: {
-                        position: "absolute",
-                        top: textBlock.cache.offset.h,
-                        width: "200px",
-                        "max-width": "200px",
-                        left: 0
-                    }
-                })
-            }
-            if (block.children) {
-                block.children.forEach(b => self.recursivelyBuildBlock(textBlock.container, b));
-            }
-            this.blocks.push(textBlock);
-            container.appendChild(textBlock.container);
-            return textBlock;
-        }
-        if (block.type == BlockType.MarginBlock) {
-            const marginBlock = this.createMarginBlock();
-            marginBlock.addBlockProperties([ { type: "block/marginalia/left" } ]);
-            marginBlock.applyBlockPropertyStyling();
-            if (block.children) {
-                block.children.forEach(b => self.recursivelyBuildBlock(marginBlock.container, b));
-            }
-            this.blocks.push(marginBlock);
-            container.appendChild(marginBlock.container);
-            return marginBlock;
-        }
-        if (block.type == BlockType.IndentedListBlock) {
-            const indentedListBlock = this.createIndentedListBlock();
-            if (block.children) {
-                block.children.forEach(b => self.recursivelyBuildBlock(indentedListBlock.container, b));
-            }
-            this.blocks.push(indentedListBlock);
-            const level = indentedListBlock.metadata.indentLevel || 0 as number;
+            
             indentedListBlock.metadata.indentLevel = level + 1;
             this.renderIndent(indentedListBlock);
             container.appendChild(indentedListBlock.container);
