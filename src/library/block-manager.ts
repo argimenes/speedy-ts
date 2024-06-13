@@ -849,10 +849,10 @@ export class BlockManager implements IBlockManager {
                             return;
                         }
                         if (parent.type == BlockType.IndentedListBlock) {
-                            let grandParent = parent.relation.parent as StandoffEditorBlock;
-                            if (grandParent) {
-                                const last = grandParent.getLastCell();
-                                grandParent.setCaret(last.index, CARET.LEFT);
+                            let previous = parent.relation.previous as StandoffEditorBlock;
+                            if (previous) {
+                                const last = previous.getLastCell();
+                                previous.setCaret(last.index, CARET.LEFT);
                                 return;
                             }
                         }
@@ -896,13 +896,20 @@ export class BlockManager implements IBlockManager {
                         //     return;
                         // }
                         let next = block.relation.next as StandoffEditorBlock;
-                        const len = block.cells.length;
                         if (!next) {
-                            block.setCaret(len - 1, CARET.LEFT);
+                            block.setCaret(block.getLastCell().index, CARET.LEFT);
                             return;
                         }
-                        next.setCaret(0, CARET.LEFT);
-                        manager.setBlockFocus(next);
+                        if(next.type == BlockType.StandoffEditorBlock) {
+                            next.setCaret(0, CARET.LEFT);
+                            manager.setBlockFocus(next);
+                            return;
+                        }
+                        if (next.type == BlockType.IndentedListBlock) {
+                            const first = next.relation.firstChild as StandoffEditorBlock;
+                            first.setCaret(0, CARET.LEFT);
+                            manager.setBlockFocus(first);
+                        }
                     }
                 }
             },
@@ -932,14 +939,6 @@ export class BlockManager implements IBlockManager {
                         /**
                          * Or skip to the end of the previous block.
                          */
-                        let indentedList = block.relation.parent as IndentedListBlock;
-                        if (indentedList?.type == BlockType.IndentedListBlock) {
-                            const previous = indentedList.relation.previous as StandoffEditorBlock;
-                            const last = previous.getLastCell();
-                            previous.setCaret(last.index);
-                            manager.setBlockFocus(previous);
-                            return;
-                        }
                         const previous = block.relation.previous as StandoffEditorBlock;
                         if (previous?.type == BlockType.StandoffEditorBlock) {
                             const last = previous.getLastCell();
@@ -947,6 +946,15 @@ export class BlockManager implements IBlockManager {
                             manager.setBlockFocus(previous);
                             return;
                         }
+                        let indentedList = block.relation.parent as IndentedListBlock;
+                        if (indentedList?.type == BlockType.IndentedListBlock) {
+                            const previous = indentedList.relation.parent as StandoffEditorBlock;
+                            const last = previous.getLastCell();
+                            previous.setCaret(last.index);
+                            manager.setBlockFocus(previous);
+                            return;
+                        }
+                        
                     }
                 }
             },
