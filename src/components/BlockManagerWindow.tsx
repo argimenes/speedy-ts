@@ -102,7 +102,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
         } as IMainListBlockDto;
         const manager = new BlockManager();
         manager.container = el;
-        manager.testLoadDocument(nextDoc);
+        manager.loadDocument(nextDoc);
         console.log({ manager, block: manager.blocks[0] })
     }
     return (

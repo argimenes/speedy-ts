@@ -837,12 +837,33 @@ export class BlockManager implements IBlockManager {
                             return;
                         }
                         let previous = block.relation.previous as StandoffEditorBlock;
-                        if (!previous) {
+                        if (previous) {
+                            const last = previous.getLastCell();
+                            previous.setCaret(last.index, CARET.LEFT);
+                            manager.setBlockFocus(previous);
+                            return;
+                        }
+                        let parent = block.relation.parent;
+                        if (!parent) {
                             block.setCaret(0, CARET.LEFT);
                             return;
                         }
-                        previous.setCaret(0, CARET.LEFT);
-                        manager.setBlockFocus(previous);
+                        if (parent.type == BlockType.IndentedListBlock) {
+                            let grandParent = parent.relation.parent as StandoffEditorBlock;
+                            if (grandParent) {
+                                const last = grandParent.getLastCell();
+                                grandParent.setCaret(last.index, CARET.LEFT);
+                                return;
+                            }
+                        }
+                        if (parent.type == BlockType.MarginBlock) {
+                            let marginParent = parent.relation.parent as StandoffEditorBlock;
+                            if (marginParent) {
+                                const last = marginParent.getLastCell();
+                                marginParent.setCaret(last.index, CARET.LEFT);
+                                return;
+                            }
+                        }
                     }
                 }
             },
@@ -1307,6 +1328,10 @@ export class BlockManager implements IBlockManager {
                 blockDto.children.forEach((b,i) => {
                     let block = self.recursivelyBuildBlock(textBlock.container, b) as IBlock;
                     textBlock.blocks.push(block);
+                    if (i == 0) {
+                        block.relation.parent = textBlock;
+                        textBlock.relation.firstChild = block;
+                    }
                     if (i > 0) {
                         let previous = textBlock.blocks[i-1];
                         block.relation.previous = previous;
@@ -1326,6 +1351,10 @@ export class BlockManager implements IBlockManager {
                 blockDto.children.forEach((b,i) => { 
                     let block = self.recursivelyBuildBlock(marginBlock.container, b) as IBlock;
                     marginBlock.blocks.push(block);
+                    if (i == 0) {
+                        block.relation.parent = marginBlock;
+                        marginBlock.relation.firstChild = block;
+                    }
                     if (i > 0) {
                         let previous = marginBlock.blocks[i-1];
                         block.relation.previous = previous;
@@ -1349,6 +1378,10 @@ export class BlockManager implements IBlockManager {
                             "list-style": "square"
                         }
                     });
+                    if (i == 0) {
+                        block.relation.parent = indentedListBlock;
+                        indentedListBlock.relation.firstChild = block;
+                    }
                     if (i > 0) {
                         let previous = indentedListBlock.blocks[i-1];
                         block.relation.previous = previous;
@@ -1371,8 +1404,8 @@ export class BlockManager implements IBlockManager {
             type: BlockType.MainListBlock
         } as IMainListBlockDto;
     }
-    testLoadDocument(dto: IMainListBlockDto) {
-        console.log("testLoadDocument", { dto });
+    loadDocument(dto: IMainListBlockDto) {
+        console.log("loadDocument", { dto });
         if (dto.type != BlockType.MainListBlock) {
             console.error("Expected doc.type to be a MainListBlock");
             return;
@@ -1387,7 +1420,7 @@ export class BlockManager implements IBlockManager {
             const len = dto.children.length;
             for (let i = 0; i <= len - 1; i++) {
                 let block = this.recursivelyBuildBlock(container, dto.children[i]) as IBlock;
-                console.log("testLoadDocument", { block });
+                console.log("loadDocument", { block });
                 blocks.push(block);
                 if (i > 0) {
                     let previous = blocks[i - 1];
