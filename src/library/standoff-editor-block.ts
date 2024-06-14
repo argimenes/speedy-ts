@@ -401,7 +401,7 @@ export interface IBlock {
     // removeRelation: (name: string, skipCommit?: boolean) => void;
     metadata: Record<string, any>;
     setFocus: () => void;
-    serialize: () => any;
+    serialize: () => IBlockDto;
     deserialize: (json: any|any[]) => IBlock;
     applyBlockPropertyStyling: () => void;
 }
@@ -1117,6 +1117,9 @@ export class StandoffEditorBlock extends AbstractBlock {
         };
         if (this.relation.leftMargin) {
             relation.leftMargin = this.relation.leftMargin.serialize();
+        }
+        if (this.relation.rightMargin) {
+            relation.rightMargin = this.relation.rightMargin.serialize();
         }
         return {
             id: this.id,

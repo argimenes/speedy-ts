@@ -7,7 +7,13 @@ export class IndentedListBlock extends AbstractBlock {
         this.type = BlockType.IndentedListBlock;
     }
     serialize(): {} {
-        throw new Error("Method not implemented.");
+        return {
+            id: this.id,
+            type: BlockType.IndentedListBlock,
+            metadata: this.metadata,
+            blockProperties: this.blockProperties.map(x => x.serialize()),
+            blocks: this.blocks.map(x => x.serialize())
+        }
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");

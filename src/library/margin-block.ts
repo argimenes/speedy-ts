@@ -7,7 +7,13 @@ export class MarginBlock extends AbstractBlock {
         this.type = BlockType.MarginBlock;
     }
     serialize(): {} {
-        throw new Error("Method not implemented.");
+        return {
+            id: this.id,
+            type: BlockType.MarginBlock,
+            metadata: this.metadata,
+            blockProperties: this.blockProperties.map(x => x.serialize()),
+            blocks: this.blocks.map(x => x.serialize())
+        }
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
@@ -23,7 +29,13 @@ export class RightMarginBlock extends AbstractBlock {
         this.type = BlockType.RightMarginBlock;
     }
     serialize(): {} {
-        throw new Error("Method not implemented.");
+        return {
+            id: this.id,
+            type: BlockType.RightMarginBlock,
+            metadata: this.metadata,
+            blockProperties: this.blockProperties.map(x => x.serialize()),
+            blocks: this.blocks.map(x => x.serialize())
+        }
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");

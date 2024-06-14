@@ -196,6 +196,13 @@ export class BlockManager implements IBlockManager {
     getBlockSchemas() {
         return [
             {
+                type: "block/font-size/three-quarters",
+                name: "3/4 the regular font size",
+                decorate: {
+                    blockClass: "block_font-size_three-quarters"
+                }
+            },
+            {
                 type: "block/marginalia/left",
                 name: "Left margin block",
                 description: "Handles the alignment of a left margin block to the one to its right.",
@@ -920,6 +927,31 @@ export class BlockManager implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Shift-ArrowDown"
+                },
+                action: {
+                    name: "Move the cursor down one nested row. If one isn't found, do nothing.",
+                    description: `
+                        
+                    `,
+                    handler: (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
+                        let next = block.relation.next as IndentedListBlock;
+                        if (next?.type != BlockType.IndentedListBlock) {
+                            return;
+                        }
+                        const first = next.relation.firstChild as StandoffEditorBlock;
+                        first.setCaret(0, CARET.LEFT);
+                        manager.setBlockFocus(first);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "ArrowDown"
                 },
                 action: {
@@ -1550,8 +1582,16 @@ export class BlockManager implements IBlockManager {
     getDocument() {
         const dto= {
             id: this.id,
-            type: BlockType.MainListBlock
+            type: BlockType.MainListBlock,
+            children: []
         } as IMainListBlockDto;
+        const mainBlock = this.blocks.find(x => x.type == BlockType.MainListBlock);
+        if (!mainBlock) return dto;
+        mainBlock.blocks.forEach(b => {
+            let block = b.serialize();
+            dto.children?.push(block);
+        });
+        return dto;
     }
     loadDocument(dto: IMainListBlockDto) {
         console.log("loadDocument", { dto });
