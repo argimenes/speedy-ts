@@ -16,3 +16,19 @@ export class MarginBlock extends AbstractBlock {
         throw new Error("Method not implemented.");
     }
 }
+
+export class RightMarginBlock extends AbstractBlock {
+    constructor(args: IAbstractBlockConstructor) {
+        super(args);
+        this.type = BlockType.RightMarginBlock;
+    }
+    serialize(): {} {
+        throw new Error("Method not implemented.");
+    }
+    deserialize(json: any): IBlock {
+        throw new Error("Method not implemented.");
+    }
+    destroy(): void {
+        throw new Error("Method not implemented.");
+    }
+}

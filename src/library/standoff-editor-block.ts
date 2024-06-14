@@ -379,6 +379,7 @@ export enum BlockType {
     PDFBlock = "pdf-block",
     GridBlock = "grid-block",
     MarginBlock = "margin-block",
+    RightMarginBlock = "right-margin-block",
     ImageBlock = "image-block",
     VideoBlock = "video-block"
 }

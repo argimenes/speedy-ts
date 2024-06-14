@@ -33,14 +33,14 @@
     margin: 0 300px;
   }
 
-  .block-window.block_marginalia_left { 
+  .block-window .block_marginalia_left { 
     position: absolute;
     left: 63px;
     height: 30px;
     width: 200px;
   }
 
-  .block-window.block_marginalia_right { 
+  .block-window .block_marginalia_right { 
     position: absolute;
     right: 552px;
     height: 30px;

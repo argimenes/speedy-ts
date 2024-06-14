@@ -1,6 +1,6 @@
 import { Component } from "solid-js"
-import { BlockManager, RelationType } from "../library/block-manager"
-import { BlockType, IBlockDto, IMainListBlockDto, IStandoffEditorBlockDto, StandoffEditorBlockDto } from "../library/standoff-editor-block"
+import { BlockManager } from "../library/block-manager"
+import { BlockType, IBlockDto, IMainListBlockDto, IStandoffEditorBlockDto } from "../library/standoff-editor-block"
 import { v4 as uuidv4 } from 'uuid';
 
 type Props = {
@@ -49,17 +49,17 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         { type: "block/alignment/right" }
                     ],
                     relation: {
-                        leftMargin: {
-                            type: BlockType.MarginBlock,
+                        rightMargin: {
+                            type: BlockType.RightMarginBlock,
                             children: [
                                 {
                                     type: BlockType.StandoffEditorBlock,
-                                    text: "Left margin note 2a.",
+                                    text: "Right margin note 2a.",
                                     blockProperties: [ { type: "block/alignment/left" }]
                                 } as IStandoffEditorBlockDto,
                                 {
                                     type: BlockType.StandoffEditorBlock,
-                                    text: "Left margin note 2b.",
+                                    text: "Right margin note 2b.",
                                     blockProperties: [ { type: "block/alignment/left" }]
                                 } as IStandoffEditorBlockDto
                             ]
@@ -97,7 +97,14 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             blockProperties: [ { type: "block/alignment/left" }]
                         } as IStandoffEditorBlockDto
                     ]
-                }
+                },
+                {
+                    type: BlockType.StandoffEditorBlock,
+                    text: "... and back to a regular text block [centre aligned]",
+                    blockProperties: [
+                        { type: "block/alignment/centre" }
+                    ]
+                } as IStandoffEditorBlockDto
             ]
         } as IMainListBlockDto;
         const manager = new BlockManager();

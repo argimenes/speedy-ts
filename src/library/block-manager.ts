@@ -8,7 +8,7 @@ import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerAr
     IStandoffEditorBlockDto} from "./standoff-editor-block";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
-import { MarginBlock } from "./margin-block";
+import { MarginBlock, RightMarginBlock } from "./margin-block";
 import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
 import { pipeToNodeWritable } from "solid-js/web";
@@ -336,60 +336,57 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        let leftMargin = block.relation.leftMargin;
+                        let leftMargin = block.relation.leftMargin as MarginBlock;
                         if (!leftMargin) {
                             leftMargin = manager.createMarginBlock();
                             const child = manager.createStandoffEditorBlock();
-                            updateElement(leftMargin.container, {
-                                style: {
-                                    top: block.cache.offset.y + "px",
-                                    left: "-200px"
-                                }
-                            });
                             child.addEOL();
-                            const hand = document.createElement("SPAN") as HTMLSpanElement;
-                            hand.innerHTML = "☞";
-                            updateElement(hand, {
-                                style: {
-                                    "font-size": "1.5rem",
-                                    position: "absolute",
-                                    top: 0,
-                                    right: 0
-                                }
-                            });
-                            child.container.appendChild(hand);
-                            leftMargin.container.classList.add("block-window");
-                            child.container.classList.add("block-window");
-                            child.addBlockProperties([
-                                { type: "block/alignment/left" }
-                            ]);
-                            leftMargin.addBlockProperties([
-                                { type: "block/marginalia/left" }
-                            ]);
-                            manager.blocks.push(leftMargin);
-                            manager.blocks.push(child);
                             manager.batchRelate({
                                 toAdd: [
                                     { sourceId: leftMargin.id, name: "firstChild", targetId: child.id },
                                     { sourceId: child.id, name: "parent", targetId: leftMargin.id },
                                 ]
                             });
-                            // leftMargin.relation.firstChild = child;
-                            // child.relation.parent = leftMargin;
+                            leftMargin.container.classList.add("block-window");
+                            child.container.classList.add("block-window");
+                            child.addBlockProperties([ { type: "block/alignment/left" } ]);
                             child.applyBlockPropertyStyling();
+                            leftMargin.addBlockProperties([ { type: "block/marginalia/left" } ]);
                             leftMargin.applyBlockPropertyStyling();
-                            manager.batchRelate({
-                                toAdd: [
-                                    { sourceId: block.id, name: "leftMargin", targetId: leftMargin.id },
-                                    { sourceId: leftMargin.id, name: "parent", targetId: block.id },
-                                ]
-                            });
-                            // block.relation.leftMargin = leftMargin;
-                            // leftMargin.relation.parent = block;
-                            block.container.parentElement?.appendChild(leftMargin.container);
-                            leftMargin.container.appendChild(child.container);
+                            manager.stageLeftMarginBlock(leftMargin, block);
                             child.setCaret(0, CARET.LEFT);
                             manager.setBlockFocus(child);
+                            // updateElement(leftMargin.container, {
+                            //     style: {
+                            //         top: block.cache.offset.y + "px",
+                            //         left: "-200px"
+                            //     }
+                            // });
+                            // const hand = document.createElement("SPAN") as HTMLSpanElement;
+                            // hand.innerHTML = "☞";
+                            // updateElement(hand, {
+                            //     style: {
+                            //         "font-size": "1.5rem",
+                            //         position: "absolute",
+                            //         top: 0,
+                            //         right: 0
+                            //     }
+                            // });
+                            // manager.blocks.push(leftMargin);
+                            // manager.blocks.push(child);
+                            // // leftMargin.relation.firstChild = child;
+                            // // child.relation.parent = leftMargin;
+                            // manager.batchRelate({
+                            //     toAdd: [
+                            //         { sourceId: block.id, name: "leftMargin", targetId: leftMargin.id },
+                            //         { sourceId: leftMargin.id, name: "parent", targetId: block.id },
+                            //     ]
+                            // });
+                            // // block.relation.leftMargin = leftMargin;
+                            // // leftMargin.relation.parent = block;
+                            // block.container.parentElement?.appendChild(leftMargin.container);
+                            // leftMargin.container.appendChild(child.container);
+                            
                             return;
                         } else {
                             const child = leftMargin.relation.firstChild as StandoffEditorBlock;
@@ -1377,6 +1374,72 @@ export class BlockManager implements IBlockManager {
         this.commits.push(commit);
         this.pointer++;
     }
+    stageRightMarginBlock(rightMargin: MarginBlock, mainBlock: StandoffEditorBlock) {
+        this.batchRelate({
+            toAdd: [
+                { sourceId: mainBlock.id, name: "rightMargin", targetId: rightMargin.id },
+                { sourceId: rightMargin.id, name: "parent", targetId: mainBlock.id }
+            ]
+        });
+        updateElement(mainBlock.container, {
+            style: {
+                position: "relative"
+            }
+        });
+        updateElement(rightMargin.container, {
+            style: {
+                position: "absolute",
+                top: mainBlock.cache.offset.h,
+                width: "200px",
+                "max-width": "200px",
+                right: "-250px"
+            }
+        });
+        const hand = document.createElement("SPAN") as HTMLSpanElement;
+        hand.innerHTML = "☜";
+        updateElement(hand, {
+            style: {
+                "font-size": "2rem",
+                position: "absolute",
+                top: "-3px",
+                left: "-15px"
+            }
+        });
+        rightMargin.container.appendChild(hand);
+    }
+    stageLeftMarginBlock(leftMargin: MarginBlock, mainBlock: StandoffEditorBlock) {
+        this.batchRelate({
+            toAdd: [
+                { sourceId: mainBlock.id, name: "leftMargin", targetId: leftMargin.id },
+                { sourceId: leftMargin.id, name: "parent", targetId: mainBlock.id }
+            ]
+        });
+        updateElement(mainBlock.container, {
+            style: {
+                position: "relative"
+            }
+        });
+        updateElement(leftMargin.container, {
+            style: {
+                position: "absolute",
+                top: mainBlock.cache.offset.h,
+                width: "200px",
+                "max-width": "200px",
+                left: "-250px"
+            }
+        });
+        const hand = document.createElement("SPAN") as HTMLSpanElement;
+        hand.innerHTML = "☞";
+        updateElement(hand, {
+            style: {
+                "font-size": "2rem",
+                position: "absolute",
+                top: "-3px",
+                right: "-15px"
+            }
+        });
+        leftMargin.container.appendChild(hand);
+    }
     recursivelyBuildBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         console.log("recursivelyBuildBlock", { container, blockDto });
         const self = this;
@@ -1385,33 +1448,11 @@ export class BlockManager implements IBlockManager {
             textBlock.bind(blockDto as IStandoffEditorBlockDto);
             if (blockDto.relation?.leftMargin) {
                 const leftMargin = this.recursivelyBuildBlock(textBlock.container, blockDto.relation.leftMargin) as MarginBlock;
-                textBlock.relation.leftMargin = leftMargin;
-                leftMargin.relation.parent = textBlock;
-                updateElement(textBlock.container, {
-                    style: {
-                        position: "relative"
-                    }
-                });
-                updateElement(leftMargin.container, {
-                    style: {
-                        position: "absolute",
-                        top: textBlock.cache.offset.h,
-                        width: "200px",
-                        "max-width": "200px",
-                        left: "-250px"
-                    }
-                });
-                const hand = document.createElement("SPAN") as HTMLSpanElement;
-                hand.innerHTML = "☞";
-                updateElement(hand, {
-                    style: {
-                        "font-size": "2rem",
-                        position: "absolute",
-                        top: 0,
-                        right: 0
-                    }
-                });
-                leftMargin.container.appendChild(hand);
+                this.stageLeftMarginBlock(leftMargin, textBlock);
+            }
+            if (blockDto.relation?.rightMargin) {
+                const rightMargin = this.recursivelyBuildBlock(textBlock.container, blockDto.relation.rightMargin) as MarginBlock;
+                this.stageRightMarginBlock(rightMargin, textBlock);
             }
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
@@ -1428,7 +1469,6 @@ export class BlockManager implements IBlockManager {
                     }
                 });
             }
-            this.blocks.push(textBlock);
             container.appendChild(textBlock.container);
             return textBlock;
         }
@@ -1451,9 +1491,30 @@ export class BlockManager implements IBlockManager {
                     }
                 });
             }
-            this.blocks.push(marginBlock);
             container.appendChild(marginBlock.container);
             return marginBlock;
+        }
+        if (blockDto.type == BlockType.RightMarginBlock) {
+            const rmb = this.createRightMarginBlock();
+            rmb.addBlockProperties([ { type: "block/marginalia/right" } ]);
+            rmb.applyBlockPropertyStyling();
+            if (blockDto.children) {
+                blockDto.children.forEach((b,i) => { 
+                    let block = self.recursivelyBuildBlock(rmb.container, b) as IBlock;
+                    rmb.blocks.push(block);
+                    if (i == 0) {
+                        block.relation.parent = rmb;
+                        rmb.relation.firstChild = block;
+                    }
+                    if (i > 0) {
+                        let previous = rmb.blocks[i-1];
+                        block.relation.previous = previous;
+                        previous.relation.next = block;
+                    }
+                });
+            }
+            container.appendChild(rmb.container);
+            return rmb;
         }
         if (blockDto.type == BlockType.IndentedListBlock) {
             const indentedListBlock = this.createIndentedListBlock();
@@ -1478,7 +1539,6 @@ export class BlockManager implements IBlockManager {
                     }
                 });
             }
-            this.blocks.push(indentedListBlock);
             const level = indentedListBlock.metadata.indentLevel || 0 as number;
             indentedListBlock.metadata.indentLevel = level + 1;
             this.renderIndent(indentedListBlock);
@@ -1503,7 +1563,6 @@ export class BlockManager implements IBlockManager {
         const container = document.createElement("DIV") as HTMLDivElement;
         const mainBlock = this.createMainListBlock();
         mainBlock.bind(dto);
-        this.blocks.push(mainBlock);
         let blocks: IBlock[] = [];
         if (dto.children) {
             const len = dto.children.length;
@@ -1552,6 +1611,7 @@ export class BlockManager implements IBlockManager {
                 value: { id: block.id }
             }
         });
+        this.blocks.push(block);
         return block;
     }
     createIndentedListBlock() {
@@ -1572,6 +1632,7 @@ export class BlockManager implements IBlockManager {
                 value: { id: block.id }
             }
         });
+        this.blocks.push(block);
         return block;
     }
     createMarginBlock() {
@@ -1592,6 +1653,28 @@ export class BlockManager implements IBlockManager {
                 value: { id: block.id }
             }
         });
+        this.blocks.push(block);
+        return block;
+    }
+    createRightMarginBlock() {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new RightMarginBlock({
+            owner: this
+        });
+        block.setBlockSchemas(blockSchemas);
+        block.applyBlockPropertyStyling();
+        this.commit({
+            redo: {
+                id: this.id,
+                name: "createRightMarginBlock"
+            },
+            undo: {
+                id: this.id,
+                name: "uncreateRightMarginBlock",
+                value: { id: block.id }
+            }
+        });
+        this.blocks.push(block);
         return block;
     }
     createStandoffEditorBlock() {
@@ -1619,6 +1702,7 @@ export class BlockManager implements IBlockManager {
                 value: { id: block.id }
             }
         });
+        this.blocks.push(block);
         return block;
     }
     private uncreateStandoffEditorBlock(id: GUID) {
