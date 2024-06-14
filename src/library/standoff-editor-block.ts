@@ -372,6 +372,8 @@ export enum BlockType {
     RootBlock = "root-block",
     MainListBlock = "main-list-block",
     IndentedListBlock = "indented-list-block",
+    TabRowBlock = "tab-row-block",
+    TabBlock = "tab-block",
     StandoffEditorBlock = "standoff-editor-block",
     HTMLEditorBlock = "html-editor-block",
     IFrameBlock = "iframe-block",

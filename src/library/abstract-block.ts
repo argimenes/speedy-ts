@@ -126,7 +126,7 @@ export abstract class AbstractBlock implements IBlock {
     setFocus(){
         this.container.focus();
     }
-    abstract serialize(): {};
+    abstract serialize():any{};
     abstract deserialize(json: any|any[]): IBlock;
     abstract destroy(): void;
 }

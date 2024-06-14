@@ -12,6 +12,7 @@ import { MarginBlock, RightMarginBlock } from "./margin-block";
 import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
 import { pipeToNodeWritable } from "solid-js/web";
+import { TabBlock, TabRowBlock } from "./tabs-block";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -1513,13 +1514,21 @@ export class BlockManager implements IBlockManager {
                     let block = self.recursivelyBuildBlock(marginBlock.container, b) as IBlock;
                     marginBlock.blocks.push(block);
                     if (i == 0) {
-                        block.relation.parent = marginBlock;
-                        marginBlock.relation.firstChild = block;
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: marginBlock.id, name: "parent", targetId: block.id },
+                                { sourceId: block.id, name: "firstChild", targetId: marginBlock.id },
+                            ]
+                        });
                     }
                     if (i > 0) {
                         let previous = marginBlock.blocks[i-1];
-                        block.relation.previous = previous;
-                        previous.relation.next = block;
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: block.id, name: "previous", targetId: previous.id },
+                                { sourceId: previous.id, name: "next", targetId: block.id },
+                            ]
+                        });
                     }
                 });
             }
@@ -1535,18 +1544,88 @@ export class BlockManager implements IBlockManager {
                     let block = self.recursivelyBuildBlock(rmb.container, b) as IBlock;
                     rmb.blocks.push(block);
                     if (i == 0) {
-                        block.relation.parent = rmb;
-                        rmb.relation.firstChild = block;
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: rmb.id, name: "parent", targetId: block.id },
+                                { sourceId: block.id, name: "firstChild", targetId: rmb.id },
+                            ]
+                        });
                     }
                     if (i > 0) {
                         let previous = rmb.blocks[i-1];
-                        block.relation.previous = previous;
-                        previous.relation.next = block;
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: block.id, name: "previous", targetId: previous.id },
+                                { sourceId: previous.id, name: "next", targetId: block.id },
+                            ]
+                        });
                     }
                 });
             }
             container.appendChild(rmb.container);
             return rmb;
+        }
+        if (blockDto.type == BlockType.TabRowBlock) {
+            const rowBlock = this.createTabRowBlock();
+            if (blockDto.children) {
+                blockDto.children.forEach((b,i) => {
+                    let block = self.recursivelyBuildBlock(rowBlock.container, b) as IBlock;
+                    rowBlock.blocks.push(block);
+                    if (i == 0) {
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: rowBlock.id, name: "parent", targetId: rowBlock.blocks[0].id },
+                                { sourceId: rowBlock.blocks[0].id, name: "firstChild", targetId: rowBlock.id },
+                            ]
+                        });
+                    }
+                    if (i > 0) {
+                        let previous = rowBlock.blocks[i-1];
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: block.id, name: "previous", targetId: previous.id },
+                                { sourceId: previous.id, name: "next", targetId: block.id },
+                            ]
+                        });
+                    }
+                });
+            }
+            const level = rowBlock.metadata.indentLevel || 0 as number;
+            rowBlock.metadata.indentLevel = level + 1;
+            this.renderIndent(rowBlock);
+            container.appendChild(rowBlock.container);
+            return rowBlock;
+        }
+        if (blockDto.type == BlockType.TabBlock) {
+            const tabBlock = this.createTabBlock();
+            if (blockDto.children) {
+                blockDto.children.forEach((b,i) => {
+                    let block = self.recursivelyBuildBlock(rowBlock.container, b) as IBlock;
+                    tabBlock.blocks.push(block);
+                    if (i == 0) {
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: tabBlock.id, name: "parent", targetId: tabBlock.blocks[0].id },
+                                { sourceId: tabBlock.blocks[0].id, name: "firstChild", targetId: tabBlock.id },
+                            ]
+                        });
+                    }
+                    if (i > 0) {
+                        let previous = tabBlock.blocks[i-1];
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: block.id, name: "previous", targetId: previous.id },
+                                { sourceId: previous.id, name: "next", targetId: block.id },
+                            ]
+                        });
+                    }
+                });
+            }
+            const level = tabBlock.metadata.indentLevel || 0 as number;
+            tabBlock.metadata.indentLevel = level + 1;
+            this.renderIndent(tabBlock);
+            container.appendChild(tabBlock.container);
+            return tabBlock;
         }
         if (blockDto.type == BlockType.IndentedListBlock) {
             const indentedListBlock = this.createIndentedListBlock();
@@ -1561,13 +1640,21 @@ export class BlockManager implements IBlockManager {
                         }
                     });
                     if (i == 0) {
-                        block.relation.parent = indentedListBlock;
-                        indentedListBlock.relation.firstChild = block;
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: block.id, name: "parent", targetId: indentedListBlock.id },
+                                { sourceId: indentedListBlock.id, name: "firstChild", targetId: block.id },
+                            ]
+                        });
                     }
                     if (i > 0) {
                         let previous = indentedListBlock.blocks[i-1];
-                        block.relation.previous = previous;
-                        previous.relation.next = block;
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: block.id, name: "previous", targetId: previous.id },
+                                { sourceId: previous.id, name: "next", targetId: block.id },
+                            ]
+                        });
                     }
                 });
             }
@@ -1669,6 +1756,48 @@ export class BlockManager implements IBlockManager {
             undo: {
                 id: this.id,
                 name: "uncreateIndentedListBlock",
+                value: { id: block.id }
+            }
+        });
+        this.blocks.push(block);
+        return block;
+    }
+    createTabBlock(){
+        const blockSchemas = this.getBlockSchemas();
+        const block = new TabBlock({
+            owner: this
+        });
+        block.setBlockSchemas(blockSchemas);
+        block.applyBlockPropertyStyling();
+        this.commit({
+            redo: {
+                id: this.id,
+                name: "createTabBlock"
+            },
+            undo: {
+                id: this.id,
+                name: "uncreateTabBlock",
+                value: { id: block.id }
+            }
+        });
+        this.blocks.push(block);
+        return block;
+    }
+    createTabRowBlock() {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new TabRowBlock({
+            owner: this
+        });
+        block.setBlockSchemas(blockSchemas);
+        block.applyBlockPropertyStyling();
+        this.commit({
+            redo: {
+                id: this.id,
+                name: "createTabRowBlock"
+            },
+            undo: {
+                id: this.id,
+                name: "uncreateTabRowBlock",
                 value: { id: block.id }
             }
         });

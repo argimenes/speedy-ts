@@ -104,7 +104,82 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                     blockProperties: [
                         { type: "block/alignment/centre" }
                     ]
-                } as IStandoffEditorBlockDto
+                } as IStandoffEditorBlockDto,
+                {
+                    type: BlockType.TabRowBlock,
+                    children: [
+                        {
+                            type: BlockType.TabBlock,
+                            name: "Tab 1",
+                            children: [
+                                {
+                                    type: BlockType.StandoffEditorBlock,
+                                    text: "Line 1",
+                                    blockProperties: [
+                                        { type: "block/alignment/left" }
+                                    ]
+                                } as IStandoffEditorBlockDto,
+                                {
+                                    type: BlockType.StandoffEditorBlock,
+                                    text: "Line 2",
+                                    blockProperties: [
+                                        { type: "block/alignment/left" }
+                                    ]
+                                } as IStandoffEditorBlockDto
+                            ]
+                        }
+                    ]
+                },
+                {
+                    type: BlockType.TabRowBlock,
+                    children: [
+                        {
+                            type: BlockType.TabBlock,
+                            name: "Tab 2",
+                            children: [
+                                {
+                                    type: BlockType.StandoffEditorBlock,
+                                    text: "Line 3",
+                                    blockProperties: [
+                                        { type: "block/alignment/left" }
+                                    ]
+                                } as IStandoffEditorBlockDto,
+                                {
+                                    type: BlockType.StandoffEditorBlock,
+                                    text: "Line 4",
+                                    blockProperties: [
+                                        { type: "block/alignment/left" }
+                                    ]
+                                } as IStandoffEditorBlockDto
+                            ]
+                        }
+                    ]
+                },
+                {
+                    type: BlockType.TabRowBlock,
+                    children: [
+                        {
+                            type: BlockType.TabBlock,
+                            name: "Tab 3",
+                            children: [
+                                {
+                                    type: BlockType.StandoffEditorBlock,
+                                    text: "Line 5",
+                                    blockProperties: [
+                                        { type: "block/alignment/left" }
+                                    ]
+                                } as IStandoffEditorBlockDto,
+                                {
+                                    type: BlockType.StandoffEditorBlock,
+                                    text: "Line 6",
+                                    blockProperties: [
+                                        { type: "block/alignment/left" }
+                                    ]
+                                } as IStandoffEditorBlockDto
+                            ]
+                        }
+                    ]
+                }
             ]
         } as IMainListBlockDto;
         const manager = new BlockManager();
