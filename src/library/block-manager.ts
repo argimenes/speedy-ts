@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { MarginBlock } from "./margin-block";
 import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
+import { pipeToNodeWritable } from "solid-js/web";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -85,6 +86,34 @@ export class BlockManager implements IBlockManager {
     }
     updateView() {
         this.blocks.forEach(x => x.updateView());
+    }
+    batchRelate(batch: IBatchRelateArgs) {
+        const self = this;
+        if (batch.toAdd) {
+            batch.toAdd.forEach(change => {
+                const source = self.getBlock(change.sourceId);
+                const target = self.getBlock(change.targetId);
+                source.relation[change.name] = target;
+            });
+        }
+        if (batch.toDelete) {
+            batch.toDelete.forEach(change => {
+                const source = self.getBlock(change.sourceId);
+                delete source.relation[change.name];
+            })
+        }
+        this.commit({
+            redo: {
+                id: this.id,
+                name: "batchRelate",
+                value: { toAdd: batch.toAdd, toDelete: batch.toDelete }
+            },
+            undo: {
+                id: this.id,
+                name: "batchRelate",
+                value: { toAdd: batch.toDelete, toDelete: batch.toAdd }
+            }
+        });
     }
     redo() {
         this.direction = PointerDirection.Redo;
@@ -318,6 +347,17 @@ export class BlockManager implements IBlockManager {
                                 }
                             });
                             child.addEOL();
+                            const hand = document.createElement("SPAN") as HTMLSpanElement;
+                            hand.innerHTML = "☞";
+                            updateElement(hand, {
+                                style: {
+                                    "font-size": "1.5rem",
+                                    position: "absolute",
+                                    top: 0,
+                                    right: 0
+                                }
+                            });
+                            child.container.appendChild(hand);
                             leftMargin.container.classList.add("block-window");
                             child.container.classList.add("block-window");
                             child.addBlockProperties([
@@ -326,16 +366,28 @@ export class BlockManager implements IBlockManager {
                             leftMargin.addBlockProperties([
                                 { type: "block/marginalia/left" }
                             ]);
-                            leftMargin.relation.firstChild = child;
-                            child.relation.parent = leftMargin;
-                            child.applyBlockPropertyStyling();
-                            leftMargin.applyBlockPropertyStyling();
-                            block.relation.leftMargin = leftMargin;
-                            leftMargin.relation.parent = block;
-                            block.container.parentElement?.appendChild(leftMargin.container);
-                            leftMargin.container.appendChild(child.container);
                             manager.blocks.push(leftMargin);
                             manager.blocks.push(child);
+                            manager.batchRelate({
+                                toAdd: [
+                                    { sourceId: leftMargin.id, name: "firstChild", targetId: child.id },
+                                    { sourceId: child.id, name: "parent", targetId: leftMargin.id },
+                                ]
+                            });
+                            // leftMargin.relation.firstChild = child;
+                            // child.relation.parent = leftMargin;
+                            child.applyBlockPropertyStyling();
+                            leftMargin.applyBlockPropertyStyling();
+                            manager.batchRelate({
+                                toAdd: [
+                                    { sourceId: block.id, name: "leftMargin", targetId: leftMargin.id },
+                                    { sourceId: leftMargin.id, name: "parent", targetId: block.id },
+                                ]
+                            });
+                            // block.relation.leftMargin = leftMargin;
+                            // leftMargin.relation.parent = block;
+                            block.container.parentElement?.appendChild(leftMargin.container);
+                            leftMargin.container.appendChild(child.container);
                             child.setCaret(0, CARET.LEFT);
                             manager.setBlockFocus(child);
                             return;
@@ -1348,7 +1400,18 @@ export class BlockManager implements IBlockManager {
                         "max-width": "200px",
                         left: "-250px"
                     }
-                })
+                });
+                const hand = document.createElement("SPAN") as HTMLSpanElement;
+                hand.innerHTML = "☞";
+                updateElement(hand, {
+                    style: {
+                        "font-size": "2rem",
+                        position: "absolute",
+                        top: 0,
+                        right: 0
+                    }
+                });
+                leftMargin.container.appendChild(hand);
             }
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
