@@ -1596,18 +1596,25 @@ export class BlockManager implements IBlockManager {
             return gridBlock;
         }
         if (blockDto.type == BlockType.GridRowBlock) {
-            const grid = this.createGridRowBlock();
+            const row = this.createGridRowBlock();
             const rowLen = blockDto.children?.length || 0;
             const width = 100 /rowLen;
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
-                    let row = self.recursivelyBuildBlock(grid.container, b) as GridRowBlock;
-                    grid.blocks.push(row);
+                    let cell = self.recursivelyBuildBlock(row.container, b) as GridRowBlock;
+                    if (b.width) {
+                        updateElement(cell.container, {
+                            style: {
+                                width: b.width
+                            }
+                        });
+                    }
+                    row.blocks.push(cell);
                     if (i == 0) {
                         self.batchRelate({
                             toAdd: [
-                                { sourceId: grid.id, name: "parent", targetId: row.blocks[0].id },
-                                { sourceId: row.blocks[0].id, name: "firstChild", targetId: grid.id },
+                                { sourceId: row.id, name: "parent", targetId: row.blocks[0].id },
+                                { sourceId: row.blocks[0].id, name: "firstChild", targetId: row.id },
                             ]
                         });
                     }
@@ -1622,15 +1629,16 @@ export class BlockManager implements IBlockManager {
                     }
                 });
             }
-            container.appendChild(grid.container);
-            return grid;
+            container.appendChild(row.container);
+            return row;
         }
         if (blockDto.type == BlockType.GridCellBlock) {
             const cell = this.createGridCellBlock();
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
                     let block = self.recursivelyBuildBlock(cell.container, b) as GridCellBlock;
-                    if (b.width) block.container.style.width = b.width;
+                    
+                    cell.blocks.push(block);
                     if (i == 0) {
                         self.batchRelate({
                             toAdd: [

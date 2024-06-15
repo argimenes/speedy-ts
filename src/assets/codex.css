@@ -85,3 +85,10 @@
     color: #fff;
     background-color: #aaa;
   }
+  .grid-cell {
+    display: inline-block;
+    border-radius: 3px;
+    padding: 3px;
+    border: 1px solid #333;
+    margin: 3px;
+  }

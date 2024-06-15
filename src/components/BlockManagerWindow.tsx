@@ -178,7 +178,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             children: [
                                 {
                                     type: BlockType.GridCellBlock,
-                                    width: "33%",
+                                    width: "30%",
                                     children: [
                                         {
                                             type: BlockType.StandoffEditorBlock,
@@ -188,7 +188,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                 },
                                 {
                                     type: BlockType.GridCellBlock,
-                                    width: "33%",
+                                    width: "30%",
                                     children: [
                                         {
                                             type: BlockType.StandoffEditorBlock,
@@ -198,7 +198,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                 },
                                 {
                                     type: BlockType.GridCellBlock,
-                                    width: "33%",
+                                    width: "30%",
                                     children: [
                                         {
                                             type: BlockType.StandoffEditorBlock,
@@ -213,7 +213,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             children: [
                                 {
                                     type: BlockType.GridCellBlock,
-                                    width: "25%",
+                                    width: "22.5%",
                                     children: [
                                         {
                                             type: BlockType.StandoffEditorBlock,
@@ -223,7 +223,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                 },
                                 {
                                     type: BlockType.GridCellBlock,
-                                    width: "50%",
+                                    width: "49%",
                                     children: [
                                         {
                                             type: BlockType.StandoffEditorBlock,
@@ -233,7 +233,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                 },
                                 {
                                     type: BlockType.GridCellBlock,
-                                    width: "25%",
+                                    width: "22.5%",
                                     children: [
                                         {
                                             type: BlockType.StandoffEditorBlock,

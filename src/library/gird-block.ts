@@ -48,6 +48,7 @@ export class GridRowBlock extends AbstractBlock {
 export class GridCellBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
+        this.container.classList.add("grid-cell");
         this.type = BlockType.GridCellBlock;
     }
     serialize(): {} {
