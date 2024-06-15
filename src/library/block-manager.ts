@@ -13,6 +13,7 @@ import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
 import { pipeToNodeWritable } from "solid-js/web";
 import { TabBlock, TabRowBlock } from "./tabs-block";
+import { GridBlock, GridCellBlock, GridRowBlock } from "./gird-block";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -1565,6 +1566,93 @@ export class BlockManager implements IBlockManager {
             container.appendChild(rmb.container);
             return rmb;
         }
+        if (blockDto.type == BlockType.GridBlock) {
+            const gridBlock = this.createGridBlock();
+            
+            if (blockDto.children) {
+                blockDto.children.forEach((b,i) => {
+                    let row = self.recursivelyBuildBlock(gridBlock.container, b) as GridRowBlock;
+                    gridBlock.blocks.push(row);
+                    if (i == 0) {
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: gridBlock.id, name: "parent", targetId: gridBlock.blocks[0].id },
+                                { sourceId: gridBlock.blocks[0].id, name: "firstChild", targetId: gridBlock.id },
+                            ]
+                        });
+                    }
+                    if (i > 0) {
+                        let previous = gridBlock.blocks[i-1];
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: row.id, name: "previous", targetId: previous.id },
+                                { sourceId: previous.id, name: "next", targetId: row.id },
+                            ]
+                        });
+                    }
+                });
+            }
+            container.appendChild(gridBlock.container);
+            return gridBlock;
+        }
+        if (blockDto.type == BlockType.GridRowBlock) {
+            const grid = this.createGridRowBlock();
+            const rowLen = blockDto.children?.length || 0;
+            const width = 100 /rowLen;
+            if (blockDto.children) {
+                blockDto.children.forEach((b,i) => {
+                    let row = self.recursivelyBuildBlock(grid.container, b) as GridRowBlock;
+                    grid.blocks.push(row);
+                    if (i == 0) {
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: grid.id, name: "parent", targetId: row.blocks[0].id },
+                                { sourceId: row.blocks[0].id, name: "firstChild", targetId: grid.id },
+                            ]
+                        });
+                    }
+                    if (i > 0) {
+                        let previous = row.blocks[i-1];
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: row.id, name: "previous", targetId: previous.id },
+                                { sourceId: previous.id, name: "next", targetId: row.id },
+                            ]
+                        });
+                    }
+                });
+            }
+            container.appendChild(grid.container);
+            return grid;
+        }
+        if (blockDto.type == BlockType.GridCellBlock) {
+            const cell = this.createGridCellBlock();
+            if (blockDto.children) {
+                blockDto.children.forEach((b,i) => {
+                    let block = self.recursivelyBuildBlock(cell.container, b) as GridCellBlock;
+                    if (b.width) block.container.style.width = b.width;
+                    if (i == 0) {
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: cell.id, name: "parent", targetId: cell.blocks[0].id },
+                                { sourceId: cell.blocks[0].id, name: "firstChild", targetId: cell.id },
+                            ]
+                        });
+                    }
+                    if (i > 0) {
+                        let previous = cell.blocks[i-1];
+                        self.batchRelate({
+                            toAdd: [
+                                { sourceId: cell.id, name: "previous", targetId: previous.id },
+                                { sourceId: previous.id, name: "next", targetId: cell.id },
+                            ]
+                        });
+                    }
+                });
+            }
+            container.appendChild(cell.container);
+            return cell;
+        }
         if (blockDto.type == BlockType.TabRowBlock) {
             const rowBlock = this.createTabRowBlock();
             if (blockDto.children) {
@@ -1774,6 +1862,69 @@ export class BlockManager implements IBlockManager {
             undo: {
                 id: this.id,
                 name: "uncreateTabBlock",
+                value: { id: block.id }
+            }
+        });
+        this.blocks.push(block);
+        return block;
+    }
+    createGridCellBlock() {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new GridCellBlock({
+            owner: this
+        });
+        block.setBlockSchemas(blockSchemas);
+        block.applyBlockPropertyStyling();
+        this.commit({
+            redo: {
+                id: this.id,
+                name: "createGridCellBlock"
+            },
+            undo: {
+                id: this.id,
+                name: "uncreateGridCellBlock",
+                value: { id: block.id }
+            }
+        });
+        this.blocks.push(block);
+        return block;
+    }
+    createGridRowBlock() {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new GridRowBlock({
+            owner: this
+        });
+        block.setBlockSchemas(blockSchemas);
+        block.applyBlockPropertyStyling();
+        this.commit({
+            redo: {
+                id: this.id,
+                name: "createGridRowBlock"
+            },
+            undo: {
+                id: this.id,
+                name: "uncreateGridRowBlock",
+                value: { id: block.id }
+            }
+        });
+        this.blocks.push(block);
+        return block;
+    }
+    createGridBlock() {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new GridBlock({
+            owner: this
+        });
+        block.setBlockSchemas(blockSchemas);
+        block.applyBlockPropertyStyling();
+        this.commit({
+            redo: {
+                id: this.id,
+                name: "createGridBlock"
+            },
+            undo: {
+                id: this.id,
+                name: "uncreateGridBlock",
                 value: { id: block.id }
             }
         });

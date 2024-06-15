@@ -169,6 +169,81 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             ]
                         }
                     ]
+                },
+                {
+                    type: BlockType.GridBlock,
+                    children: [
+                        {
+                            type: BlockType.GridRowBlock,
+                            children: [
+                                {
+                                    type: BlockType.GridCellBlock,
+                                    width: "33%",
+                                    children: [
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Row 1 - Cell 1"
+                                        }
+                                    ]
+                                },
+                                {
+                                    type: BlockType.GridCellBlock,
+                                    width: "33%",
+                                    children: [
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Row 1 - Cell 2"
+                                        }
+                                    ]
+                                },
+                                {
+                                    type: BlockType.GridCellBlock,
+                                    width: "33%",
+                                    children: [
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Row 1 - Cell 3"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            type: BlockType.GridRowBlock,
+                            children: [
+                                {
+                                    type: BlockType.GridCellBlock,
+                                    width: "25%",
+                                    children: [
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Row 2 - Cell 1"   
+                                        }
+                                    ]
+                                },
+                                {
+                                    type: BlockType.GridCellBlock,
+                                    width: "50%",
+                                    children: [
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Row 2 - Cell 2"
+                                        }
+                                    ]
+                                },
+                                {
+                                    type: BlockType.GridCellBlock,
+                                    width: "25%",
+                                    children: [
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Row 2 - Cell 3"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
                 }
             ]
         } as IMainListBlockDto;

@@ -380,6 +380,8 @@ export enum BlockType {
     HTMLBlock = "html-block",
     PDFBlock = "pdf-block",
     GridBlock = "grid-block",
+    GridRowBlock = "grid-row-block",
+    GridCellBlock = "grid-cell-block",
     MarginBlock = "margin-block",
     RightMarginBlock = "right-margin-block",
     ImageBlock = "image-block",
