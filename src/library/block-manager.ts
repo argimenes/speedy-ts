@@ -1569,7 +1569,8 @@ export class BlockManager implements IBlockManager {
             const rowBlock = this.createTabRowBlock();
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
-                    let block = self.recursivelyBuildBlock(rowBlock.container, b) as IBlock;
+                    let block = self.recursivelyBuildBlock(rowBlock.container, b) as TabBlock;
+                    if (b.name) block.name = b.name;
                     rowBlock.blocks.push(block);
                     if (i == 0) {
                         self.batchRelate({
@@ -1590,9 +1591,8 @@ export class BlockManager implements IBlockManager {
                     }
                 });
             }
-            const level = rowBlock.metadata.indentLevel || 0 as number;
-            rowBlock.metadata.indentLevel = level + 1;
-            this.renderIndent(rowBlock);
+            rowBlock.renderLabels();
+            rowBlock.blocks[0]?.setActive();
             container.appendChild(rowBlock.container);
             return rowBlock;
         }
@@ -1600,7 +1600,7 @@ export class BlockManager implements IBlockManager {
             const tabBlock = this.createTabBlock();
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
-                    let block = self.recursivelyBuildBlock(rowBlock.container, b) as IBlock;
+                    let block = self.recursivelyBuildBlock(tabBlock.panel, b) as IBlock;
                     tabBlock.blocks.push(block);
                     if (i == 0) {
                         self.batchRelate({
@@ -1621,9 +1621,6 @@ export class BlockManager implements IBlockManager {
                     }
                 });
             }
-            const level = tabBlock.metadata.indentLevel || 0 as number;
-            tabBlock.metadata.indentLevel = level + 1;
-            this.renderIndent(tabBlock);
             container.appendChild(tabBlock.container);
             return tabBlock;
         }

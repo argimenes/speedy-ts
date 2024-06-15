@@ -127,12 +127,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                     ]
                                 } as IStandoffEditorBlockDto
                             ]
-                        }
-                    ]
-                },
-                {
-                    type: BlockType.TabRowBlock,
-                    children: [
+                        },
                         {
                             type: BlockType.TabBlock,
                             name: "Tab 2",
@@ -152,12 +147,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                     ]
                                 } as IStandoffEditorBlockDto
                             ]
-                        }
-                    ]
-                },
-                {
-                    type: BlockType.TabRowBlock,
-                    children: [
+                        },
                         {
                             type: BlockType.TabBlock,
                             name: "Tab 3",
