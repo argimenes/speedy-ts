@@ -382,7 +382,7 @@ export enum BlockType {
     GridBlock = "grid-block",
     GridRowBlock = "grid-row-block",
     GridCellBlock = "grid-cell-block",
-    MarginBlock = "margin-block",
+    LeftMarginBlock = "left-margin-block",
     RightMarginBlock = "right-margin-block",
     ImageBlock = "image-block",
     VideoBlock = "video-block"
@@ -1129,8 +1129,8 @@ export class StandoffEditorBlock extends AbstractBlock {
             id: this.id,
             type: this.type,
             text: this.getText(),
-            standoffProperties: this.standoffProperties.map(x => x.serialize()),
-            blockProperties: this.blockProperties.map(x => x.serialize()),
+            standoffProperties: this.standoffProperties?.map(x => x.serialize()) || [],
+            blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
             metadata: this.metadata,
             relation: relation
         } as IStandoffEditorBlockDto;

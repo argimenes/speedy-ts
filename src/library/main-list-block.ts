@@ -19,7 +19,13 @@ export class MainListBlock extends AbstractBlock {
         }
     }
     serialize(): {} {
-        throw new Error("Method not implemented.");
+        return {
+            id: this.id,
+            type: this.type,
+            metadata: this.metadata,
+            blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
+            blocks: this.blocks?.map(x => x.serialize()) || []
+        }
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");

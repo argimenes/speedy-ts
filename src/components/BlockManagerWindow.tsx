@@ -26,7 +26,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                     ],
                     relation: {
                         leftMargin: {
-                            type: BlockType.MarginBlock,
+                            type: BlockType.LeftMarginBlock,
                             children: [
                                 {
                                     type: BlockType.StandoffEditorBlock,
@@ -250,7 +250,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
         const manager = new BlockManager();
         manager.container = el;
         manager.loadDocument(nextDoc);
-        console.log({ manager, block: manager.blocks[0] })
+        console.log("== GLOBAL ==", { manager, block: manager.blocks[0] })
     }
     return (
         <>

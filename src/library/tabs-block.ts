@@ -36,10 +36,10 @@ export class TabRowBlock extends AbstractBlock {
     serialize(): {} {
         return {
             id: this.id,
-            type: BlockType.IndentedListBlock,
+            type: this.type,
             metadata: this.metadata,
-            blockProperties: this.blockProperties.map(x => x.serialize()),
-            blocks: this.blocks.map(x => x.serialize())
+            blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
+            blocks: this.blocks?.map(x => x.serialize()) || []
         }
     }
     deserialize(json: any): IBlock {
@@ -84,10 +84,10 @@ export class TabBlock extends AbstractBlock {
     serialize(): {} {
         return {
             id: this.id,
-            type: BlockType.IndentedListBlock,
+            type: this.type,
             metadata: this.metadata,
-            blockProperties: this.blockProperties.map(x => x.serialize()),
-            blocks: this.blocks.map(x => x.serialize())
+            blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
+            blocks: this.blocks?.map(x => x.serialize()) || []
         }
     }
     deserialize(json: any): IBlock {

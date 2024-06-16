@@ -4,15 +4,15 @@ import { BlockType, IBlock } from "./standoff-editor-block";
 export class MarginBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
-        this.type = BlockType.MarginBlock;
+        this.type = BlockType.LeftMarginBlock;
     }
     serialize(): {} {
         return {
             id: this.id,
-            type: BlockType.MarginBlock,
+            type: this.type,
             metadata: this.metadata,
-            blockProperties: this.blockProperties.map(x => x.serialize()),
-            blocks: this.blocks.map(x => x.serialize())
+            blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
+            blocks: this.blocks?.map(x => x.serialize()) || []
         }
     }
     deserialize(json: any): IBlock {
@@ -31,10 +31,10 @@ export class RightMarginBlock extends AbstractBlock {
     serialize(): {} {
         return {
             id: this.id,
-            type: BlockType.RightMarginBlock,
+            type: this.type,
             metadata: this.metadata,
-            blockProperties: this.blockProperties.map(x => x.serialize()),
-            blocks: this.blocks.map(x => x.serialize())
+            blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
+            blocks: this.blocks?.map(x => x.serialize()) || []
         }
     }
     deserialize(json: any): IBlock {

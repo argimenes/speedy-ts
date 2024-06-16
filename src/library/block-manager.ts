@@ -347,7 +347,7 @@ export class BlockManager implements IBlockManager {
                         const manager = block.owner as BlockManager;
                         let leftMargin = block.relation.leftMargin as MarginBlock;
                         if (!leftMargin) {
-                            leftMargin = manager.createMarginBlock();
+                            leftMargin = manager.createLeftMarginBlock();
                             const child = manager.createStandoffEditorBlock();
                             child.addEOL();
                             manager.batchRelate({
@@ -422,7 +422,7 @@ export class BlockManager implements IBlockManager {
                         const manager = block.owner as BlockManager;
                         let rightMargin = block.relation.rightMargin as MarginBlock;
                         if (!rightMargin) {
-                            rightMargin = this.createMarginBlock();
+                            rightMargin = this.createLeftMarginBlock();
                             rightMargin.relation.parent = block;
                             block.relation.rightMargin = rightMargin;
                             manager.blocks.push(rightMargin);
@@ -914,7 +914,7 @@ export class BlockManager implements IBlockManager {
                                 return;
                             }
                         }
-                        if (parent.type == BlockType.MarginBlock) {
+                        if (parent.type == BlockType.LeftMarginBlock) {
                             let marginParent = parent.relation.parent as StandoffEditorBlock;
                             if (marginParent) {
                                 const last = marginParent.getLastCell();
@@ -1486,7 +1486,7 @@ export class BlockManager implements IBlockManager {
                 this.stageLeftMarginBlock(leftMargin, textBlock);
             }
             if (blockDto.relation?.rightMargin) {
-                const rightMargin = this.recursivelyBuildBlock(textBlock.container, blockDto.relation.rightMargin) as MarginBlock;
+                const rightMargin = this.recursivelyBuildBlock(textBlock.container, blockDto.relation.rightMargin) as RightMarginBlock;
                 textBlock.relation.rightMargin = rightMargin;
                 this.stageRightMarginBlock(rightMargin, textBlock);
             }
@@ -1508,27 +1508,27 @@ export class BlockManager implements IBlockManager {
             container.appendChild(textBlock.container);
             return textBlock;
         }
-        if (blockDto.type == BlockType.MarginBlock) {
-            const marginBlock = this.createMarginBlock();
-            marginBlock.addBlockProperties([ { type: "block/marginalia/left" } ]);
-            marginBlock.applyBlockPropertyStyling();
+        if (blockDto.type == BlockType.LeftMarginBlock) {
+            const lmb = this.createLeftMarginBlock();
+            lmb.addBlockProperties([ { type: "block/marginalia/left" } ]);
+            lmb.applyBlockPropertyStyling();
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => { 
-                    let block = self.recursivelyBuildBlock(marginBlock.container, b) as IBlock;
-                    marginBlock.blocks.push(block);
+                    let block = self.recursivelyBuildBlock(lmb.container, b) as IBlock;
+                    lmb.blocks.push(block);
                     if (i == 0) {
-                        marginBlock.relation.parent = block;
-                        block.relation.firstChild = marginBlock;
+                        lmb.relation.firstChild = block;
+                        block.relation.parent = lmb;
                     }
                     if (i > 0) {
-                        let previous = marginBlock.blocks[i-1];
+                        let previous = lmb.blocks[i-1];
                         block.relation.previous = previous;
                         previous.relation.next = block;
                     }
                 });
             }
-            container.appendChild(marginBlock.container);
-            return marginBlock;
+            container.appendChild(lmb.container);
+            return lmb;
         }
         if (blockDto.type == BlockType.RightMarginBlock) {
             const rmb = this.createRightMarginBlock();
@@ -1539,8 +1539,8 @@ export class BlockManager implements IBlockManager {
                     let block = self.recursivelyBuildBlock(rmb.container, b) as IBlock;
                     rmb.blocks.push(block);
                     if (i == 0) {
-                        rmb.relation.parent = block;
-                        block.relation.firstChild = rmb;
+                        rmb.relation.firstChild = block;
+                        block.relation.parent = rmb;
                     }
                     if (i > 0) {
                         let previous = rmb.blocks[i-1];
@@ -1717,15 +1717,18 @@ export class BlockManager implements IBlockManager {
         const container = document.createElement("DIV") as HTMLDivElement;
         const mainBlock = this.createMainListBlock();
         mainBlock.bind(dto);
-        let blocks: IBlock[] = [];
         if (dto.children) {
             const len = dto.children.length;
             for (let i = 0; i <= len - 1; i++) {
                 let block = this.recursivelyBuildBlock(container, dto.children[i]) as IBlock;
-                console.log("loadDocument", { block });
-                blocks.push(block);
+                //console.log("loadDocument", { block });
+                mainBlock.blocks.push(block);
+                if (i == 0) {
+                    mainBlock.relation.firstChild = block;
+                    block.relation.parent = mainBlock;
+                }
                 if (i > 0) {
-                    let previous = blocks[i - 1];
+                    let previous = mainBlock.blocks[i - 1];
                     previous.relation.next = block;
                     block.relation.previous = previous;
                 }
@@ -1894,7 +1897,7 @@ export class BlockManager implements IBlockManager {
         this.blocks.push(block);
         return block;
     }
-    createMarginBlock() {
+    createLeftMarginBlock() {
         const blockSchemas = this.getBlockSchemas();
         const block = new MarginBlock({
             owner: this
