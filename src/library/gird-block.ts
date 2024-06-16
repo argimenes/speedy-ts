@@ -12,7 +12,7 @@ export class GridBlock extends AbstractBlock {
             type: BlockType.GridBlock,
             metadata: this.metadata,
             blockProperties: this.blockProperties.map(x => x.serialize()),
-            blocks: this.blocks.map(x => x.serialize())
+            children: this.blocks.map(x => x.serialize())
         }
     }
     deserialize(json: any): IBlock {
@@ -34,7 +34,7 @@ export class GridRowBlock extends AbstractBlock {
             type: BlockType.GridRowBlock,
             metadata: this.metadata,
             blockProperties: this.blockProperties.map(x => x.serialize()),
-            blocks: this.blocks.map(x => x.serialize())
+            children: this.blocks.map(x => x.serialize())
         }
     }
     deserialize(json: any): IBlock {
@@ -57,7 +57,7 @@ export class GridCellBlock extends AbstractBlock {
             type: BlockType.GridCellBlock,
             metadata: this.metadata,
             blockProperties: this.blockProperties.map(x => x.serialize()),
-            blocks: this.blocks.map(x => x.serialize())
+            children: this.blocks.map(x => x.serialize())
         }
     }
     deserialize(json: any): IBlock {

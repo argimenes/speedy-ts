@@ -472,6 +472,11 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
+                        const parent = manager.getParent(block);
+                        if (!parent) {
+                            // Expected to find a parent somewhere
+                            return;
+                        }
                         let next = block.relation.next as StandoffEditorBlock;
                         if (!next) {
                             next = manager.createStandoffEditorBlock();
@@ -479,6 +484,7 @@ export class BlockManager implements IBlockManager {
                             next.addBlockProperties(blockData.blockProperties || []);
                             next.applyBlockPropertyStyling();
                             manager.blocks.push(next);
+                            parent.blocks.push(next);
                             next.relation.previous = block;
                             block.relation.next = next;
                             next.addEOL();
@@ -1147,6 +1153,16 @@ export class BlockManager implements IBlockManager {
         ];
         return events;
     }
+    getParent(block: IBlock) {
+        let current = block;
+        while (current) {
+            if (current.relation.parent) {
+                return current.relation.parent;
+            }
+            current = current.relation.previous;
+        }
+        return null;
+    }
     findNearestWord(index: number, words: Word[]) {
         const lastIndex = words.length - 1;
         for (let i = lastIndex; i >= 0; i--) {
@@ -1713,6 +1729,12 @@ export class BlockManager implements IBlockManager {
             console.error("Expected doc.type to be a MainListBlock");
             return;
         }
+        if (this.container.childNodes.length) {
+            this.container.innerHTML = "";
+        }
+        if (this.blocks.length) {
+            this.blocks = [];
+        }
         this.id = dto.id || uuidv4();
         const container = document.createElement("DIV") as HTMLDivElement;
         const mainBlock = this.createMainListBlock();
@@ -1721,7 +1743,6 @@ export class BlockManager implements IBlockManager {
             const len = dto.children.length;
             for (let i = 0; i <= len - 1; i++) {
                 let block = this.recursivelyBuildBlock(container, dto.children[i]) as IBlock;
-                //console.log("loadDocument", { block });
                 mainBlock.blocks.push(block);
                 if (i == 0) {
                     mainBlock.relation.firstChild = block;

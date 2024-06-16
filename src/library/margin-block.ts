@@ -12,7 +12,7 @@ export class MarginBlock extends AbstractBlock {
             type: this.type,
             metadata: this.metadata,
             blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
-            blocks: this.blocks?.map(x => x.serialize()) || []
+            children: this.blocks?.map(x => x.serialize()) || []
         }
     }
     deserialize(json: any): IBlock {
@@ -34,7 +34,7 @@ export class RightMarginBlock extends AbstractBlock {
             type: this.type,
             metadata: this.metadata,
             blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
-            blocks: this.blocks?.map(x => x.serialize()) || []
+            children: this.blocks?.map(x => x.serialize()) || []
         }
     }
     deserialize(json: any): IBlock {

@@ -12,7 +12,7 @@ export class IndentedListBlock extends AbstractBlock {
             type: BlockType.IndentedListBlock,
             metadata: this.metadata,
             blockProperties: this.blockProperties.map(x => x.serialize()),
-            blocks: this.blocks.map(x => x.serialize())
+            children: this.blocks.map(x => x.serialize())
         }
     }
     deserialize(json: any): IBlock {

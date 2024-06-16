@@ -1131,6 +1131,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             text: this.getText(),
             standoffProperties: this.standoffProperties?.map(x => x.serialize()) || [],
             blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
+            children: this.blocks?.map(x => x.serialize()) || [],
             metadata: this.metadata,
             relation: relation
         } as IStandoffEditorBlockDto;
@@ -1339,7 +1340,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             .filter(p => p.isDeleted && p.schema?.render?.destroy)
             ;
         this.batch(toDelete, (schema, props) => schema.render?.destroy({ block, properties: props }));
-        console.log("updateRenderers", { block, toUpdate, toDelete })
+        //console.log("updateRenderers", { block, toUpdate, toDelete })
     }
     batch(properties: StandoffProperty[], action: (schema: IStandoffPropertySchema, props: StandoffProperty[]) => void) {
         const block = this;

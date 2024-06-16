@@ -39,7 +39,7 @@ export class TabRowBlock extends AbstractBlock {
             type: this.type,
             metadata: this.metadata,
             blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
-            blocks: this.blocks?.map(x => x.serialize()) || []
+            children: this.blocks?.map(x => x.serialize()) || []
         }
     }
     deserialize(json: any): IBlock {
@@ -87,7 +87,7 @@ export class TabBlock extends AbstractBlock {
             type: this.type,
             metadata: this.metadata,
             blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
-            blocks: this.blocks?.map(x => x.serialize()) || []
+            children: this.blocks?.map(x => x.serialize()) || []
         }
     }
     deserialize(json: any): IBlock {
