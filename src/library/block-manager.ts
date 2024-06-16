@@ -1593,10 +1593,10 @@ export class BlockManager implements IBlockManager {
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
                     let cellBlock = self.recursivelyBuildBlock(rowBlock.container, b) as GridRowBlock;
-                    if (b.width) {
+                    if (b.metadata?.width) {
                         updateElement(cellBlock.container, {
                             style: {
-                                width: b.width
+                                width: b.metadata?.width
                             }
                         });
                     }
@@ -1617,6 +1617,7 @@ export class BlockManager implements IBlockManager {
         }
         if (blockDto.type == BlockType.GridCellBlock) {
             const cellBlock = this.createGridCellBlock();
+            if (blockDto.metadata) cellBlock.metadata = blockDto.metadata;
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
                     let block = self.recursivelyBuildBlock(cellBlock.container, b) as IBlock;
@@ -1640,7 +1641,7 @@ export class BlockManager implements IBlockManager {
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
                     let tabBlock = self.recursivelyBuildBlock(rowBlock.container, b) as TabBlock;
-                    if (b.name) tabBlock.name = b.name;
+                    if (b.metadata?.name) tabBlock.name = b.metadata?.name;
                     rowBlock.blocks.push(tabBlock);
                     if (i == 0) {
                         rowBlock.relation.firstChild= tabBlock;
@@ -1654,12 +1655,13 @@ export class BlockManager implements IBlockManager {
                 });
             }
             rowBlock.renderLabels();
-            rowBlock.blocks[0]?.setActive();
+            (rowBlock.blocks[0] as TabBlock)?.setActive();
             container.appendChild(rowBlock.container);
             return rowBlock;
         }
         if (blockDto.type == BlockType.TabBlock) {
             const tabBlock = this.createTabBlock();
+            if (blockDto.metadata) tabBlock.metadata = blockDto.metadata;
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
                     let block = self.recursivelyBuildBlock(tabBlock.panel, b) as IBlock;

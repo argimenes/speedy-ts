@@ -18,14 +18,14 @@ export class MainListBlock extends AbstractBlock {
             this.applyBlockPropertyStyling();
         }
     }
-    serialize(): {} {
+    serialize() {
         return {
             id: this.id,
             type: this.type,
             metadata: this.metadata,
             blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
             children: this.blocks?.map(x => x.serialize()) || []
-        }
+        } as IBlockDto;
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");

@@ -1,6 +1,5 @@
-import { classList } from "solid-js/web";
 import { AbstractBlock, IAbstractBlockConstructor } from "./abstract-block";
-import { BlockType, IBlock } from "./standoff-editor-block";
+import { BlockType, IBlock, IBlockDto } from "./standoff-editor-block";
 import { updateElement } from "./svg";
 
 export class TabRowBlock extends AbstractBlock {
@@ -13,16 +12,16 @@ export class TabRowBlock extends AbstractBlock {
     }
     setTabActive(tab: TabBlock, label: HTMLSpanElement) {
         Array.from(this.header.children).forEach(n => n.classList.remove("active"));
-        this.blocks.forEach((t: TabBlock)=> t.setInactive());
+        (this.blocks as TabBlock[]).forEach((t: TabBlock)=> t.setInactive());
         tab.setActive();
         label.classList.add("active");
     }
     renderLabels() {
         const self = this;
         const header = this.header;
-        const tabs = this.blocks.filter(x => x.type == BlockType.TabBlock);
+        const tabs = this.blocks.filter(x => x.type == BlockType.TabBlock) as TabBlock[];
         header.innerHTML = "";
-        tabs.forEach((tab: TabBlock, i) => {
+        tabs.forEach((tab, i) => {
             const label = document.createElement("SPAN") as HTMLSpanElement;
             label.innerHTML = tab.name || ("Tab " + (i+1));
             label.classList.add("tab-label");
@@ -33,14 +32,14 @@ export class TabRowBlock extends AbstractBlock {
             header.appendChild(label);
         });
     }
-    serialize(): {} {
+    serialize() {
         return {
             id: this.id,
             type: this.type,
             metadata: this.metadata,
             blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
             children: this.blocks?.map(x => x.serialize()) || []
-        }
+        } as IBlockDto;
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
@@ -81,14 +80,14 @@ export class TabBlock extends AbstractBlock {
             }
         });
     }
-    serialize(): {} {
+    serialize() {
         return {
             id: this.id,
             type: this.type,
             metadata: this.metadata,
             blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
             children: this.blocks?.map(x => x.serialize()) || []
-        }
+        } as IBlockDto;
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");

@@ -1,19 +1,19 @@
 import { AbstractBlock, IAbstractBlockConstructor } from "./abstract-block";
-import { BlockType, IBlock } from "./standoff-editor-block";
+import { BlockType, IBlock, IBlockDto } from "./standoff-editor-block";
 
 export class GridBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.GridBlock;
     }
-    serialize(): {} {
+    serialize() {
         return {
             id: this.id,
             type: BlockType.GridBlock,
             metadata: this.metadata,
             blockProperties: this.blockProperties.map(x => x.serialize()),
             children: this.blocks.map(x => x.serialize())
-        }
+        } as IBlockDto;
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
@@ -28,14 +28,14 @@ export class GridRowBlock extends AbstractBlock {
         super(args);
         this.type = BlockType.GridRowBlock;
     }
-    serialize(): {} {
+    serialize() {
         return {
             id: this.id,
             type: BlockType.GridRowBlock,
             metadata: this.metadata,
             blockProperties: this.blockProperties.map(x => x.serialize()),
             children: this.blocks.map(x => x.serialize())
-        }
+        } as IBlockDto;
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
@@ -51,14 +51,14 @@ export class GridCellBlock extends AbstractBlock {
         this.container.classList.add("grid-cell");
         this.type = BlockType.GridCellBlock;
     }
-    serialize(): {} {
+    serialize() {
         return {
             id: this.id,
             type: BlockType.GridCellBlock,
             metadata: this.metadata,
             blockProperties: this.blockProperties.map(x => x.serialize()),
             children: this.blocks.map(x => x.serialize())
-        }
+        } as IBlockDto;
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");

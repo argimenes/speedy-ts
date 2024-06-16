@@ -1,4 +1,4 @@
-import { BlockProperty, BlockPropertyDto, BlockType, Commit, GUID, IBlock, IBlockPropertySchema, IBlockRelation } from "./standoff-editor-block";
+import { BlockProperty, BlockPropertyDto, BlockType, Commit, GUID, IBlock, IBlockDto, IBlockPropertySchema, IBlockRelation } from "./standoff-editor-block";
 import { v4 as uuidv4 } from 'uuid';
 
 export interface IAbstractBlockConstructor {
@@ -126,7 +126,7 @@ export abstract class AbstractBlock implements IBlock {
     setFocus(){
         this.container.focus();
     }
-    abstract serialize():any{};
+    abstract serialize():IBlockDto;
     abstract deserialize(json: any|any[]): IBlock;
     abstract destroy(): void;
 }
