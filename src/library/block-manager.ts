@@ -1482,10 +1482,12 @@ export class BlockManager implements IBlockManager {
             textBlock.bind(blockDto as IStandoffEditorBlockDto);
             if (blockDto.relation?.leftMargin) {
                 const leftMargin = this.recursivelyBuildBlock(textBlock.container, blockDto.relation.leftMargin) as MarginBlock;
+                textBlock.relation.leftMargin = leftMargin;
                 this.stageLeftMarginBlock(leftMargin, textBlock);
             }
             if (blockDto.relation?.rightMargin) {
                 const rightMargin = this.recursivelyBuildBlock(textBlock.container, blockDto.relation.rightMargin) as MarginBlock;
+                textBlock.relation.rightMargin = rightMargin;
                 this.stageRightMarginBlock(rightMargin, textBlock);
             }
             if (blockDto.children) {
@@ -1515,21 +1517,13 @@ export class BlockManager implements IBlockManager {
                     let block = self.recursivelyBuildBlock(marginBlock.container, b) as IBlock;
                     marginBlock.blocks.push(block);
                     if (i == 0) {
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: marginBlock.id, name: "parent", targetId: block.id },
-                                { sourceId: block.id, name: "firstChild", targetId: marginBlock.id },
-                            ]
-                        });
+                        marginBlock.relation.parent = block;
+                        block.relation.firstChild = marginBlock;
                     }
                     if (i > 0) {
                         let previous = marginBlock.blocks[i-1];
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: block.id, name: "previous", targetId: previous.id },
-                                { sourceId: previous.id, name: "next", targetId: block.id },
-                            ]
-                        });
+                        block.relation.previous = previous;
+                        previous.relation.next = block;
                     }
                 });
             }
@@ -1545,21 +1539,13 @@ export class BlockManager implements IBlockManager {
                     let block = self.recursivelyBuildBlock(rmb.container, b) as IBlock;
                     rmb.blocks.push(block);
                     if (i == 0) {
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: rmb.id, name: "parent", targetId: block.id },
-                                { sourceId: block.id, name: "firstChild", targetId: rmb.id },
-                            ]
-                        });
+                        rmb.relation.parent = block;
+                        block.relation.firstChild = rmb;
                     }
                     if (i > 0) {
                         let previous = rmb.blocks[i-1];
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: block.id, name: "previous", targetId: previous.id },
-                                { sourceId: previous.id, name: "next", targetId: block.id },
-                            ]
-                        });
+                        block.relation.previous = previous;
+                        previous.relation.next = block;
                     }
                 });
             }
@@ -1568,27 +1554,18 @@ export class BlockManager implements IBlockManager {
         }
         if (blockDto.type == BlockType.GridBlock) {
             const gridBlock = this.createGridBlock();
-            
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
-                    let row = self.recursivelyBuildBlock(gridBlock.container, b) as GridRowBlock;
-                    gridBlock.blocks.push(row);
+                    let rowBlock = self.recursivelyBuildBlock(gridBlock.container, b) as GridRowBlock;
+                    gridBlock.blocks.push(rowBlock);
                     if (i == 0) {
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: gridBlock.id, name: "parent", targetId: gridBlock.blocks[0].id },
-                                { sourceId: gridBlock.blocks[0].id, name: "firstChild", targetId: gridBlock.id },
-                            ]
-                        });
+                        gridBlock.relation.firstChild = rowBlock;
+                        rowBlock.relation.parent = gridBlock;
                     }
                     if (i > 0) {
                         let previous = gridBlock.blocks[i-1];
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: row.id, name: "previous", targetId: previous.id },
-                                { sourceId: previous.id, name: "next", targetId: row.id },
-                            ]
-                        });
+                        rowBlock.relation.previous = previous;
+                        previous.relation.next = rowBlock;
                     }
                 });
             }
@@ -1596,94 +1573,67 @@ export class BlockManager implements IBlockManager {
             return gridBlock;
         }
         if (blockDto.type == BlockType.GridRowBlock) {
-            const row = this.createGridRowBlock();
-            const rowLen = blockDto.children?.length || 0;
-            const width = 100 /rowLen;
+            const rowBlock = this.createGridRowBlock();
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
-                    let cell = self.recursivelyBuildBlock(row.container, b) as GridRowBlock;
+                    let cellBlock = self.recursivelyBuildBlock(rowBlock.container, b) as GridRowBlock;
                     if (b.width) {
-                        updateElement(cell.container, {
+                        updateElement(cellBlock.container, {
                             style: {
                                 width: b.width
                             }
                         });
                     }
-                    row.blocks.push(cell);
+                    rowBlock.blocks.push(cellBlock);
                     if (i == 0) {
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: row.id, name: "parent", targetId: row.blocks[0].id },
-                                { sourceId: row.blocks[0].id, name: "firstChild", targetId: row.id },
-                            ]
-                        });
+                        rowBlock.relation.firstChild = cellBlock;
+                        cellBlock.relation.parent = rowBlock;
                     }
                     if (i > 0) {
-                        let previous = row.blocks[i-1];
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: row.id, name: "previous", targetId: previous.id },
-                                { sourceId: previous.id, name: "next", targetId: row.id },
-                            ]
-                        });
+                        let previous = rowBlock.blocks[i-1];
+                        cellBlock.relation.previous = previous;
+                        previous.relation.next = cellBlock;
                     }
                 });
             }
-            container.appendChild(row.container);
-            return row;
+            container.appendChild(rowBlock.container);
+            return rowBlock;
         }
         if (blockDto.type == BlockType.GridCellBlock) {
-            const cell = this.createGridCellBlock();
+            const cellBlock = this.createGridCellBlock();
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
-                    let block = self.recursivelyBuildBlock(cell.container, b) as GridCellBlock;
-                    
-                    cell.blocks.push(block);
+                    let block = self.recursivelyBuildBlock(cellBlock.container, b) as IBlock;
+                    cellBlock.blocks.push(block);
                     if (i == 0) {
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: cell.id, name: "parent", targetId: cell.blocks[0].id },
-                                { sourceId: cell.blocks[0].id, name: "firstChild", targetId: cell.id },
-                            ]
-                        });
+                        cellBlock.relation.firstChild = block;
+                        block.relation.parent = cellBlock;
                     }
                     if (i > 0) {
-                        let previous = cell.blocks[i-1];
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: cell.id, name: "previous", targetId: previous.id },
-                                { sourceId: previous.id, name: "next", targetId: cell.id },
-                            ]
-                        });
+                        let previous = cellBlock.blocks[i-1];
+                        block.relation.previous = previous;
+                        previous.relation.next = block;
                     }
                 });
             }
-            container.appendChild(cell.container);
-            return cell;
+            container.appendChild(cellBlock.container);
+            return cellBlock;
         }
         if (blockDto.type == BlockType.TabRowBlock) {
             const rowBlock = this.createTabRowBlock();
             if (blockDto.children) {
                 blockDto.children.forEach((b,i) => {
-                    let block = self.recursivelyBuildBlock(rowBlock.container, b) as TabBlock;
-                    if (b.name) block.name = b.name;
-                    rowBlock.blocks.push(block);
+                    let tabBlock = self.recursivelyBuildBlock(rowBlock.container, b) as TabBlock;
+                    if (b.name) tabBlock.name = b.name;
+                    rowBlock.blocks.push(tabBlock);
                     if (i == 0) {
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: rowBlock.id, name: "parent", targetId: rowBlock.blocks[0].id },
-                                { sourceId: rowBlock.blocks[0].id, name: "firstChild", targetId: rowBlock.id },
-                            ]
-                        });
+                        rowBlock.relation.firstChild= tabBlock;
+                        tabBlock.relation.parent = rowBlock;
                     }
                     if (i > 0) {
                         let previous = rowBlock.blocks[i-1];
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: block.id, name: "previous", targetId: previous.id },
-                                { sourceId: previous.id, name: "next", targetId: block.id },
-                            ]
-                        });
+                        tabBlock.relation.previous = previous;
+                        previous.relation.next = tabBlock;
                     }
                 });
             }
@@ -1699,21 +1649,13 @@ export class BlockManager implements IBlockManager {
                     let block = self.recursivelyBuildBlock(tabBlock.panel, b) as IBlock;
                     tabBlock.blocks.push(block);
                     if (i == 0) {
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: tabBlock.id, name: "parent", targetId: tabBlock.blocks[0].id },
-                                { sourceId: tabBlock.blocks[0].id, name: "firstChild", targetId: tabBlock.id },
-                            ]
-                        });
+                        tabBlock.relation.firstChild = block;
+                        block.relation.parent = tabBlock;
                     }
                     if (i > 0) {
                         let previous = tabBlock.blocks[i-1];
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: block.id, name: "previous", targetId: previous.id },
-                                { sourceId: previous.id, name: "next", targetId: block.id },
-                            ]
-                        });
+                        block.relation.previous = previous;
+                        previous.relation.next = block;
                     }
                 });
             }
@@ -1733,21 +1675,13 @@ export class BlockManager implements IBlockManager {
                         }
                     });
                     if (i == 0) {
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: block.id, name: "parent", targetId: indentedListBlock.id },
-                                { sourceId: indentedListBlock.id, name: "firstChild", targetId: block.id },
-                            ]
-                        });
+                        block.relation.parent = indentedListBlock;
+                        indentedListBlock.relation.firstChild = block;
                     }
                     if (i > 0) {
                         let previous = indentedListBlock.blocks[i-1];
-                        self.batchRelate({
-                            toAdd: [
-                                { sourceId: block.id, name: "previous", targetId: previous.id },
-                                { sourceId: previous.id, name: "next", targetId: block.id },
-                            ]
-                        });
+                        block.relation.previous = previous;
+                        previous.relation.next = block;
                     }
                 });
             }
