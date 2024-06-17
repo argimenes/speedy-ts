@@ -1489,6 +1489,35 @@ export class BlockManager implements IBlockManager {
         });
         leftMargin.container.appendChild(hand);
     }
+    async listDocuments() {
+        const res = await fetch("/api/listDocuments");
+        const json = await res.json();
+        console.log({ json });
+    }
+    async loadServerDocument(filename: string) {
+        const res = await fetch("/api/loadDocumentJson?filename=" + filename, { method: "GET" });
+        const json = await res.json();
+        console.log("loadServerDocument", { filename, json });
+        if (!json.Success) {
+            return;
+        }
+        this.loadDocument(json.document);
+    }
+    async saveServerDocument() {
+        const data = this.getDocument();
+        const filename = prompt("filename?");
+        if (!filename) return;
+        const res = await fetch("/api/saveDocumentJson", {
+            headers: { "Content-Type": "application/json" },
+            method: "POST",
+            body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        console.log("saveServerDocument", { filename, json, data })
+        if (!json.Success) {
+            return;
+        }
+    }
     recursivelyBuildBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         console.log("recursivelyBuildBlock", { container, blockDto });
         const self = this;
