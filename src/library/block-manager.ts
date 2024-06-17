@@ -1,7 +1,7 @@
-import { KEYS, Platform, TPlatformKey } from "./keyboard";
+import { Platform, TPlatformKey } from "./keyboard";
 import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock,
-    IBlockManager, IBlockRelation, IRange, IStandoffPropertySchema, Mode, DIRECTION, StandoffEditorBlock,
-    StandoffEditorBlockDto, StandoffProperty, Commit, Cell, BlockProperty, Command, ISelection, Word, RowPosition,
+    IBlockManager, IRange, IStandoffPropertySchema, DIRECTION, StandoffEditorBlock,
+    StandoffProperty, Commit, Cell, BlockProperty, Command, ISelection, Word, RowPosition,
     BlockPropertyDto, IBlockPropertySchema, 
     IBlockDto,
     IMainListBlockDto,
@@ -11,7 +11,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { MarginBlock, RightMarginBlock } from "./margin-block";
 import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
-import { pipeToNodeWritable } from "solid-js/web";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "./gird-block";
 
@@ -1726,7 +1725,6 @@ export class BlockManager implements IBlockManager {
         return dto;
     }
     loadDocument(dto: IMainListBlockDto) {
-        console.log("loadDocument", { dto });
         if (dto.type != BlockType.MainListBlock) {
             console.error("Expected doc.type to be a MainListBlock");
             return;

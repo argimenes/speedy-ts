@@ -272,7 +272,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
     }
     return (
         <>
-            <div ref={initialise} class="block-window" />
+            <div ref={initialise} class="block-window" style="margin: 0 auto;" />
         </>
     )
 }
