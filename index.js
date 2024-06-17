@@ -11,8 +11,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static('public'));
 app.use(bodyParser.json());
+app.get('/api/textJson', function(req, res) {
+     const text = req.query.text;
+     res.send(text);
+});
 app.get('/api/loadDocumentJson', function(req, res) {
-     const filename = req.params.filename;
+     const filename = req.query.filename;
      const filepath = path.join(__dirname + "/data/" + filename + ".json");
      const data = fs.readFileSync(filepath);
      const json = JSON.parse(data);
