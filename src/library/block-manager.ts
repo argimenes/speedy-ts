@@ -1501,7 +1501,7 @@ export class BlockManager implements IBlockManager {
         if (!json.Success) {
             return;
         }
-        this.loadDocument(json.document);
+        this.loadDocument(json.Data.document);
     }
     async saveServerDocument() {
         const data = this.getDocument();
@@ -1510,7 +1510,10 @@ export class BlockManager implements IBlockManager {
         const res = await fetch("/api/saveDocumentJson", {
             headers: { "Content-Type": "application/json" },
             method: "POST",
-            body: JSON.stringify(data)
+            body: JSON.stringify({
+                filename: filename,
+                document: data
+            })
         });
         const json = await res.json();
         console.log("saveServerDocument", { filename, json, data })

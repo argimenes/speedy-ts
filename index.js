@@ -6,11 +6,11 @@ import bodyParser from 'body-parser';
 import fs from "fs";
 import cors from "cors";
 
-const app = express(); 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use(express.static('public'));
+const app = express(); 
 app.use(bodyParser.json());
+app.use(express.static('public'));
 app.get('/api/textJson', function(req, res) {
      const text = req.query.text;
      res.send(text);
@@ -27,12 +27,19 @@ app.get('/api/loadDocumentJson', function(req, res) {
      const json = JSON.parse(data);
      res.send({
           Success: true,
-          Data: json
+          Data: {
+               document: json
+          }
      });
 });
 app.post('/api/saveDocumentJson', function(req, res) {
      const json = req.body;
-     fs.writeFileSync(json.filename, json.document);
+     const filepath = path.join(__dirname + "/data/" + json.filename);
+     const document = JSON.stringify(json.document);
+     fs.writeFileSync(filepath, document);
+     res.send({
+          Success: true
+     });
 });
 app.get('/', function(req, res) { 
      res.sendFile(path.join(__dirname + '/public/index.html')); 
