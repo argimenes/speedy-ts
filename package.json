@@ -18,7 +18,10 @@
     "vite-plugin-solid": "^2.7.0"
   },
   "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
     "express": "^4.19.2",
+    "fs": "^0.0.1-security",
     "node-static": "^0.7.11",
     "path": "^0.12.7",
     "solid-js": "^1.7.6",
