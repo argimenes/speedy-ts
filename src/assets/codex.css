@@ -92,3 +92,10 @@
     border: 1px solid #333;
     margin: 3px;
   }
+  .control-panel {
+    position: fixed;
+    bottom: 100px;
+    height: 35px;
+    width: 100%;
+    left: 0;
+  }

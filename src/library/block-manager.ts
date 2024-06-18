@@ -1492,7 +1492,7 @@ export class BlockManager implements IBlockManager {
     async listDocuments() {
         const res = await fetch("/api/listDocuments");
         const json = await res.json();
-        console.log({ json });
+        return json.files as string[];
     }
     async loadServerDocument(filename: string) {
         const res = await fetch("/api/loadDocumentJson?filename=" + filename, { method: "GET" });
@@ -1503,9 +1503,8 @@ export class BlockManager implements IBlockManager {
         }
         this.loadDocument(json.Data.document);
     }
-    async saveServerDocument() {
+    async saveServerDocument(filename: string) {
         const data = this.getDocument();
-        const filename = prompt("filename?");
         if (!filename) return;
         const res = await fetch("/api/saveDocumentJson", {
             headers: { "Content-Type": "application/json" },
