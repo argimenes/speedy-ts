@@ -1,4 +1,4 @@
-import type { Component } from 'solid-js';
+import { Show, type Component } from 'solid-js';
 import { BlockManagerWindow } from './components/BlockManagerWindow';
 import { BlockManager } from './library/block-manager';
 import { ControlPanel } from './components/control-panel';
@@ -12,7 +12,9 @@ const App: Component = () => {
   return (
     <div class="App">
       <BlockManagerWindow getInstance={(inst) => { setModel("manager", inst) }} />
-      <ControlPanel manager={model.manager} />
+      <Show when={model.manager}>
+        <ControlPanel manager={model.manager} />
+      </Show>
     </div>
   );
 };

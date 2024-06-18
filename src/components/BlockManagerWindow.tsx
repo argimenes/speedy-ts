@@ -2,12 +2,8 @@ import { Component } from "solid-js"
 import { BlockManager } from "../library/block-manager"
 import { BlockType, IBlockDto, IMainListBlockDto, IStandoffEditorBlockDto } from "../library/standoff-editor-block"
 
-interface IBlockManagerInstance {
-    instance: BlockManager;
-}
-
 type Props = {
-    getInstance: (instance: BlockManager) => void;
+    getInstance: (inst: BlockManager) => void;
 }
 export const BlockManagerWindow : Component<Props> = (props) => {
     const initialise = (el: HTMLDivElement) => {
@@ -271,9 +267,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
         const manager = new BlockManager();
         manager.container = el;
         manager.loadDocument(nextDoc);
-        props.getInstance = () => {
-            return manager;
-        }
+        props.getInstance(manager);
         console.log("== GLOBAL ==", { manager, block: manager.blocks[0] })
     }
     return (

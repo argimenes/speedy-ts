@@ -1,6 +1,7 @@
 import { Component, For, onMount } from "solid-js"
 import { createStore } from "solid-js/store";
 import { BlockManager } from "../library/block-manager";
+import { BlockType, CARET, IBlock, StandoffEditorBlock } from "../library/standoff-editor-block";
 
 type Model = {
     command: string;
@@ -44,6 +45,27 @@ export const ControlPanel : Component<Props> = (props) => {
         e.preventDefault();
         await load([model.file]);
     }
+    const createDocument = () => {
+        if (!props.manager) return;
+        const doc = {
+            type: BlockType.MainListBlock,
+            children: [
+                {
+                    type: BlockType.StandoffEditorBlock,
+                    text: "",
+                    standoffProperties: [],
+                    blockProperties: [
+                        { type: "block/alignment/left "}
+                    ]
+                }
+            ]
+        };
+        props.manager.loadDocument(doc);
+        const block = props.manager.blocks[1] as StandoffEditorBlock;
+        block.addEOL();
+        block.setCaret(0, CARET.LEFT);
+        props.manager?.setBlockFocus(block);
+    }
     const runCommand = async () => {
         if (!model.command) {
             return;
@@ -53,13 +75,18 @@ export const ControlPanel : Component<Props> = (props) => {
         {
             case "load": await load(parameters); return;
             case "save": await save(parameters); return;
-            case "list-documents": await listDocuments(); return;
+            case "list-docs": await listDocuments(); return;
+            case "create-doc":
+            case "new-doc": {   
+                createDocument(); return;
+            }
             default: break;
         }
     }
     onMount(async () => {
         const files = await props.manager?.listDocuments() as string[];
         setResources("files", files);
+        setModel("file", files[0]);
     })
     return (
         <div class="control-panel">
@@ -77,7 +104,7 @@ export const ControlPanel : Component<Props> = (props) => {
             <div style="display: inline-block; margin-right: 10px;">
                 <select value={model.file} onInput={(e) => setModel("file", e.currentTarget.value)}>
                     <For each={resources.files}>{(file) =>
-                        <option>
+                        <option value={file}>
                             {file}
                         </option>
                     }</For>
