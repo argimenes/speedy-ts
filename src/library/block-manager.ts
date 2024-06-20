@@ -1547,9 +1547,7 @@ export class BlockManager implements IBlockManager {
     }
     buildLeftMarginBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
-        const leftMargin = this.createLeftMarginBlock();
-        leftMargin.addBlockProperties([ { type: "block/marginalia/left" } ]);
-        leftMargin.applyBlockPropertyStyling();
+        const leftMargin = this.createLeftMarginBlock(blockDto);
         if (blockDto.children) {
             blockDto.children.forEach((b,i) => { 
                 let block = self.recursivelyBuildBlock(leftMargin.container, b) as IBlock;
@@ -1562,9 +1560,7 @@ export class BlockManager implements IBlockManager {
     }
     buildRightMarginBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
-        const rightMargin = this.createRightMarginBlock();
-        rightMargin.addBlockProperties([ { type: "block/marginalia/right" } ]);
-        rightMargin.applyBlockPropertyStyling();
+        const rightMargin = this.createRightMarginBlock(blockDto);
         if (blockDto.children) {
             blockDto.children.forEach((b,i) => { 
                 let block = self.recursivelyBuildBlock(rightMargin.container, b) as IBlock;
@@ -1627,7 +1623,6 @@ export class BlockManager implements IBlockManager {
         if (blockDto.children) {
             blockDto.children.forEach((b,i) => {
                 let tabBlock = self.recursivelyBuildBlock(rowBlock.container, b) as TabBlock;
-                if (b.metadata?.name) tabBlock.name = b.metadata?.name;
                 rowBlock.blocks.push(tabBlock);
             });
         }
@@ -1639,8 +1634,7 @@ export class BlockManager implements IBlockManager {
     }
     buildTabBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
-        const tabBlock = this.createTabBlock();
-        if (blockDto.metadata) tabBlock.metadata = blockDto.metadata;
+        const tabBlock = this.createTabBlock(blockDto);
         if (blockDto.children) {
             blockDto.children.forEach((b,i) => {
                 let block = self.recursivelyBuildBlock(tabBlock.panel, b) as IBlock;
@@ -1820,11 +1814,12 @@ export class BlockManager implements IBlockManager {
         this.blocks.push(block);
         return block;
     }
-    createTabBlock(){
+    createTabBlock(dto?: IBlockDto){
         const blockSchemas = this.getBlockSchemas();
         const block = new TabBlock({
             owner: this
         });
+        if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
         block.applyBlockPropertyStyling();
         this.commit({
@@ -1899,45 +1894,27 @@ export class BlockManager implements IBlockManager {
         this.blocks.push(block);
         return block;
     }
-    createLeftMarginBlock() {
+    createLeftMarginBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new MarginBlock({
             owner: this
         });
+        if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
+        block.addBlockProperties([ { type: "block/marginalia/left" } ]);
         block.applyBlockPropertyStyling();
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "createMarginBlock"
-            },
-            undo: {
-                id: this.id,
-                name: "uncreateMarginBlock",
-                value: { id: block.id }
-            }
-        });
         this.blocks.push(block);
         return block;
     }
-    createRightMarginBlock() {
+    createRightMarginBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new RightMarginBlock({
             owner: this
         });
+        if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
+        block.addBlockProperties([ { type: "block/marginalia/right" } ]);
         block.applyBlockPropertyStyling();
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "createRightMarginBlock"
-            },
-            undo: {
-                id: this.id,
-                name: "uncreateRightMarginBlock",
-                value: { id: block.id }
-            }
-        });
         this.blocks.push(block);
         return block;
     }

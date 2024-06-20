@@ -110,7 +110,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         {
                             type: BlockType.TabBlock,
                             metadata: {
-                                name: "Tab 1"
+                                name: "A"
                             },
                             children: [
                                 {
@@ -132,7 +132,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         {
                             type: BlockType.TabBlock,
                             metadata: {
-                                name: "Tab 2"
+                                name: "B"
                             },
                             children: [
                                 {
@@ -154,7 +154,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         {
                             type: BlockType.TabBlock,
                             metadata: {
-                                name: "Tab 3"
+                                name: "C"
                             },
                             children: [
                                 {

@@ -23,7 +23,7 @@ export class TabRowBlock extends AbstractBlock {
         header.innerHTML = "";
         tabs.forEach((tab, i) => {
             const label = document.createElement("SPAN") as HTMLSpanElement;
-            label.innerHTML = tab.name || ("Tab " + (i+1));
+            label.innerHTML = tab.metadata?.name || ("Tab " + (i+1));
             label.classList.add("tab-label");
             if (i == 0) label.classList.add("active");
             label.addEventListener("click", (e) => {
@@ -50,12 +50,10 @@ export class TabRowBlock extends AbstractBlock {
 }
 
 export class TabBlock extends AbstractBlock {
-    name: string;
     panel: HTMLDivElement;
     isActive: boolean;
     constructor(args: IAbstractBlockConstructor) {
         super(args);
-        this.name = "";
         this.type = BlockType.TabBlock;
         this.isActive = false;
         this.panel = document.createElement("DIV") as HTMLDivElement;
