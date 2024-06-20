@@ -38,9 +38,11 @@ export abstract class AbstractBlock implements IBlock {
     addBlockProperties(properties: BlockPropertyDto[]) {
         const self = this;
         const props = properties.map(x => new BlockProperty({
-            type: x.type,
-            block: self,
-            schema: self.blockSchemas.find(x2 => x2.type == x.type) as IBlockPropertySchema })
+                type: x.type,
+                block: self,
+                value: x.value,
+                schema: self.blockSchemas.find(x2 => x2.type == x.type) as IBlockPropertySchema
+            }),
         );
         this.blockProperties.push(...props);
     }

@@ -269,6 +269,19 @@ export class BlockManager implements IBlockManager {
                 decorate: {
                     blockClass: "block_blue_and_white"
                 }
+            },
+            {
+                type: "block/background/colour",
+                name: "Set background colour",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        updateElement(p.block.container, {
+                            style: {
+                                "background-color": p.value
+                            }
+                        });
+                    }
+                }
             }
         ]
     }
@@ -330,6 +343,23 @@ export class BlockManager implements IBlockManager {
     }
     getEditorEvents() {
         const events: InputEvent[] = [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Mouse,
+                    match: "click"
+                },
+                action: {
+                    name: "Set focus to the current block.",
+                    description: "",
+                    handler: (args: IBindingHandlerArgs) => {
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
+                        manager.focus = block;
+                        console.log("Set focus to current block ...")
+                    }
+                }
+            },
             {
                 mode: "default",
                 trigger: {
@@ -1710,6 +1740,9 @@ export class BlockManager implements IBlockManager {
             return this.buildIndentedListBlock(container, blockDto);
         }
         return null;
+    }
+    getBlockInFocus() {
+        return this.focus;
     }
     getDocument() {
         const dto= {

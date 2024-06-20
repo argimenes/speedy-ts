@@ -59,6 +59,7 @@ export enum DIRECTION {
 export type GUID = string;
 export interface IBlockPropertySchema {
     type: string;
+    event?: Record<string, BlockBindingHandler>;
     decorate?: {
         blockClass?: string;
     }
@@ -70,18 +71,30 @@ export interface IBlockPropertyConstructor {
     id?: GUID;
     type: string;
     schema: IBlockPropertySchema;
+    event?: Record<string, BlockBindingHandler>;
     block: IBlock;
+    value?: string;
 }
 export class BlockProperty {
     id: GUID;
     type: string;
     schema: IBlockPropertySchema;
-    block: IBlock; 
-    constructor({ id, type, block, schema }: IBlockPropertyConstructor) {
+    event?: Record<string, BlockBindingHandler>;
+    block: IBlock;
+    value?: string;
+    constructor({ id, type, block, schema, value, event }: IBlockPropertyConstructor) {
         this.id = id || uuidv4();
         this.type = type;
         this.schema = schema;
+        this.event = event;
         this.block = block;
+        this.value = value;
+        this.onInit();
+    }
+    onInit() {
+        if (this.schema?.event?.onInit) {
+            this.schema?.event?.onInit(this);
+        }
     }
     serialize() {
         return {
@@ -431,6 +444,7 @@ export type CellElement = {
     role: ELEMENT_ROLE;
 }
 export type BindingHandler = (args: IBindingHandlerArgs) => void;
+export type BlockBindingHandler = (block: BlockProperty) => void;
 export type KeyboardBinding = Record<string, BindingHandler>;
 export type MouseBinding = KeyboardBinding;
 export type InputBindings = {
@@ -775,6 +789,17 @@ export class StandoffEditorBlock extends AbstractBlock {
         */
         this.wrapper.addEventListener("keydown", this.handleKeyDown.bind(this));
         this.wrapper.addEventListener("mouseup", this.handleMouseUpEvent.bind(this));
+        this.wrapper.addEventListener("click", this.handleClickEvent.bind(this));
+    }
+    handleClickEvent(e: MouseEvent) {
+        const mouseEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Mouse);
+        const found = mouseEvents.find(x => x.trigger.match == "click");
+        if (found) {
+            found.action.handler({
+                block: this,
+                caret: this.getCaret() as Caret
+            });
+        }
     }
     handleMouseUpEvent(e: MouseEvent) {
         const target = e.target as CellHtmlElement;
@@ -878,7 +903,7 @@ export class StandoffEditorBlock extends AbstractBlock {
     }
     getFirstMatchingInputEvent(input: IKeyboardInput) {
         const self = this;
-        const modeEvents = _.groupBy(this.inputEvents, x=> x.mode);
+        const modeEvents = _.groupBy(this.inputEvents.filter(x => x.trigger.source == InputEventSource.Keyboard), x => x.mode);
         const maxIndex = this.modes.length -1;
         for (let i = maxIndex; i >= 0; i--) {
             let mode = this.modes[i];

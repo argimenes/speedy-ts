@@ -66,6 +66,15 @@ export const ControlPanel : Component<Props> = (props) => {
         block.setCaret(0, CARET.LEFT);
         props.manager?.setBlockFocus(block);
     }
+    const setBackgroundColour = (colour: string) => {
+        const prop = {
+            type: "block/background/colour",
+            value: colour
+        };
+        const block = props.manager?.getBlockInFocus();
+        if (!block) return;
+        block.addBlockProperties([prop]);
+    }
     const runCommand = async () => {
         if (!model.command) {
             return;
@@ -76,6 +85,7 @@ export const ControlPanel : Component<Props> = (props) => {
             case "load": await load(parameters); return;
             case "save": await save(parameters); return;
             case "list-docs": await listDocuments(); return;
+            case "bgcol": setBackgroundColour(parameters[0]); return;
             case "create-doc":
             case "new-doc": {   
                 createDocument(); return;
