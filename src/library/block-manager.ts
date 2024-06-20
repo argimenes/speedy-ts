@@ -13,6 +13,7 @@ import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "./gird-block";
+import { AbstractBlock } from "./abstract-block";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -1538,65 +1539,41 @@ export class BlockManager implements IBlockManager {
             blockDto.children.forEach((b,i) => {
                 let block = self.recursivelyBuildBlock(textBlock.container, b) as IBlock;
                 textBlock.blocks.push(block);
-                if (i == 0) {
-                    block.relation.parent = textBlock;
-                    textBlock.relation.firstChild = block;
-                }
-                if (i > 0) {
-                    let previous = textBlock.blocks[i-1];
-                    block.relation.previous = previous;
-                    previous.relation.next = block;
-                }
             });
         }
+        this.addParentSiblingRelations(textBlock);
         container.appendChild(textBlock.container);
         return textBlock;
     }
     buildLeftMarginBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
-        const lmb = this.createLeftMarginBlock();
-        lmb.addBlockProperties([ { type: "block/marginalia/left" } ]);
-        lmb.applyBlockPropertyStyling();
+        const leftMargin = this.createLeftMarginBlock();
+        leftMargin.addBlockProperties([ { type: "block/marginalia/left" } ]);
+        leftMargin.applyBlockPropertyStyling();
         if (blockDto.children) {
             blockDto.children.forEach((b,i) => { 
-                let block = self.recursivelyBuildBlock(lmb.container, b) as IBlock;
-                lmb.blocks.push(block);
-                if (i == 0) {
-                    lmb.relation.firstChild = block;
-                    block.relation.parent = lmb;
-                }
-                if (i > 0) {
-                    let previous = lmb.blocks[i-1];
-                    block.relation.previous = previous;
-                    previous.relation.next = block;
-                }
+                let block = self.recursivelyBuildBlock(leftMargin.container, b) as IBlock;
+                leftMargin.blocks.push(block);
             });
         }
-        container.appendChild(lmb.container);
-        return lmb;
+        this.addParentSiblingRelations(leftMargin);
+        container.appendChild(leftMargin.container);
+        return leftMargin;
     }
     buildRightMarginBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
-        const rmb = this.createRightMarginBlock();
-        rmb.addBlockProperties([ { type: "block/marginalia/right" } ]);
-        rmb.applyBlockPropertyStyling();
+        const rightMargin = this.createRightMarginBlock();
+        rightMargin.addBlockProperties([ { type: "block/marginalia/right" } ]);
+        rightMargin.applyBlockPropertyStyling();
         if (blockDto.children) {
             blockDto.children.forEach((b,i) => { 
-                let block = self.recursivelyBuildBlock(rmb.container, b) as IBlock;
-                rmb.blocks.push(block);
-                if (i == 0) {
-                    rmb.relation.firstChild = block;
-                    block.relation.parent = rmb;
-                }
-                if (i > 0) {
-                    let previous = rmb.blocks[i-1];
-                    block.relation.previous = previous;
-                    previous.relation.next = block;
-                }
+                let block = self.recursivelyBuildBlock(rightMargin.container, b) as IBlock;
+                rightMargin.blocks.push(block);
             });
         }
-        container.appendChild(rmb.container);
-        return rmb;
+        this.addParentSiblingRelations(rightMargin);
+        container.appendChild(rightMargin.container);
+        return rightMargin;
     }
     buildGridBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
@@ -1605,17 +1582,9 @@ export class BlockManager implements IBlockManager {
             blockDto.children.forEach((b,i) => {
                 let rowBlock = self.recursivelyBuildBlock(gridBlock.container, b) as GridRowBlock;
                 gridBlock.blocks.push(rowBlock);
-                if (i == 0) {
-                    gridBlock.relation.firstChild = rowBlock;
-                    rowBlock.relation.parent = gridBlock;
-                }
-                if (i > 0) {
-                    let previous = gridBlock.blocks[i-1];
-                    rowBlock.relation.previous = previous;
-                    previous.relation.next = rowBlock;
-                }
             });
         }
+        this.addParentSiblingRelations(gridBlock);
         container.appendChild(gridBlock.container);
         return gridBlock;
     }
@@ -1624,7 +1593,7 @@ export class BlockManager implements IBlockManager {
         const rowBlock = this.createGridRowBlock();
         if (blockDto.children) {
             blockDto.children.forEach((b,i) => {
-                let cellBlock = self.recursivelyBuildBlock(rowBlock.container, b) as GridRowBlock;
+                let cellBlock = self.recursivelyBuildBlock(rowBlock.container, b) as GridCellBlock;
                 if (b.metadata?.width) {
                     updateElement(cellBlock.container, {
                         style: {
@@ -1633,61 +1602,36 @@ export class BlockManager implements IBlockManager {
                     });
                 }
                 rowBlock.blocks.push(cellBlock);
-                if (i == 0) {
-                    rowBlock.relation.firstChild = cellBlock;
-                    cellBlock.relation.parent = rowBlock;
-                }
-                if (i > 0) {
-                    let previous = rowBlock.blocks[i-1];
-                    cellBlock.relation.previous = previous;
-                    previous.relation.next = cellBlock;
-                }
             });
         }
+        this.addParentSiblingRelations(rowBlock);
         container.appendChild(rowBlock.container);
         return rowBlock;
     }
     buildGridCellBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
-        const cellBlock = this.createGridCellBlock();
-        if (blockDto.metadata) cellBlock.metadata = blockDto.metadata;
+        const cellBlock = this.createGridCellBlock(blockDto);
         if (blockDto.children) {
             blockDto.children.forEach((b,i) => {
                 let block = self.recursivelyBuildBlock(cellBlock.container, b) as IBlock;
                 cellBlock.blocks.push(block);
-                if (i == 0) {
-                    cellBlock.relation.firstChild = block;
-                    block.relation.parent = cellBlock;
-                }
-                if (i > 0) {
-                    let previous = cellBlock.blocks[i-1];
-                    block.relation.previous = previous;
-                    previous.relation.next = block;
-                }
             });
         }
+        this.addParentSiblingRelations(cellBlock);
         container.appendChild(cellBlock.container);
         return cellBlock;
     }
     buildTabRowBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
-        const rowBlock = this.createTabRowBlock();
+        const rowBlock = this.createTabRowBlock(blockDto);
         if (blockDto.children) {
             blockDto.children.forEach((b,i) => {
                 let tabBlock = self.recursivelyBuildBlock(rowBlock.container, b) as TabBlock;
                 if (b.metadata?.name) tabBlock.name = b.metadata?.name;
                 rowBlock.blocks.push(tabBlock);
-                if (i == 0) {
-                    rowBlock.relation.firstChild= tabBlock;
-                    tabBlock.relation.parent = rowBlock;
-                }
-                if (i > 0) {
-                    let previous = rowBlock.blocks[i-1];
-                    tabBlock.relation.previous = previous;
-                    previous.relation.next = tabBlock;
-                }
             });
         }
+        this.addParentSiblingRelations(rowBlock);
         rowBlock.renderLabels();
         (rowBlock.blocks[0] as TabBlock)?.setActive();
         container.appendChild(rowBlock.container);
@@ -1701,17 +1645,9 @@ export class BlockManager implements IBlockManager {
             blockDto.children.forEach((b,i) => {
                 let block = self.recursivelyBuildBlock(tabBlock.panel, b) as IBlock;
                 tabBlock.blocks.push(block);
-                if (i == 0) {
-                    tabBlock.relation.firstChild = block;
-                    block.relation.parent = tabBlock;
-                }
-                if (i > 0) {
-                    let previous = tabBlock.blocks[i-1];
-                    block.relation.previous = previous;
-                    previous.relation.next = block;
-                }
             });
         }
+        this.addParentSiblingRelations(tabBlock);
         container.appendChild(tabBlock.container);
         return tabBlock;
     }
@@ -1728,22 +1664,28 @@ export class BlockManager implements IBlockManager {
                             "list-style": "square"
                         }
                     });
-                    if (i == 0) {
-                        block.relation.parent = indentedListBlock;
-                        indentedListBlock.relation.firstChild = block;
-                    }
-                    if (i > 0) {
-                        let previous = indentedListBlock.blocks[i-1];
-                        block.relation.previous = previous;
-                        previous.relation.next = block;
-                    }
                 });
             }
+            this.addParentSiblingRelations(indentedListBlock);
             const level = indentedListBlock.metadata.indentLevel || 0 as number;
             indentedListBlock.metadata.indentLevel = level + 1;
             this.renderIndent(indentedListBlock);
             container.appendChild(indentedListBlock.container);
             return indentedListBlock;
+    }
+    addParentSiblingRelations<T extends AbstractBlock>(parent: T) {
+        parent.blocks.forEach((block, i) => {
+            if (i == 0) {
+                block.relation.parent = parent;
+                parent.relation.firstChild = block;
+            }
+            if (i > 0) {
+                let previous = parent.blocks[i - 1];
+                block.relation.previous = previous;
+                previous.relation.next = block;
+            }
+        });
+        return parent;
     }
     recursivelyBuildBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         if (blockDto.type == BlockType.StandoffEditorBlock) {
@@ -1935,11 +1877,12 @@ export class BlockManager implements IBlockManager {
         this.blocks.push(block);
         return block;
     }
-    createTabRowBlock() {
+    createTabRowBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new TabRowBlock({
             owner: this
         });
+        if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
         block.applyBlockPropertyStyling();
         this.commit({
