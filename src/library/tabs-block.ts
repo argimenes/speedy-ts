@@ -22,7 +22,7 @@ export class TabRowBlock extends AbstractBlock {
         const tabs = this.blocks.filter(x => x.type == BlockType.TabBlock) as TabBlock[];
         header.innerHTML = "";
         tabs.forEach((tab, i) => {
-            const label = document.createElement("SPAN") as HTMLSpanElement;
+            const label = (tab.container.querySelector("span.tab-label") || document.createElement("SPAN")) as HTMLSpanElement;
             label.innerHTML = tab.metadata?.name || ("Tab " + (i+1));
             label.classList.add("tab-label");
             if (i == 0) label.classList.add("active");
@@ -59,6 +59,9 @@ export class TabBlock extends AbstractBlock {
         this.panel = document.createElement("DIV") as HTMLDivElement;
         this.panel.classList.add("tab-panel");
         this.container.appendChild(this.panel);
+    }
+    setName(name: string) {
+        this.metadata.name = name;
     }
     setActive() {
         this.isActive = true;

@@ -3,6 +3,7 @@ import { createStore } from "solid-js/store";
 import { BlockManager } from "../library/block-manager";
 import { BlockType, CARET, IBlock, StandoffEditorBlock } from "../library/standoff-editor-block";
 import { GridBlock } from "../library/gird-block";
+import { TabBlock, TabRowBlock } from "../library/tabs-block";
 
 type Model = {
     command: string;
@@ -82,6 +83,45 @@ export const ControlPanel : Component<Props> = (props) => {
         const gridBlock = props.manager?.createGrid(rows, cells) as GridBlock;
         props.manager?.addSiblingBlock(block, gridBlock);
     }
+    const setTabName = (name: string) => {
+        const block = props.manager?.getBlockInFocus();
+        if (!block) return;
+        const tab = props.manager?.getParent(block) as TabBlock;
+        if (!tab || tab.type != BlockType.TabBlock) return;
+        tab.setName(name);
+        const row = tab.relation.parent as TabRowBlock;
+        row.renderLabels();
+    }
+    const addTab = (name: string) => {
+        const block = props.manager?.getBlockInFocus();
+        if (!block) return;
+        const tab = props.manager?.getParent(block) as TabBlock;
+        if (!tab || tab.type != BlockType.TabBlock) return;
+        const row = props.manager?.getParent(tab) as TabRowBlock;
+        if (!row) return;
+        const newTab = props.manager?.createTabBlock({
+            type: BlockType.TabBlock,
+            metadata: {
+                name: name
+            }
+        }) as TabBlock;
+        const textBlock = props.manager?.createStandoffEditorBlock({
+            type: BlockType.StandoffEditorBlock,
+            blockProperties:[
+                { type: "block/alignment/left" }
+            ]
+        }) as StandoffEditorBlock;
+        textBlock.addEOL();
+        newTab.blocks.push(textBlock);
+        row.blocks.push(newTab);
+        props.manager?.addParentSiblingRelations(row);
+        row.renderLabels();
+        newTab.container.appendChild(textBlock.container);
+        row.container.appendChild(newTab.container);
+        const label = newTab.container.querySelector(".tab-label") as HTMLSpanElement;
+        row.setTabActive(newTab, label);
+        props.manager?.setBlockFocus(textBlock);
+    }
     const runCommand = async () => {
         if (!model.command) {
             return;
@@ -95,6 +135,8 @@ export const ControlPanel : Component<Props> = (props) => {
             case "bgcol": setBackgroundColour(parameters[0]); return;
             case "add-grid": createGrid(parseInt(parameters[0]), parseInt(parameters[1])); return;
             case "new-doc": createDocument(); return;
+            case "set-tab-name": setTabName(parameters[0]); return;
+            case "add-tab": addTab(parameters[0]); return;
             default: break;
         }
     }
