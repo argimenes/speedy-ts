@@ -99,7 +99,8 @@ export class BlockProperty {
     serialize() {
         return {
             id: this.id,
-            type: this.type
+            type: this.type,
+            value: this.value
         }
     }
     applyStyling() {
@@ -1205,7 +1206,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                 console.log("Schema not found for the standoff property type.", { p });
                 // Need to handle this properly ... can't just return early in a map().
             }
-            const prop = new BlockProperty({ type: p.type, block: self, schema });
+            const prop = new BlockProperty({ type: p.type, block: self, schema, value: p.value });
             return prop;
         }) as BlockProperty[];
         this.applyBlockPropertyStyling();

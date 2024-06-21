@@ -1805,45 +1805,27 @@ export class BlockManager implements IBlockManager {
             }
         });
     }
-    createMainListBlock() {
+    createMainListBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new MainListBlock({
             owner: this
         });
+        if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "createMainListBlock"
-            },
-            undo: {
-                id: this.id,
-                name: "uncreateMainListBlock",
-                value: { id: block.id }
-            }
-        });
         this.blocks.push(block);
         return block;
     }
-    createIndentedListBlock() {
+    createIndentedListBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new IndentedListBlock({
             owner: this
         });
+        if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "createIndentedListBlock"
-            },
-            undo: {
-                id: this.id,
-                name: "uncreateIndentedListBlock",
-                value: { id: block.id }
-            }
-        });
         this.blocks.push(block);
         return block;
     }
@@ -1854,18 +1836,8 @@ export class BlockManager implements IBlockManager {
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "createTabBlock"
-            },
-            undo: {
-                id: this.id,
-                name: "uncreateTabBlock",
-                value: { id: block.id }
-            }
-        });
         this.blocks.push(block);
         return block;
     }
@@ -1877,6 +1849,7 @@ export class BlockManager implements IBlockManager {
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.blocks.push(block);
         return block;
@@ -1889,6 +1862,7 @@ export class BlockManager implements IBlockManager {
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.blocks.push(block);
         return block;
@@ -1901,6 +1875,7 @@ export class BlockManager implements IBlockManager {
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.blocks.push(block);
         return block;
@@ -1912,6 +1887,7 @@ export class BlockManager implements IBlockManager {
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.commit({
             redo: {
@@ -1935,6 +1911,7 @@ export class BlockManager implements IBlockManager {
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
         block.addBlockProperties([ { type: "block/marginalia/left" } ]);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.blocks.push(block);
         return block;
@@ -1947,11 +1924,12 @@ export class BlockManager implements IBlockManager {
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
         block.addBlockProperties([ { type: "block/marginalia/right" } ]);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.blocks.push(block);
         return block;
     }
-    createStandoffEditorBlock() {
+    createStandoffEditorBlock(dto?: IBlockDto) {
         const standoffSchemas = this.getStandoffSchemas();
         const blockSchemas = this.getBlockSchemas();
         const standoffEvents = this.getStandoffPropertyEvents();
@@ -1964,18 +1942,9 @@ export class BlockManager implements IBlockManager {
         block.setEvents(standoffEvents);
         block.setEvents(editorEvents);
         block.setCommitHandler(this.storeCommit.bind(this));
+        if (dto?.metadata) block.metadata = dto.metadata;
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "createStandoffEditorBlock"
-            },
-            undo: {
-                id: this.id,
-                name: "uncreateStandoffEditorBlock",
-                value: { id: block.id }
-            }
-        });
         this.blocks.push(block);
         return block;
     }
