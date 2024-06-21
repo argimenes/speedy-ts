@@ -1792,6 +1792,25 @@ export class BlockManager implements IBlockManager {
         container.appendChild(mainBlock.container);
         this.container.appendChild(container);
     }
+    createGrid(previousBlock: IBlock, rows: number, cells: number) {
+        const gridBlock = this.createGridBlock();
+        const width = 100 / cells;
+        for (let row = 1; row <= rows; row++) {
+            const rowBlock = this.createGridRowBlock();
+            for (let cell = 1; cell <= cells; cell++) {
+                const cellBlock = this.createGridCellBlock({
+                    type: BlockType.GridCellBlock,
+                    metadata: {
+                        width: width + "%"
+                    }
+                });
+                const textBlock = this.createStandoffEditorBlock();
+                cellBlock.blocks.push(textBlock);
+                rowBlock.blocks.push(cellBlock);
+            }
+            gridBlock.blocks.push(rowBlock);
+        }
+    }
     renderIndent(block: IBlock) {
         /**
          * Currently assumes that these are StandoffTextBlocks on the same BlockManager,
