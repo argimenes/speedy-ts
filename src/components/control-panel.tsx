@@ -97,30 +97,7 @@ export const ControlPanel : Component<Props> = (props) => {
         if (!block) return;
         const tab = props.manager?.getParent(block) as TabBlock;
         if (!tab || tab.type != BlockType.TabBlock) return;
-        const row = props.manager?.getParent(tab) as TabRowBlock;
-        if (!row) return;
-        const newTab = props.manager?.createTabBlock({
-            type: BlockType.TabBlock,
-            metadata: {
-                name: name
-            }
-        }) as TabBlock;
-        const textBlock = props.manager?.createStandoffEditorBlock({
-            type: BlockType.StandoffEditorBlock,
-            blockProperties:[
-                { type: "block/alignment/left" }
-            ]
-        }) as StandoffEditorBlock;
-        textBlock.addEOL();
-        newTab.blocks.push(textBlock);
-        row.blocks.push(newTab);
-        props.manager?.addParentSiblingRelations(row);
-        row.renderLabels();
-        newTab.container.appendChild(textBlock.container);
-        row.container.appendChild(newTab.container);
-        const label = newTab.container.querySelector(".tab-label") as HTMLSpanElement;
-        row.setTabActive(newTab, label);
-        props.manager?.setBlockFocus(textBlock);
+        props.manager?.addTab({ tabId: tab.id, name });
     }
     const runCommand = async () => {
         if (!model.command) {

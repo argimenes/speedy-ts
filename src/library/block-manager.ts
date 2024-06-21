@@ -1183,6 +1183,22 @@ export class BlockManager implements IBlockManager {
         ];
         return events;
     }
+    getParentOfType(block: IBlock, type: BlockType) {
+        let current = block;
+        while (current) {
+            let parent = current.relation.parent;
+            if (parent) {
+                if (parent.type == type) {
+                    return current.relation.parent;
+                }
+                current = parent;
+                continue;
+            }
+            current = current.relation.previous;
+            continue;
+        }
+        return null;
+    }
     getParent(block: IBlock) {
         let current = block;
         while (current) {
@@ -1662,6 +1678,34 @@ export class BlockManager implements IBlockManager {
         container.appendChild(rowBlock.container);
         return rowBlock;
     }
+    addTab({ tabId, name }: { tabId: string, name: string }) {
+        const tab = this.getBlock(tabId) as TabBlock;
+        const row = this.getParentOfType(tab, BlockType.TabRowBlock) as TabRowBlock;
+        if (!row) return;
+        const newTab = this.createTabBlock({
+            type: BlockType.TabBlock,
+            metadata: {
+                name: name
+            }
+        }) as TabBlock;
+        const textBlock = this.createStandoffEditorBlock({
+            type: BlockType.StandoffEditorBlock,
+            blockProperties:[
+                { type: "block/alignment/left" }
+            ]
+        }) as StandoffEditorBlock;
+        textBlock.addEOL();
+        newTab.blocks.push(textBlock);
+        row.blocks.push(newTab);
+        this.addParentSiblingRelations(row);
+        row.renderLabels();
+        newTab.panel.appendChild(textBlock.container);
+        row.container.appendChild(newTab.container);
+        const label = newTab.container.querySelector(".tab-label") as HTMLSpanElement;
+        row.setTabActive(newTab, label);
+        this.setBlockFocus(textBlock);
+        return newTab;
+    }
     buildTabBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
         const tabBlock = this.createTabBlock(blockDto);
@@ -1937,17 +1981,6 @@ export class BlockManager implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "createTabRowBlock"
-            },
-            undo: {
-                id: this.id,
-                name: "uncreateTabRowBlock",
-                value: { id: block.id }
-            }
-        });
         this.blocks.push(block);
         return block;
     }
