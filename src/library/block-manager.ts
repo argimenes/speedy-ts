@@ -1792,7 +1792,21 @@ export class BlockManager implements IBlockManager {
         container.appendChild(mainBlock.container);
         this.container.appendChild(container);
     }
-    createGrid(previousBlock: IBlock, rows: number, cells: number) {
+    addSiblingBlock(block: IBlock, sibling: IBlock) {
+        block.container.insertAdjacentElement("afterend", sibling.container);
+        const parent = block.relation.parent;
+        if (!parent) return;
+        const i = parent.blocks.findIndex(x => x.id == block.id);
+        parent.blocks.splice(i + 1, 0, sibling);
+        const next = block.relation.next;
+        block.relation.next = sibling;
+        sibling.relation.previous = block;
+        if (next) {
+            next.relation.previous = block;
+            sibling.relation.next = next;
+        }
+    }
+    createGrid(rows: number, cells: number) {
         const gridBlock = this.createGridBlock();
         const width = 100 / cells;
         for (let row = 1; row <= rows; row++) {
@@ -1801,15 +1815,23 @@ export class BlockManager implements IBlockManager {
                 const cellBlock = this.createGridCellBlock({
                     type: BlockType.GridCellBlock,
                     metadata: {
-                        width: width + "%"
+                        width: (width-2) + "%"
                     }
                 });
                 const textBlock = this.createStandoffEditorBlock();
+                textBlock.addEOL();
                 cellBlock.blocks.push(textBlock);
                 rowBlock.blocks.push(cellBlock);
+                this.addParentSiblingRelations(cellBlock);
+                cellBlock.container.appendChild(textBlock.container);
+                rowBlock.container.appendChild(cellBlock.container);
             }
+            this.addParentSiblingRelations(rowBlock);
             gridBlock.blocks.push(rowBlock);
+            gridBlock.container.appendChild(rowBlock.container);
         }
+        this.addParentSiblingRelations(gridBlock);
+        return gridBlock;
     }
     renderIndent(block: IBlock) {
         /**
@@ -1867,6 +1889,13 @@ export class BlockManager implements IBlockManager {
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
+        if (block.metadata.width) {
+            updateElement(block.container, {
+                style: {
+                    width: block.metadata.width
+                }
+            });
+        }
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();

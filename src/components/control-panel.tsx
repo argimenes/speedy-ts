@@ -2,6 +2,7 @@ import { Component, For, onMount } from "solid-js"
 import { createStore } from "solid-js/store";
 import { BlockManager } from "../library/block-manager";
 import { BlockType, CARET, IBlock, StandoffEditorBlock } from "../library/standoff-editor-block";
+import { GridBlock } from "../library/gird-block";
 
 type Model = {
     command: string;
@@ -75,6 +76,12 @@ export const ControlPanel : Component<Props> = (props) => {
         if (!block) return;
         block.addBlockProperties([prop]);
     }
+    const createGrid = (rows: number, cells: number) => {
+        const block = props.manager?.getBlockInFocus();
+        if (!block) return;
+        const gridBlock = props.manager?.createGrid(rows, cells) as GridBlock;
+        props.manager?.addSiblingBlock(block, gridBlock);
+    }
     const runCommand = async () => {
         if (!model.command) {
             return;
@@ -86,10 +93,8 @@ export const ControlPanel : Component<Props> = (props) => {
             case "save": await save(parameters); return;
             case "list-docs": await listDocuments(); return;
             case "bgcol": setBackgroundColour(parameters[0]); return;
-            case "create-doc":
-            case "new-doc": {   
-                createDocument(); return;
-            }
+            case "add-grid": createGrid(parseInt(parameters[0]), parseInt(parameters[1])); return;
+            case "new-doc": createDocument(); return;
             default: break;
         }
     }
