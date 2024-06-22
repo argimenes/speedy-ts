@@ -77,6 +77,15 @@ export const ControlPanel : Component<Props> = (props) => {
         if (!block) return;
         block.addBlockProperties([prop]);
     }
+    const setFontColour = (colour: string) => {
+        const prop = {
+            type: "block/font/colour",
+            value: colour
+        };
+        const block = props.manager?.getBlockInFocus();
+        if (!block) return;
+        block.addBlockProperties([prop]);
+    }
     const createGrid = (rows: number, cells: number) => {
         const block = props.manager?.getBlockInFocus();
         if (!block) return;
@@ -109,6 +118,7 @@ export const ControlPanel : Component<Props> = (props) => {
             case "load": await load(parameters); return;
             case "save": await save(parameters); return;
             case "list-docs": await listDocuments(); return;
+            case "color": setFontColour(parameters[0]); return;
             case "bgcol": setBackgroundColour(parameters[0]); return;
             case "add-grid": createGrid(parseInt(parameters[0]), parseInt(parameters[1])); return;
             case "new-doc": createDocument(); return;

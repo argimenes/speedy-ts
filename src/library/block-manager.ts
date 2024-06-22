@@ -14,6 +14,7 @@ import { IndentedListBlock } from "./indented-list-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "./gird-block";
 import { AbstractBlock } from "./abstract-block";
+import { ImageBlock } from "./image-block";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -278,6 +279,19 @@ export class BlockManager implements IBlockManager {
                         updateElement(p.block.container, {
                             style: {
                                 "background-color": p.value
+                            }
+                        });
+                    }
+                }
+            },
+            {
+                type: "block/font/colour",
+                name: "Set font colour",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        updateElement(p.block.container, {
+                            style: {
+                                "color": p.value
                             }
                         });
                     }
@@ -1604,6 +1618,21 @@ export class BlockManager implements IBlockManager {
         container.appendChild(leftMargin.container);
         return leftMargin;
     }
+    buildImageBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+        const self = this;
+        const image = this.createImageBlock(blockDto);
+        image.build();
+        if (blockDto.children) {
+            blockDto.children.forEach((b,i) => { 
+                let block = self.recursivelyBuildBlock(image.container, b) as IBlock;
+                image.blocks.push(block);
+            });
+        }
+        this.addParentSiblingRelations(image);
+        image.container.appendChild(image.image);
+        container.appendChild(image.container);
+        return image;
+    }
     buildRightMarginBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
         const rightMargin = this.createRightMarginBlock(blockDto);
@@ -1782,6 +1811,9 @@ export class BlockManager implements IBlockManager {
         }
         if (blockDto.type == BlockType.IndentedListBlock) {
             return this.buildIndentedListBlock(container, blockDto);
+        }
+        if (blockDto.type == BlockType.ImageBlock) {
+            return this.buildImageBlock(container, blockDto);
         }
         return null;
     }
@@ -1992,6 +2024,18 @@ export class BlockManager implements IBlockManager {
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
         block.addBlockProperties([ { type: "block/marginalia/left" } ]);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+        block.applyBlockPropertyStyling();
+        this.blocks.push(block);
+        return block;
+    }
+    createImageBlock(dto?: IBlockDto) {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new ImageBlock({
+            owner: this
+        });
+        if (dto?.metadata) block.metadata = dto.metadata;
+        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.blocks.push(block);
