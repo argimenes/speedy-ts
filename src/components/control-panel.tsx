@@ -4,6 +4,8 @@ import { BlockManager } from "../library/block-manager";
 import { BlockType, CARET, IBlock, StandoffEditorBlock } from "../library/standoff-editor-block";
 import { GridBlock } from "../library/gird-block";
 import { TabBlock, TabRowBlock } from "../library/tabs-block";
+import { ImageBlock } from "../library/image-block";
+import { AbstractBlock } from "../library/abstract-block";
 
 type Model = {
     command: string;
@@ -86,6 +88,19 @@ export const ControlPanel : Component<Props> = (props) => {
         if (!block) return;
         block.addBlockProperties([prop]);
     }
+    const addImage = (url: string) => {
+        const block = props.manager?.getBlockInFocus();
+        if (!block) return;
+        const image = props.manager?.createImageBlock({
+            type: BlockType.ImageBlock,
+            metadata: {
+                url: url
+            }
+        }) as ImageBlock;
+        image.build();
+        image.container.appendChild(image.image);
+        props.manager?.addSiblingBlock(block, image);
+    }
     const createGrid = (rows: number, cells: number) => {
         const block = props.manager?.getBlockInFocus();
         if (!block) return;
@@ -118,6 +133,7 @@ export const ControlPanel : Component<Props> = (props) => {
             case "load": await load(parameters); return;
             case "save": await save(parameters); return;
             case "list-docs": await listDocuments(); return;
+            case "add-image": addImage(parameters[0]); return;
             case "color": setFontColour(parameters[0]); return;
             case "bgcol": setBackgroundColour(parameters[0]); return;
             case "add-grid": createGrid(parseInt(parameters[0]), parseInt(parameters[1])); return;

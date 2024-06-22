@@ -17,7 +17,7 @@ export class ImageBlock extends AbstractBlock {
                     src: this.metadata.url
                 },
                 style: {
-                    width: this.metadata.width || "auto",
+                    width: this.metadata.width || "100%",
                     height: this.metadata.height || "auto",
                 }
             });
