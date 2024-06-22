@@ -1838,10 +1838,10 @@ export class BlockManager implements IBlockManager {
     }
     addSiblingBlock(block: IBlock, sibling: IBlock) {
         block.container.insertAdjacentElement("afterend", sibling.container);
-        const parent = block.relation.parent;
+        const parent = this.getParent(block);
         if (!parent) return;
         const i = parent.blocks.findIndex(x => x.id == block.id);
-        parent.blocks.splice(i + 1, 0, sibling);
+        parent.blocks.splice(i, 0, sibling);
         const next = block.relation.next;
         block.relation.next = sibling;
         sibling.relation.previous = block;
