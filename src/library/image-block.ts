@@ -22,6 +22,7 @@ export class ImageBlock extends AbstractBlock {
                 }
             });
         }
+        this.container.appendChild(this.image);
     }
     bind(data: IBlockDto) {
         this.id = data.id || uuidv4();

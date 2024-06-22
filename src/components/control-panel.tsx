@@ -98,7 +98,6 @@ export const ControlPanel : Component<Props> = (props) => {
             }
         }) as ImageBlock;
         image.build();
-        image.container.appendChild(image.image);
         props.manager?.addSiblingBlock(block, image);
     }
     const createGrid = (rows: number, cells: number) => {

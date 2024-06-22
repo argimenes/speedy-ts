@@ -1629,7 +1629,6 @@ export class BlockManager implements IBlockManager {
             });
         }
         this.addParentSiblingRelations(image);
-        image.container.appendChild(image.image);
         container.appendChild(image.container);
         return image;
     }
