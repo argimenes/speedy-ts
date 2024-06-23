@@ -27,8 +27,14 @@ export class VideoBlock extends AbstractBlock {
         });
         this.container.appendChild(this.iframe);
         /**
-         * https://www.youtube.com/watch?v=g5Vo2EiEFnA&ab_channel=TwoMinutePapers
-         * <iframe width="560" height="315" src="https://www.youtube.com/embed/g5Vo2EiEFnA?si=7LGUR6rfzt4P_DJf" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+         * Source: https://www.youtube.com/watch?v=g5Vo2EiEFnA&ab_channel=TwoMinutePapers
+         * 
+         * Embed code:
+         * <iframe width="560" height="315"
+         * src="https://www.youtube.com/embed/g5Vo2EiEFnA?si=7LGUR6rfzt4P_DJf"
+         * title="YouTube video player"
+         * frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+         * referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
          */
     }
     bind(data: IBlockDto) {
