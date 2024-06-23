@@ -6,6 +6,8 @@ import { GridBlock } from "../library/gird-block";
 import { TabBlock, TabRowBlock } from "../library/tabs-block";
 import { ImageBlock } from "../library/image-block";
 import { AbstractBlock } from "../library/abstract-block";
+import { VideoBlock } from "../library/video-block";
+import { IframeBlock } from "../library/iframe-block";
 
 type Model = {
     command: string;
@@ -100,6 +102,30 @@ export const ControlPanel : Component<Props> = (props) => {
         image.build();
         props.manager?.addSiblingBlock(block, image);
     }
+    const addVideo = (url: string) => {
+        const block = props.manager?.getBlockInFocus();
+        if (!block) return;
+        const video = props.manager?.createVideoBlock({
+            type: BlockType.VideoBlock,
+            metadata: {
+                url: url
+            }
+        }) as VideoBlock;
+        video.build();
+        props.manager?.addSiblingBlock(block, video);
+    }
+    const addIFrame = (url: string) => {
+        const block = props.manager?.getBlockInFocus();
+        if (!block) return;
+        const iframe = props.manager?.createIFrameBlock({
+            type: BlockType.IFrameBlock,
+            metadata: {
+                url: url
+            }
+        }) as IframeBlock;
+        iframe.build();
+        props.manager?.addSiblingBlock(block, iframe);
+    }
     const createGrid = (rows: number, cells: number) => {
         const block = props.manager?.getBlockInFocus();
         if (!block) return;
@@ -133,6 +159,8 @@ export const ControlPanel : Component<Props> = (props) => {
             case "save": await save(parameters); return;
             case "list-docs": await listDocuments(); return;
             case "add-image": addImage(parameters[0]); return;
+            case "add-video": addVideo(parameters[0]); return;
+            case "add-url": addIFrame(parameters[0]); return;
             case "color": setFontColour(parameters[0]); return;
             case "bgcol": setBackgroundColour(parameters[0]); return;
             case "add-grid": createGrid(parseInt(parameters[0]), parseInt(parameters[1])); return;

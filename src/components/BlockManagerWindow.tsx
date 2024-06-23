@@ -64,6 +64,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         }
                     }
                 } as IStandoffEditorBlockDto,
+                
                 {
                     type: BlockType.IndentedListBlock,
                     children: [
@@ -248,6 +249,12 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                         {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "Row 2 - Cell 2"
+                                        },
+                                        {
+                                            type: BlockType.IFrameBlock,
+                                            metadata: {
+                                                url: "https://en.wikipedia.org/wiki/Leonardo_da_Vinci"
+                                            }
                                         }
                                     ]
                                 },

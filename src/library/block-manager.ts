@@ -15,6 +15,8 @@ import { TabBlock, TabRowBlock } from "./tabs-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "./gird-block";
 import { AbstractBlock } from "./abstract-block";
 import { ImageBlock } from "./image-block";
+import { VideoBlock } from "./video-block";
+import { IframeBlock } from "./iframe-block";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -1691,6 +1693,34 @@ export class BlockManager implements IBlockManager {
         container.appendChild(cellBlock.container);
         return cellBlock;
     }
+    buildVideoBlock(container: HTMLDivElement, blockDto: IBlockDto){
+        const self = this;
+        const video = this.createVideoBlock(blockDto);
+        if (blockDto.children) {
+            blockDto.children.forEach((b,i) => {
+                let tabBlock = self.recursivelyBuildBlock(video.container, b) as TabBlock;
+                video.blocks.push(tabBlock);
+            });
+        }
+        video.build();
+        this.addParentSiblingRelations(video);
+        container.appendChild(video.container);
+        return video;
+    }
+    buildIframeBlock(container: HTMLDivElement, blockDto: IBlockDto){
+        const self = this;
+        const iframe = this.createIFrameBlock(blockDto);
+        if (blockDto.children) {
+            blockDto.children.forEach((b,i) => {
+                let tabBlock = self.recursivelyBuildBlock(iframe.container, b) as TabBlock;
+                iframe.blocks.push(tabBlock);
+            });
+        }
+        iframe.build();
+        this.addParentSiblingRelations(iframe);
+        container.appendChild(iframe.container);
+        return iframe;
+    }
     buildTabRowBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
         const rowBlock = this.createTabRowBlock(blockDto);
@@ -1802,6 +1832,9 @@ export class BlockManager implements IBlockManager {
         if (blockDto.type == BlockType.GridCellBlock) {
             return this.buildGridCellBlock(container, blockDto);
         }
+        if (blockDto.type == BlockType.IFrameBlock) {
+            return this.buildIframeBlock(container, blockDto);
+        }
         if (blockDto.type == BlockType.TabRowBlock) {
             return this.buildTabRowBlock(container, blockDto);
         }
@@ -1813,6 +1846,9 @@ export class BlockManager implements IBlockManager {
         }
         if (blockDto.type == BlockType.ImageBlock) {
             return this.buildImageBlock(container, blockDto);
+        }
+        if (blockDto.type == BlockType.VideoBlock) {
+            return this.buildVideoBlock(container, blockDto);
         }
         return null;
     }
@@ -2023,6 +2059,30 @@ export class BlockManager implements IBlockManager {
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
         block.addBlockProperties([ { type: "block/marginalia/left" } ]);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+        block.applyBlockPropertyStyling();
+        this.blocks.push(block);
+        return block;
+    }
+    createIFrameBlock(dto?: IBlockDto) {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new IframeBlock({
+            owner: this
+        });
+        if (dto?.metadata) block.metadata = dto.metadata;
+        block.setBlockSchemas(blockSchemas);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+        block.applyBlockPropertyStyling();
+        this.blocks.push(block);
+        return block;
+    }
+    createVideoBlock(dto?: IBlockDto) {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new VideoBlock({
+            owner: this
+        });
+        if (dto?.metadata) block.metadata = dto.metadata;
+        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.blocks.push(block);
