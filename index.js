@@ -44,6 +44,6 @@ app.post('/api/saveDocumentJson', function(req, res) {
 app.get('/', function(req, res) { 
      res.sendFile(path.join(__dirname + '/public/index.html')); 
 }); 
-const port = process.env.port || 80;
+const port = process.env.port || 3002
 app.listen(port); 
 console.log('Running at Port ' + port); 

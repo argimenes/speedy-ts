@@ -8,7 +8,7 @@ import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerAr
     IStandoffEditorBlockDto} from "./standoff-editor-block";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
-import { MarginBlock, RightMarginBlock } from "./margin-block";
+import { LeftMarginBlock, RightMarginBlock } from "./margin-block";
 import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
@@ -391,7 +391,7 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        let leftMargin = block.relation.leftMargin as MarginBlock;
+                        let leftMargin = block.relation.leftMargin as LeftMarginBlock;
                         if (!leftMargin) {
                             leftMargin = manager.createLeftMarginBlock();
                             const child = manager.createStandoffEditorBlock();
@@ -466,9 +466,9 @@ export class BlockManager implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        let rightMargin = block.relation.rightMargin as MarginBlock;
+                        let rightMargin = block.relation.rightMargin as RightMarginBlock;
                         if (!rightMargin) {
-                            rightMargin = this.createLeftMarginBlock();
+                            rightMargin = this.createRightMarginBlock();
                             rightMargin.relation.parent = block;
                             block.relation.rightMargin = rightMargin;
                             manager.blocks.push(rightMargin);
@@ -1486,7 +1486,7 @@ export class BlockManager implements IBlockManager {
         this.commits.push(commit);
         this.pointer++;
     }
-    stageRightMarginBlock(rightMargin: MarginBlock, mainBlock: StandoffEditorBlock) {
+    stageRightMarginBlock(rightMargin: LeftMarginBlock, mainBlock: StandoffEditorBlock) {
         this.batchRelate({
             toAdd: [
                 { sourceId: mainBlock.id, name: "rightMargin", targetId: rightMargin.id },
@@ -1519,7 +1519,7 @@ export class BlockManager implements IBlockManager {
         });
         rightMargin.container.appendChild(hand);
     }
-    stageLeftMarginBlock(leftMargin: MarginBlock, mainBlock: StandoffEditorBlock) {
+    stageLeftMarginBlock(leftMargin: LeftMarginBlock, mainBlock: StandoffEditorBlock) {
         this.batchRelate({
             toAdd: [
                 { sourceId: mainBlock.id, name: "leftMargin", targetId: leftMargin.id },
@@ -1588,7 +1588,7 @@ export class BlockManager implements IBlockManager {
         const textBlock = this.createStandoffEditorBlock();
         textBlock.bind(blockDto as IStandoffEditorBlockDto);
         if (blockDto.relation?.leftMargin) {
-            const leftMargin = this.recursivelyBuildBlock(textBlock.container, blockDto.relation.leftMargin) as MarginBlock;
+            const leftMargin = this.recursivelyBuildBlock(textBlock.container, blockDto.relation.leftMargin) as LeftMarginBlock;
             textBlock.relation.leftMargin = leftMargin;
             this.stageLeftMarginBlock(leftMargin, textBlock);
         }
@@ -2053,7 +2053,7 @@ export class BlockManager implements IBlockManager {
     }
     createLeftMarginBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
-        const block = new MarginBlock({
+        const block = new LeftMarginBlock({
             owner: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;

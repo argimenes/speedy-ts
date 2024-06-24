@@ -1,7 +1,7 @@
 import { AbstractBlock, IAbstractBlockConstructor  } from "./abstract-block"
 import { BlockType, IBlock, IBlockDto } from "./standoff-editor-block";
 
-export class MarginBlock extends AbstractBlock {
+export class LeftMarginBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.LeftMarginBlock;
