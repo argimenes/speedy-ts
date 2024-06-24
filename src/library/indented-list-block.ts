@@ -15,6 +15,22 @@ export class IndentedListBlock extends AbstractBlock {
             children: this.blocks.map(x => x.serialize())
         } as IBlockDto;
     }
+    collapse() {
+        this.metadata.collapsed = true;
+        this.renderCollapsedState();
+    }
+    expand() {
+        this.metadata.collapsed = false;
+        this.renderCollapsedState();
+    }
+    renderCollapsedState() {
+        const nodes = Array.from(this.container.childNodes);
+        if (this.metadata.collapsed) {
+            nodes.forEach((c: any) => c.style.display = "none");
+        } else {
+            nodes.forEach((c: any) => c.style.display = "block");
+        }
+    }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
     }

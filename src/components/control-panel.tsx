@@ -8,6 +8,7 @@ import { ImageBlock } from "../library/image-block";
 import { AbstractBlock } from "../library/abstract-block";
 import { VideoBlock } from "../library/video-block";
 import { IframeBlock } from "../library/iframe-block";
+import { IndentedListBlock } from "../library/indented-list-block";
 
 type Model = {
     command: string;
@@ -148,6 +149,16 @@ export const ControlPanel : Component<Props> = (props) => {
         if (!tab || tab.type != BlockType.TabBlock) return;
         props.manager?.addTab({ tabId: tab.id, name });
     }
+    const collapse = (name: string) => {
+        const block = props.manager?.getBlockInFocus() as IndentedListBlock;
+        if (!block || block.type != BlockType.IndentedListBlock) return;
+        block.collapse();
+    }
+    const expand = (name: string) => {
+        const block = props.manager?.getBlockInFocus() as IndentedListBlock;
+        if (!block || block.type != BlockType.IndentedListBlock) return;
+        block.expand();
+    }
     const runCommand = async () => {
         if (!model.command) {
             return;
@@ -164,6 +175,8 @@ export const ControlPanel : Component<Props> = (props) => {
             case "color": setFontColour(parameters[0]); return;
             case "bgcol": setBackgroundColour(parameters[0]); return;
             case "add-grid": createGrid(parseInt(parameters[0]), parseInt(parameters[1])); return;
+            case "collapse": collapse(); return;
+            case "expand": expand(); return;
             case "new-doc": createDocument(); return;
             case "set-tab-name": setTabName(parameters[0]); return;
             case "add-tab": addTab(parameters[0]); return;
