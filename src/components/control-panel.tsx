@@ -94,38 +94,17 @@ export const ControlPanel : Component<Props> = (props) => {
     const addImage = (url: string) => {
         const block = props.manager?.getBlockInFocus();
         if (!block) return;
-        const image = props.manager?.createImageBlock({
-            type: BlockType.ImageBlock,
-            metadata: {
-                url: url
-            }
-        }) as ImageBlock;
-        image.build();
-        props.manager?.addSiblingBlock(block, image);
+        props.manager?.addImageBlock(block, url);
     }
     const addVideo = (url: string) => {
         const block = props.manager?.getBlockInFocus();
         if (!block) return;
-        const video = props.manager?.createVideoBlock({
-            type: BlockType.VideoBlock,
-            metadata: {
-                url: url
-            }
-        }) as VideoBlock;
-        video.build();
-        props.manager?.addSiblingBlock(block, video);
+        props.manager?.addVideoBlock(block, url);
     }
     const addIFrame = (url: string) => {
         const block = props.manager?.getBlockInFocus();
         if (!block) return;
-        const iframe = props.manager?.createIFrameBlock({
-            type: BlockType.IFrameBlock,
-            metadata: {
-                url: url
-            }
-        }) as IframeBlock;
-        iframe.build();
-        props.manager?.addSiblingBlock(block, iframe);
+        props.manager?.addIFrameBlock(block, url);
     }
     const createGrid = (rows: number, cells: number) => {
         const block = props.manager?.getBlockInFocus();

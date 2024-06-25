@@ -514,37 +514,7 @@ export class BlockManager implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        const manager = block.owner as BlockManager;
-                        const parent = manager.getParent(block);
-                        if (!parent) {
-                            // Expected to find a parent somewhere
-                            return;
-                        }
-                        let next = block.relation.next as StandoffEditorBlock;
-                        if (!next) {
-                            next = manager.createStandoffEditorBlock();
-                            const blockData = block.serialize();
-                            next.addBlockProperties(blockData.blockProperties || []);
-                            next.applyBlockPropertyStyling();
-                            manager.blocks.push(next);
-                            parent.blocks.push(next);
-                            next.relation.previous = block;
-                            block.relation.next = next;
-                            next.addEOL();
-                            /**
-                             * This should be done by fetching the container on the root MainList
-                             */
-                            block.container.insertAdjacentElement("afterend", next.container);
-                            next.setCaret(0, CARET.LEFT);
-                            manager.setBlockFocus(next);
-                        } else {
-                            next.setCaret(0, CARET.LEFT);
-                            manager.setBlockFocus(next);
-                        }
-                    }
+                    handler: this.handleEnterKey.bind(this)
                 }
             },
             {
@@ -558,48 +528,7 @@ export class BlockManager implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        const manager = block.owner as BlockManager;
-                        const parent = block.relation.parent;
-                        if (parent) {
-                            /**
-                             * Quit if this is the first child of another block.
-                             */
-                            return;
-                        }
-                        const previous = block.relation.previous;
-                        if (!previous) {
-                            /**
-                             * Quit if this is the first block.
-                             */
-                            return;
-                        }
-                        const indentedList = manager.createIndentedListBlock();
-                        /**
-                         * Convert the previous block into a parent of the indented list block.
-                         */
-                        const next = block.relation.next;
-                        previous.relation.firstChild = indentedList;
-                        indentedList.relation.parent = previous;
-                        block.relation.parent = indentedList;
-                        indentedList.relation.firstChild = block;
-                        previous.relation.next = next;
-                        next.relation.previous = previous;
-                        delete block.relation.previous;
-                        delete block.relation.next;
-                        previous.blocks.push(indentedList);
-                        indentedList.blocks.push(block);
-                        manager.blocks.push(indentedList);
-                        const level = indentedList.metadata.indentLevel || 0 as number;
-                        indentedList.metadata.indentLevel = level + 1;
-                        indentedList.container.appendChild(block.container);
-                        previous.container.appendChild(indentedList.container);
-                        manager.renderIndent(indentedList);
-                        block.setCaret(0, CARET.LEFT);
-                        manager.setBlockFocus(block);
-                    }
+                    handler: this.handleTabKey.bind(this)
                 }
             },
             {
@@ -2113,6 +2042,36 @@ export class BlockManager implements IBlockManager {
         this.blocks.push(block);
         return block;
     }
+    addImageBlock(sibling: IBlock, url: string) {
+        const image = this.createImageBlock({
+            type: BlockType.ImageBlock,
+            metadata: {
+                url: url
+            }
+        }) as ImageBlock;
+        image.build();
+        this.addSiblingBlock(sibling, image);
+    }
+    addVideoBlock(sibling: IBlock, url: string) {
+        const video = this.createVideoBlock({
+            type: BlockType.VideoBlock,
+            metadata: {
+                url: url
+            }
+        }) as VideoBlock;
+        video.build();
+        this.addSiblingBlock(sibling, video);
+    }
+    addIFrameBlock(sibling: IBlock, url: string) {
+        const iframe = this.createIFrameBlock({
+            type: BlockType.IFrameBlock,
+            metadata: {
+                url: url
+            }
+        }) as IframeBlock;
+        iframe.build();
+        this.addSiblingBlock(sibling, iframe);
+    }
     createStandoffEditorBlock(dto?: IBlockDto) {
         const standoffSchemas = this.getStandoffSchemas();
         const blockSchemas = this.getBlockSchemas();
@@ -2131,6 +2090,65 @@ export class BlockManager implements IBlockManager {
         block.applyBlockPropertyStyling();
         this.blocks.push(block);
         return block;
+    }
+    handleEnterKey(args: IBindingHandlerArgs) {
+        const block = args.block as StandoffEditorBlock;
+        const parent = this.getParent(block);
+        if (!parent) {
+            // Expected to find a parent somewhere
+            return;
+        }
+        let next = block.relation.next as StandoffEditorBlock;
+        if (!next) {
+            next = this.createStandoffEditorBlock();
+            const blockData = block.serialize();
+            next.addBlockProperties(blockData.blockProperties || []);
+            next.applyBlockPropertyStyling();
+            next.addEOL();
+            this.blocks.push(next);
+            this.addSiblingBlock(next, block);
+            next.setCaret(0, CARET.LEFT);
+            this.setBlockFocus(next);
+        } else {
+            next.setCaret(0, CARET.LEFT);
+            this.setBlockFocus(next);
+        }
+    }
+    handleTabKey(args: IBindingHandlerArgs) {
+        const block = args.block as StandoffEditorBlock;
+        const parent = block.relation.parent;
+        if (parent) {
+            /**
+             * Quit if this is the first child of another block.
+             */
+            return;
+        }
+        const list = this.createIndentedListBlock();
+        const previous = block.relation.previous;
+        const next = block.relation.next;
+        /**
+         * Convert the previous block into a parent of the indented list block.
+         */
+        previous.relation.firstChild = list;
+        list.relation.parent = previous;
+        list.relation.firstChild = block;
+        block.relation.parent = list;
+        delete block.relation.previous;
+        previous.relation.next = next;
+        delete block.relation.next;
+        if (next) {
+            next.relation.previous = previous;
+        }
+        previous.blocks.push(list);
+        list.blocks.push(block);
+        const listParent = this.getParentOfType(block, BlockType.IndentedListBlock) as IndentedListBlock;
+        const level = listParent?.metadata.indentLevel || 0 as number;
+        list.metadata.indentLevel = level + 1;
+        list.container.appendChild(block.container);
+        previous.container.appendChild(list.container);
+        this.renderIndent(list);
+        // block.setCaret(0, CARET.LEFT);
+        // this.setBlockFocus(block);
     }
     private uncreateStandoffEditorBlock(id: GUID) {
         const block = this.getBlock(id) as IBlock;
