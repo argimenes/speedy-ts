@@ -17,6 +17,7 @@ import { AbstractBlock } from "./abstract-block";
 import { ImageBlock } from "./image-block";
 import { VideoBlock } from "./video-block";
 import { IframeBlock } from "./iframe-block";
+import { insert } from "solid-js/web";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -542,7 +543,7 @@ export class BlockManager implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: this.moveSelectionOneCharacterRightwards
+                    handler: this.moveSelectionOneCharacterRightwards.bind(this)
                 }
             },
             {
@@ -570,7 +571,7 @@ export class BlockManager implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: this.moveCaretToStartOfTextBlock
+                    handler: this.moveCaretToStartOfTextBlock.bind(this)
                 }
             },
             {
@@ -1811,18 +1812,33 @@ export class BlockManager implements IBlockManager {
         container.appendChild(mainBlock.container);
         this.container.appendChild(container);
     }
-    addSiblingBlock(block: IBlock, sibling: IBlock) {
-        block.container.insertAdjacentElement("afterend", sibling.container);
-        const parent = this.getParent(block);
+    addPreviousBlock(newBlock: IBlock, sibling: IBlock) {
+        const parent = sibling.relation.parent;
+        parent.relation.firstChild = newBlock;
+        newBlock.relation.parent = parent;
+        newBlock.relation.next = sibling;
+        sibling.relation.previous = newBlock;
+        delete sibling.relation.parent;
+        const i = parent.blocks.findIndex(x => x.id == newBlock.id);
+        if (i > 0) {
+            parent.blocks.splice(i - 1, 0, sibling);
+        } else {
+            parent.blocks = [newBlock, ...parent.blocks];
+        }
+        sibling.container.insertAdjacentElement("beforebegin", newBlock.container);
+    }
+    addNextBlock(newBlock: IBlock, sibling: IBlock) {
+        sibling.container.insertAdjacentElement("afterend", newBlock.container);
+        const parent = this.getParent(sibling);
         if (!parent) return;
-        const i = parent.blocks.findIndex(x => x.id == block.id);
-        parent.blocks.splice(i, 0, sibling);
-        const next = block.relation.next;
-        block.relation.next = sibling;
-        sibling.relation.previous = block;
+        const i = parent.blocks.findIndex(x => x.id == sibling.id);
+        parent.blocks.splice(i, 0, newBlock);
+        const next = sibling.relation.next;
+        sibling.relation.next = newBlock;
+        newBlock.relation.previous = sibling;
         if (next) {
-            next.relation.previous = block;
-            sibling.relation.next = next;
+            newBlock.relation.next = next;
+            next.relation.previous = newBlock;
         }
     }
     createGrid(rows: number, cells: number) {
@@ -2029,7 +2045,7 @@ export class BlockManager implements IBlockManager {
             }
         }) as ImageBlock;
         image.build();
-        this.addSiblingBlock(sibling, image);
+        this.addNextBlock(sibling, image);
     }
     addVideoBlock(sibling: IBlock, url: string) {
         const video = this.createVideoBlock({
@@ -2039,7 +2055,7 @@ export class BlockManager implements IBlockManager {
             }
         }) as VideoBlock;
         video.build();
-        this.addSiblingBlock(sibling, video);
+        this.addNextBlock(sibling, video);
     }
     addIFrameBlock(sibling: IBlock, url: string) {
         const iframe = this.createIFrameBlock({
@@ -2049,7 +2065,7 @@ export class BlockManager implements IBlockManager {
             }
         }) as IframeBlock;
         iframe.build();
-        this.addSiblingBlock(sibling, iframe);
+        this.addNextBlock(sibling, iframe);
     }
     createStandoffEditorBlock(dto?: IBlockDto) {
         const standoffSchemas = this.getStandoffSchemas();
@@ -2071,27 +2087,23 @@ export class BlockManager implements IBlockManager {
         return block;
     }
     handleEnterKey(args: IBindingHandlerArgs) {
+        const { caret } = args;
         const block = args.block as StandoffEditorBlock;
-        const parent = this.getParent(block);
-        if (!parent) {
-            // Expected to find a parent somewhere
-            return;
-        }
-        let next = block.relation.next as StandoffEditorBlock;
-        if (!next) {
-            next = this.createStandoffEditorBlock();
-            const blockData = block.serialize();
-            next.addBlockProperties(blockData.blockProperties || []);
-            next.applyBlockPropertyStyling();
-            next.addEOL();
-            this.blocks.push(next);
-            this.addSiblingBlock(next, block);
-            next.setCaret(0, CARET.LEFT);
-            this.setBlockFocus(next);
+        const next = block.relation.next;
+        const parent = block.relation.parent;
+        const newBlock = this.createStandoffEditorBlock();
+        const blockData = block.serialize();
+        newBlock.addBlockProperties(blockData.blockProperties || []);
+        newBlock.applyBlockPropertyStyling();
+        newBlock.addEOL();
+        const insertAbove = parent && caret.left == null;
+        if (insertAbove) {
+            this.addPreviousBlock(newBlock, block);
         } else {
-            next.setCaret(0, CARET.LEFT);
-            this.setBlockFocus(next);
+            this.addNextBlock(newBlock, block);
         }
+        newBlock.setCaret(0, CARET.LEFT);
+        this.setBlockFocus(newBlock);
     }
     handleTabKey(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
