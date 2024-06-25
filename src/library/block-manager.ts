@@ -359,6 +359,27 @@ export class BlockManager implements IBlockManager {
         };
         animate();
     }
+    getTabBlockEvents() {
+        const events: InputEvent[] = [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Mouse,
+                    match: "click"
+                },
+                action: {
+                    name: "Set focus to the current block.",
+                    description: "",
+                    handler: (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        const manager = block.owner as BlockManager;
+                        manager.setBlockFocus(block);
+                    }
+                }
+            }
+        ]
+        return events;
+    }
     getImageBlockEvents() {
         const events: InputEvent[] = [
             {
@@ -371,7 +392,7 @@ export class BlockManager implements IBlockManager {
                     name: "Set focus to the current block.",
                     description: "",
                     handler: (args: IBindingHandlerArgs) => {
-                        const block = args.block as StandoffEditorBlock;
+                        const block = args.block as ImageBlock;
                         const manager = block.owner as BlockManager;
                         manager.setBlockFocus(block);
                     }
@@ -1897,9 +1918,11 @@ export class BlockManager implements IBlockManager {
     }
     createTabBlock(dto?: IBlockDto){
         const blockSchemas = this.getBlockSchemas();
+        const inputEvents = this.getTabBlockEvents();
         const block = new TabBlock({
             owner: this
         });
+        block.inputEvents = inputEvents;
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
@@ -1955,10 +1978,12 @@ export class BlockManager implements IBlockManager {
     }
     createTabRowBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
+        const inputEvents = this.getTabBlockEvents();
         const block = new TabRowBlock({
             owner: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
+        block.inputEvents = inputEvents;
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
