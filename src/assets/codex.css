@@ -1,4 +1,6 @@
-
+[contenteditable] {
+  outline: 0px solid transparent;
+}
 
 .block_alignment_centre {
     text-align: center;
@@ -40,7 +42,7 @@
   .block-window {
     width: 800px;
     /* border: 1px solid #ccc; */
-    border-radius: 10px;
+    /* border-radius: 10px; */
     padding: 20px 15px;
     margin: 0 300px;
   }
@@ -52,6 +54,9 @@
     width: 200px;
   }
 .block-window .focus-highlight {
+  box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
   border: 2px solid yellow;
   border-radius: 3px;
 }

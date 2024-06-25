@@ -394,8 +394,7 @@ export class BlockManager implements IBlockManager {
                     handler: (args: IBindingHandlerArgs) => {
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        manager.focus = block;
-                        console.log("Set focus to current block ...")
+                        manager.setBlockFocus(block);
                     }
                 }
             },
