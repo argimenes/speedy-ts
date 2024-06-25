@@ -938,38 +938,7 @@ export class BlockManager implements IBlockManager {
                     description: `
                         ... Or skip to the end of the previous block.
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
-                        /**
-                         * Move the cursor back one cell ...
-                         */
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        const manager = block.owner as BlockManager;
-                        block.cache.caret.x = null;
-                        if (caret.left) {
-                            block.setCaret(caret.left.index);
-                            return;
-                        }
-                        /**
-                         * Or skip to the end of the previous block.
-                         */
-                        const previous = block.relation.previous as StandoffEditorBlock;
-                        if (previous?.type == BlockType.StandoffEditorBlock) {
-                            const last = previous.getLastCell();
-                            previous.setCaret(last.index, CARET.LEFT);
-                            manager.setBlockFocus(previous);
-                            return;
-                        }
-                        let indentedList = block.relation.parent as IndentedListBlock;
-                        if (indentedList?.type == BlockType.IndentedListBlock) {
-                            const previous = indentedList.relation.parent as StandoffEditorBlock;
-                            const last = previous.getLastCell();
-                            previous.setCaret(last.index);
-                            manager.setBlockFocus(previous);
-                            return;
-                        }
-                        
-                    }
+                    handler: this.moveCaretLeft.bind(this)
                 }
             },
             {
@@ -1159,7 +1128,7 @@ export class BlockManager implements IBlockManager {
         const block = args.block as StandoffEditorBlock;
         const last = block.getLastCell();
         if (!last) return;
-        block.setCaret(last.index, CARET.RIGHT);
+        block.setCaret(last.index, CARET.LEFT);
     }
     getStandoffPropertyEvents() {
         const events: InputEvent[] = [
@@ -2162,6 +2131,61 @@ export class BlockManager implements IBlockManager {
         } else {
             // TBC
         }      
+    }
+    moveCaretLeft(args: IBindingHandlerArgs) {
+        /**
+         * Move the cursor back one cell ...
+         */
+        const { caret } = args;
+        if (args.block.type != BlockType.StandoffEditorBlock) {
+            const predecessor = args.block.relation.previous || args.block.relation.parent;
+            if (predecessor) {
+                this.setBlockFocus(predecessor);
+            }
+            return;
+        }
+        const block = args.block as StandoffEditorBlock;
+        block.cache.caret.x = null;
+        if (caret.left) {
+            block.setCaret(caret.left.index);
+            return;
+        }
+        /**
+         * Or skip to the end of the previous block.
+         */
+        if (block.relation.previous?.type == BlockType.StandoffEditorBlock) {
+            const previous = block.relation.previous as StandoffEditorBlock;
+            const last = previous.getLastCell();
+            previous.setCaret(last.index, CARET.LEFT);
+            this.setBlockFocus(previous);
+            return;
+        }
+        if (block.relation.previous?.type == BlockType.IndentedListBlock) {
+            const previous = block.relation.previous as IndentedListBlock;
+            const child = previous.relation.firstChild as StandoffEditorBlock;
+            const last = child.getLastCell();
+            child.setCaret(last.index, CARET.LEFT);
+            this.setBlockFocus(child);
+            return;
+        }
+        if (block.relation.parent?.type == BlockType.IndentedListBlock) {
+            const parent = block.relation.parent as IndentedListBlock;
+            if (parent.relation.previous?.type == BlockType.StandoffEditorBlock) {
+                const sibling = parent.relation.previous as StandoffEditorBlock;
+                const last = sibling.getLastCell();
+                sibling.setCaret(last.index, CARET.LEFT);
+                this.setBlockFocus(sibling);
+                return;
+            }
+            if (parent.relation.parent?.type == BlockType.StandoffEditorBlock) {
+                const grandParent = parent.relation.parent as StandoffEditorBlock;
+                const last = grandParent.getLastCell();
+                grandParent.setCaret(last.index, CARET.LEFT);
+                this.setBlockFocus(grandParent);
+                return;
+            }
+            return;
+        }
     }
     private uncreateStandoffEditorBlock(id: GUID) {
         const block = this.getBlock(id) as IBlock;

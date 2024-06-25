@@ -941,6 +941,12 @@ export class StandoffEditorBlock extends AbstractBlock {
             let cell = new Cell({ text: text[i], block: this });
             cells.push(cell);
         }
+        const lastCode = text.charCodeAt(len-1);
+        if (lastCode != 13) {
+            const eol = new Cell({ text: String.fromCharCode(13), block: this });
+            eol.isEOL = true;
+            cells.push(eol);
+        }
         this.chainCellsTogether(cells);
         return cells;
     }
