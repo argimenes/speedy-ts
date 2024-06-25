@@ -1,9 +1,6 @@
-import { AbstractBlock, IAbstractBlockConstructor } from "./abstract-block";
-import { BlockType, IBlock, IBlockDto } from "./standoff-editor-block";
+import { AbstractBlock, BlockType, IAbstractBlockConstructor, IBlock, IBlockDto } from "./abstract-block";
 import { v4 as uuidv4 } from 'uuid';
 import YouTubePlayer from 'youtube-player';
-import { updateElement } from "./svg";
-//import { YouTubePlayer } from "youtube-player/dist/types";
 
 export class VideoBlock extends AbstractBlock {
     iframe: HTMLDivElement;
@@ -16,31 +13,8 @@ export class VideoBlock extends AbstractBlock {
     }
     build() {
         const id = this.metadata.url.split("=")[1].split("&")[0];
-        const src = `http://www.youtube.com/embed/${id}`;
         this.player.loadVideoById(id);
-        // updateElement(this.iframe, {
-        //     attribute: {
-        //         src: src,
-        //         width: "560",
-        //         height: "315",
-        //         title: "YouTube video player",
-        //         frameborder: "0",
-        //         allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
-        //         //referrerpolicy: "no-referrer-when-downgrade",
-        //         allowfullscreen: true
-        //     }
-        // });
         this.container.appendChild(this.iframe);
-        /**
-         * Source: https://www.youtube.com/watch?v=g5Vo2EiEFnA&ab_channel=TwoMinutePapers
-         * 
-         * Embed code:
-         * <iframe width="560" height="315"
-         * src="https://www.youtube.com/embed/g5Vo2EiEFnA?si=7LGUR6rfzt4P_DJf"
-         * title="YouTube video player"
-         * frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-         * referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-         */
     }
     bind(data: IBlockDto) {
         this.id = data.id || uuidv4();

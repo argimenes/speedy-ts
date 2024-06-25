@@ -1,0 +1,121 @@
+import { CARET, DIRECTION, ELEMENT_ROLE, StandoffEditorBlock } from "./standoff-editor-block";
+
+export type Caret = {
+    left?: Cell;
+    right: Cell;
+};
+export type CellElement = {
+    cell: Cell;
+    role: ELEMENT_ROLE;
+}
+export interface ICellConstructor {
+    block: StandoffEditorBlock;
+    text: string;
+    previous?: Cell;
+    next?: Cell;
+}
+export interface ICoordOffsets {
+    x: number;
+    y: number;
+    h: number;
+    w: number;
+}
+export interface ICellCoordOffsets extends ICoordOffsets {
+    cy: number;
+}
+export type CellNode = Node & { speedy: CellElement };
+export type CellHtmlElement = HTMLElement & { speedy: CellElement };
+export interface ICursor {
+    anchorCell: Cell;
+    caret: CARET;
+}
+export class Cell {
+    index: number;
+    previous?: Cell;
+    next?: Cell;
+    text: string;
+    cache: {
+        previousOffset: ICellCoordOffsets,
+        offset: ICellCoordOffsets
+    };
+    element?: CellHtmlElement;
+    isEOL: boolean;
+    block: StandoffEditorBlock;
+    row?: Row;
+    constructor({ text, block }: ICellConstructor) {
+        this.index = 0;
+        this.text = text;
+        this.block = block;
+        this.cache = {
+            previousOffset: {
+                x:0,y:0,w:0,h:0,cy:0
+            },
+            offset: {
+                x:0,y:0,w:0,h:0,cy:0
+            }
+        };
+        this.isEOL = false;
+        this.element = this.createElement();
+    }
+    createElement() {
+        /**
+         * Ideally we'd like to be able to override this from somewhere when we want to generate different kinds
+         * of elements, such as SVGs.
+         */
+        return this.createSpan();
+    }
+    createSpan() {
+        const span = document.createElement("SPAN") as CellHtmlElement;
+        span.innerHTML = this.text == " " ? "&nbsp;" : this.text;
+        span.speedy = {
+            cell: this,
+            role: ELEMENT_ROLE.CELL
+        }
+        return span;
+    }
+    removeElement() {
+        this.element?.remove();
+    }
+    getTextNode() {
+        // Get the first TEXT NODE of the element
+        let node = this.element?.firstChild;
+        if (!node) {
+            return this.element as ChildNode;
+        }
+        while (node?.nodeType != 3) {
+            node = node?.firstChild as ChildNode;
+        }
+        return node;
+    }
+}
+
+export interface IRowConstructor {
+    index: number;
+    cells: Cell[]; 
+}
+export class Row {
+    index: number;
+    previous?: Row;
+    next?: Row;
+    cells: Cell[];
+    constructor(args: IRowConstructor) {
+        this.index = args.index;
+        this.cells = args.cells;
+    }
+    findNearestCell(x: number) {
+        const cellDiffs = this.cells.map(c => {
+            const diff = x - c.cache.offset.x;
+            return {
+                diff: Math.abs(diff),
+                side: diff <= 0 ? DIRECTION.LEFT : DIRECTION.RIGHT,
+                cell: c
+            }
+        });
+        const orderedDiffs = cellDiffs.sort((a, b) => a.diff > b.diff ? 1 : a.diff == b.diff ? 0 : -1);
+        const min = orderedDiffs[0];
+        return min;
+    }
+    getLastCell() {
+        return this.cells[this.cells.length-1];
+    }
+}

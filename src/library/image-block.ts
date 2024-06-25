@@ -1,5 +1,4 @@
-import { AbstractBlock, IAbstractBlockConstructor } from "./abstract-block";
-import { BlockType, IBlock, IBlockDto } from "./standoff-editor-block";
+import { AbstractBlock, BlockType, IAbstractBlockConstructor, IBlock, IBlockDto } from "./abstract-block";
 import { v4 as uuidv4 } from 'uuid';
 import { updateElement } from "./svg";
 

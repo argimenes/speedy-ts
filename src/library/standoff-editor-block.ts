@@ -2,7 +2,8 @@ import _ from "underscore";
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
 import { v4 as uuidv4 } from 'uuid';
 import { updateElement } from "./svg";
-import { AbstractBlock, IAbstractBlockConstructor } from "./abstract-block";
+import { AbstractBlock, BlockProperty, BlockPropertyDto, Commit, GUID, IAbstractBlockConstructor, IBlockDto, IBlockPropertySchema, IKeyboardInput, InputAction, InputEventSource, ModeTrigger, InputEvent, BlockType,IBindingHandlerArgs, IBlockRelation} from "./abstract-block";
+import { Cell, CellHtmlElement, CellNode, ICoordOffsets, Row } from "./cell";
 
 export enum CARET {
     LEFT = 0,
@@ -28,12 +29,7 @@ export type StandoffPropertyDto = {
     type: string,
     value?: string
 }
-export type BlockPropertyDto = {
-    id?: GUID,
-    blockGuid?: GUID,
-    type: string,
-    value?: string
-}
+
 export type StandoffEditorBlockDto = {
     id?: GUID
     text: string
@@ -56,66 +52,7 @@ export enum DIRECTION {
     LEFT = 0,
     RIGHT = 1
 }
-export type GUID = string;
-export interface IBlockPropertySchema {
-    type: string;
-    event?: Record<string, BlockBindingHandler>;
-    decorate?: {
-        blockClass?: string;
-    }
-    animation?: {
-        init: (p: BlockProperty) => void;
-    }
-}
-export interface IBlockPropertyConstructor {
-    id?: GUID;
-    type: string;
-    schema: IBlockPropertySchema;
-    event?: Record<string, BlockBindingHandler>;
-    block: IBlock;
-    value?: string;
-}
-export class BlockProperty {
-    id: GUID;
-    type: string;
-    schema: IBlockPropertySchema;
-    event?: Record<string, BlockBindingHandler>;
-    block: IBlock;
-    value?: string;
-    constructor({ id, type, block, schema, value, event }: IBlockPropertyConstructor) {
-        this.id = id || uuidv4();
-        this.type = type;
-        this.schema = schema;
-        this.event = event;
-        this.block = block;
-        this.value = value;
-        this.onInit();
-    }
-    onInit() {
-        if (this.schema?.event?.onInit) {
-            this.schema?.event?.onInit(this);
-        }
-    }
-    serialize() {
-        return {
-            id: this.id,
-            type: this.type,
-            value: this.value
-        }
-    }
-    applyStyling() {
-        const schema = this.schema;
-        if (schema?.decorate?.blockClass) {
-            this.block.container.classList.add(schema.decorate.blockClass);
-        }
-    }
-    removeStyling() {
-        const schema = this.schema;
-        if (schema?.decorate?.blockClass) {
-            this.block.container.classList.remove(schema.decorate.blockClass);
-        }
-    }
-}
+
 export interface IStandoffPropertyConstructor {
     id?: GUID;
     type: string,
@@ -128,12 +65,7 @@ export interface IRange {
     start: Cell;
     end: Cell;
 }
-export interface ICellConstructor {
-    block: StandoffEditorBlock;
-    text: string;
-    previous?: Cell;
-    next?: Cell;
-}
+
 export enum BLOCK_POSITION {
     Inside,
     Start,
@@ -176,74 +108,7 @@ function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     });
     return map;
 };
-interface ICoordOffsets {
-    x: number;
-    y: number;
-    h: number;
-    w: number;
-}
-interface ICellCoordOffsets extends ICoordOffsets {
-    cy: number;
-}
-export class Cell {
-    index: number;
-    previous?: Cell;
-    next?: Cell;
-    text: string;
-    cache: {
-        previousOffset: ICellCoordOffsets,
-        offset: ICellCoordOffsets
-    };
-    element?: CellHtmlElement;
-    isEOL: boolean;
-    block: StandoffEditorBlock;
-    row?: Row;
-    constructor({ text, block }: ICellConstructor) {
-        this.index = 0;
-        this.text = text;
-        this.block = block;
-        this.cache = {
-            previousOffset: {
-                x:0,y:0,w:0,h:0,cy:0
-            },
-            offset: {
-                x:0,y:0,w:0,h:0,cy:0
-            }
-        };
-        this.isEOL = false;
-        this.element = this.createElement();
-    }
-    createElement() {
-        /**
-         * Ideally we'd like to be able to override this from somewhere when we want to generate different kinds
-         * of elements, such as SVGs.
-         */
-        return this.createSpan();
-    }
-    createSpan() {
-        const span = document.createElement("SPAN") as CellHtmlElement;
-        span.innerHTML = this.text == " " ? "&nbsp;" : this.text;
-        span.speedy = {
-            cell: this,
-            role: ELEMENT_ROLE.CELL
-        }
-        return span;
-    }
-    removeElement() {
-        this.element?.remove();
-    }
-    getTextNode() {
-        // Get the first TEXT NODE of the element
-        let node = this.element?.firstChild;
-        if (!node) {
-            return this.element as ChildNode;
-        }
-        while (node?.nodeType != 3) {
-            node = node?.firstChild as ChildNode;
-        }
-        return node;
-    }
-}
+
 
 export class StandoffProperty {
     id: GUID;
@@ -351,198 +216,20 @@ export class StandoffProperty {
         if (this.bracket.right) this.bracket.right.style.display = "none";
     }
 }
-
-export interface IKeyboardInput {
-    control: boolean;
-    shift: boolean;
-    option: boolean;
-    command: boolean;
-    //function: boolean;
-    key: string;
-    keyCode: number;
-}
-export enum ActionKey {
-    DEL,
-    TAB,
-    ENTER,
-    ESC
-}
-export interface IBlockRelationDto extends IBlockRelation {}
-export interface IBlockDto {
-    id?: GUID;
-    type: BlockType;
-    relation?: Record<string, IBlockDto>;
-    children?: IBlockDto[];
-    metadata?: Record<string, any>;
-    blockProperties?: BlockPropertyDto[];
-}
-export interface IMainListBlockDto extends IBlockDto {}
 export interface IStandoffEditorBlockDto extends IBlockDto {
     text: string;
     standoffProperties?: StandoffPropertyDto[];
 }
 
-export enum BlockType {
-    RootBlock = "root-block",
-    MainListBlock = "main-list-block",
-    IndentedListBlock = "indented-list-block",
-    TabRowBlock = "tab-row-block",
-    TabBlock = "tab-block",
-    StandoffEditorBlock = "standoff-editor-block",
-    HTMLEditorBlock = "html-editor-block",
-    IFrameBlock = "iframe-block",
-    HTMLBlock = "html-block",
-    PDFBlock = "pdf-block",
-    GridBlock = "grid-block",
-    GridRowBlock = "grid-row-block",
-    GridCellBlock = "grid-cell-block",
-    LeftMarginBlock = "left-margin-block",
-    RightMarginBlock = "right-margin-block",
-    ImageBlock = "image-block",
-    VideoBlock = "video-block"
-}
-
-export interface IBlock {
-    id: GUID;
-    owner?: IBlock;
-    type: BlockType;
-    blockProperties: BlockProperty[];
-    addBlockProperties: (props: BlockPropertyDto[]) => void;
-    blocks: IBlock[];
-    updateView: () => void;
-    getBlock: (id: GUID) => IBlock;
-    container: HTMLDivElement;
-    relation: Record<string, IBlock>;
-    //relations: Record<string, IBlockRelation>;
-    // addRelation: (name: string, targetId: string, skipCommit?: boolean) => void;
-    // getRelation: (name: string) => IBlockRelation;
-    // removeRelation: (name: string, skipCommit?: boolean) => void;
-    metadata: Record<string, any>;
-    setFocus: () => void;
-    serialize: () => IBlockDto;
-    deserialize: (json: any|any[]) => IBlock;
-    applyBlockPropertyStyling: () => void;
-}
-export interface IBlockManager extends IBlock {
-
-}
-
-export interface IBlockRelation {
-    name: string;
-    sourceId: GUID;
-    targetId: GUID;
-}
-export type Caret = {
-    left?: Cell;
-    right: Cell;
-};
-export interface IBindingHandlerArgs {
-    block: IBlock;
-    caret: Caret;
-}
-export type CellElement = {
-    cell: Cell;
-    role: ELEMENT_ROLE;
-}
-export type BindingHandler = (args: IBindingHandlerArgs) => void;
-export type BlockBindingHandler = (block: BlockProperty) => void;
-export type KeyboardBinding = Record<string, BindingHandler>;
-export type MouseBinding = KeyboardBinding;
-export type InputBindings = {
-    keyboard: KeyboardBinding[];
-    mouse: MouseBinding[];
-}
-export type Mode = Record<string, InputBindings>;
-/**
- * A place to store collections of absolutely-positioned SVG elements that 
- * are overlaid on the text underneath, e.g., for overlapping underlines.
- */
-export type Overlay = {
-    index: number;
-    name: string;
-    container: HTMLDivElement;
-}
 export interface ISelection extends IRange {
     direction: DIRECTION;
 }
-export type CellNode = Node & { speedy: CellElement };
-export type CellHtmlElement = HTMLElement & { speedy: CellElement };
-export interface ICursor {
-    anchorCell: Cell;
-    caret: CARET;
-}
 
-export enum InputEventSource {
-    Keyboard,
-    Mouse
-}
-
-export type Command = {
-    id: GUID;
-    name: string;
-    value?: Record<string,any>;
-}
-export type ReverseCommand = Command;
-export type Commit = {
-    redo: Command;
-    undo?: ReverseCommand;
-}
-export type Trigger = {
-    source: InputEventSource;
-    match:  string|string[];
-}
-
-export interface ModeTrigger {
-    mode: string;
-    trigger: Trigger;
-}
-export type InputEvent = {
-    mode: string;                   // "default"
-    trigger: Trigger;
-    action: InputAction;             // See the one below
-}
-
-export type InputAction = {
-    name: string;                   // "copy"
-    description?: string;           // "Copies text in the selection for pasting elsewhere."
-    handler: BindingHandler;        // The function that carries out the task.
-}
 export interface IStandoffEditorBlockConstructor extends IAbstractBlockConstructor {
 }
-export interface IRowConstructor {
-    index: number;
-    cells: Cell[]; 
-}
-export class Row {
-    index: number;
-    previous?: Row;
-    next?: Row;
-    cells: Cell[];
-    constructor(args: IRowConstructor) {
-        this.index = args.index;
-        this.cells = args.cells;
-    }
-    findNearestCell(x: number) {
-        const cellDiffs = this.cells.map(c => {
-            const diff = x - c.cache.offset.x;
-            return {
-                diff: Math.abs(diff),
-                side: diff <= 0 ? DIRECTION.LEFT : DIRECTION.RIGHT,
-                cell: c
-            }
-        });
-        const orderedDiffs = cellDiffs.sort((a, b) => a.diff > b.diff ? 1 : a.diff == b.diff ? 0 : -1);
-        const min = orderedDiffs[0];
-        return min;
-    }
-    getLastCell() {
-        return this.cells[this.cells.length-1];
-    }
-}
+
 export class StandoffEditorBlock extends AbstractBlock {
     type: BlockType;
-    
-    relations: Record<string, IBlockRelation>;
     cells: Cell[];
     rows: Row[];
     cache: {
@@ -582,11 +269,7 @@ export class StandoffEditorBlock extends AbstractBlock {
      * 'container' should be absolutely positioned. Such generated elements will be drawn/undrawn when the StandoffProperty
      * is rendered, and when anything affects the alignment of cells in those properties, such as adding or removing text.
      */
-    overlays: Overlay[];
-    inputEvents: InputEvent[];
-    inputActions: InputAction[];
-    modes: string[];
-    blocks: IBlock[];
+    
     wrapper: HTMLDivElement;
     constructor(args: IStandoffEditorBlockConstructor) {
         super(args);
@@ -618,7 +301,6 @@ export class StandoffEditorBlock extends AbstractBlock {
             },
             containerWidth: 0
         };
-        this.relations = {};
         this.cells = [];
         this.rows = [];
         this.metadata = {};
@@ -626,11 +308,6 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.standoffProperties = [];
         this.selections = [];
         this.inputBuffer = [];
-        this.overlays = [];
-        this.inputEvents = [];
-        this.inputActions = [];
-        
-        this.modes = ["default"];
         this.attachBindings();
     }
     addMode(mode: string) {
@@ -675,27 +352,27 @@ export class StandoffEditorBlock extends AbstractBlock {
     setBlockSchemas(schemas: IBlockPropertySchema[]) {
         this.blockSchemas.push(...schemas);
     }
-    addRelation(name: string, targetId: string, skipCommit?: boolean) {
-        this.relations[name] = {
-            name: name,
-            sourceId: this.id,
-            targetId: targetId
-        };
-        if (!skipCommit) {
-            this.commit({
-                redo: {
-                    id: this.id,
-                    name: "addRelation",
-                    value: { name, targetId }
-                },
-                undo: {
-                    id: this.id,
-                    name: "removeRelation",
-                    value: { name }
-                }
-            });
-        }
-    }
+    // addRelation(name: string, targetId: string, skipCommit?: boolean) {
+    //     this.relation[name] = {
+    //         name: name,
+    //         sourceId: this.id,
+    //         targetId: targetId
+    //     };
+    //     if (!skipCommit) {
+    //         this.commit({
+    //             redo: {
+    //                 id: this.id,
+    //                 name: "addRelation",
+    //                 value: { name, targetId }
+    //             },
+    //             undo: {
+    //                 id: this.id,
+    //                 name: "removeRelation",
+    //                 value: { name }
+    //             }
+    //         });
+    //     }
+    // }
     getWordsFromText(text: string) {
         const re = new RegExp(/\b[^\s]+\b/, "g");
         const words: Word[] = [];

@@ -1,6 +1,7 @@
 import { Component } from "solid-js"
 import { BlockManager } from "../library/block-manager"
-import { BlockType, IBlockDto, IMainListBlockDto, IStandoffEditorBlockDto } from "../library/standoff-editor-block"
+import { IBlockDto, BlockType, IMainListBlockDto } from "../library/abstract-block";
+import { IStandoffEditorBlockDto } from "../library/standoff-editor-block";
 
 type Props = {
     getInstance: (inst: BlockManager) => void;

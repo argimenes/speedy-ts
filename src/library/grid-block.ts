@@ -1,5 +1,4 @@
-import { AbstractBlock, IAbstractBlockConstructor } from "./abstract-block";
-import { BlockType, IBlock, IBlockDto } from "./standoff-editor-block";
+import { AbstractBlock, BlockType, IAbstractBlockConstructor, IBlock, IBlockDto } from "./abstract-block";
 
 export class GridBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {

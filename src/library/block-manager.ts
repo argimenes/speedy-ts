@@ -1,23 +1,18 @@
 import { Platform, TPlatformKey } from "./keyboard";
-import { InputEventSource, InputEvent, BlockType, CARET, GUID, IBindingHandlerArgs, IBlock,
-    IBlockManager, IRange, IStandoffPropertySchema, DIRECTION, StandoffEditorBlock,
-    StandoffProperty, Commit, Cell, BlockProperty, Command, ISelection, Word, RowPosition,
-    BlockPropertyDto, IBlockPropertySchema, 
-    IBlockDto,
-    IMainListBlockDto,
-    IStandoffEditorBlockDto} from "./standoff-editor-block";
+
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 import { LeftMarginBlock, RightMarginBlock } from "./margin-block";
 import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
-import { GridBlock, GridCellBlock, GridRowBlock } from "./gird-block";
-import { AbstractBlock } from "./abstract-block";
+import { GridBlock, GridCellBlock, GridRowBlock } from "./grid-block";
+import { AbstractBlock, BlockProperty, InputEvent, BlockPropertyDto, BlockType, Command, Commit, GUID, IBindingHandlerArgs, IBlock, IBlockDto, IBlockManager, IBlockPropertySchema, IMainListBlockDto, InputEventSource } from "./abstract-block";
 import { ImageBlock } from "./image-block";
 import { VideoBlock } from "./video-block";
 import { IframeBlock } from "./iframe-block";
-import { insert } from "solid-js/web";
+import { Cell } from "./cell";
+import { DIRECTION, StandoffEditorBlock, CARET, RowPosition, IRange, Word, ISelection, IStandoffPropertySchema, StandoffProperty, IStandoffEditorBlockDto } from "./standoff-editor-block";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
