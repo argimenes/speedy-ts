@@ -542,26 +542,7 @@ export class BlockManager implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        const range = block.getSelection();
-                        if (!range) {
-                            const selection = {
-                                start: caret.right,
-                                end: caret.right,
-                                direction: DIRECTION.RIGHT
-                            } as ISelection;
-                            block.setSelection(selection);
-                        } else {
-                            const selection = {
-                                start: range.start,
-                                end: range.end.next,
-                                direction: DIRECTION.RIGHT
-                            } as ISelection;
-                            block.setSelection(selection);
-                        };
-                    }
+                    handler: this.moveSelectionOneCharacterRightwards
                 }
             },
             {
@@ -575,22 +556,7 @@ export class BlockManager implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        const range = block.getSelection();
-                        if (!range) {
-                            // Ignore for now.
-                            return;
-                        } else {
-                            const selection = {
-                                start: range.start,
-                                end: range.end.previous,
-                                direction: DIRECTION.LEFT
-                            } as ISelection;
-                            block.setSelection(selection);
-                        };
-                    }
+                    handler: this.moveSelectionOneCharacterLeftwards
                 }
             },
             {
@@ -604,13 +570,7 @@ export class BlockManager implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        const first = block.cells[0];
-                        if (!first) return;
-                        block.setCaret(0, CARET.LEFT);
-                    }
+                    handler: this.moveCaretToStartOfTextBlock
                 }
             },
             {
@@ -624,13 +584,7 @@ export class BlockManager implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        const last = block.cells[block.cells.length-1];
-                        if (!last) return;
-                        block.setCaret(last.index, CARET.LEFT);
-                    }
+                    handler: this.moveCaretToEndOfTextBlock
                 }
             },
             {
@@ -1162,6 +1116,55 @@ export class BlockManager implements IBlockManager {
         }
         return null;
     }
+    moveSelectionOneCharacterRightwards(args: IBindingHandlerArgs) {
+        const { caret } = args;
+        const block = args.block as StandoffEditorBlock;
+        const range = block.getSelection();
+        if (!range) {
+            const selection = {
+                start: caret.right,
+                end: caret.right,
+                direction: DIRECTION.RIGHT
+            } as ISelection;
+            block.setSelection(selection);
+        } else {
+            const selection = {
+                start: range.start,
+                end: range.end.next,
+                direction: DIRECTION.RIGHT
+            } as ISelection;
+            block.setSelection(selection);
+        };
+    }
+    moveSelectionOneCharacterLeftwards(args: IBindingHandlerArgs){
+        const { caret } = args;
+        const block = args.block as StandoffEditorBlock;
+        const range = block.getSelection();
+        if (!range) {
+            // Ignore for now.
+            return;
+        } else {
+            const selection = {
+                start: range.start,
+                end: range.end.previous,
+                direction: DIRECTION.LEFT
+            } as ISelection;
+            block.setSelection(selection);
+        };
+    }
+    moveCaretToStartOfTextBlock(args: IBindingHandlerArgs) {
+        const { caret } = args;
+        const block = args.block as StandoffEditorBlock;
+        const first = block.cells[0];
+        if (!first) return;
+        block.setCaret(0, CARET.LEFT);
+    }
+    moveCaretToEndOfTextBlock(args: IBindingHandlerArgs) {
+        const block = args.block as StandoffEditorBlock;
+        const last = block.getLastCell();
+        if (!last) return;
+        block.setCaret(last.index, CARET.RIGHT);
+    }
     getStandoffPropertyEvents() {
         const events: InputEvent[] = [
             {
@@ -1173,15 +1176,7 @@ export class BlockManager implements IBlockManager {
                 action: {
                     name: "Italicise",
                     description: "Italicises text in the selection. If no text is selected, switches to/from italics text mode.",
-                    handler: (args: IBindingHandlerArgs) => {
-                        const block = args.block as StandoffEditorBlock;
-                        const selection = block.getSelection();
-                        if (selection) {
-                            block.createStandoffProperty("style/italics", selection);
-                        } else {
-                            // TBC
-                        }      
-                    }
+                    handler: this.applyItalicsToText
                 }
             },
             {
@@ -1210,15 +1205,7 @@ export class BlockManager implements IBlockManager {
                 action: {
                     name: "Bold",
                     description: "Emboldens text in the selection. If no text is selected, switches to/from embolden text mode.",
-                    handler: (args: IBindingHandlerArgs) => {
-                        const block = args.block as StandoffEditorBlock;
-                        const selection = block.getSelection();
-                        if (selection) {
-                            block.createStandoffProperty("style/bold", selection);
-                        } else {
-                            // TBC
-                        }      
-                    }
+                    handler: this.applyBoldToText
                 }
             },
             {
@@ -1230,15 +1217,7 @@ export class BlockManager implements IBlockManager {
                 action: {
                     name: "Entity reference",
                     description: "Links to an entity in the graph database.",
-                    handler: (args: IBindingHandlerArgs) => {
-                        const block = args.block as StandoffEditorBlock;
-                        const selection = block.getSelection();
-                        if (selection) {
-                            block.createStandoffProperty("codex/entity-reference", selection);
-                        } else {
-                            // TBC
-                        }      
-                    }
+                    handler: this.applyEntityReferenceToText
                 }
             }
         ];
@@ -2149,6 +2128,33 @@ export class BlockManager implements IBlockManager {
         this.renderIndent(list);
         // block.setCaret(0, CARET.LEFT);
         // this.setBlockFocus(block);
+    }
+    applyItalicsToText(args: IBindingHandlerArgs) {
+        const block = args.block as StandoffEditorBlock;
+        const selection = block.getSelection();
+        if (selection) {
+            block.createStandoffProperty("style/italics", selection);
+        } else {
+            // TBC
+        }      
+    }
+    applyBoldToText(args: IBindingHandlerArgs) {
+        const block = args.block as StandoffEditorBlock;
+        const selection = block.getSelection();
+        if (selection) {
+            block.createStandoffProperty("style/bold", selection);
+        } else {
+            // TBC
+        }      
+    }
+    applyEntityReferenceToText(args: IBindingHandlerArgs) {
+        const block = args.block as StandoffEditorBlock;
+        const selection = block.getSelection();
+        if (selection) {
+            block.createStandoffProperty("codex/entity-reference", selection);
+        } else {
+            // TBC
+        }      
     }
     private uncreateStandoffEditorBlock(id: GUID) {
         const block = this.getBlock(id) as IBlock;
