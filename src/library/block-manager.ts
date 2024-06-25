@@ -191,8 +191,14 @@ export class BlockManager implements IBlockManager {
 
     }
     setBlockFocus(block: IBlock) {
+        const oldFocus = this.focus;
+        oldFocus?.container.classList.remove("focus-highlight");
         this.focus = block;
+        this.focus.container.classList.add("focus-highlight");
         block.setFocus();
+    }
+    getImageBlockSchemas() {
+        return []
     }
     getBlockSchemas() {
         return [
@@ -352,6 +358,27 @@ export class BlockManager implements IBlockManager {
             }
         };
         animate();
+    }
+    getImageBlockEvents() {
+        const events: InputEvent[] = [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Mouse,
+                    match: "click"
+                },
+                action: {
+                    name: "Set focus to the current block.",
+                    description: "",
+                    handler: (args: IBindingHandlerArgs) => {
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
+                        manager.setBlockFocus(block);
+                    }
+                }
+            }
+        ]
+        return events;
     }
     getEditorEvents() {
         const events: InputEvent[] = [
@@ -1977,10 +2004,12 @@ export class BlockManager implements IBlockManager {
         return block;
     }
     createImageBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
+        const blockSchemas = this.getImageBlockSchemas();
+        const inputEvents = this.getImageBlockEvents();
         const block = new ImageBlock({
             owner: this
         });
+        block.inputEvents = inputEvents;
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);

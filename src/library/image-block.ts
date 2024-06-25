@@ -8,6 +8,15 @@ export class ImageBlock extends AbstractBlock {
         super(args);
         this.type = BlockType.ImageBlock;
         this.image = document.createElement("IMG") as HTMLImageElement;
+        this.attachEventHandlers();
+    }
+    attachEventHandlers() {
+        this.container.addEventListener("click", this.handleClick.bind(this));
+    }
+    handleClick(e: MouseEvent) {
+        const onClick = this.inputEvents.find(x => (x.trigger.match as string).toLowerCase() == "click");
+        if (!onClick) return;
+        onClick.action.handler({ block: this, caret: {} as any });
     }
     build() {
         if (this.metadata.url) {
