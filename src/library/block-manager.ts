@@ -86,11 +86,13 @@ export class BlockManager implements IBlockManager {
     attachEventBindings() {
         const self = this;
         document.body.addEventListener("keydown", function (e) {
+            const ALLOW = true, FORBID = false;
             if (e.target != document.body) {
-                return;
+                return ALLOW;
             }
             const block = self.getBlockInFocus();
             self.handleKeyDown(e);
+            return ALLOW;
         });
     }
     private toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
@@ -152,7 +154,7 @@ export class BlockManager implements IBlockManager {
             match.action.handler(args);
             return FORBID;
         }
-        return FORBID;
+        return ALLOW;
     }
     getGlobalInputEvents() {
         const self = this;
@@ -168,17 +170,26 @@ export class BlockManager implements IBlockManager {
                     description: "",
                     handler: (args: IBindingHandlerArgs) => {
                         const block = args.block;
-                        if (block.relation.firstChild) {
-                            self.setBlockFocus(block.relation.firstChild);
-                            return;
-                        }
                         if (block.relation.next) {
                             self.setBlockFocus(block.relation.next);
                             return;
                         }
-                        const parent = self.getParent(block);
-                        if (parent) {
-                            self.setBlockFocus(parent);
+                    }
+                }
+            },
+            {
+                mode: "global",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "ArrowUp"
+                },
+                action: {
+                    name: "Set focus to the block above.",
+                    description: "",
+                    handler: (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        if (block.relation.previous) {
+                            self.setBlockFocus(block.relation.previous);
                             return;
                         }
                     }
@@ -1899,6 +1910,7 @@ export class BlockManager implements IBlockManager {
                 }
             }
         }
+        this.addParentSiblingRelations(mainBlock);
         container.appendChild(mainBlock.container);
         this.container.appendChild(container);
     }
