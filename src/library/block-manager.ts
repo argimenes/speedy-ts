@@ -7,12 +7,13 @@ import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "./grid-block";
-import { AbstractBlock, BlockProperty, InputEvent, BlockPropertyDto, BlockType, Command, Commit, GUID, IBindingHandlerArgs, IBlock, IBlockDto, IBlockManager, IBlockPropertySchema, IMainListBlockDto, InputEventSource } from "./abstract-block";
+import { AbstractBlock, BlockProperty, InputEvent, BlockPropertyDto, BlockType, Command, Commit, GUID, IBindingHandlerArgs, IBlock, IBlockDto, IBlockManager, IBlockPropertySchema, IMainListBlockDto, InputEventSource, IKeyboardInput, InputAction } from "./abstract-block";
 import { ImageBlock } from "./image-block";
 import { VideoBlock } from "./video-block";
 import { IframeBlock } from "./iframe-block";
 import { Cell } from "./cell";
 import { DIRECTION, StandoffEditorBlock, CARET, RowPosition, IRange, Word, ISelection, IStandoffPropertySchema, StandoffProperty, IStandoffEditorBlockDto } from "./standoff-editor-block";
+import _ from "underscore";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -54,6 +55,9 @@ export class BlockManager implements IBlockManager {
     relation: Record<string, IBlock>;
     metadata: Record<string,any>;
     focus?: IBlock;
+    modes: string[];
+    inputEvents: InputEvent[];
+    inputActions: InputAction[];
     selections: IBlockSelection[];
     commits: Commit[];
     pointer: number;
@@ -74,6 +78,113 @@ export class BlockManager implements IBlockManager {
         this.direction = PointerDirection.Undo;
         this.blockProperties= [];
         this.blockSchemas=[];
+        this.inputEvents = this.getGlobalInputEvents();
+        this.inputActions = [];
+        this.modes = ["global"];
+        this.attachEventBindings();
+    }
+    attachEventBindings() {
+        const self = this;
+        document.body.addEventListener("keydown", function (e) {
+            if (e.target != document.body) {
+                return;
+            }
+            const block = self.getBlockInFocus();
+            self.handleKeyDown(e);
+        });
+    }
+    private toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
+        const input: IKeyboardInput = {
+            shift: e.shiftKey,
+            control: e.ctrlKey,
+            command: e.metaKey,
+            option: e.altKey,
+            key: e.key,
+            keyCode: parseInt(e.code || e.keyCode)
+        };
+        return input;
+    }
+    private toChord(match: string) {
+        let chord: IKeyboardInput = {} as any;
+        const _match = match.toUpperCase();
+        chord.control = (_match.indexOf("CONTROL") >= 0);
+        chord.option = (_match.indexOf("ALT") >= 0);
+        chord.command = (_match.indexOf("META") >= 0);
+        chord.shift = (_match.indexOf("SHIFT") >= 0);
+        const parts = _match.split("-"), len = parts.length;
+        chord.key = parts[len-1];
+        return chord;
+    }
+    compareChords(input: IKeyboardInput, trigger: IKeyboardInput) {
+        if (input.command != trigger.command) return false;
+        if (input.option != trigger.option) return false;
+        if (input.shift != trigger.shift) return false;
+        if (input.control != trigger.control) return false;
+        if (input.key.toUpperCase() != trigger.key.toUpperCase()) return false;
+        return true;
+    }
+    getFirstMatchingInputEvent(input: IKeyboardInput) {
+        const self = this;
+        const modeEvents = _.groupBy(this.inputEvents.filter(x => x.trigger.source == InputEventSource.Keyboard), x => x.mode);
+        const maxIndex = this.modes.length -1;
+        for (let i = maxIndex; i >= 0; i--) {
+            let mode = this.modes[i];
+            let events = modeEvents[mode];
+            let match = events.find(x => {
+                let trigger = self.toChord(x.trigger.match as string);
+                return self.compareChords(input, trigger);
+            });
+            if (match) return match;
+        }
+        return null;
+    }
+    private handleKeyDown(e: KeyboardEvent) {
+        e.preventDefault();
+        const ALLOW = true, FORBID = false;
+        const input = this.toKeyboardInput(e);
+        const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
+        if (modifiers.some(x => x == input.key)) {
+            return ALLOW;
+        }
+        const match = this.getFirstMatchingInputEvent(input);
+        if (match) {
+            const args = { block: this.getBlockInFocus() } as any;
+            match.action.handler(args);
+            return FORBID;
+        }
+        return FORBID;
+    }
+    getGlobalInputEvents() {
+        const self = this;
+        return [
+            {
+                mode: "global",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "ArrowDown"
+                },
+                action: {
+                    name: "Set focus to the block below.",
+                    description: "",
+                    handler: (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        if (block.relation.firstChild) {
+                            self.setBlockFocus(block.relation.firstChild);
+                            return;
+                        }
+                        if (block.relation.next) {
+                            self.setBlockFocus(block.relation.next);
+                            return;
+                        }
+                        const parent = self.getParent(block);
+                        if (parent) {
+                            self.setBlockFocus(parent);
+                            return;
+                        }
+                    }
+                }
+            }
+        ]
     }
     addBlockProperties(properties: BlockPropertyDto[]) {
         const self = this;
@@ -939,39 +1050,7 @@ export class BlockManager implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        const manager = block.owner as BlockManager;
-                        if (block.cache.caret.x == null) {
-                            block.cache.caret.x = caret.right.cache.offset.x;
-                        }
-                        const match = block.getCellBelow(caret.right);
-                        if (match) {
-                            block.setCaret(match.cell.index, CARET.LEFT);
-                            return;
-                        }
-                        // const match = block.getCellInRow(caret.right, RowPosition.Next);
-                        // if (match) {
-                        //     block.setCaret(match.cell.index, match.caret);
-                        //     return;
-                        // }
-                        let next = block.relation.next as StandoffEditorBlock;
-                        if (!next) {
-                            block.setCaret(block.getLastCell().index, CARET.LEFT);
-                            return;
-                        }
-                        if(next.type == BlockType.StandoffEditorBlock) {
-                            next.setCaret(0, CARET.LEFT);
-                            manager.setBlockFocus(next);
-                            return;
-                        }
-                        if (next.type == BlockType.IndentedListBlock) {
-                            const first = next.relation.firstChild as StandoffEditorBlock;
-                            first.setCaret(0, CARET.LEFT);
-                            manager.setBlockFocus(first);
-                        }
-                    }
+                    handler: this.moveCaretDown.bind(this)
                 }
             },
             {
@@ -2238,6 +2317,31 @@ export class BlockManager implements IBlockManager {
                 return;
             }
             return;
+        }
+    }
+    moveCaretDown(args: IBindingHandlerArgs) {
+        const { caret } = args;
+        if (args.block.type == BlockType.StandoffEditorBlock) {
+            const block = args.block as StandoffEditorBlock;
+            if (block.cache.caret.x == null) {
+                block.cache.caret.x = caret.right.cache.offset.x;
+            }
+            const match = block.getCellBelow(caret.right);
+            if (match) {
+                block.setCaret(match.cell.index, CARET.LEFT);
+                return;
+            }
+            if (!block.relation.next) {
+                block.setCaret(block.getLastCell().index, CARET.LEFT);
+                return;
+            }
+            if (block.relation.next.type == BlockType.StandoffEditorBlock) {
+                const next = block.relation.next as StandoffEditorBlock;
+                next.setCaret(0, CARET.LEFT);
+                this.setBlockFocus(next);
+                return;
+            }
+            this.setBlockFocus(block.relation.next);
         }
     }
     private uncreateStandoffEditorBlock(id: GUID) {
