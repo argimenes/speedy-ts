@@ -135,16 +135,20 @@ export const ControlPanel : Component<Props> = (props) => {
         if (!block || block.type != BlockType.IndentedListBlock) return;
         block.expand();
     }
-    const drawLeaderLines = (relation: string) => {
+    const drawLeaderLines = (relation?: string, colour?: string) => {
         const block = props.manager?.getBlockInFocus();
-        props.manager?.drawLeaderLines(relation);
+        props.manager?.drawLeaderLines(relation, colour);
+    }
+    const clearLeaderLines = () => {
+        const block = props.manager?.getBlockInFocus();
+        props.manager?.clearLeaderLines();
     }
     const runCommand = async () => {
         if (!model.command) {
             return;
         }
-        const [command, ...parameters] = model.command.toLowerCase().split(" ");
-        switch (command)
+        const [command, ...parameters] = model.command.split(" ");
+        switch (command.toLowerCase())
         {
             case "load": await load(parameters); return;
             case "save": await save(parameters); return;
@@ -160,7 +164,8 @@ export const ControlPanel : Component<Props> = (props) => {
             case "new-doc": createDocument(); return;
             case "set-tab-name": setTabName(parameters[0]); return;
             case "add-tab": addTab(parameters[0]); return;
-            case "draw-leader-lines": drawLeaderLines(parameters[0] || ""); return;
+            case "draw-leader-lines": drawLeaderLines(parameters[0] || "", parameters[1] || ""); return;
+            case "clear-leader-lines": clearLeaderLines(); return;
             default: break;
         }
     }

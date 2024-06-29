@@ -109,19 +109,34 @@ export class BlockManager implements IBlockManager {
         };
         return input;
     }
-    drawLeaderLines(relation?: string) {
+    clearLeaderLines() {
+        this.leaderLines.forEach(l => { 
+            updateElement(l.start as HTMLElement, {
+                style: {
+                    border: "none"
+                }
+            })
+            l.remove();
+        });
+    }
+    drawLeaderLines(relation?: string, colour?: string) {
         const self = this;
-        this.leaderLines.forEach(l => l.remove());
+        
         this.blocks.forEach(b => {
             for (let n in b.relation) {
                 if (relation) {
                     if (n != relation) continue;
                 }
                 let target = b.relation[n];
+                updateElement(b.container, {
+                    style: {
+                        border: "1px solid " + (colour || "orange")
+                    }
+                });
                 self.leaderLines.push(new LeaderLine(
                     b.container,
                     target.container,
-                    {endLabel: LeaderLine.pathLabel(n)}
+                    {endLabel: LeaderLine.pathLabel(n), color: (colour || "orange")}
                 ));     
             }
         })
