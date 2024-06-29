@@ -2445,6 +2445,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
             
         }
+        if(block.relation.firstChild) {
+            let firstChild = block.relation.firstChild;
+            if (firstChild.type == BlockType.StandoffEditorBlock) {
+                (firstChild as StandoffEditorBlock).setCaret(0, CARET.LEFT);
+            }
+            this.setBlockFocus(firstChild);
+            return;
+        }
         if (block.relation.next) {
             let next = block.relation.next as StandoffEditorBlock;
             if (next.type == BlockType.StandoffEditorBlock) {
@@ -2453,9 +2461,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             this.setBlockFocus(next);
             return;
         }
-        if(block.relation.firstChild) {
-            let firstChild = block.relation.firstChild;
-            this.setBlockFocus(firstChild);
+        const uncle = this.findNearestUncle(block);
+        if (uncle) {
+            if (uncle.type == BlockType.StandoffEditorBlock) {
+                (uncle as StandoffEditorBlock).setCaret(0, CARET.LEFT);
+            }
+            this.setBlockFocus(uncle);
             return;
         }
     }
