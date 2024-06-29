@@ -2432,27 +2432,31 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     moveCaretDown(args: IBindingHandlerArgs) {
         const { caret } = args;
+        const block = args.block;
         if (args.block.type == BlockType.StandoffEditorBlock) {
-            const block = args.block as StandoffEditorBlock;
-            if (block.cache.caret.x == null) {
-                block.cache.caret.x = caret.right.cache.offset.x;
+            const textBlock = args.block as StandoffEditorBlock;
+            if (textBlock.cache.caret.x == null) {
+                textBlock.cache.caret.x = caret.right.cache.offset.x;
             }
-            const match = block.getCellBelow(caret.right);
+            const match = textBlock.getCellBelow(caret.right);
             if (match) {
-                block.setCaret(match.cell.index, CARET.LEFT);
+                textBlock.setCaret(match.cell.index, CARET.LEFT);
                 return;
             }
-            if (!block.relation.next) {
-                block.setCaret(block.getLastCell().index, CARET.LEFT);
-                return;
+            
+        }
+        if (block.relation.next) {
+            let next = block.relation.next as StandoffEditorBlock;
+            if (next.type == BlockType.StandoffEditorBlock) {
+                next.setCaret(next.getLastCell().index, CARET.LEFT); 
             }
-            if (block.relation.next.type == BlockType.StandoffEditorBlock) {
-                const next = block.relation.next as StandoffEditorBlock;
-                next.setCaret(0, CARET.LEFT);
-                this.setBlockFocus(next);
-                return;
-            }
-            this.setBlockFocus(block.relation.next);
+            this.setBlockFocus(next);
+            return;
+        }
+        if(block.relation.firstChild) {
+            let firstChild = block.relation.firstChild;
+            this.setBlockFocus(firstChild);
+            return;
         }
     }
     private uncreateStandoffEditorBlock(id: GUID) {
