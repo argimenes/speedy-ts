@@ -135,6 +135,10 @@ export const ControlPanel : Component<Props> = (props) => {
         if (!block || block.type != BlockType.IndentedListBlock) return;
         block.expand();
     }
+    const drawLeaderLines = (relation: string) => {
+        const block = props.manager?.getBlockInFocus();
+        props.manager?.drawLeaderLines(relation);
+    }
     const runCommand = async () => {
         if (!model.command) {
             return;
@@ -156,6 +160,7 @@ export const ControlPanel : Component<Props> = (props) => {
             case "new-doc": createDocument(); return;
             case "set-tab-name": setTabName(parameters[0]); return;
             case "add-tab": addTab(parameters[0]); return;
+            case "draw-leader-lines": drawLeaderLines(parameters[0] || ""); return;
             default: break;
         }
     }

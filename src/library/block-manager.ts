@@ -14,6 +14,7 @@ import { IframeBlock } from "./iframe-block";
 import { Cell } from "./cell";
 import { DIRECTION, StandoffEditorBlock, CARET, RowPosition, IRange, Word, ISelection, IStandoffPropertySchema, StandoffProperty, IStandoffEditorBlockDto } from "./standoff-editor-block";
 import _ from "underscore";
+import LeaderLine from 'leader-line-new';
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -65,6 +66,7 @@ export class BlockManager implements IBlockManager {
     owner?: IBlock | undefined;
     blockProperties: BlockProperty[];
     blockSchemas: IBlockPropertySchema[];
+    leaderLines: LeaderLine[];
     constructor(props?: IBlockManagerConstructor) {
         this.id = props?.id || uuidv4();
         this.type = BlockType.IndentedListBlock;
@@ -81,6 +83,7 @@ export class BlockManager implements IBlockManager {
         this.inputEvents = this.getGlobalInputEvents();
         this.inputActions = [];
         this.modes = ["global"];
+        this.leaderLines = [];
         this.attachEventBindings();
     }
     attachEventBindings() {
@@ -105,6 +108,23 @@ export class BlockManager implements IBlockManager {
             keyCode: parseInt(e.code || e.keyCode)
         };
         return input;
+    }
+    drawLeaderLines(relation?: string) {
+        const self = this;
+        this.leaderLines.forEach(l => l.remove());
+        this.blocks.forEach(b => {
+            for (let n in b.relation) {
+                if (relation) {
+                    if (n != relation) continue;
+                }
+                let target = b.relation[n];
+                self.leaderLines.push(new LeaderLine(
+                    b.container,
+                    target.container,
+                    {endLabel: LeaderLine.pathLabel(n)}
+                ));     
+            }
+        })
     }
     private toChord(match: string) {
         let chord: IKeyboardInput = {} as any;
@@ -168,13 +188,7 @@ export class BlockManager implements IBlockManager {
                 action: {
                     name: "Set focus to the block below.",
                     description: "",
-                    handler: (args: IBindingHandlerArgs) => {
-                        const block = args.block;
-                        if (block.relation.next) {
-                            self.setBlockFocus(block.relation.next);
-                            return;
-                        }
-                    }
+                    handler: this.moveCaretDown.bind(this)
                 }
             },
             {
@@ -2330,6 +2344,27 @@ export class BlockManager implements IBlockManager {
             }
             return;
         }
+    }
+    findNearestNephew(block: IBlock): IBlock {
+        /**
+         * Unsure about this algorithm ... might get trapped in the first nephew branch rather than the last.
+         */
+        let previous = block.relation.previous;
+        if (!previous) return block;
+        let firstChild = block.relation.firstChild;
+        if (firstChild) return this.findNearestNephew(firstChild);
+        let next = block.relation.next;
+        if (next) return this.findNearestNephew(next);
+        return block;
+    }
+    findNearestUncle(block: IBlock): IBlock {
+        let previous = block.relation.previous;
+        if (previous) return this.findNearestUncle(previous);
+        let parent = block.relation.parent;
+        if (parent) return this.findNearestUncle(parent);
+        let uncle = block.relation.next;
+        if (uncle) return uncle;
+        return block;
     }
     moveCaretDown(args: IBindingHandlerArgs) {
         const { caret } = args;
