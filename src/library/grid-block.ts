@@ -18,7 +18,7 @@ export class GridBlock extends AbstractBlock {
         throw new Error("Method not implemented.");
     }
     destroy(): void {
-        this.container.innerHTML = "";
+        this.container.remove();
     }
 }
 
@@ -40,7 +40,7 @@ export class GridRowBlock extends AbstractBlock {
         throw new Error("Method not implemented.");
     }
     destroy(): void {
-        this.container.innerHTML = "";
+        this.container.remove();
     }
 }
 
@@ -63,6 +63,6 @@ export class GridCellBlock extends AbstractBlock {
         throw new Error("Method not implemented.");
     }
     destroy(): void {
-        this.container.innerHTML = "";
+        this.container.remove();
     }
 }

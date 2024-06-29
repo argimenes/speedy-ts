@@ -7,7 +7,7 @@ import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "./grid-block";
-import { AbstractBlock, BlockProperty, InputEvent, BlockPropertyDto, BlockType, Command, Commit, GUID, IBindingHandlerArgs, IBlock, IBlockDto, IBlockManager, IBlockPropertySchema, IMainListBlockDto, InputEventSource, IKeyboardInput, InputAction } from "./abstract-block";
+import { AbstractBlock, BlockProperty, InputEvent, BlockPropertyDto, BlockType, Command, Commit, GUID, IBindingHandlerArgs, IBlock, IBlockDto, IBlockPropertySchema, IMainListBlockDto, InputEventSource, IKeyboardInput, InputAction } from "./abstract-block";
 import { ImageBlock } from "./image-block";
 import { VideoBlock } from "./video-block";
 import { IframeBlock } from "./iframe-block";
@@ -48,7 +48,10 @@ enum PointerDirection {
     Undo,
     Redo
 }
-export class BlockManager implements IBlockManager {
+export interface IBlockManager extends IBlock {
+
+}
+export class BlockManager extends AbstractBlock implements IBlockManager {
     id: string;
     type: BlockType;
     container: HTMLDivElement;
@@ -63,11 +66,11 @@ export class BlockManager implements IBlockManager {
     commits: Commit[];
     pointer: number;
     direction: PointerDirection;
-    owner?: IBlock | undefined;
     blockProperties: BlockProperty[];
     blockSchemas: IBlockPropertySchema[];
     leaderLines: LeaderLine[];
     constructor(props?: IBlockManagerConstructor) {
+        super({ id: props?.id, container: props?.container });
         this.id = props?.id || uuidv4();
         this.type = BlockType.IndentedListBlock;
         this.container = props?.container || document.createElement("DIV") as HTMLDivElement;
@@ -85,6 +88,20 @@ export class BlockManager implements IBlockManager {
         this.modes = ["global"];
         this.leaderLines = [];
         this.attachEventBindings();
+    }
+    deserialize(json: any): IBlock {
+        throw new Error("Method not implemented.");
+    }
+    destroy() {
+        this.blocks = [];
+        this.inputEvents = [];
+        this.inputActions = [];
+        this.blockProperties = [];
+        this.blockSchemas = [];
+        this.modes = [];
+        this.leaderLines = [];
+        this.selections = [];
+        this.container.remove();
     }
     attachEventBindings() {
         const self = this;
@@ -191,9 +208,21 @@ export class BlockManager implements IBlockManager {
         }
         return ALLOW;
     }
-    getGlobalInputEvents() {
+    getGlobalInputEvents():InputEvent[] {
         const self = this;
         return [
+            {
+                mode: "global",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Delete"
+                },
+                action: {
+                    name: "Delete block currently in focus or selected.",
+                    description: "",
+                    handler: this.handleDeleteBlock.bind(this)
+                }
+            },
             {
                 mode: "global",
                 trigger: {
@@ -1408,9 +1437,6 @@ export class BlockManager implements IBlockManager {
             }
         ] as IStandoffPropertySchema[];
     }
-    deserialize(json: any) {
-        return {} as IBlock;
-    }
     deserializeBlock(data: any) {
         switch (data.type) {
             case BlockType.StandoffEditorBlock: {
@@ -1462,6 +1488,29 @@ export class BlockManager implements IBlockManager {
     }
     commit(msg: Commit) {
         this.commits.push(msg);
+    }
+    handleDeleteBlock(args: IBindingHandlerArgs) {
+        const block = args.block;
+        const i = this.blocks.findIndex(x => x.id == block.id);
+        const { previous, next, parent, firstChild } = block.relation;
+        if (previous) {
+            previous.relation.next = next;
+        }
+        if (next) {
+            next.relation.previous = previous;
+        }
+        if (parent) {
+            if (next) {
+                next.relation.parent = parent;
+            }
+        }
+        if (firstChild) {
+            if (previous) {
+                previous.relation.next = firstChild;
+            }
+        }
+        block.destroy();
+        this.blocks.splice(i, 1); // delete
     }
     deleteBlock(blockId: GUID) {
         const block = this.getBlock(blockId) as StandoffEditorBlock;

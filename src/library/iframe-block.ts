@@ -42,7 +42,7 @@ export class IframeBlock extends AbstractBlock {
         throw new Error("Method not implemented.");
     }
     destroy(): void {
-        this.container.innerHTML = "";
+        this.container.remove();
     }
 
 }

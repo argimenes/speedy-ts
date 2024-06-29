@@ -36,7 +36,7 @@ export class VideoBlock extends AbstractBlock {
         throw new Error("Method not implemented.");
     }
     destroy(): void {
-        this.container.innerHTML = "";
+        if (this.container) this.container.remove();
     }
 
 }

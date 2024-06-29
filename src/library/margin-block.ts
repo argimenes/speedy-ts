@@ -18,7 +18,7 @@ export class LeftMarginBlock extends AbstractBlock {
         throw new Error("Method not implemented.");
     }
     destroy(): void {
-        throw new Error("Method not implemented.");
+        if (this.container) this.container.remove();
     }
 }
 
@@ -40,6 +40,6 @@ export class RightMarginBlock extends AbstractBlock {
         throw new Error("Method not implemented.");
     }
     destroy(): void {
-        throw new Error("Method not implemented.");
+        if (this.container) this.container.remove();
     }
 }

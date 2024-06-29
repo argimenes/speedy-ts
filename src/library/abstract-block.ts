@@ -4,7 +4,7 @@ import { Caret } from './cell';
 export interface IAbstractBlockConstructor {
     id?: string;
     container?: HTMLDivElement;
-    owner: IBlock;
+    owner?: IBlock;
 }
 export enum InputEventSource {
     Keyboard,
@@ -47,7 +47,7 @@ export abstract class AbstractBlock implements IBlock {
     inputEvents: InputEvent[];
     inputActions: InputAction[];
     modes: string[];
-    owner: IBlock;
+    owner?: IBlock;
     blockProperties: BlockProperty[];
     blockSchemas: IBlockPropertySchema[];
     container: HTMLDivElement;
@@ -218,14 +218,13 @@ export interface IBlock {
     // getRelation: (name: string) => IBlockRelation;
     // removeRelation: (name: string, skipCommit?: boolean) => void;
     metadata: Record<string, any>;
-    setFocus: () => void;
-    serialize: () => IBlockDto;
-    deserialize: (json: any|any[]) => IBlock;
-    applyBlockPropertyStyling: () => void;
+    setFocus(): void;
+    serialize(): IBlockDto;
+    deserialize(json: any|any[]): IBlock;
+    applyBlockPropertyStyling(): void;
+    destroy(): void;
 }
-export interface IBlockManager extends IBlock {
 
-}
 export interface IBlockRelation {
     name: string;
     sourceId: GUID;
