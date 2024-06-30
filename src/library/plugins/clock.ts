@@ -1,10 +1,11 @@
 import { CellHtmlElement } from "../cell";
 import { CARET, ELEMENT_ROLE, StandoffProperty } from "../standoff-editor-block";
-import { updateElement } from "../svg";
+import { updateElement, wrapRange } from "../svg";
 
 export interface IPlugin {
     property: StandoffProperty;
     destroy(): void;
+    serialise(): Record<string, any>;
 }
 export interface IAnimationPlugin extends IPlugin {
     active: boolean;
@@ -37,29 +38,33 @@ export class ClockPlugin implements IAnimationPlugin {
             }
         });
     }
-    wrap() {
-        const dummy = document.createElement("SPAN");
-        const snp = this.property.start.element as HTMLSpanElement;
-        const parent = snp?.parentElement as HTMLDivElement;
-        parent.insertBefore(dummy, snp);
-        const wrapper = this.wrapper;
-        wrapper.speedy = {
-            role: ELEMENT_ROLE.INNER_STYLE_BLOCK,
-            cell: this.property.start
+    serialise() {
+        return {
+            degrees: this.degrees
         };
-        //wrapper.classList.add(this.propertyType[type].className);
-        const blocks = this.property.getCells();
-        blocks.forEach(b => wrapper.appendChild(b.element as HTMLSpanElement));
-        parent.insertBefore(wrapper, dummy);
-        parent.removeChild(dummy);
     }
-    testwrap() {
-        const startElement = this.property.start.element as HTMLSpanElement;
-        const cells = this.property.getCells();
-        const frag = document.createDocumentFragment();
-        frag.append(...cells.map(c => c.element as HTMLSpanElement));
-        this.wrapper.appendChild(frag);
-        startElement.insertAdjacentElement("beforebegin", this.wrapper);
+    createCircle() {
+        const p = this.property;
+        var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        var w = p.end.cache.offset.x + p.end.cache.offset.w - p.start.cache.offset.x;
+        var x = p.start.cache.offset.x;
+        var y = p.start.cache.offset.y - p.start.cache.offset.cy - (w / 4);
+        svg.style.position = "absolute";
+        svg.style.left = x + "px";
+        svg.style.top = y + "px";
+        svg.style.width = w + "px";
+        svg.style.height = w + "px";
+        var svgNS = svg.namespaceURI;
+        var circle = document.createElementNS(svgNS, 'circle');
+        circle.setAttributeNS(null, 'cx', (w / 2)+"");
+        circle.setAttributeNS(null, 'cy', (w / 2)+"");
+        circle.setAttributeNS(null, 'r', (w / 2)+"");
+        circle.setAttributeNS(null, 'fill', 'transparent');
+        svg.appendChild(circle);
+        return svg;
+    }
+    wrap() {
+        wrapRange(this.property, this.wrapper);
     }
     unwrap() {
         const wrapper = this.wrapper;
@@ -95,6 +100,8 @@ export class ClockPlugin implements IAnimationPlugin {
         this.wrap();
         this.property.block.setCaret(index, CARET.LEFT);
         this.property.block.setFocus();
+        // const circle = this.createCircle();
+        // this.wrapper.insertAdjacentElement("beforebegin", circle);
         this.active = true;
         this.timer = setInterval(function () {
             if (!self.active) {

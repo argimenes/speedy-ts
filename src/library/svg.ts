@@ -1,11 +1,33 @@
 import _ from "underscore";
-import { Cell } from "./cell";
-import { StandoffProperty } from "./standoff-editor-block";
+import { Cell, CellHtmlElement } from "./cell";
+import { ELEMENT_ROLE, StandoffProperty } from "./standoff-editor-block";
 
 export const createSvg = (config: any) => {
     var el = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     return updateSVGElement(el, config);
 };
+
+export const wrapRange = (property: StandoffProperty, wrapper?: CellHtmlElement) => {
+    const dummy = document.createElement("SPAN");
+    const snp = property.start.element as HTMLSpanElement;
+    const parent = snp?.parentElement as HTMLDivElement;
+    parent.insertBefore(dummy, snp);
+    wrapper = wrapper || document.createElement("DIV") as CellHtmlElement;
+    wrapper.speedy = {
+        role: ELEMENT_ROLE.INNER_STYLE_BLOCK,
+        cell: property.start
+    };
+    const blocks = property.getCells();
+    blocks.forEach(b => wrapper.appendChild(b.element as HTMLSpanElement));
+    updateElement(wrapper, {
+        style: {
+            display: "inline-block"
+        }
+    });
+    parent.insertBefore(wrapper, dummy);
+    parent.removeChild(dummy);
+    return wrapper;
+}
 
 function newElement<T extends HTMLElement> (type: string, config: any) {
     var el = document.createElement(type);

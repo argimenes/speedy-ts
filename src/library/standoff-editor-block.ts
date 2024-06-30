@@ -1,9 +1,9 @@
 import _ from "underscore";
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
 import { v4 as uuidv4 } from 'uuid';
-import { updateElement } from "./svg";
+import { updateElement, wrapRange } from "./svg";
 import { AbstractBlock, BlockProperty, BlockPropertyDto, Commit, GUID, IAbstractBlockConstructor, IBlockDto, IBlockPropertySchema, IKeyboardInput, InputAction, InputEventSource, ModeTrigger, InputEvent, BlockType,IBindingHandlerArgs, IBlockRelation} from "./abstract-block";
-import { Cell, CellHtmlElement, CellNode, ICoordOffsets, Row } from "./cell";
+import { Caret, Cell, CellHtmlElement, CellNode, ICoordOffsets, Row } from "./cell";
 import { IPlugin } from "./plugins/clock";
 
 export enum CARET {
@@ -88,6 +88,9 @@ export interface IStandoffPropertySchema {
         cssClass?: string;
         batchRender?: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
     },
+    wrap?: {
+        cssClass?: string;
+    },
     render?: {
         update: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
         destroy: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
@@ -119,7 +122,8 @@ export class StandoffProperty {
     isDeleted: boolean;
     cache: Record<string, any>;
     value: string;
-    plugins: Record<string, IPlugin>;
+    metadata: Record<string, any>;
+    plugin?: IPlugin;
     schema: IStandoffPropertySchema;
     block: StandoffEditorBlock; 
     bracket: { left?: HTMLElement; right?: HTMLElement };
@@ -130,10 +134,10 @@ export class StandoffProperty {
         this.start = start;
         this.end = end;
         this.schema = schema;
+        this.metadata = {};
         this.value = "";
         this.block = block;
         this.cache = {};
-        this.plugins = {};
         this.bracket = {
             left: undefined,
             right: undefined
@@ -184,6 +188,10 @@ export class StandoffProperty {
         if (this.schema?.decorate?.cssClass) {
             this.applyCssClass(this.schema.decorate.cssClass);
         }
+        if (this.schema?.wrap?.cssClass) {
+            const wrapper = wrapRange(this);
+            wrapper.classList.add(this.schema?.wrap?.cssClass);
+        }
     }
     applyCssClass(className: string) {
         if (this.isDeleted) return;
@@ -228,6 +236,8 @@ export class StandoffProperty {
             start: this.start.index,
             end: this.end.index,
             value: this.value,
+            metadata: this.metadata,
+            plugin: this.plugin ? this.plugin.serialise() : null,
             isDeleted: this.isDeleted
         }
     }

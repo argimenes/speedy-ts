@@ -1344,6 +1344,30 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Control-F"
+                },
+                action: {
+                    name: "Flip",
+                    description: "Flips the selected text upside down",
+                    handler: this.applyFlipToText.bind(this)
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-M"
+                },
+                action: {
+                    name: "Mirror",
+                    description: "Mirrors the selected text",
+                    handler: this.applyMirrorToText.bind(this)
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "Control-I"
                 },
                 action: {
@@ -1411,6 +1435,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     onDestroy: (p: StandoffProperty) => {
                         p.plugins?.clock?.destroy();
                     }
+                }
+            },
+            {
+                type: "style/flip",
+                name: "Flip",
+                wrap: {
+                    cssClass: "style_flipY"
+                }
+            },
+            {
+                type: "style/mirror",
+                name: "Mirror",
+                wrap: {
+                    cssClass: "style_flipX"
                 }
             },
             {
@@ -2360,6 +2398,24 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const selection = block.getSelection();
         if (selection) {
             block.createStandoffProperty("animation/clock", selection);
+        } else {
+            // TBC
+        }      
+    }
+    applyMirrorToText(args: IBindingHandlerArgs) {
+        const block = args.block as StandoffEditorBlock;
+        const selection = block.getSelection();
+        if (selection) {
+            block.createStandoffProperty("style/mirror", selection);
+        } else {
+            // TBC
+        }      
+    }
+    applyFlipToText(args: IBindingHandlerArgs) {
+        const block = args.block as StandoffEditorBlock;
+        const selection = block.getSelection();
+        if (selection) {
+            block.createStandoffProperty("style/flip", selection);
         } else {
             // TBC
         }      
