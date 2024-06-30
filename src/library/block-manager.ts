@@ -15,6 +15,7 @@ import { Cell } from "./cell";
 import { DIRECTION, StandoffEditorBlock, CARET, RowPosition, IRange, Word, ISelection, IStandoffPropertySchema, StandoffProperty, IStandoffEditorBlockDto } from "./standoff-editor-block";
 import _ from "underscore";
 import LeaderLine from 'leader-line-new';
+import { ClockPlugin } from "./plugins/clock";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -441,8 +442,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 type: "block/animation/sine-wave",
                 name: "Sine Wave",
                 description: "Animates the paragraph as a text sine wave.",
-                animation: {
-                    init: (p: BlockProperty) => {
+                event: {
+                    onInit: (p: BlockProperty) => {
                         const manager = p.block.owner as BlockManager;
                         manager.animateSineWave(p);
                     }
@@ -1331,12 +1332,24 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Control-C"
+                },
+                action: {
+                    name: "Clock",
+                    description: "Turns the text range into a ticking clock",
+                    handler: this.applyClockToText.bind(this)
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "Control-I"
                 },
                 action: {
                     name: "Italicise",
                     description: "Italicises text in the selection. If no text is selected, switches to/from italics text mode.",
-                    handler: this.applyItalicsToText
+                    handler: this.applyItalicsToText.bind(this)
                 }
             },
             {
@@ -1385,6 +1398,21 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     getStandoffSchemas() {
         return [
+            {
+                type: "animation/clock",
+                name: "Clock",
+                description: "",
+                event: {
+                    onInit: (p: StandoffProperty) => {
+                        const clock = new ClockPlugin({ property: p });
+                        p.plugins.clock = clock;
+                        clock.start();
+                    },
+                    onDestroy: (p: StandoffProperty) => {
+                        p.plugins?.clock?.destroy();
+                    }
+                }
+            },
             {
                 type: "style/italics",
                 name: "Italics",
@@ -2326,6 +2354,15 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.renderIndent(list);
         // block.setCaret(0, CARET.LEFT);
         // this.setBlockFocus(block);
+    }
+    applyClockToText(args: IBindingHandlerArgs) {
+        const block = args.block as StandoffEditorBlock;
+        const selection = block.getSelection();
+        if (selection) {
+            block.createStandoffProperty("animation/clock", selection);
+        } else {
+            // TBC
+        }      
     }
     applyItalicsToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;

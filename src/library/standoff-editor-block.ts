@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { updateElement } from "./svg";
 import { AbstractBlock, BlockProperty, BlockPropertyDto, Commit, GUID, IAbstractBlockConstructor, IBlockDto, IBlockPropertySchema, IKeyboardInput, InputAction, InputEventSource, ModeTrigger, InputEvent, BlockType,IBindingHandlerArgs, IBlockRelation} from "./abstract-block";
 import { Cell, CellHtmlElement, CellNode, ICoordOffsets, Row } from "./cell";
+import { IPlugin } from "./plugins/clock";
 
 export enum CARET {
     LEFT = 0,
@@ -118,6 +119,7 @@ export class StandoffProperty {
     isDeleted: boolean;
     cache: Record<string, any>;
     value: string;
+    plugins: Record<string, IPlugin>;
     schema: IStandoffPropertySchema;
     block: StandoffEditorBlock; 
     bracket: { left?: HTMLElement; right?: HTMLElement };
@@ -131,10 +133,28 @@ export class StandoffProperty {
         this.value = "";
         this.block = block;
         this.cache = {};
+        this.plugins = {};
         this.bracket = {
             left: undefined,
             right: undefined
         };
+        this.onInit();
+    }
+    onInit() {
+        if (this.schema?.event?.onInit) {
+            this.schema?.event?.onInit(this);
+        }
+    }
+    onDestroy() {
+        if (this.schema?.event?.onDestroy) {
+            this.schema?.event?.onDestroy(this);
+        }
+    }
+    destroy() {
+        this.onDestroy();
+        if (this.schema.decorate?.cssClass) {
+            this.detachCssClass(this.schema.decorate?.cssClass);
+        }
     }
     hasOffsetChanged() {
         let spoff = this.start.cache.previousOffset;
@@ -169,6 +189,10 @@ export class StandoffProperty {
         if (this.isDeleted) return;
         const cells = this.getCells();
         cells.forEach(x => x.element?.classList.add(className));
+    }
+    detachCssClass(className: string) {
+        const cells = this.getCells();
+        cells.forEach(x => x.element?.classList.remove(className));
     }
     removeCssClassFromRange(className: string) {
         if (this.isDeleted) return;
