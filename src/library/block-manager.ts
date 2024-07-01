@@ -399,6 +399,21 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 }
             },
             {
+                type: "block/background/image",
+                name: "Set background image",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const url = p.value || (p.value = prompt("Background image url: ") || "");
+                        if (!url) return;
+                        const panel = p.block.container;
+                        updateElement(panel, {
+                            "background-size": "cover",
+                            "background": "url(" + url + ") no-repeat center center fixed"
+                        });
+                    }
+                }
+            },
+            {
                 type: "block/background/colour",
                 name: "Set background colour",
                 event: {
@@ -2357,6 +2372,11 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.renderIndent(list);
         // block.setCaret(0, CARET.LEFT);
         // this.setBlockFocus(block);
+    }
+    applyImageBackgroundToBlock(args: IBindingHandlerArgs) {
+        const block = args.block as StandoffEditorBlock;
+        block.addBlockProperties([{ type: "block/background/image" }]);
+        block.applyBlockPropertyStyling();
     }
     applyClockToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;

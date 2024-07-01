@@ -79,6 +79,16 @@ export const ControlPanel : Component<Props> = (props) => {
         if (!block) return;
         block.addBlockProperties([prop]);
     }
+    const setBackgroundImage = (url: string) => {
+        const prop = {
+            type: "block/background/image",
+            value: url
+        };
+        const block = props.manager?.getBlockInFocus();
+        if (!block) return;
+        block.addBlockProperties([prop]);
+        block.applyBlockPropertyStyling();
+    }
     const setFontColour = (colour: string) => {
         const prop = {
             type: "block/font/colour",
@@ -153,6 +163,7 @@ export const ControlPanel : Component<Props> = (props) => {
             case "load": await load(parameters); return;
             case "save": await save(parameters); return;
             case "list-docs": await listDocuments(); return;
+            case "bgimage": setBackgroundImage(parameters[0]); return;
             case "add-image": addImage(parameters[0]); return;
             case "add-video": addVideo(parameters[0]); return;
             case "add-url": addIFrame(parameters[0]); return;
