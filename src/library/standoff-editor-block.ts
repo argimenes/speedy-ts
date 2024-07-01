@@ -155,6 +155,7 @@ export class StandoffProperty {
         }
     }
     destroy() {
+        this.isDeleted = true;
         this.onDestroy();
         if (this.schema.decorate?.cssClass) {
             this.detachCssClass(this.schema.decorate?.cssClass);
