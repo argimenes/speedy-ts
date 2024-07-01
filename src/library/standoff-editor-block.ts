@@ -383,30 +383,6 @@ export class StandoffEditorBlock extends AbstractBlock {
     setSchemas(schemas: IStandoffPropertySchema[]) {
         this.schemas.push(...schemas);
     }
-    setBlockSchemas(schemas: IBlockPropertySchema[]) {
-        this.blockSchemas.push(...schemas);
-    }
-    // addRelation(name: string, targetId: string, skipCommit?: boolean) {
-    //     this.relation[name] = {
-    //         name: name,
-    //         sourceId: this.id,
-    //         targetId: targetId
-    //     };
-    //     if (!skipCommit) {
-    //         this.commit({
-    //             redo: {
-    //                 id: this.id,
-    //                 name: "addRelation",
-    //                 value: { name, targetId }
-    //             },
-    //             undo: {
-    //                 id: this.id,
-    //                 name: "removeRelation",
-    //                 value: { name }
-    //             }
-    //         });
-    //     }
-    // }
     getWordsFromText(text: string) {
         const re = new RegExp(/\b[^\s]+\b/, "g");
         const words: Word[] = [];
@@ -441,39 +417,9 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         return results;
     }
-    getOrSetOverlay(name: string) {
-        const overlay = this.overlays.find(x=> x.name == name);
-        if (overlay) return overlay;
-        return this.addOverlay(name);
-    }
-    addOverlay(name: string) {
-        const blockIndex = 100;
-        const container = document.createElement("DIV") as HTMLDivElement;
-        const indexes = this.overlays.map(x=> x.index);
-        const lastIndex = Math.max(...indexes);
-        const newIndex = lastIndex + 1;
-        updateElement(container, {
-            attribute: {
-                position: "absolute",
-                x: 0,
-                y: 0,
-                width: "100%",
-                height: "100%",
-                "z-index": newIndex + blockIndex
-            }
-        })
-        const overlay = { name, container, index: newIndex };
-        this.overlays.push(overlay);
-        return overlay;
-    }
     getLastCell() {
         const len = this.cells.length;
         return this.cells[len-1];
-    }
-    removeOverlay(name: string) {
-        const o = this.overlays.find(x => x.name == name);
-        if (!o) return;
-        o.container.remove();
     }
     private attachBindings() {
         /*
@@ -575,10 +521,6 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.cells.forEach(c => frag.append(c.element as HTMLElement));
         this.wrapper.appendChild(frag);
     }
-    getKeyCode(name: string) {
-        const code = KEYS[name].find(x => x.platform == Platform.Windows)?.code as number;
-        return code;
-    }
     createLineBreakCell() {
         const code = this.getKeyCode("ENTER");
         const EOL = String.fromCharCode(code);
@@ -593,40 +535,6 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         this.inputBuffer.splice(0, 1);
         this.addToInputBuffer(key);
-    }
-    private toChord(match: string) {
-        let chord: IKeyboardInput = {} as any;
-        const _match = match.toUpperCase();
-        chord.control = (_match.indexOf("CONTROL") >= 0);
-        chord.option = (_match.indexOf("ALT") >= 0);
-        chord.command = (_match.indexOf("META") >= 0);
-        chord.shift = (_match.indexOf("SHIFT") >= 0);
-        const parts = _match.split("-"), len = parts.length;
-        chord.key = parts[len-1];
-        return chord;
-    }
-    compareChords(input: IKeyboardInput, trigger: IKeyboardInput) {
-        if (input.command != trigger.command) return false;
-        if (input.option != trigger.option) return false;
-        if (input.shift != trigger.shift) return false;
-        if (input.control != trigger.control) return false;
-        if (input.key.toUpperCase() != trigger.key.toUpperCase()) return false;
-        return true;
-    }
-    getFirstMatchingInputEvent(input: IKeyboardInput) {
-        const self = this;
-        const modeEvents = _.groupBy(this.inputEvents.filter(x => x.trigger.source == InputEventSource.Keyboard), x => x.mode);
-        const maxIndex = this.modes.length -1;
-        for (let i = maxIndex; i >= 0; i--) {
-            let mode = this.modes[i];
-            let events = modeEvents[mode];
-            let match = events.find(x => {
-                let trigger = self.toChord(x.trigger.match as string);
-                return self.compareChords(input, trigger);
-            });
-            if (match) return match;
-        }
-        return null;
     }
     private handleKeyDown(e: KeyboardEvent) {
         e.preventDefault();
@@ -834,17 +742,6 @@ export class StandoffEditorBlock extends AbstractBlock {
             current.next = next;
             next.previous = current;
         }
-    }
-    private toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
-        const input: IKeyboardInput = {
-            shift: e.shiftKey,
-            control: e.ctrlKey,
-            command: e.metaKey,
-            option: e.altKey,
-            key: e.key,
-            keyCode: parseInt(e.code || e.keyCode)
-        };
-        return input;
     }
     unbind() {
         this.cells = [];

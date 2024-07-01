@@ -116,17 +116,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return ALLOW;
         });
     }
-    private toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
-        const input: IKeyboardInput = {
-            shift: e.shiftKey,
-            control: e.ctrlKey,
-            command: e.metaKey,
-            option: e.altKey,
-            key: e.key,
-            keyCode: parseInt(e.code || e.keyCode)
-        };
-        return input;
-    }
     clearLeaderLines() {
         this.leaderLines.forEach(l => { 
             updateElement(l.start as HTMLElement, {
@@ -158,40 +147,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 ));     
             }
         })
-    }
-    private toChord(match: string) {
-        let chord: IKeyboardInput = {} as any;
-        const _match = match.toUpperCase();
-        chord.control = (_match.indexOf("CONTROL") >= 0);
-        chord.option = (_match.indexOf("ALT") >= 0);
-        chord.command = (_match.indexOf("META") >= 0);
-        chord.shift = (_match.indexOf("SHIFT") >= 0);
-        const parts = _match.split("-"), len = parts.length;
-        chord.key = parts[len-1];
-        return chord;
-    }
-    compareChords(input: IKeyboardInput, trigger: IKeyboardInput) {
-        if (input.command != trigger.command) return false;
-        if (input.option != trigger.option) return false;
-        if (input.shift != trigger.shift) return false;
-        if (input.control != trigger.control) return false;
-        if (input.key.toUpperCase() != trigger.key.toUpperCase()) return false;
-        return true;
-    }
-    getFirstMatchingInputEvent(input: IKeyboardInput) {
-        const self = this;
-        const modeEvents = _.groupBy(this.inputEvents.filter(x => x.trigger.source == InputEventSource.Keyboard), x => x.mode);
-        const maxIndex = this.modes.length -1;
-        for (let i = maxIndex; i >= 0; i--) {
-            let mode = this.modes[i];
-            let events = modeEvents[mode];
-            let match = events.find(x => {
-                let trigger = self.toChord(x.trigger.match as string);
-                return self.compareChords(input, trigger);
-            });
-            if (match) return match;
-        }
-        return null;
     }
     private handleKeyDown(e: KeyboardEvent) {
         e.preventDefault();
@@ -256,16 +211,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         ]
     }
-    addBlockProperties(properties: BlockPropertyDto[]) {
-        const self = this;
-        const props = properties.map(x => new BlockProperty({ type: x.type, block: self, schema: self.blockSchemas.find(x2 => x2.type == x.type) as IBlockPropertySchema }));
-        this.blockProperties.push(...props);
-    }
-    applyBlockPropertyStyling() {
-        this.blockProperties.forEach(p => {
-            p.applyStyling();
-        });
-    }
+    
     updateView() {
         this.blocks.forEach(x => x.updateView());
     }
@@ -361,12 +307,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 break;
             }
         }
-    }
-    addRelation(name: string) {
-
-    }
-    removeRelation(name: string) {
-
     }
     setFocus() {
 
@@ -1429,11 +1369,11 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 event: {
                     onInit: (p: StandoffProperty) => {
                         const clock = new ClockPlugin({ property: p });
-                        p.plugins.clock = clock;
+                        p.plugin = clock;
                         clock.start();
                     },
                     onDestroy: (p: StandoffProperty) => {
-                        p.plugins?.clock?.destroy();
+                        p.plugin?.destroy();
                     }
                 }
             },
