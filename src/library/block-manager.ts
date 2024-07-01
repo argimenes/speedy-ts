@@ -1335,6 +1335,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     }
                 }
             },
+            // {
+            //     mode: "default",
+            //     trigger: {
+            //         source: InputEventSource.Keyboard,
+            //         match: "Control-B"
+            //     },
+            //     action: {
+            //         name: "Bold",
+            //         description: "Emboldens text in the selection. If no text is selected, switches to/from embolden text mode.",
+            //         handler: this.applyBoldToText
+            //     }
+            // },
             {
                 mode: "default",
                 trigger: {
@@ -1342,9 +1354,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     match: "Control-B"
                 },
                 action: {
-                    name: "Bold",
-                    description: "Emboldens text in the selection. If no text is selected, switches to/from embolden text mode.",
-                    handler: this.applyBoldToText
+                    name: "Blur",
+                    description: "Blurs text",
+                    handler: this.applyBlurToText.bind(this)
                 }
             },
             {
@@ -1381,6 +1393,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         const i = self.plugins.findIndex(x => x == p.plugin);
                         self.plugins.splice(i, 1);
                     }
+                }
+            },
+            {
+                type: "style/blur",
+                name: "Blur",
+                wrap: {
+                    cssClass: "style_blur"
                 }
             },
             {
@@ -2376,13 +2395,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }      
     }
     applyBoldToText(args: IBindingHandlerArgs) {
-        const block = args.block as StandoffEditorBlock;
+        this.applyStandoffProperty(args.block as StandoffEditorBlock, "style/bold") 
+    }
+    applyBlurToText(args: IBindingHandlerArgs) {
+        this.applyStandoffProperty(args.block as StandoffEditorBlock, "style/blur") 
+    }
+    applyStandoffProperty(block: StandoffEditorBlock, type: string) {
         const selection = block.getSelection();
         if (selection) {
-            block.createStandoffProperty("style/bold", selection);
+            block.createStandoffProperty(type, selection);
         } else {
             // TBC
-        }      
+        }  
     }
     applyEntityReferenceToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
