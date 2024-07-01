@@ -3,6 +3,7 @@ import { CARET, ELEMENT_ROLE, StandoffProperty } from "../standoff-editor-block"
 import { updateElement, wrapRange } from "../svg";
 
 export interface IPlugin {
+    type: string;
     property: StandoffProperty;
     destroy(): void;
     serialise(): Record<string, any>;
@@ -13,25 +14,35 @@ export interface IAnimationPlugin extends IPlugin {
     wrapper: CellHtmlElement;
     start(): void;
     stop(): void;
-    draw(): void;
+    update(): void;
     pause(): void;
     unpause(): void;
 }
 export interface IClockPluginConstructor {
     property: StandoffProperty;
 }
+export enum ClockDirection {
+    Clockwise,
+    Anticlockwise
+}
 export class ClockPlugin implements IAnimationPlugin {
+    type: string;
     degrees: number;
     active: boolean;
     property: StandoffProperty;
     wrapper: CellHtmlElement;
+    direction: ClockDirection;
     timer: number;
+    steps: number;
     constructor(args: IClockPluginConstructor) {
+        this.type = "animation/clock";
         this.degrees = 0;
         this.active = false;
         this.property = args.property;
         this.wrapper = document.createElement("DIV") as CellHtmlElement;
         this.timer = 0;
+        this.steps = 2;
+        this.direction = ClockDirection.Clockwise;
         updateElement(this.wrapper, {
             style: {
                 display: "inline-block"
@@ -64,20 +75,41 @@ export class ClockPlugin implements IAnimationPlugin {
         return svg;
     }
     wrap() {
+        this.wrapper = this.wrapper || document.createElement("DIV") as CellHtmlElement;
         wrapRange(this.property, this.wrapper);
     }
     unwrap() {
         const wrapper = this.wrapper;
         const frag = document.createDocumentFragment();
-        const spans = Array.from(this.wrapper.children).reverse();
+        const spans = Array.from(this.wrapper.children);
         frag.append(...spans);
         spans.forEach(s => wrapper.insertAdjacentElement("beforebegin", s));
+        this.wrapper.remove();
+    }
+    setSteps(steps: number) {
+        this.steps = steps;
+    }
+    setClockwise() {
+        this.direction = ClockDirection.Clockwise;
+    }
+    setAnticlockwise() {
+        this.direction = ClockDirection.Anticlockwise;
+    }
+    update() {
+        if (this.direction == ClockDirection.Clockwise) {
+            this.degrees += this.steps;
+            if (this.degrees > 360) {
+                this.degrees = 0;
+            }
+        } else {
+            this.degrees -= this.steps;
+            if (this.degrees < 0) {
+                this.degrees = 360;
+            }
+        }
+        this.draw();
     }
     draw() {
-        this.degrees += 2;
-        if (this.degrees > 360) {
-            this.degrees = 0;
-        }
         updateElement(this.wrapper, {
             style: {
                 transform: `rotate(${this.degrees}deg)`
@@ -108,7 +140,7 @@ export class ClockPlugin implements IAnimationPlugin {
                 // clearInterval(p.animation.timer);
                 return;
             }
-            self.draw();
+            self.update();
         }, 125);
     }
     stop() {
@@ -116,6 +148,8 @@ export class ClockPlugin implements IAnimationPlugin {
     }
     destroy() {
         this.stop();
+        this.degrees = 180;
+        this.draw();
         this.unwrap();
     }
 }

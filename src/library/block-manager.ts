@@ -15,7 +15,7 @@ import { Cell } from "./cell";
 import { DIRECTION, StandoffEditorBlock, CARET, RowPosition, IRange, Word, ISelection, IStandoffPropertySchema, StandoffProperty, IStandoffEditorBlockDto } from "./standoff-editor-block";
 import _ from "underscore";
 import LeaderLine from 'leader-line-new';
-import { ClockPlugin } from "./plugins/clock";
+import { ClockPlugin, IPlugin } from "./plugins/clock";
 
 export enum CssClass {
     LineBreak = "codex__line-break"
@@ -70,6 +70,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     blockProperties: BlockProperty[];
     blockSchemas: IBlockPropertySchema[];
     leaderLines: LeaderLine[];
+    plugins: IPlugin[];
     constructor(props?: IBlockManagerConstructor) {
         super({ id: props?.id, container: props?.container });
         this.id = props?.id || uuidv4();
@@ -87,6 +88,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.inputEvents = this.getGlobalInputEvents();
         this.inputActions = [];
         this.modes = ["global"];
+        this.plugins = [];
         this.leaderLines = [];
         this.attachEventBindings();
     }
@@ -1421,6 +1423,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return events;
     }
     getStandoffSchemas() {
+        const self = this;
         return [
             {
                 type: "animation/clock",
@@ -1429,11 +1432,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 event: {
                     onInit: (p: StandoffProperty) => {
                         const clock = new ClockPlugin({ property: p });
-                        p.plugins.clock = clock;
+                        p.plugin = clock;
+                        self.plugins.push(clock);
                         clock.start();
                     },
                     onDestroy: (p: StandoffProperty) => {
-                        p.plugins?.clock?.destroy();
+                        p.plugin?.destroy();
+                        const i = self.plugins.findIndex(x => x == p.plugin);
+                        self.plugins.splice(i, 1);
                     }
                 }
             },
