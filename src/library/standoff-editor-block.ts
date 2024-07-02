@@ -424,27 +424,7 @@ export class StandoffEditorBlock extends AbstractBlock {
     }
     private attachBindings() {
         /*
-        
-        We want to capture [a] keyboard input and [b] mouse input.
-
-        [a] Keyboard Input
-        - should be converted into a structure like this:
-
-        {
-            control: boolean;
-            shift: boolean;
-            option: boolean;
-            command: boolean;
-            function: boolean;
-            key: string;
-            keyCode: number;
-        }
-
-        We then send the IKeyboardInput object to a Chooser that decides which handler
-        should receive the event.
-
         We also need to keep track of keyboard input combinations, e.g., [CTRL-K, CTRL-D].
-
         */
         this.wrapper.addEventListener("keydown", this.handleKeyDown.bind(this));
         this.wrapper.addEventListener("mouseup", this.handleMouseUpEvent.bind(this));
