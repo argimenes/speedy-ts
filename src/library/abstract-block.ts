@@ -185,68 +185,8 @@ export abstract class AbstractBlock implements IBlock {
     protected commit(msg: Commit) {
         this.commitHandler(msg);
     }
-    updateView() {
+    // updateView() {
 
-    }
-    // removeRelation(name: string, skipCommit?: boolean) {
-    //     const relation = this.getRelation(name);
-    //     delete this.relations[name];
-    //     if (!skipCommit) {
-    //         this.commit({
-    //             redo: {
-    //                 id: this.id,
-    //                 name: "removeRelation",
-    //                 value: { name }
-    //             },
-    //             undo: {
-    //                 id: this.id,
-    //                 name: "addRelation",
-    //                 value: {
-    //                     name,
-    //                     targetId: relation.targetId
-    //                 }
-    //             }
-    //         });
-    //     }
-    // }
-    // getRelation(name: string) {
-    //     return this.relations[name];
-    // }
-    // setRelation(type: string, targetId: string) {
-    //     this.relations[type] = { type, sourceId: this.id, targetId };
-    //     this.commit({
-    //         redo: {
-    //             id: this.id,
-    //             name: "setRelation",
-    //             value: { type, targetId }
-    //         },
-    //         undo: {
-    //             id: this.id,
-    //             name: "removeRelation",
-    //             value: { name: type }
-    //         }
-    //     })
-    // }
-    // addRelation(name: string, targetId: string, skipCommit?: boolean) {
-    //     this.relations[name] = {
-    //         type: name,
-    //         sourceId: this.id,
-    //         targetId: targetId
-    //     };
-    //     if (!skipCommit) {
-    //         this.commit({
-    //             redo: {
-    //                 id: this.id,
-    //                 name: "addRelation",
-    //                 value: { name, targetId }
-    //             },
-    //             undo: {
-    //                 id: this.id,
-    //                 name: "removeRelation",
-    //                 value: { name }
-    //             }
-    //         });
-    //     }
     // }
     setFocus(){
         this.container.focus();
@@ -292,14 +232,10 @@ export interface IBlock {
     blockProperties: BlockProperty[];
     addBlockProperties: (props: BlockPropertyDto[]) => void;
     blocks: IBlock[];
-    updateView: () => void;
+    //updateView: () => void;
     getBlock: (id: GUID) => IBlock;
     container: HTMLDivElement;
     relation: Record<string, IBlock>;
-    //relations: Record<string, IBlockRelation>;
-    // addRelation: (name: string, targetId: string, skipCommit?: boolean) => void;
-    // getRelation: (name: string) => IBlockRelation;
-    // removeRelation: (name: string, skipCommit?: boolean) => void;
     metadata: Record<string, any>;
     setFocus(): void;
     serialize(): IBlockDto;
