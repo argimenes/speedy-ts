@@ -2,9 +2,10 @@ import _ from "underscore";
 import { KEYS, Platform, TPlatformKey } from "./keyboard";
 import { v4 as uuidv4 } from 'uuid';
 import { updateElement, wrapRange } from "./svg";
-import { AbstractBlock, BlockProperty, BlockPropertyDto, Commit, GUID, IAbstractBlockConstructor, IBlockDto, IBlockPropertySchema, IKeyboardInput, InputAction, InputEventSource, ModeTrigger, InputEvent, BlockType,IBindingHandlerArgs, IBlockRelation} from "./abstract-block";
+import { AbstractBlock, BlockPropertyDto, Commit, GUID, IAbstractBlockConstructor, IBlockDto, IBlockPropertySchema, IKeyboardInput, InputAction, InputEventSource, ModeTrigger, InputEvent, BlockType,IBindingHandlerArgs, IBlockRelation} from "./abstract-block";
 import { Caret, Cell, CellHtmlElement, CellNode, ICoordOffsets, Row } from "./cell";
 import { IPlugin } from "./plugins/clock";
+import { BlockProperty } from "./block-property";
 
 export enum CARET {
     LEFT = 0,
