@@ -7,7 +7,7 @@ import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "./grid-block";
-import { AbstractBlock, BlockProperty, InputEvent, BlockPropertyDto, BlockType, Command, Commit, GUID, IBindingHandlerArgs, IBlock, IBlockDto, IBlockPropertySchema, IMainListBlockDto, InputEventSource, IKeyboardInput, InputAction } from "./abstract-block";
+import { AbstractBlock, BlockProperty, InputEvent, BlockType, Command, Commit, GUID, IBindingHandlerArgs, IBlock, IBlockDto, IBlockPropertySchema, IMainListBlockDto, InputEventSource, IKeyboardInput, InputAction } from "./abstract-block";
 import { ImageBlock } from "./image-block";
 import { VideoBlock } from "./video-block";
 import { IframeBlock } from "./iframe-block";
@@ -407,8 +407,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         if (!url) return;
                         const panel = p.block.container;
                         updateElement(panel, {
-                            "background-size": "cover",
-                            "background": "url(" + url + ") no-repeat center center fixed"
+                            style: {
+                                "background-size": "cover",
+                                "background": "url(" + url + ") no-repeat center center fixed"
+                            }
                         });
                     }
                 }
@@ -2058,7 +2060,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const parent = this.getParent(sibling);
         if (!parent) return;
         const i = parent.blocks.findIndex(x => x.id == sibling.id);
-        parent.blocks.splice(i, 0, newBlock);
+        parent.blocks.splice(i + 1, 0, newBlock);
         const next = sibling.relation.next;
         sibling.relation.next = newBlock;
         newBlock.relation.previous = sibling;
