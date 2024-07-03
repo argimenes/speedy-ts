@@ -2482,15 +2482,39 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return block;
     }
     addImageRight(block: IBlock, url: string) {
+        const parent = this.getParent(block);
+        const previous = block.relation.previous;
+        const next = block.relation.next;
         const grid = this.createGrid(1, 2);
-        const row = grid.blocks[0];
-        const cell1 = row.blocks[0], cell2 = row.blocks[1];
-        const image = this.createImageBlock();
+        const row = grid.blocks[0] as GridRowBlock;
+        const cell1 = row.blocks[0] as GridCellBlock, cell2 = row.blocks[1] as GridCellBlock;
+        const image = this.createImageBlock({
+            type: BlockType.ImageBlock,
+            metadata: {
+                url
+            }
+        });
+        image.build();
         cell1.blocks = [block];
         cell2.blocks = [image];
-        /**
-         * TBC
-         */
+        if (previous) {
+            previous.relation.next = grid;
+            grid.relation.previous = previous;
+        }
+        if (next) {
+            next.relation.previous = grid;
+            grid.relation.next = next;
+        }
+        const i = parent?.blocks.findIndex(x => x.id == block.id) as number;
+        parent?.blocks.splice(i, 1);
+        parent?.blocks.splice(i, 0, grid);
+        this.addParentSiblingRelations(cell1);
+        this.addParentSiblingRelations(cell2);
+        this.appendSibling(block.container, grid.container);
+        cell1.container.innerHTML = "";
+        cell1.container.append(block.container);
+        cell2.container.innerHTML = "";
+        cell2.container.append(image.container);
     }
     moveCaretDown(args: IBindingHandlerArgs) {
         const { caret } = args;
