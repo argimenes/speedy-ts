@@ -8,6 +8,14 @@ export const createSvg = (config: any) => {
     return updateSVGElement(el, config);
 };
 
+export const unwrapRange = (wrapper: CellHtmlElement) => {
+    const frag = document.createDocumentFragment();
+    const spans = Array.from(wrapper.children);
+    frag.append(...spans);
+    spans.forEach(s => wrapper.insertAdjacentElement("beforebegin", s));
+    wrapper.remove();
+}
+
 export const wrapRange = (property: StandoffProperty, wrapper?: CellHtmlElement) => {
     const dummy = document.createElement("SPAN");
     const snp = property.start.element as HTMLSpanElement;

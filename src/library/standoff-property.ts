@@ -1,9 +1,8 @@
 import { Cell } from "./cell";
-import { IPlugin } from "./plugins/clock";
 import { v4 as uuidv4 } from 'uuid';
-import { wrapRange } from "./svg";
+import { unwrapRange, wrapRange } from "./svg";
 import { StandoffEditorBlock } from "./standoff-editor-block";
-import { GUID, IStandoffPropertySchema, IStandoffPropertyConstructor } from "./types";
+import { GUID, IStandoffPropertySchema, IStandoffPropertyConstructor, CellHtmlElement, IPlugin } from "./types";
 
 export class StandoffProperty {
     id: GUID;
@@ -18,6 +17,8 @@ export class StandoffProperty {
     schema: IStandoffPropertySchema;
     block: StandoffEditorBlock; 
     bracket: { left?: HTMLElement; right?: HTMLElement };
+    styled: boolean;
+    wrapper?: CellHtmlElement;
     constructor({ type, start, end, block, id, schema }: IStandoffPropertyConstructor) {
         this.id = id || uuidv4();
         this.isDeleted = false;
@@ -29,6 +30,7 @@ export class StandoffProperty {
         this.value = "";
         this.block = block;
         this.cache = {};
+        this.styled = false;
         this.bracket = {
             left: undefined,
             right: undefined
@@ -48,9 +50,7 @@ export class StandoffProperty {
     destroy() {
         this.isDeleted = true;
         this.onDestroy();
-        if (this.schema.decorate?.cssClass) {
-            this.detachCssClass(this.schema.decorate?.cssClass);
-        }
+        this.removeStyling();
     }
     hasOffsetChanged() {
         let spoff = this.start.cache.previousOffset;
@@ -79,10 +79,22 @@ export class StandoffProperty {
     applyStyling() {
         if (this.schema?.decorate?.cssClass) {
             this.applyCssClass(this.schema.decorate.cssClass);
+            this.styled = true;
         }
         if (this.schema?.wrap?.cssClass) {
-            const wrapper = wrapRange(this);
+            const wrapper = this.wrapper = wrapRange(this);
             wrapper.classList.add(this.schema?.wrap?.cssClass);
+            this.styled = true;
+        }
+    }
+    removeStyling() {
+        if (this.schema?.decorate?.cssClass) {
+            this.detachCssClass(this.schema.decorate.cssClass);
+            this.styled = false;
+        }
+        if (this.schema?.wrap?.cssClass) {
+            unwrapRange(this.wrapper as CellHtmlElement);
+            this.styled = false;
         }
     }
     applyCssClass(className: string) {

@@ -2127,6 +2127,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 }
             });
         }
+        updateElement(block.container, {
+            style: {
+                //"display": "table-cell",
+                "vertical-align": "top"
+            }
+        });
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
@@ -2485,9 +2491,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const parent = this.getParent(block);
         const previous = block.relation.previous;
         const next = block.relation.next;
-        const grid = this.createGrid(1, 2);
-        const row = grid.blocks[0] as GridRowBlock;
-        const cell1 = row.blocks[0] as GridCellBlock, cell2 = row.blocks[1] as GridCellBlock;
+        const grid = this.createGridBlock();
+        const row = this.createGridRowBlock();
+        const cell1 = this.createGridCellBlock({
+            type: BlockType.GridCellBlock,
+            metadata: {
+                width: "48%"
+            }
+        });
+        const cell2 = this.createGridCellBlock({
+            type: BlockType.GridCellBlock,
+            metadata: {
+                width: "48%"
+            }
+        });
         const image = this.createImageBlock({
             type: BlockType.ImageBlock,
             metadata: {
@@ -2497,6 +2514,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         image.build();
         cell1.blocks = [block];
         cell2.blocks = [image];
+        row.blocks = [cell1, cell2];
+        grid.blocks = [row];
+        this.addParentSiblingRelations(cell1);
+        this.addParentSiblingRelations(cell2);
+        this.addParentSiblingRelations(row);
+        this.addParentSiblingRelations(grid);
         if (previous) {
             previous.relation.next = grid;
             grid.relation.previous = previous;
@@ -2505,28 +2528,15 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             next.relation.previous = grid;
             grid.relation.next = next;
         }
+        cell2.container.append(image.container);
+        row.container.append(cell1.container);
+        row.container.append(cell2.container);
+        grid.container.append(row.container);
         const i = parent?.blocks.findIndex(x => x.id == block.id) as number;
         parent?.blocks.splice(i, 1);
         parent?.blocks.splice(i, 0, grid);
-        this.addParentSiblingRelations(cell1);
-        this.addParentSiblingRelations(cell2);
         this.appendSibling(block.container, grid.container);
-        cell1.container.innerHTML = "";
         cell1.container.append(block.container);
-        cell2.container.innerHTML = "";
-        cell2.container.append(image.container);
-        updateElement(cell1.container, {
-            style: {
-                "display": "table-cell",
-                "vertical-align": "top"
-            }
-        });
-        updateElement(cell2.container, {
-            style: {
-                "display": "table-cell",
-                "vertical-align": "top"
-            }
-        });
     }
     moveCaretDown(args: IBindingHandlerArgs) {
         const { caret } = args;

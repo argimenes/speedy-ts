@@ -8,6 +8,7 @@ export class BlockProperty {
     event?: Record<string, BlockBindingHandler>;
     block: IBlock;
     value?: string;
+    styled: boolean;
     constructor({ id, type, block, schema, value, event }: IBlockPropertyConstructor) {
         this.id = id || uuidv4();
         this.type = type;
@@ -15,6 +16,7 @@ export class BlockProperty {
         this.event = event;
         this.block = block;
         this.value = value;
+        this.styled = false;
         this.onInit();
     }
     onInit() {
@@ -33,12 +35,14 @@ export class BlockProperty {
         const schema = this.schema;
         if (schema?.decorate?.blockClass) {
             this.block.container.classList.add(schema.decorate.blockClass);
+            this.styled = true;
         }
     }
     removeStyling() {
         const schema = this.schema;
         if (schema?.decorate?.blockClass) {
             this.block.container.classList.remove(schema.decorate.blockClass);
+            this.styled = false;
         }
     }
 }
