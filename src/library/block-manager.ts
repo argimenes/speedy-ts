@@ -2487,6 +2487,57 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (uncle) return uncle;
         return block;
     }
+    addImageLeft(block: IBlock, url: string) {
+        const parent = this.getParent(block);
+        const previous = block.relation.previous;
+        const next = block.relation.next;
+        const grid = this.createGridBlock();
+        const row = this.createGridRowBlock();
+        const cell1 = this.createGridCellBlock({
+            type: BlockType.GridCellBlock,
+            metadata: {
+                width: "48%"
+            }
+        });
+        const cell2 = this.createGridCellBlock({
+            type: BlockType.GridCellBlock,
+            metadata: {
+                width: "48%"
+            }
+        });
+        const image = this.createImageBlock({
+            type: BlockType.ImageBlock,
+            metadata: {
+                url
+            }
+        });
+        image.build();
+        cell1.blocks = [image];
+        cell2.blocks = [block];
+        row.blocks = [cell1, cell2];
+        grid.blocks = [row];
+        this.addParentSiblingRelations(cell1);
+        this.addParentSiblingRelations(cell2);
+        this.addParentSiblingRelations(row);
+        this.addParentSiblingRelations(grid);
+        if (previous) {
+            previous.relation.next = grid;
+            grid.relation.previous = previous;
+        }
+        if (next) {
+            next.relation.previous = grid;
+            grid.relation.next = next;
+        }
+        cell1.container.append(image.container);
+        row.container.append(cell1.container);
+        row.container.append(cell2.container);
+        grid.container.append(row.container);
+        const i = parent?.blocks.findIndex(x => x.id == block.id) as number;
+        parent?.blocks.splice(i, 1);
+        parent?.blocks.splice(i, 0, grid);
+        this.appendSibling(block.container, grid.container);
+        cell2.container.append(block.container);
+    }
     addImageRight(block: IBlock, url: string) {
         const parent = this.getParent(block);
         const previous = block.relation.previous;
