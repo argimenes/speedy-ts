@@ -1,5 +1,7 @@
-import { AbstractBlock, BlockType, IAbstractBlockConstructor, IBlock, IBlockDto } from "./abstract-block";
+
+import { AbstractBlock } from "./abstract-block";
 import { updateElement } from "./svg";
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "./types";
 
 export class TabRowBlock extends AbstractBlock {
     header: HTMLDivElement;

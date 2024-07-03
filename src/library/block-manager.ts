@@ -1,5 +1,3 @@
-import { Platform, TPlatformKey } from "./keyboard";
-
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 import { LeftMarginBlock, RightMarginBlock } from "./margin-block";
@@ -7,51 +5,19 @@ import { MainListBlock } from "./main-list-block";
 import { IndentedListBlock } from "./indented-list-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "./grid-block";
-import { AbstractBlock, BlockProperty, InputEvent, BlockType, Command, Commit, GUID, IBindingHandlerArgs, IBlock, IBlockDto, IBlockPropertySchema, IMainListBlockDto, InputEventSource, IKeyboardInput, InputAction } from "./abstract-block";
 import { ImageBlock } from "./image-block";
 import { VideoBlock } from "./video-block";
 import { IframeBlock } from "./iframe-block";
 import { Cell } from "./cell";
-import { DIRECTION, StandoffEditorBlock, CARET, RowPosition, IRange, Word, ISelection, IStandoffPropertySchema, StandoffProperty, IStandoffEditorBlockDto } from "./standoff-editor-block";
 import _ from "underscore";
 import LeaderLine from 'leader-line-new';
 import { ClockPlugin, IPlugin } from "./plugins/clock";
+import { AbstractBlock } from "./abstract-block";
+import { BlockProperty } from "./block-property";
+import { StandoffEditorBlock } from "./standoff-editor-block";
+import { StandoffProperty } from "./standoff-property";
+import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey } from "./types";
 
-export enum CssClass {
-    LineBreak = "codex__line-break"
-}
-export interface IEdge {
-    sourceId: string;
-    name: string;
-    targetId: string;
-}
-export interface IAddEdge extends IEdge {
-    
-}
-export interface IBatchRelateArgs {
-    toDelete?: IEdge[];
-    toAdd?: IEdge[];
-}
-
-export interface IBlockManagerConstructor {
-    id?: GUID;
-    container?: HTMLDivElement;
-}
-export interface IBlockRange {
-    start: IBlock;
-    end: IBlock;
-}
-export interface IBlockSelection extends IBlockRange {
-    direction: DIRECTION;
-}
-
-enum PointerDirection {
-    Undo,
-    Redo
-}
-export interface IBlockManager extends IBlock {
-
-}
 export class BlockManager extends AbstractBlock implements IBlockManager {
     id: string;
     type: BlockType;

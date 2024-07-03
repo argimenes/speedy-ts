@@ -1,30 +1,7 @@
-import { CellHtmlElement } from "../cell";
-import { CARET, ELEMENT_ROLE, StandoffProperty } from "../standoff-editor-block";
+import { StandoffProperty } from "../standoff-property";
 import { updateElement, wrapRange } from "../svg";
+import { IAnimationPlugin, CellHtmlElement, ClockDirection, IClockPluginConstructor, CARET } from "../types";
 
-export interface IPlugin {
-    type: string;
-    property: StandoffProperty;
-    destroy(): void;
-    serialise(): Record<string, any>;
-}
-export interface IAnimationPlugin extends IPlugin {
-    active: boolean;
-    timer: number;
-    wrapper: CellHtmlElement;
-    start(): void;
-    stop(): void;
-    update(): void;
-    pause(): void;
-    unpause(): void;
-}
-export interface IClockPluginConstructor {
-    property: StandoffProperty;
-}
-export enum ClockDirection {
-    Clockwise,
-    Anticlockwise
-}
 export class ClockPlugin implements IAnimationPlugin {
     type: string;
     degrees: number;

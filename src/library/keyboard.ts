@@ -1,11 +1,4 @@
-export enum Platform {
-    Linux,
-    Windows,
-    Mac
-}
-
-export type TPlatformKey = { code: number, platform: Platform; };
-export type TKEYS = Record<string, TPlatformKey[]>;
+import { TKEYS, Platform } from "./types";
 
 export const KEYS: TKEYS  = {
     BACKSPACE: [

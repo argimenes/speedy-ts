@@ -1,6 +1,7 @@
 import _ from "underscore";
-import { Cell, CellHtmlElement } from "./cell";
-import { ELEMENT_ROLE, StandoffProperty } from "./standoff-editor-block";
+import { Cell } from "./cell";
+import { StandoffProperty } from "./standoff-property";
+import { CellHtmlElement, ELEMENT_ROLE } from "./types";
 
 export const createSvg = (config: any) => {
     var el = document.createElementNS("http://www.w3.org/2000/svg", "svg");

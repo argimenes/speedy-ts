@@ -1,6 +1,7 @@
-import { AbstractBlock, BlockType, IAbstractBlockConstructor, IBlock, IBlockDto } from "./abstract-block";
 import { v4 as uuidv4 } from 'uuid';
 import YouTubePlayer from 'youtube-player';
+import { AbstractBlock } from './abstract-block';
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from './types';
 
 export class VideoBlock extends AbstractBlock {
     iframe: HTMLDivElement;

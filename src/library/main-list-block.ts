@@ -1,9 +1,6 @@
-import { AbstractBlock, BlockType, IAbstractBlockConstructor, IBlock, IBlockDto } from "./abstract-block";
 import { v4 as uuidv4 } from 'uuid';
-
-export interface IMainListBlockDto extends IBlockDto {
-
-}
+import { AbstractBlock } from './abstract-block';
+import { IAbstractBlockConstructor, BlockType, IMainListBlockDto, IBlockDto, IBlock } from './types';
 
 export class MainListBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {

@@ -1,9 +1,9 @@
-import { GUID } from "./abstract-block";
 import { Cell } from "./cell";
 import { IPlugin } from "./plugins/clock";
 import { v4 as uuidv4 } from 'uuid';
-import { IStandoffPropertySchema, StandoffEditorBlock, IStandoffPropertyConstructor } from "./standoff-editor-block";
 import { wrapRange } from "./svg";
+import { StandoffEditorBlock } from "./standoff-editor-block";
+import { GUID, IStandoffPropertySchema, IStandoffPropertyConstructor } from "./types";
 
 export class StandoffProperty {
     id: GUID;

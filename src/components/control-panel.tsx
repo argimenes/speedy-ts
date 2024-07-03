@@ -4,8 +4,8 @@ import { BlockManager } from "../library/block-manager";
 import { GridBlock } from "../library/grid-block";
 import { TabBlock, TabRowBlock } from "../library/tabs-block";
 import { IndentedListBlock } from "../library/indented-list-block";
-import { BlockType } from "../library/abstract-block";
-import { StandoffEditorBlock, CARET } from "../library/standoff-editor-block";
+import { StandoffEditorBlock } from "../library/standoff-editor-block";
+import { BlockType, CARET } from "../library/types";
 
 type Model = {
     command: string;

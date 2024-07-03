@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { GUID, IBlockPropertySchema, BlockBindingHandler, IBlock, IBlockPropertyConstructor } from "./abstract-block";
+import { GUID, IBlockPropertySchema, BlockBindingHandler, IBlock, IBlockPropertyConstructor } from './types';
 
 export class BlockProperty {
     id: GUID;

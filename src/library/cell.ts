@@ -1,34 +1,6 @@
-import { CARET, DIRECTION, ELEMENT_ROLE, StandoffEditorBlock } from "./standoff-editor-block";
+import { StandoffEditorBlock } from "./standoff-editor-block";
+import { ICellCoordOffsets, CellHtmlElement, ICellConstructor, ELEMENT_ROLE, DIRECTION } from "./types";
 
-export type Caret = {
-    left?: Cell;
-    right: Cell;
-};
-export type CellElement = {
-    cell: Cell;
-    role: ELEMENT_ROLE;
-}
-export interface ICellConstructor {
-    block: StandoffEditorBlock;
-    text: string;
-    previous?: Cell;
-    next?: Cell;
-}
-export interface ICoordOffsets {
-    x: number;
-    y: number;
-    h: number;
-    w: number;
-}
-export interface ICellCoordOffsets extends ICoordOffsets {
-    cy: number;
-}
-export type CellNode = Node & { speedy: CellElement };
-export type CellHtmlElement = HTMLElement & { speedy: CellElement };
-export interface ICursor {
-    anchorCell: Cell;
-    caret: CARET;
-}
 export class Cell {
     index: number;
     previous?: Cell;

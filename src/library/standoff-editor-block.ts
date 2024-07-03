@@ -1,104 +1,12 @@
 import _ from "underscore";
-import { KEYS, Platform, TPlatformKey } from "./keyboard";
 import { updateElement } from "./svg";
-import { AbstractBlock, BlockPropertyDto, Commit, GUID, IAbstractBlockConstructor, IBlockDto, IBlockPropertySchema, IKeyboardInput, InputAction, InputEventSource, ModeTrigger, InputEvent, BlockType,IBindingHandlerArgs, IBlockRelation} from "./abstract-block";
-import { Caret, Cell, CellHtmlElement, CellNode, ICoordOffsets, Row } from "./cell";
 import { BlockProperty } from "./block-property";
 import { StandoffProperty } from "./standoff-property";
+import { AbstractBlock } from "./abstract-block";
+import { Cell, Row } from "./cell";
+import { KEYS } from "./keyboard";
+import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition } from "./types";
 
-export enum CARET {
-    LEFT = 0,
-    RIGHT = 1
-}
-export class Word {
-    start: number;
-    end: number;
-    text: string;
-    previous?: Word;
-    next?: Word
-    constructor(start: number, end: number, text: string) {
-        this.start = start;
-        this.end = end;
-        this.text = text;
-    }
-}
-export type StandoffPropertyDto = {
-    id?: GUID,
-    blockGuid?: GUID,
-    start: number,
-    end: number,
-    type: string,
-    value?: string
-}
-
-export type StandoffEditorBlockDto = {
-    id?: GUID
-    text: string
-    standoffProperties: StandoffPropertyDto[]
-    blockProperties?: BlockPropertyDto[]
-}
-export enum RowPosition {
-    Previous,
-    Next
-}
-export enum ELEMENT_ROLE {
-    CELL = 0,
-    INNER_STYLE_BLOCK = 1,
-    ROOT = 2,
-    CELL_STYLE = 3,
-    TEXT_BLOCK = 4,
-    OUTER_STYLE_BLOCK = 5
-}
-export enum DIRECTION {
-    LEFT = 0,
-    RIGHT = 1
-}
-
-export interface IStandoffPropertyConstructor {
-    id?: GUID;
-    type: string,
-    start: Cell,
-    end: Cell,
-    block: StandoffEditorBlock,
-    schema: IStandoffPropertySchema
-}
-export interface IRange {
-    start: Cell;
-    end: Cell;
-}
-
-export enum BLOCK_POSITION {
-    Inside,
-    Start,
-    End,
-    EmptyLine
-};
-export interface IStandoffProperty {
-    type: string;
-    startIndex: number;
-    endIndex: number;
-    value?: string;
-}
-export interface IStandoffPropertySchema {
-    type: string;
-    name?: string;
-    description?: string;
-    event: any;
-    decorate?: {
-        cssClass?: string;
-        batchRender?: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
-    },
-    wrap?: {
-        cssClass?: string;
-    },
-    render?: {
-        update: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
-        destroy: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
-    },
-    animation?: {
-        init?: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
-    }
-}
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     const map = new Map();
     list.forEach((item) => {
@@ -112,20 +20,6 @@ function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     });
     return map;
 };
-
-
-
-export interface IStandoffEditorBlockDto extends IBlockDto {
-    text: string;
-    standoffProperties?: StandoffPropertyDto[];
-}
-
-export interface ISelection extends IRange {
-    direction: DIRECTION;
-}
-
-export interface IStandoffEditorBlockConstructor extends IAbstractBlockConstructor {
-}
 
 export class StandoffEditorBlock extends AbstractBlock {
     type: BlockType;

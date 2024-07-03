@@ -1,4 +1,5 @@
-import { AbstractBlock, BlockType, IAbstractBlockConstructor, IBlock, IBlockDto  } from "./abstract-block"
+import { AbstractBlock } from "./abstract-block";
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "./types";
 
 export class LeftMarginBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
