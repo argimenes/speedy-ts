@@ -2481,6 +2481,17 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (uncle) return uncle;
         return block;
     }
+    addImageRight(block: IBlock, url: string) {
+        const grid = this.createGrid(1, 2);
+        const row = grid.blocks[0];
+        const cell1 = row.blocks[0], cell2 = row.blocks[1];
+        const image = this.createImageBlock();
+        cell1.blocks = [block];
+        cell2.blocks = [image];
+        /**
+         * TBC
+         */
+    }
     moveCaretDown(args: IBindingHandlerArgs) {
         const { caret } = args;
         const block = args.block;

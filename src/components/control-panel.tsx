@@ -103,6 +103,11 @@ export const ControlPanel : Component<Props> = (props) => {
         if (!block) return;
         props.manager?.addImageBlock(block, url);
     }
+    const addImageRight = (url: string) => {
+        const block = props.manager?.getBlockInFocus();
+        if (!block) return;
+        props.manager?.addImageRight(block, url);
+    }
     const addVideo = (url: string) => {
         const block = props.manager?.getBlockInFocus();
         if (!block) return;
@@ -165,6 +170,7 @@ export const ControlPanel : Component<Props> = (props) => {
             case "list-docs": await listDocuments(); return;
             case "bgimage": setBackgroundImage(parameters[0]); return;
             case "add-image": addImage(parameters[0]); return;
+            case "add-image-right": addImageRight(parameters[0]); return;
             case "add-video": addVideo(parameters[0]); return;
             case "add-url": addIFrame(parameters[0]); return;
             case "color": setFontColour(parameters[0]); return;
