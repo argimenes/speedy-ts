@@ -2515,6 +2515,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         cell1.container.append(block.container);
         cell2.container.innerHTML = "";
         cell2.container.append(image.container);
+        updateElement(cell1.container, {
+            style: {
+                "display": "table-cell",
+                "vertical-align": "top"
+            }
+        });
+        updateElement(cell2.container, {
+            style: {
+                "display": "table-cell",
+                "vertical-align": "top"
+            }
+        });
     }
     moveCaretDown(args: IBindingHandlerArgs) {
         const { caret } = args;
