@@ -2478,6 +2478,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (next) return this.findNearestNephew(next);
         return block;
     }
+    swapCells(left: GridCellBlock, right: GridCellBlock) {
+        const row = this.getParentOfType(left, BlockType.GridRowBlock) as GridRowBlock;
+        if (!row)return;
+        const li = row.blocks.findIndex(x => x.id == left.id), ri = row.blocks.findIndex(x => x.id == right.id);
+        row.blocks[ri] = left;
+        row.blocks[li] = right;
+        left.container.insertAdjacentElement("beforebegin", right.container);
+    }
     findNearestUncle(block: IBlock): IBlock {
         let previous = block.relation.previous;
         if (previous) return this.findNearestUncle(previous);

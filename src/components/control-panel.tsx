@@ -1,7 +1,7 @@
 import { Component, For, onMount } from "solid-js"
 import { createStore } from "solid-js/store";
 import { BlockManager } from "../library/block-manager";
-import { GridBlock } from "../library/grid-block";
+import { GridBlock, GridCellBlock } from "../library/grid-block";
 import { TabBlock, TabRowBlock } from "../library/tabs-block";
 import { IndentedListBlock } from "../library/indented-list-block";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
@@ -155,6 +155,20 @@ export const ControlPanel : Component<Props> = (props) => {
         if (!block || block.type != BlockType.IndentedListBlock) return;
         block.expand();
     }
+    const swapGridCells = () => {
+        const block = props.manager?.getBlockInFocus() as StandoffEditorBlock;
+        if (block?.type != BlockType.StandoffEditorBlock) return;
+        const row = props.manager?.getParentOfType(block, BlockType.GridRowBlock);
+        if (!row) return;
+        const len = row.blocks.length;
+        if (len < 2) return;
+        const cell = props.manager?.getParentOfType(block, BlockType.GridCellBlock) as GridCellBlock;
+        const ci = row.blocks.findIndex(x => x.id == cell.id);
+        if (ci == len) return;
+        const left = row.blocks[ci] as GridCellBlock;
+        const right = row.blocks[ci + 1] as GridCellBlock;
+        props.manager?.swapCells(left, right);
+    }
     const drawLeaderLines = (relation?: string, colour?: string) => {
         const block = props.manager?.getBlockInFocus();
         props.manager?.drawLeaderLines(relation, colour);
@@ -184,6 +198,7 @@ export const ControlPanel : Component<Props> = (props) => {
             case "add-grid": createGrid(parseInt(parameters[0]), parseInt(parameters[1])); return;
             // case "collapse": collapse(); return;
             // case "expand": expand(); return;
+            case "swap": swapGridCells(); return;
             case "new-doc": createDocument(); return;
             case "set-tab-name": setTabName(parameters[0]); return;
             case "add-tab": addTab(parameters[0]); return;
