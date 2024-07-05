@@ -177,6 +177,10 @@ export const ControlPanel : Component<Props> = (props) => {
         const block = props.manager?.getBlockInFocus();
         props.manager?.clearLeaderLines();
     }
+    const setMultiColumns = (cols: string) => {
+        const block = props.manager?.getBlockInFocus();
+        props.manager?.setMultiColumns(block!.id, parseInt(cols));
+    }
     const runCommand = async () => {
         if (!model.command) {
             return;
@@ -202,6 +206,7 @@ export const ControlPanel : Component<Props> = (props) => {
             case "new-doc": createDocument(); return;
             case "set-tab-name": setTabName(parameters[0]); return;
             case "add-tab": addTab(parameters[0]); return;
+            case "multicols": setMultiColumns(parameters[0]); return;
             case "draw-leader-lines": drawLeaderLines(parameters[0] || "", parameters[1] || ""); return;
             case "clear-leader-lines": clearLeaderLines(); return;
             default: break;

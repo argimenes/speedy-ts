@@ -2486,6 +2486,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         row.blocks[li] = right;
         left.container.insertAdjacentElement("beforebegin", right.container);
     }
+    setMultiColumns(id: GUID, cols: number) {
+        const block = this.getBlock(id);
+        updateElement(block.container, {
+            style: {
+                "column-count": cols
+            }
+        });
+    }
     findNearestUncle(block: IBlock): IBlock {
         let previous = block.relation.previous;
         if (previous) return this.findNearestUncle(previous);
