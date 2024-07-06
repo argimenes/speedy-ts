@@ -35,7 +35,8 @@ export enum BlockType {
     LeftMarginBlock = "left-margin-block",
     RightMarginBlock = "right-margin-block",
     ImageBlock = "image-block",
-    VideoBlock = "video-block"
+    VideoBlock = "video-block",
+    PlainTextBlock = "plain-text-block"
 }
 export interface IBlock {
     id: GUID;
@@ -121,6 +122,9 @@ export interface IBlockDto {
     children?: IBlockDto[];
     metadata?: Record<string, any>;
     blockProperties?: BlockPropertyDto[];
+}
+export interface IPlainTextBlockDto extends IBlockDto {
+    text: string;
 }
 export interface IMainListBlockDto extends IBlockDto {}
 export enum Platform {

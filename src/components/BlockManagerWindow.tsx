@@ -1,6 +1,6 @@
 import { Component } from "solid-js"
 import { BlockManager } from "../library/block-manager"
-import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto } from "../library/types";
+import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto } from "../library/types";
 
 type Props = {
     getInstance: (inst: BlockManager) => void;
@@ -64,7 +64,10 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         }
                     }
                 } as IStandoffEditorBlockDto,
-                
+                {
+                    type: BlockType.PlainTextBlock,
+                    text: "... and this is just a plain text block ..."
+                } as IPlainTextBlockDto,
                 {
                     type: BlockType.IndentedListBlock,
                     children: [

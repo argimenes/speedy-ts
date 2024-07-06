@@ -16,7 +16,8 @@ import { AbstractBlock } from "./abstract-block";
 import { BlockProperty } from "./block-property";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { StandoffProperty } from "./standoff-property";
-import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey } from "./types";
+import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto } from "./types";
+import { PlainTextBlock } from "./plain-text-block";
 
 export class BlockManager extends AbstractBlock implements IBlockManager {
     id: string;
@@ -1749,6 +1750,22 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(rightMargin.container);
         return rightMargin;
     }
+    buildPlainTextBlock(container: HTMLDivElement, blockDto: IPlainTextBlockDto) {
+        const self = this;
+        const plainText = this.createPlainTextBlock(blockDto);
+        if (blockDto.children) {
+            blockDto.children.forEach((b,i) => {
+                let rowBlock = self.recursivelyBuildBlock(plainText.container, b) as GridRowBlock;
+                plainText.blocks.push(rowBlock);
+            });
+        }
+        if (blockDto.text)  {
+            plainText.bind(blockDto.text);
+        }
+        this.addParentSiblingRelations(plainText);
+        container.appendChild(plainText.container);
+        return plainText;
+    }
     buildGridBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
         const gridBlock = this.createGridBlock();
@@ -1939,6 +1956,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         if (blockDto.type == BlockType.TabRowBlock) {
             return this.buildTabRowBlock(container, blockDto);
+        }
+        if (blockDto.type == BlockType.PlainTextBlock) {
+            return this.buildPlainTextBlock(container, blockDto as IPlainTextBlockDto);
         }
         if (blockDto.type == BlockType.TabBlock) {
             return this.buildTabBlock(container, blockDto);
@@ -2142,6 +2162,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createGridRowBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new GridRowBlock({
+            owner: this,
+            id: dto?.id
+        });
+        if (dto?.metadata) block.metadata = dto.metadata;
+        block.setBlockSchemas(blockSchemas);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+        block.applyBlockPropertyStyling();
+        this.blocks.push(block);
+        return block;
+    }
+    createPlainTextBlock(dto?: IPlainTextBlockDto) {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new PlainTextBlock({
             owner: this,
             id: dto?.id
         });
