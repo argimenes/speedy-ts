@@ -3,7 +3,7 @@ import { BlockManagerWindow } from './components/BlockManagerWindow';
 import { BlockManager } from './library/block-manager';
 import { ControlPanel } from './components/control-panel';
 import { createStore } from 'solid-js/store';
-
+import "./assets/tufte.css"
 type Model = {
   manager: BlockManager;
 }
