@@ -34,11 +34,6 @@ export class StandoffEditorBlock extends AbstractBlock {
         containerWidth: number;
     };
     standoffProperties: StandoffProperty[];
-    /**
-     * This will keep track of the last couple of key-combinations entered. The main purpose
-     * is for triggering two-part bindings, such as 'CTRL-K, CTRL-D'.
-     */
-    inputBuffer: IKeyboardInput[];
     schemas: IStandoffPropertySchema[];
     /**
      * Not unlike a StandoffProperty, a Selection denotes a highlighted range of text. Unlike a StandoffProperty,
@@ -48,13 +43,6 @@ export class StandoffEditorBlock extends AbstractBlock {
      * range, or it could be a collection of one or more SVG lines generated to match the shape of the text range.
      */
     selections: ISelection[];
-    /**
-     * A place to store data about the Block, especially the kind that may not be relevant to every instance
-     * of Block in every circumstance. For example, 'indentLevel: number' is relevant to a Block in a nested-list
-     * but not a chain of paragraph-like blocks. For now, this is a catch-all for Block data that hasn't yet been
-     * promoted to being a member of the class itself.
-     */
-    metadata: Record<string, any>;
     /**
      * An Overlay is a named DIV container for storing generated elements - such as SVG underlines - which are meant
      * to be overlaid (like a layer) on top of the text underneath. An Overlay 'container' should be absolutely
@@ -81,7 +69,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         });
         
         this.container.appendChild(this.wrapper);
-        this.blocks = [];
+        
         this.cache = {
             previousOffset: {
                 x: 0, y: 0, h: 0, w: 0
@@ -96,11 +84,9 @@ export class StandoffEditorBlock extends AbstractBlock {
         };
         this.cells = [];
         this.rows = [];
-        this.metadata = {};
         this.schemas = [];
         this.standoffProperties = [];
         this.selections = [];
-        this.inputBuffer = [];
         this.attachBindings();
     }
     addMode(mode: string) {
@@ -130,14 +116,6 @@ export class StandoffEditorBlock extends AbstractBlock {
         const index = this.modes.findIndex(x => x == mode);
         if (index < 0) return;
         this.modes.splice(index, 1);
-    }
-    setCommitHandler(handler: (commit: Commit) => void) {
-        this.commitHandler = handler;
-    }
-    setEvents(events: InputEvent[]){
-        this.inputEvents.push(...events);
-        const actions = events.map(x => x.action);
-        this.inputActions.push(...actions);
     }
     setSchemas(schemas: IStandoffPropertySchema[]) {
         this.schemas.push(...schemas);
@@ -285,9 +263,13 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         const match = this.getFirstMatchingInputEvent(input);
         if (match) {
-            const args = { block: this, caret: this.getCaret(), selection: this.getSelection() } as IBindingHandlerArgs;
+            let passthrough = false;
+            const args = {
+                block: this, caret: this.getCaret(), selection: this.getSelection(),
+                allowPassthrough: () => passthrough = true
+            } as IBindingHandlerArgs;
             match.action.handler(args);
-            return FORBID;
+            if (!passthrough) return FORBID;
         }
         if (input.key.length == 1) {
             // Ignoring UNICODE code page implications for the moment.

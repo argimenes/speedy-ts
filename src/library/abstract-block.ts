@@ -10,6 +10,11 @@ export abstract class AbstractBlock implements IBlock {
     type: BlockType;
     blocks: IBlock[];
     overlays: Overlay[];
+    /**
+     * This will keep track of the last couple of key-combinations entered. The main purpose
+     * is for triggering two-part bindings, such as 'CTRL-K, CTRL-D'.
+     */
+    inputBuffer: IKeyboardInput[];
     inputEvents: InputEvent[];
     inputActions: InputAction[];
     modes: string[];
@@ -18,6 +23,12 @@ export abstract class AbstractBlock implements IBlock {
     blockSchemas: IBlockPropertySchema[];
     container: HTMLDivElement;
     relation: Record<string, IBlock>;
+    /**
+     * A place to store data about the Block, especially the kind that may not be relevant to every instance
+     * of Block in every circumstance. For example, 'indentLevel: number' is relevant to a Block in a nested-list
+     * but not a chain of paragraph-like blocks. For now, this is a catch-all for Block data that hasn't yet been
+     * promoted to being a member of the class itself.
+     */
     metadata: Record<string, any>;
     commitHandler: (commit: Commit) => void;
     constructor(args: IAbstractBlockConstructor) {
@@ -34,6 +45,7 @@ export abstract class AbstractBlock implements IBlock {
         this.blocks=[];
         this.overlays = [];
         this.inputEvents = [];
+        this.inputBuffer = [];
         this.inputActions = [];
         
         this.modes = ["default"];
@@ -69,7 +81,12 @@ export abstract class AbstractBlock implements IBlock {
         this.overlays.push(overlay);
         return overlay;
     }
-    getKeyCode(name: string) {
+     setEvents(events: InputEvent[]){
+        this.inputEvents.push(...events);
+        const actions = events.map(x => x.action);
+        this.inputActions.push(...actions);
+    }
+    protected getKeyCode(name: string) {
         const code = KEYS[name].find(x => x.platform == Platform.Windows)?.code as number;
         return code;
     }

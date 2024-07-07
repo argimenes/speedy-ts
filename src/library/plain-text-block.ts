@@ -1,7 +1,7 @@
 import { AbstractBlock } from "./abstract-block";
 import { BlockManager } from "./block-manager";
 import { updateElement } from "./svg";
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IPlainTextBlockDto } from "./types";
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IPlainTextBlockDto, IBindingHandlerArgs, Caret, CaretAnchor } from "./types";
 
 export class PlainTextBlock extends AbstractBlock {
     text: string;
@@ -25,6 +25,36 @@ export class PlainTextBlock extends AbstractBlock {
         this.textarea.addEventListener("click", () => {
             (self.owner as BlockManager).setBlockFocus(self);
         });
+        this.textarea.addEventListener("keydown", this.handleKeyDown.bind(this));
+    }
+    getCaret() {
+        const sel = this.getSelection();
+        const { anchorNode } = sel;
+        const offset = sel.anchorOffset;
+        const toTheLeft = offset == 0;
+        const left = sel.anchorNode;
+        const right = sel.anchorNode?.nextSibling;
+        return { left, right } as CaretAnchor;
+    }
+    getSelection() {
+        const sel = window.getSelection() as Selection
+        return sel;
+    }
+    private handleKeyDown(e: KeyboardEvent) {
+        e.preventDefault();
+        const ALLOW = true, FORBID = false;
+        const input = this.toKeyboardInput(e);
+        const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
+        if (modifiers.some(x => x == input.key)) {
+            return ALLOW;
+        }
+        const match = this.getFirstMatchingInputEvent(input);
+        if (match) {
+            const args = { block: this, caret: this.getCaret(), selection: this.getSelection() } as any;
+            match.action.handler(args);
+            return FORBID;
+        }
+        return ALLOW;
     }
     bind(text: string) {
         this.textarea.value = text;

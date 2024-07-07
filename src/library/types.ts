@@ -74,6 +74,12 @@ export interface IBlockPropertyConstructor {
 export interface IBindingHandlerArgs {
     block: IBlock;
     caret: Caret;
+    allowPassthrough?: () => void;
+}
+export interface IPlainTextBindingHandlerArgs {
+    block: IBlock;
+    caret: CaretAnchor;
+    allowPassthrough?: () => void;
 }
 export type BindingHandler = (args: IBindingHandlerArgs) => void;
 export type BlockBindingHandler = (block: BlockProperty) => void;
@@ -169,6 +175,10 @@ export enum PointerDirection {
 }
 export interface IBlockManager extends IBlock {
 
+}
+export type CaretAnchor = {
+    left?: Node;
+    right?: Node;
 }
 export type Caret = {
     left?: Cell;

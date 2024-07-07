@@ -133,6 +133,25 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         return ALLOW;
     }
+    getPlainTextInputEvents():InputEvent[] {
+        const self = this;
+        return [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "ArrowDown"
+                },
+                action: {
+                    name: "Set focus to the block below.",
+                    description: "",
+                    handler: (args) => {
+                        if (args.allowPassthrough) args.allowPassthrough();
+                    }
+                }
+            },
+        ]
+    }
     getGlobalInputEvents():InputEvent[] {
         const self = this;
         return [
@@ -2174,12 +2193,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     createPlainTextBlock(dto?: IPlainTextBlockDto) {
         const blockSchemas = this.getBlockSchemas();
+        const events = this.getPlainTextInputEvents();
         const block = new PlainTextBlock({
             owner: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
+        block.setEvents(events);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.blocks.push(block);
