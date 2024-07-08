@@ -16,8 +16,9 @@ import { AbstractBlock } from "./abstract-block";
 import { BlockProperty } from "./block-property";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { StandoffProperty } from "./standoff-property";
-import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto } from "./types";
+import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto } from "./types";
 import { PlainTextBlock } from "./plain-text-block";
+import { CodeMirrorBlock } from "./code-mirror-block";
 
 export class BlockManager extends AbstractBlock implements IBlockManager {
     id: string;
@@ -1774,6 +1775,22 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(rightMargin.container);
         return rightMargin;
     }
+    buildCodeMirrorBlock(container: HTMLDivElement, blockDto: ICodeMirrorBlockDto) {
+        const self = this;
+        const cm = this.createCodeMirrorBlock(blockDto);
+        if (blockDto.children) {
+            blockDto.children.forEach((b,i) => {
+                let child = self.recursivelyBuildBlock(cm.container, b) as IBlock;
+                cm.blocks.push(child);
+            });
+        }
+        if (blockDto.text)  {
+            cm.bind(blockDto.text);
+        }
+        this.addParentSiblingRelations(cm);
+        container.appendChild(cm.container);
+        return cm;
+    }
     buildPlainTextBlock(container: HTMLDivElement, blockDto: IPlainTextBlockDto) {
         const self = this;
         const plainText = this.createPlainTextBlock(blockDto);
@@ -1983,6 +2000,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         if (blockDto.type == BlockType.PlainTextBlock) {
             return this.buildPlainTextBlock(container, blockDto as IPlainTextBlockDto);
+        }
+        if (blockDto.type == BlockType.CodeMirrorBlock) {
+            return this.buildCodeMirrorBlock(container, blockDto as ICodeMirrorBlockDto);
         }
         if (blockDto.type == BlockType.TabBlock) {
             return this.buildTabBlock(container, blockDto);
@@ -2703,6 +2723,21 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             this.setBlockFocus(uncle);
             return;
         }
+    }
+    addCodeMirrorBlock(sibling: IBlock) {
+        const parent = this.getParent(sibling) as AbstractBlock;
+        const cm = this.createCodeMirrorBlock();
+        this.addParentSiblingRelations(parent);
+        this.addNextBlock(cm, sibling);
+        this.setBlockFocus(cm);
+        return cm;
+    }
+    createCodeMirrorBlock(dto?: ICodeMirrorBlockDto) {
+        const block = new CodeMirrorBlock({
+            type: BlockType.CodeMirrorBlock,
+            text: dto?.text || ""
+        });
+        return block;
     }
     private uncreateStandoffEditorBlock(id: GUID) {
         const block = this.getBlock(id) as IBlock;

@@ -81,6 +81,10 @@
   .active {
     display: inline;
   }
+  .tab {
+    border: 1px solid #ccc;
+    box-shadow: 5px 5px 5px #666;
+  }
   .tab-label {
     display: inline;
     color: #333;

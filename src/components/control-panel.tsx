@@ -49,6 +49,11 @@ export const ControlPanel : Component<Props> = (props) => {
         e.preventDefault();
         await load([model.file]);
     }
+    const createCodeMirrorBlock = () => {
+        const block = props.manager?.getBlockInFocus();
+        if (!block) return;
+        props.manager?.addCodeMirrorBlock(block);
+    }
     const createDocument = () => {
         if (!props.manager) return;
         const doc = {
@@ -204,6 +209,7 @@ export const ControlPanel : Component<Props> = (props) => {
             // case "expand": expand(); return;
             case "swap": swapGridCells(); return;
             case "new-doc": createDocument(); return;
+            case "cm": createCodeMirrorBlock(); return;
             case "set-tab-name": setTabName(parameters[0]); return;
             case "add-tab": addTab(parameters[0]); return;
             case "multicols": setMultiColumns(parameters[0]); return;

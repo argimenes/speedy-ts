@@ -1,4 +1,5 @@
 
+import { classList } from "solid-js/web";
 import { AbstractBlock } from "./abstract-block";
 import { updateElement } from "./svg";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "./types";
@@ -86,9 +87,7 @@ export class TabBlock extends AbstractBlock {
     setActive() {
         this.isActive = true;
         updateElement(this.container, {
-            style: {
-                border: "1px solid #ccc"
-            }
+            classList: ["tab"]
         });
         this.panel.classList.add("active");
     }

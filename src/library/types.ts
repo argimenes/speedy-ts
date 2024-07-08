@@ -36,7 +36,8 @@ export enum BlockType {
     RightMarginBlock = "right-margin-block",
     ImageBlock = "image-block",
     VideoBlock = "video-block",
-    PlainTextBlock = "plain-text-block"
+    PlainTextBlock = "plain-text-block",
+    CodeMirrorBlock = "code-mirror-block"
 }
 export interface IBlock {
     id: GUID;
@@ -130,6 +131,9 @@ export interface IBlockDto {
     blockProperties?: BlockPropertyDto[];
 }
 export interface IPlainTextBlockDto extends IBlockDto {
+    text: string;
+}
+export interface ICodeMirrorBlockDto extends IBlockDto {
     text: string;
 }
 export interface IMainListBlockDto extends IBlockDto {}
