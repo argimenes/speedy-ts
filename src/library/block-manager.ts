@@ -145,8 +145,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 action: {
                     name: "Set focus to the block below.",
                     description: "",
-                    handler: (args) => {
-                        if (args.allowPassthrough) args.allowPassthrough();
+                    handler: (args: any) => {
+                        const { characterIndex, textLength, allowPassthrough } = args;
+                        if (characterIndex.start >= textLength - 10) {
+                            self.moveCaretDown(args);
+                            return;
+                        }
+                        allowPassthrough && allowPassthrough();
                     }
                 }
             },

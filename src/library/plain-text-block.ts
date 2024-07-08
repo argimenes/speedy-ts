@@ -1,5 +1,6 @@
 import { AbstractBlock } from "./abstract-block";
 import { BlockManager } from "./block-manager";
+import { getCursorPos } from "./keyboard";
 import { updateElement } from "./svg";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IPlainTextBlockDto, IBindingHandlerArgs, Caret, CaretAnchor } from "./types";
 
@@ -27,21 +28,11 @@ export class PlainTextBlock extends AbstractBlock {
         });
         this.textarea.addEventListener("keydown", this.handleKeyDown.bind(this));
     }
-    getCaret() {
-        const sel = this.getSelection();
-        const { anchorNode } = sel;
-        const offset = sel.anchorOffset;
-        const toTheLeft = offset == 0;
-        const left = sel.anchorNode;
-        const right = sel.anchorNode?.nextSibling;
-        return { left, right } as CaretAnchor;
-    }
     getSelection() {
         const sel = window.getSelection() as Selection
         return sel;
     }
     private handleKeyDown(e: KeyboardEvent) {
-        e.preventDefault();
         const ALLOW = true, FORBID = false;
         const input = this.toKeyboardInput(e);
         const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
@@ -50,9 +41,22 @@ export class PlainTextBlock extends AbstractBlock {
         }
         const match = this.getFirstMatchingInputEvent(input);
         if (match) {
-            const args = { block: this, caret: this.getCaret(), selection: this.getSelection() } as any;
+            let passthrough = false;
+            const characterIndex = getCursorPos(this.textarea);
+            const selection = this.getSelection();
+            const textLength = this.textarea.value?.length;
+            const args = {
+                block: this,
+                characterIndex,
+                textLength,
+                selection,
+                allowPassthrough: () => passthrough = true
+            } as any;
             match.action.handler(args);
-            return FORBID;
+            if (!passthrough) {
+                e.preventDefault();
+                return FORBID;
+            }
         }
         return ALLOW;
     }
