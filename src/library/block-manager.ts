@@ -2322,6 +2322,40 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.blocks.push(block);
         return block;
     }
+    randomIntFromInterval(min: number, max: number) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+    getRandomIpsum() {
+        const lines = [
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut tempor velit a leo euismod sagittis. Vivamus ullamcorper eu ex sollicitudin sollicitudin. Aliquam erat volutpat. Ut eu felis at dolor facilisis maximus. Ut ac hendrerit erat. Suspendisse auctor mi sapien. Aliquam risus arcu, sollicitudin a urna sit amet, ultrices dapibus sem. Sed eleifend facilisis dolor, in feugiat metus interdum sit amet.",
+            "Proin id massa nibh. Aliquam consectetur nisl quis hendrerit vestibulum. Phasellus urna sapien, ultrices at turpis at, aliquam finibus justo. Sed id dui arcu. Donec id mauris lectus. Quisque nunc sapien, maximus nec diam vitae, viverra vestibulum lacus. Quisque elementum metus in condimentum eleifend. Vestibulum et ante non libero posuere consectetur. Pellentesque metus lorem, suscipit nec est in, condimentum tincidunt purus. Praesent in justo facilisis, finibus mauris nec, ultricies turpis.",
+            "Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Maecenas in felis ac ex laoreet lobortis vitae eget velit. Morbi condimentum lorem eu hendrerit mattis. Curabitur ut nibh tincidunt, tincidunt justo sit amet, convallis lectus. Donec ultricies purus et faucibus luctus. Donec tristique libero turpis, eget faucibus nibh faucibus eget. Nulla sed finibus dolor. Duis vitae consequat arcu. Integer aliquam finibus accumsan.",
+            "Phasellus pretium elementum ipsum quis aliquam. Maecenas nisl lorem, hendrerit nec ultricies a, porta a tellus. Donec venenatis pellentesque ante ut laoreet. Phasellus velit metus, convallis eget bibendum quis, tempus vitae velit. Etiam scelerisque aliquam felis quis molestie. Nunc euismod, nulla non pharetra dapibus, lectus magna suscipit sem, vitae efficitur libero ante sit amet nisi. Suspendisse et nunc non lacus vehicula vestibulum.",
+            "Quisque augue nunc, fringilla ac ante vel, elementum tincidunt dui. Nullam tempor augue vel dapibus bibendum. Duis id eros in ante euismod fringilla nec eu sapien. Nulla facilisi. Nulla quis molestie massa, a elementum sem. Ut malesuada eros non maximus consectetur. Pellentesque at tellus sem. Aliquam facilisis maximus interdum. Proin sollicitudin dapibus magna, interdum laoreet justo."
+        ];
+        const i = this.randomIntFromInterval(0, lines.length - 1);
+        return lines[i];
+    }
+    testLoadDocument(rows: number) {
+        const nextDoc: IBlockDto = {
+            type: BlockType.MainListBlock,
+            children: []
+        };
+        for (let i = 0; i < rows; i++) {
+            const tb = {
+                type: BlockType.StandoffEditorBlock,
+                text: this.getRandomIpsum(),
+                standoffProperties: [
+                    { type: "style/italics", start: 20, end: 30 },
+                    { type: "style/bold", start: 25, end: 35 },
+                    { type: "codex/entity-reference", start: 27, end: 37 },
+                    { type: "codex/block-reference", start: 19, end: 29 },
+                ]
+            };
+            nextDoc.children?.push(tb);
+        }
+        this.loadDocument(nextDoc);
+    }
     addImageBlock(sibling: IBlock, url: string) {
         const image = this.createImageBlock({
             type: BlockType.ImageBlock,
