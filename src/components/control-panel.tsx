@@ -5,7 +5,7 @@ import { GridBlock, GridCellBlock } from "../library/grid-block";
 import { TabBlock, TabRowBlock } from "../library/tabs-block";
 import { IndentedListBlock } from "../library/indented-list-block";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
-import { BlockType, CARET } from "../library/types";
+import { BlockType, CARET, IBlock } from "../library/types";
 
 type Model = {
     command: string;
@@ -161,8 +161,8 @@ export const ControlPanel : Component<Props> = (props) => {
         block.expand();
     }
     const swapGridCells = () => {
-        const block = props.manager?.getBlockInFocus() as StandoffEditorBlock;
-        if (block?.type != BlockType.StandoffEditorBlock) return;
+        const block = props.manager?.getBlockInFocus() as IBlock;
+        if (!block) return;
         const row = props.manager?.getParentOfType(block, BlockType.GridRowBlock);
         if (!row) return;
         const len = row.blocks.length;
