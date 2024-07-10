@@ -186,6 +186,9 @@ export const ControlPanel : Component<Props> = (props) => {
         const block = props.manager?.getBlockInFocus();
         props.manager?.setMultiColumns(block!.id, parseInt(cols));
     }
+    const testLoadDocument =(rows: string) => {
+        props.manager?.testLoadDocument(parseInt(rows));
+    }
     const runCommand = async () => {
         if (!model.command) {
             return;
@@ -215,6 +218,7 @@ export const ControlPanel : Component<Props> = (props) => {
             case "multicols": setMultiColumns(parameters[0]); return;
             case "draw-leader-lines": drawLeaderLines(parameters[0] || "", parameters[1] || ""); return;
             case "clear-leader-lines": clearLeaderLines(); return;
+            case "test-load-doc": testLoadDocument(parameters[0]); return;
             default: break;
         }
     }
