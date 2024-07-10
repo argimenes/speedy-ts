@@ -423,6 +423,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             console.log("insertTextAtIndex", { text, index, cells: this.cells, caret });
         }
         this.setCaret(index + 1);
+        this.publishOnTextChanged();
         this.commit({
             redo: {
                 id: this.id,
@@ -436,6 +437,12 @@ export class StandoffEditorBlock extends AbstractBlock {
             }
         });
         return cells;
+    }
+    publishOnTextChanged() {
+        const event = this.inputEvents.find(x => x.trigger.match == "onTextChanged");
+        if (!event) return;
+        const caret = this.getCaret() as Caret;
+        event.action.handler({ block: this, caret });
     }
     private insertElementsBefore(anchor: HTMLElement, elements: HTMLElement[]) {
         const frag = document.createDocumentFragment();
@@ -876,6 +883,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         if (updateCaret) {
             this.setCaret(index);
         }
+        this.publishOnTextChanged();
         this.commit({
             redo: {
                 id: this.id,

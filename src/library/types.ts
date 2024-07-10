@@ -220,7 +220,8 @@ export interface IAbstractBlockConstructor {
 }
 export enum InputEventSource {
     Keyboard,
-    Mouse
+    Mouse,
+    Custom
 }
 export type Command = {
     id: GUID;

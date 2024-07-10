@@ -18,6 +18,7 @@ import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelecti
 import { PlainTextBlock } from "./plain-text-block";
 import { CodeMirrorBlock } from "./code-mirror-block";
 import { ClockPlugin } from "./plugins/clock";
+import { TextProcessor } from "./text-processor";
 
 export class BlockManager extends AbstractBlock implements IBlockManager {
     id: string;
@@ -55,7 +56,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.inputActions = [];
         this.modes = ["global"];
         this.plugins = [];
-        this.leaderLines = [];
         this.attachEventBindings();
     }
     deserialize(json: any): IBlock {
@@ -500,6 +500,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     getEditorEvents() {
         const events: InputEvent[] = [
+            
             {
                 mode: "default",
                 trigger: {
@@ -2364,6 +2365,25 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setEvents(standoffEvents);
         block.setEvents(editorEvents);
         block.setCommitHandler(this.storeCommit.bind(this));
+        const textProcessor = new TextProcessor({ editor: block });
+        const custom = [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Custom,
+                    match: "onTextChanged"
+                },
+                action: {
+                    name: "",
+                    description: "",
+                    handler: (args: IBindingHandlerArgs) => {
+                        console.log("onTextChanged", { args });
+                        textProcessor.process(args);
+                    }
+                }
+            }
+        ];
+        block.setEvents(custom);
         if (dto?.metadata) block.metadata = dto.metadata;
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
