@@ -10,8 +10,6 @@ import { VideoBlock } from "./video-block";
 import { IframeBlock } from "./iframe-block";
 import { Cell } from "./cell";
 import _ from "underscore";
-import LeaderLine from 'leader-line-new';
-import { ClockPlugin, IPlugin } from "./plugins/clock";
 import { AbstractBlock } from "./abstract-block";
 import { BlockProperty } from "./block-property";
 import { StandoffEditorBlock } from "./standoff-editor-block";
@@ -19,6 +17,7 @@ import { StandoffProperty } from "./standoff-property";
 import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto } from "./types";
 import { PlainTextBlock } from "./plain-text-block";
 import { CodeMirrorBlock } from "./code-mirror-block";
+import { ClockPlugin } from "./plugins/clock";
 
 export class BlockManager extends AbstractBlock implements IBlockManager {
     id: string;
@@ -37,7 +36,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     direction: PointerDirection;
     blockProperties: BlockProperty[];
     blockSchemas: IBlockPropertySchema[];
-    leaderLines: LeaderLine[];
     plugins: IPlugin[];
     constructor(props?: IBlockManagerConstructor) {
         super({ id: props?.id, container: props?.container });
@@ -70,7 +68,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.blockProperties = [];
         this.blockSchemas = [];
         this.modes = [];
-        this.leaderLines = [];
         this.selections = [];
         this.container.remove();
     }
@@ -85,38 +82,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             self.handleKeyDown(e);
             return ALLOW;
         });
-    }
-    clearLeaderLines() {
-        this.leaderLines.forEach(l => { 
-            updateElement(l.start as HTMLElement, {
-                style: {
-                    border: "none"
-                }
-            })
-            l.remove();
-        });
-    }
-    drawLeaderLines(relation?: string, colour?: string) {
-        const self = this;
-        
-        this.blocks.forEach(b => {
-            for (let n in b.relation) {
-                if (relation) {
-                    if (n != relation) continue;
-                }
-                let target = b.relation[n];
-                updateElement(b.container, {
-                    style: {
-                        border: "1px solid " + (colour || "orange")
-                    }
-                });
-                self.leaderLines.push(new LeaderLine(
-                    b.container,
-                    target.container,
-                    {endLabel: LeaderLine.pathLabel(n), color: (colour || "orange")}
-                ));     
-            }
-        })
     }
     private handleKeyDown(e: KeyboardEvent) {
         e.preventDefault();
