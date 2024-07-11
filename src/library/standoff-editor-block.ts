@@ -411,7 +411,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         const right = this.cells[index];
         const left = right.previous;
         const anchor = left || right;
-        const cells = text.split('').map(c => new Cell({ text: c, block: this }));
+        const cells = [...text].map(c => new Cell({ text: c, block: this }));
         this.applyStylingAndRenderingToNewCells(anchor, cells);
         this.knitCells(left, cells, right);
         this.insertIntoCellArrayBefore(index, cells);
