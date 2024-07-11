@@ -594,13 +594,16 @@ export class StandoffEditorBlock extends AbstractBlock {
     }
     private toCells(text: string) {
         if (!text) return [] as Cell[];
-        const len = text.length;
+        const chars = [...text];
+        const len = chars.length;
         const cells: Cell[] = [];
+        
         for (let i = 0; i < len; i ++) {
-            let cell = new Cell({ text: text[i], block: this });
+            let cell = new Cell({ text: chars[i], block: this });
             cells.push(cell);
         }
-        const lastCode = text.charCodeAt(len-1);
+        const lastChar = chars[len-1];
+        const lastCode = lastChar.charCodeAt(0);
         if (lastCode != 13) {
             const eol = new Cell({ text: String.fromCharCode(13), block: this });
             eol.isEOL = true;
