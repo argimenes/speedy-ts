@@ -1353,6 +1353,33 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const self = this;
         return [
             {
+                type: "cell/micro-document",
+                name: "Cell-sized document",
+                description: "",
+                event: {
+                    onInit: async (p:StandoffProperty) => {
+                        const manager = new BlockManager();
+                        const container = p.start.element as HTMLSpanElement;
+                        updateElement(container, {
+                            style: {
+                                display: "inline-block",
+                                zoom: 0.08,
+                                "overflow": "hidden"
+                            }
+                        });
+                        await manager.loadServerDocument(p.value);
+                        container.innerHTML = "";
+                        updateElement(manager.container, {
+                            style: {
+                                maxWidth: p.start.cache.offset.w,
+                                maxHeight: p.start.cache.offset.h
+                            }
+                        });
+                        container.appendChild(manager.container);
+                    }
+                }
+            },
+            {
                 type: "animation/clock",
                 name: "Clock",
                 description: "",

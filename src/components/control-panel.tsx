@@ -5,7 +5,7 @@ import { GridBlock, GridCellBlock } from "../library/grid-block";
 import { TabBlock, TabRowBlock } from "../library/tabs-block";
 import { IndentedListBlock } from "../library/indented-list-block";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
-import { BlockType, CARET, IBlock } from "../library/types";
+import { BlockType, CARET, IBlock, IRange } from "../library/types";
 
 type Model = {
     command: string;
@@ -28,6 +28,22 @@ export const ControlPanel : Component<Props> = (props) => {
     const onSubmit = (e:Event) => {
         e.preventDefault();
         runCommand();
+    }
+    const loadMicroDocument = async (parameters: string[]) => {
+        if (!props.manager) return;
+        const filename = parameters && parameters[0] || model.file;
+        const block = props.manager.getBlockInFocus() as StandoffEditorBlock;
+        if (block?.type != BlockType.StandoffEditorBlock) return;
+        const lastCaret = block.lastCaret;
+        const prop = {
+            type: "cell/micro-document",
+            start: lastCaret.index,
+            end: lastCaret.index,
+            value: filename
+        };
+        block.addStandoffPropertiesDto([prop]);
+        block.applyBlockPropertyStyling();
+        block.setCaret(lastCaret.index, CARET.LEFT);
     }
     const load = async (parameters: string[]) => {
         if (!props.manager) return;
@@ -174,14 +190,6 @@ export const ControlPanel : Component<Props> = (props) => {
         const right = row.blocks[ci + 1] as GridCellBlock;
         props.manager?.swapCells(left, right);
     }
-    const drawLeaderLines = (relation?: string, colour?: string) => {
-        const block = props.manager?.getBlockInFocus();
-        props.manager?.drawLeaderLines(relation, colour);
-    }
-    const clearLeaderLines = () => {
-        const block = props.manager?.getBlockInFocus();
-        props.manager?.clearLeaderLines();
-    }
     const setMultiColumns = (cols: string) => {
         const block = props.manager?.getBlockInFocus();
         props.manager?.setMultiColumns(block!.id, parseInt(cols));
@@ -216,9 +224,8 @@ export const ControlPanel : Component<Props> = (props) => {
             case "set-tab-name": setTabName(parameters[0]); return;
             case "add-tab": addTab(parameters[0]); return;
             case "multicols": setMultiColumns(parameters[0]); return;
-            case "draw-leader-lines": drawLeaderLines(parameters[0] || "", parameters[1] || ""); return;
-            case "clear-leader-lines": clearLeaderLines(); return;
             case "test-load-doc": testLoadDocument(parameters[0]); return;
+            case "load-micro-doc": await loadMicroDocument(parameters); return;
             default: break;
         }
     }

@@ -41,21 +41,24 @@ export enum BlockType {
 }
 export interface IBlock {
     id: GUID;
-    owner?: IBlock;
+    owner?: IBlock; // parent
     type: BlockType;
-    blockProperties: BlockProperty[];
-    addBlockProperties: (props: BlockPropertyDto[]) => void;
     blocks: IBlock[];
-    //updateView: () => void;
-    getBlock: (id: GUID) => IBlock;
-    container: HTMLDivElement;
+    blockProperties: BlockProperty[];
     relation: Record<string, IBlock>;
     metadata: Record<string, any>;
-    setFocus(): void;
+
+    container: HTMLDivElement; // rendering system
+
     serialize(): IBlockDto;
     deserialize(json: any|any[]): IBlock;
-    applyBlockPropertyStyling(): void;
     destroy(): void;
+    setFocus(): void;
+
+    addBlockProperties: (props: BlockPropertyDto[]) => void;
+    //updateView: () => void;
+    getBlock: (id: GUID) => IBlock;
+    applyBlockPropertyStyling(): void;
 }
 
 export interface IBlockRelation {
@@ -305,6 +308,7 @@ export interface IStandoffPropertyConstructor {
     type: string,
     start: Cell,
     end: Cell,
+    value?: string;
     block: StandoffEditorBlock,
     schema: IStandoffPropertySchema
 }

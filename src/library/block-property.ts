@@ -33,7 +33,7 @@ export class BlockProperty {
     }
     applyStyling() {
         const schema = this.schema;
-        if (schema?.decorate?.blockClass) {
+        if (!this.styled && schema?.decorate?.blockClass) {
             this.block.container.classList.add(schema.decorate.blockClass);
             this.styled = true;
         }

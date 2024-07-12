@@ -5,7 +5,7 @@ import { StandoffProperty } from "./standoff-property";
 import { AbstractBlock } from "./abstract-block";
 import { Cell, Row } from "./cell";
 import { KEYS } from "./keyboard";
-import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition } from "./types";
+import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto } from "./types";
 
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     const map = new Map();
@@ -50,7 +50,10 @@ export class StandoffEditorBlock extends AbstractBlock {
      * 'container' should be absolutely positioned. Such generated elements will be drawn/undrawn when the StandoffProperty
      * is rendered, and when anything affects the alignment of cells in those properties, such as adding or removing text.
      */
-    
+    lastCaret: {
+        index: number,
+        offset: CARET;
+    };
     wrapper: HTMLDivElement;
     constructor(args: IStandoffEditorBlockConstructor) {
         super(args);
@@ -69,7 +72,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         });
         
         this.container.appendChild(this.wrapper);
-        
+        this.lastCaret = { index: 0, offset: CARET.LEFT };
         this.cache = {
             previousOffset: {
                 x: 0, y: 0, h: 0, w: 0
@@ -169,6 +172,13 @@ export class StandoffEditorBlock extends AbstractBlock {
     handleClickEvent(e: MouseEvent) {
         const mouseEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Mouse);
         const found = mouseEvents.find(x => x.trigger.match == "click");
+        const caret = this.getCaret();
+        if (caret) {
+            this.lastCaret = {
+                index: caret.right.index,
+                offset: CARET.LEFT
+            }
+        }
         if (found) {
             found.action.handler({
                 block: this,
@@ -510,6 +520,22 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.bind(json as IStandoffEditorBlockDto);
         return this;
     }
+    addStandoffPropertiesDto(props: StandoffPropertyDto[], cells?: Cell[]) {
+        cells = cells || this.cells;
+        const self = this;
+        const properties = props.map(p => {
+            const start = cells[p.start];
+            const end = cells[p.end];
+            const schema = this.schemas.find(x => x.type == p.type) as IStandoffPropertySchema;
+            if (!schema) {
+                console.log("Schema not found for the standoff property type.", { p });
+                // Need to handle this properly ... can't just return early in a map().
+            }
+            const sproc = new StandoffProperty({ type: p.type, block: self, start, end, schema, value: p.value });
+            return sproc;
+        });
+        this.standoffProperties.push(...properties);
+    }
     bind(block: IStandoffEditorBlockDto) {
         const self = this;
         if (this.wrapper) this.wrapper.innerHTML = "";
@@ -523,8 +549,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                     console.log("Schema not found for the standoff property type.", { p });
                     // Need to handle this properly ... can't just return early in a map().
                 }
-                const sproc = new StandoffProperty({ type: p.type, block: self, start, end, schema });
-                sproc.value = p.value as string;
+                const sproc = new StandoffProperty({ type: p.type, block: self, start, end, schema, value: p.value });
                 return sproc;
             });
         }
@@ -628,6 +653,7 @@ export class StandoffEditorBlock extends AbstractBlock {
          */
         console.log("setCaret", { index, offset });
         offset = offset || CARET.LEFT;
+        this.lastCaret = { index, offset: offset };
         const cell = this.cells[index];
         const textNode = cell.getTextNode();
         const selection = document.getSelection() as Selection;

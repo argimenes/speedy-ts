@@ -19,7 +19,7 @@ export class StandoffProperty {
     bracket: { left?: HTMLElement; right?: HTMLElement };
     styled: boolean;
     wrapper?: CellHtmlElement;
-    constructor({ type, start, end, block, id, schema }: IStandoffPropertyConstructor) {
+    constructor({ type, start, end, block, id, schema, value }: IStandoffPropertyConstructor) {
         this.id = id || uuidv4();
         this.isDeleted = false;
         this.type = type;
@@ -27,7 +27,7 @@ export class StandoffProperty {
         this.end = end;
         this.schema = schema;
         this.metadata = {};
-        this.value = "";
+        this.value = value;
         this.block = block;
         this.cache = {};
         this.styled = false;
@@ -37,14 +37,14 @@ export class StandoffProperty {
         };
         this.onInit();
     }
-    onInit() {
+    async onInit() {
         if (this.schema?.event?.onInit) {
-            this.schema?.event?.onInit(this);
+            await this.schema?.event?.onInit(this);
         }
     }
-    onDestroy() {
+    async onDestroy() {
         if (this.schema?.event?.onDestroy) {
-            this.schema?.event?.onDestroy(this);
+            await this.schema?.event?.onDestroy(this);
         }
     }
     destroy() {
