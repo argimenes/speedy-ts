@@ -14,11 +14,12 @@ import { AbstractBlock } from "./abstract-block";
 import { BlockProperty } from "./block-property";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { StandoffProperty } from "./standoff-property";
-import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto } from "./types";
+import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto } from "./types";
 import { PlainTextBlock } from "./plain-text-block";
 import { CodeMirrorBlock } from "./code-mirror-block";
 import { ClockPlugin } from "./plugins/clock";
 import { TextProcessor } from "./text-processor";
+import { EmbedDocumentBlock } from "./embed-document-block";
 
 export class BlockManager extends AbstractBlock implements IBlockManager {
     id: string;
@@ -1712,23 +1713,23 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         }
     }
-    buildStandoffEditorBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildStandoffEditorBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
         const textBlock = this.createStandoffEditorBlock();
         textBlock.bind(blockDto as IStandoffEditorBlockDto);
         if (blockDto.relation?.leftMargin) {
-            const leftMargin = this.recursivelyBuildBlock(textBlock.container, blockDto.relation.leftMargin) as LeftMarginBlock;
+            const leftMargin = await this.recursivelyBuildBlock(textBlock.container, blockDto.relation.leftMargin) as LeftMarginBlock;
             textBlock.relation.leftMargin = leftMargin;
             this.stageLeftMarginBlock(leftMargin, textBlock);
         }
         if (blockDto.relation?.rightMargin) {
-            const rightMargin = this.recursivelyBuildBlock(textBlock.container, blockDto.relation.rightMargin) as RightMarginBlock;
+            const rightMargin = await this.recursivelyBuildBlock(textBlock.container, blockDto.relation.rightMargin) as RightMarginBlock;
             textBlock.relation.rightMargin = rightMargin;
             this.stageRightMarginBlock(rightMargin, textBlock);
         }
         if (blockDto.children) {
-            blockDto.children.forEach((b,i) => {
-                let block = self.recursivelyBuildBlock(textBlock.container, b) as IBlock;
+            blockDto.children.forEach(async (b,i) => {
+                let block = await self.recursivelyBuildBlock(textBlock.container, b) as IBlock;
                 textBlock.blocks.push(block);
             });
         }
@@ -1736,12 +1737,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(textBlock.container);
         return textBlock;
     }
-    buildLeftMarginBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildLeftMarginBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
         const leftMargin = this.createLeftMarginBlock(blockDto);
         if (blockDto.children) {
-            blockDto.children.forEach((b,i) => { 
-                let block = self.recursivelyBuildBlock(leftMargin.container, b) as IBlock;
+            blockDto.children.forEach(async (b,i) => { 
+                let block = await self.recursivelyBuildBlock(leftMargin.container, b) as IBlock;
                 leftMargin.blocks.push(block);
             });
         }
@@ -1749,13 +1750,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(leftMargin.container);
         return leftMargin;
     }
-    buildImageBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildImageBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
         const image = this.createImageBlock(blockDto);
         image.build();
         if (blockDto.children) {
-            blockDto.children.forEach((b,i) => { 
-                let block = self.recursivelyBuildBlock(image.container, b) as IBlock;
+            blockDto.children.forEach(async (b,i) => { 
+                let block = await self.recursivelyBuildBlock(image.container, b) as IBlock;
                 image.blocks.push(block);
             });
         }
@@ -1763,12 +1764,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(image.container);
         return image;
     }
-    buildRightMarginBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildRightMarginBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
         const rightMargin = this.createRightMarginBlock(blockDto);
         if (blockDto.children) {
-            blockDto.children.forEach((b,i) => { 
-                let block = self.recursivelyBuildBlock(rightMargin.container, b) as IBlock;
+            blockDto.children.forEach(async (b,i) => { 
+                let block = await self.recursivelyBuildBlock(rightMargin.container, b) as IBlock;
                 rightMargin.blocks.push(block);
             });
         }
@@ -1776,12 +1777,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(rightMargin.container);
         return rightMargin;
     }
-    buildCodeMirrorBlock(container: HTMLDivElement, blockDto: ICodeMirrorBlockDto) {
+    async buildCodeMirrorBlock(container: HTMLDivElement, blockDto: ICodeMirrorBlockDto) {
         const self = this;
         const cm = this.createCodeMirrorBlock(blockDto);
         if (blockDto.children) {
-            blockDto.children.forEach((b,i) => {
-                let child = self.recursivelyBuildBlock(cm.container, b) as IBlock;
+            blockDto.children.forEach(async (b,i) => {
+                let child = await self.recursivelyBuildBlock(cm.container, b) as IBlock;
                 cm.blocks.push(child);
             });
         }
@@ -1792,12 +1793,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(cm.container);
         return cm;
     }
-    buildPlainTextBlock(container: HTMLDivElement, blockDto: IPlainTextBlockDto) {
+    async buildPlainTextBlock(container: HTMLDivElement, blockDto: IPlainTextBlockDto) {
         const self = this;
         const plainText = this.createPlainTextBlock(blockDto);
         if (blockDto.children) {
-            blockDto.children.forEach((b,i) => {
-                let rowBlock = self.recursivelyBuildBlock(plainText.container, b) as GridRowBlock;
+            blockDto.children.forEach(async (b,i) => {
+                let rowBlock = await self.recursivelyBuildBlock(plainText.container, b) as GridRowBlock;
                 plainText.blocks.push(rowBlock);
             });
         }
@@ -1808,12 +1809,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(plainText.container);
         return plainText;
     }
-    buildGridBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildGridBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
         const gridBlock = this.createGridBlock();
         if (blockDto.children) {
-            blockDto.children.forEach((b,i) => {
-                let rowBlock = self.recursivelyBuildBlock(gridBlock.container, b) as GridRowBlock;
+            blockDto.children.forEach(async (b,i) => {
+                let rowBlock = await self.recursivelyBuildBlock(gridBlock.container, b) as GridRowBlock;
                 gridBlock.blocks.push(rowBlock);
             });
         }
@@ -1825,8 +1826,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const self = this;
         const rowBlock = this.createGridRowBlock();
         if (blockDto.children) {
-            blockDto.children.forEach((b,i) => {
-                let cellBlock = self.recursivelyBuildBlock(rowBlock.container, b) as GridCellBlock;
+            blockDto.children.forEach(async (b,i) => {
+                let cellBlock = await self.recursivelyBuildBlock(rowBlock.container, b) as GridCellBlock;
                 if (b.metadata?.width) {
                     updateElement(cellBlock.container, {
                         style: {
@@ -1845,8 +1846,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const self = this;
         const cellBlock = this.createGridCellBlock(blockDto);
         if (blockDto.children) {
-            blockDto.children.forEach((b,i) => {
-                let block = self.recursivelyBuildBlock(cellBlock.container, b) as IBlock;
+            blockDto.children.forEach(async (b,i) => {
+                let block = await self.recursivelyBuildBlock(cellBlock.container, b) as IBlock;
                 cellBlock.blocks.push(block);
             });
         }
@@ -1854,12 +1855,38 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(cellBlock.container);
         return cellBlock;
     }
-    buildVideoBlock(container: HTMLDivElement, blockDto: IBlockDto){
+    async buildEmbedDocumentBlock(container: HTMLDivElement, blockDto: IEmbedDocumentBlockDto){
+        const self = this;
+        const embed = this.createEmbedDocumentBlock(blockDto);
+        if (blockDto.children) {
+            blockDto.children.forEach(async (b,i) => {
+                let block = await self.recursivelyBuildBlock(embed.container, b) as IBlock;
+                embed.blocks.push(block);
+            });
+        }
+        embed.filename = blockDto.filename;
+        if (embed.filename) {
+            const manager = new BlockManager();
+            await manager.loadServerDocument(embed.filename);
+            embed.container.appendChild(manager.container);
+            updateElement(embed.container, {
+                style: {
+                    zoom: 0.5,
+                    "overflow-x": "hidden",
+                    "overflow-y": "scroll"
+                }
+            })
+        }
+        this.addParentSiblingRelations(embed);
+        container.appendChild(embed.container);
+        return embed;
+    }
+    async buildVideoBlock(container: HTMLDivElement, blockDto: IBlockDto){
         const self = this;
         const video = this.createVideoBlock(blockDto);
         if (blockDto.children) {
-            blockDto.children.forEach((b,i) => {
-                let tabBlock = self.recursivelyBuildBlock(video.container, b) as TabBlock;
+            blockDto.children.forEach(async (b,i) => {
+                let tabBlock = await self.recursivelyBuildBlock(video.container, b) as TabBlock;
                 video.blocks.push(tabBlock);
             });
         }
@@ -1872,8 +1899,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const self = this;
         const iframe = this.createIFrameBlock(blockDto);
         if (blockDto.children) {
-            blockDto.children.forEach((b,i) => {
-                let tabBlock = self.recursivelyBuildBlock(iframe.container, b) as TabBlock;
+            blockDto.children.forEach(async (b,i) => {
+                let tabBlock = await self.recursivelyBuildBlock(iframe.container, b) as TabBlock;
                 iframe.blocks.push(tabBlock);
             });
         }
@@ -1882,12 +1909,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(iframe.container);
         return iframe;
     }
-    buildTabRowBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildTabRowBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
         const rowBlock = this.createTabRowBlock(blockDto);
         if (blockDto.children) {
-            blockDto.children.forEach((b,i) => {
-                let tabBlock = self.recursivelyBuildBlock(rowBlock.container, b) as TabBlock;
+            blockDto.children.forEach(async (b,i) => {
+                let tabBlock = await self.recursivelyBuildBlock(rowBlock.container, b) as TabBlock;
                 rowBlock.blocks.push(tabBlock);
             });
         }
@@ -1925,12 +1952,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.setBlockFocus(textBlock);
         return newTab;
     }
-    buildTabBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildTabBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
         const tabBlock = this.createTabBlock(blockDto);
         if (blockDto.children) {
-            blockDto.children.forEach((b,i) => {
-                let block = self.recursivelyBuildBlock(tabBlock.panel, b) as IBlock;
+            blockDto.children.forEach(async (b,i) => {
+                let block = await self.recursivelyBuildBlock(tabBlock.panel, b) as IBlock;
                 tabBlock.blocks.push(block);
             });
         }
@@ -1938,12 +1965,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(tabBlock.container);
         return tabBlock;
     }
-    buildIndentedListBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildIndentedListBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const self = this;
         const indentedListBlock = this.createIndentedListBlock();
             if (blockDto.children) {
-                blockDto.children.forEach((b,i) => {
-                    let block = self.recursivelyBuildBlock(indentedListBlock.container, b) as IBlock;
+                blockDto.children.forEach(async (b,i) => {
+                    let block = await self.recursivelyBuildBlock(indentedListBlock.container, b) as IBlock;
                     indentedListBlock.blocks.push(block);
                     updateElement(block.container, {
                         style: {
@@ -1974,48 +2001,51 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         });
         return parent;
     }
-    recursivelyBuildBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async recursivelyBuildBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         if (blockDto.type == BlockType.StandoffEditorBlock) {
-            return this.buildStandoffEditorBlock(container, blockDto);
+            return await this.buildStandoffEditorBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.LeftMarginBlock) {
-            return this.buildLeftMarginBlock(container, blockDto);
+            return await this.buildLeftMarginBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.RightMarginBlock) {
-            return this.buildRightMarginBlock(container, blockDto);
+            return await this.buildRightMarginBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.GridBlock) {
-            return this.buildGridBlock(container, blockDto);
+            return await this.buildGridBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.GridRowBlock) {
-            return this.buildGridRowBlock(container, blockDto);
+            return await this.buildGridRowBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.GridCellBlock) {
-            return this.buildGridCellBlock(container, blockDto);
+            return await this.buildGridCellBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.IFrameBlock) {
             return this.buildIframeBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.TabRowBlock) {
-            return this.buildTabRowBlock(container, blockDto);
+            return await this.buildTabRowBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.PlainTextBlock) {
-            return this.buildPlainTextBlock(container, blockDto as IPlainTextBlockDto);
+            return await this.buildPlainTextBlock(container, blockDto as IPlainTextBlockDto);
         }
         if (blockDto.type == BlockType.CodeMirrorBlock) {
-            return this.buildCodeMirrorBlock(container, blockDto as ICodeMirrorBlockDto);
+            return await this.buildCodeMirrorBlock(container, blockDto as ICodeMirrorBlockDto);
         }
         if (blockDto.type == BlockType.TabBlock) {
-            return this.buildTabBlock(container, blockDto);
+            return await this.buildTabBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.IndentedListBlock) {
-            return this.buildIndentedListBlock(container, blockDto);
+            return await this.buildIndentedListBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.ImageBlock) {
-            return this.buildImageBlock(container, blockDto);
+            return await this.buildImageBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.VideoBlock) {
-            return this.buildVideoBlock(container, blockDto);
+            return await this.buildVideoBlock(container, blockDto);
+        }
+        if (blockDto.type == BlockType.EmbedDocumentBlock) {
+            return await this.buildEmbedDocumentBlock(container, blockDto as IEmbedDocumentBlockDto);
         }
         return null;
     }
@@ -2036,7 +2066,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         });
         return dto;
     }
-    loadDocument(dto: IMainListBlockDto) {
+    async loadDocument(dto: IMainListBlockDto) {
         if (dto.type != BlockType.MainListBlock) {
             console.error("Expected doc.type to be a MainListBlock");
             return;
@@ -2054,7 +2084,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (dto.children) {
             const len = dto.children.length;
             for (let i = 0; i <= len - 1; i++) {
-                let block = this.recursivelyBuildBlock(container, dto.children[i]) as IBlock;
+                let block = await this.recursivelyBuildBlock(container, dto.children[i]) as IBlock;
                 mainBlock.blocks.push(block);
                 if (i == 0) {
                     mainBlock.relation.firstChild = block;
@@ -2267,6 +2297,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
         block.addBlockProperties([ { type: "block/marginalia/left" } ]);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+        block.applyBlockPropertyStyling();
+        this.blocks.push(block);
+        return block;
+    }
+    createEmbedDocumentBlock(dto?: IBlockDto) {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new EmbedDocumentBlock({
+            owner: this
+        });
+        if (dto?.metadata) block.metadata = dto.metadata;
+        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.blocks.push(block);

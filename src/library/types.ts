@@ -38,7 +38,8 @@ export enum BlockType {
     VideoBlock = "video-block",
     PlainTextBlock = "plain-text-block",
     CodeMirrorBlock = "code-mirror-block",
-    CheckboxBlock = "checkbox-block"
+    CheckboxBlock = "checkbox-block",
+    EmbedDocumentBlock = "embed-document-block"
 }
 export interface IBlock {
     id: GUID;
@@ -133,6 +134,9 @@ export interface IBlockDto {
     children?: IBlockDto[];
     metadata?: Record<string, any>;
     blockProperties?: BlockPropertyDto[];
+}
+export interface IEmbedDocumentBlockDto extends IBlockDto {
+    filename: string;
 }
 export interface IPlainTextBlockDto extends IBlockDto {
     text: string;
