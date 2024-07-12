@@ -1363,8 +1363,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         updateElement(container, {
                             style: {
                                 display: "inline-block",
-                                zoom: 0.08,
-                                "overflow": "hidden"
+                                zoom: 0.08
                             }
                         });
                         await manager.loadServerDocument(p.value);
@@ -1372,10 +1371,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         updateElement(manager.container, {
                             style: {
                                 maxWidth: p.start.cache.offset.w,
-                                maxHeight: p.start.cache.offset.h
+                                maxHeight: p.start.cache.offset.h,
+                                "overflow": "hidden"
                             }
                         });
                         container.appendChild(manager.container);
+                    },
+                    onDestroy: (p: StandoffProperty) => {
+                        const span = p.start.element as HTMLSpanElement;
+                        updateElement(span, {
+                            display: "inline",
+                            zoom: 1
+                        });
+                        span.innerHTML = p.start.text;
                     }
                 }
             },
