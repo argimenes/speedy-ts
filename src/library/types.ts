@@ -37,7 +37,8 @@ export enum BlockType {
     ImageBlock = "image-block",
     VideoBlock = "video-block",
     PlainTextBlock = "plain-text-block",
-    CodeMirrorBlock = "code-mirror-block"
+    CodeMirrorBlock = "code-mirror-block",
+    CheckboxBlock = "checkbox-block"
 }
 export interface IBlock {
     id: GUID;

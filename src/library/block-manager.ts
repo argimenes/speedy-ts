@@ -2778,6 +2778,21 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         }
     }
+    async embedDocument(sibling: IBlock, filename: string) {
+        const parent = this.getParent(sibling) as AbstractBlock;
+        const manager = new BlockManager();
+        await manager.loadServerDocument(filename);
+        updateElement(manager.container, {
+            style: {
+                zoom: 0.5,
+                "overflow-x": "hidden",
+                "overflow-y": "scroll"
+            }
+        });
+        this.addNextBlock(manager, sibling);
+        this.addParentSiblingRelations(parent);
+        this.setBlockFocus(manager.blocks[0]);
+    }
     addCodeMirrorBlock(sibling: IBlock) {
         const parent = this.getParent(sibling) as AbstractBlock;
         const cm = this.createCodeMirrorBlock();

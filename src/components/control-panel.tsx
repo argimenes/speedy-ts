@@ -29,6 +29,12 @@ export const ControlPanel : Component<Props> = (props) => {
         e.preventDefault();
         runCommand();
     }
+    const embedDocument = async (parameters: string[]) => {
+        if (!props.manager) return;
+        const filename = parameters && parameters[0] || model.file;
+        const block = props.manager.getBlockInFocus() as IBlock;
+        await props.manager.embedDocument(block, filename);
+    }
     const loadMicroDocument = async (parameters: string[]) => {
         if (!props.manager) return;
         const filename = parameters && parameters[0] || model.file;
@@ -226,6 +232,7 @@ export const ControlPanel : Component<Props> = (props) => {
             case "multicols": setMultiColumns(parameters[0]); return;
             case "test-load-doc": testLoadDocument(parameters[0]); return;
             case "load-micro-doc": await loadMicroDocument(parameters); return;
+            case "embed-doc": await embedDocument(parameters); return;
             default: break;
         }
     }
