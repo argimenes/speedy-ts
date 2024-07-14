@@ -105,11 +105,13 @@
     margin: 3px;
   }
   .control-panel {
-    position: fixed;
-    bottom: 100px;
+    position: sticky;
+    bottom: 0;
     height: 35px;
     width: 100%;
     left: 0;
+    background-color: #333;
+    padding-top: 10px;
   }
   .style_blur {
     filter: blur(4px);
