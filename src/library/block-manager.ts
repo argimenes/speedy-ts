@@ -1913,10 +1913,11 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const self = this;
         const rowBlock = this.createTabRowBlock(blockDto);
         if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => {
+            for (let i = 0; i < blockDto.children.length; i++) {
+                let b = blockDto.children[i];
                 let tabBlock = await self.recursivelyBuildBlock(rowBlock.container, b) as TabBlock;
                 rowBlock.blocks.push(tabBlock);
-            });
+            }
         }
         this.addParentSiblingRelations(rowBlock);
         rowBlock.renderLabels();
