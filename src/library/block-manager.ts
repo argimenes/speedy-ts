@@ -1714,156 +1714,96 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     async buildStandoffEditorBlock(container: HTMLDivElement, blockDto: IBlockDto) {
-        const self = this;
         const textBlock = this.createStandoffEditorBlock();
         textBlock.bind(blockDto as IStandoffEditorBlockDto);
         if (blockDto.relation?.leftMargin) {
             const leftMargin = await this.recursivelyBuildBlock(textBlock.container, blockDto.relation.leftMargin) as LeftMarginBlock;
             textBlock.relation.leftMargin = leftMargin;
+            leftMargin.relation.marginParent = textBlock;
             this.stageLeftMarginBlock(leftMargin, textBlock);
         }
         if (blockDto.relation?.rightMargin) {
             const rightMargin = await this.recursivelyBuildBlock(textBlock.container, blockDto.relation.rightMargin) as RightMarginBlock;
             textBlock.relation.rightMargin = rightMargin;
+            rightMargin.relation.marginParent = textBlock;
             this.stageRightMarginBlock(rightMargin, textBlock);
         }
-        if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => {
-                let block = await self.recursivelyBuildBlock(textBlock.container, b) as IBlock;
-                textBlock.blocks.push(block);
-            });
-        }
-        this.addParentSiblingRelations(textBlock);
+        await this.buildChildren(textBlock, blockDto);
         container.appendChild(textBlock.container);
         return textBlock;
     }
     async buildLeftMarginBlock(container: HTMLDivElement, blockDto: IBlockDto) {
-        const self = this;
         const leftMargin = this.createLeftMarginBlock(blockDto);
-        if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => { 
-                let block = await self.recursivelyBuildBlock(leftMargin.container, b) as IBlock;
-                leftMargin.blocks.push(block);
-            });
-        }
-        this.addParentSiblingRelations(leftMargin);
+        await this.buildChildren(leftMargin, blockDto);
         container.appendChild(leftMargin.container);
         return leftMargin;
     }
     async buildImageBlock(container: HTMLDivElement, blockDto: IBlockDto) {
-        const self = this;
         const image = this.createImageBlock(blockDto);
         image.build();
-        if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => { 
-                let block = await self.recursivelyBuildBlock(image.container, b) as IBlock;
-                image.blocks.push(block);
-            });
-        }
-        this.addParentSiblingRelations(image);
+        await this.buildChildren(image, blockDto);
         container.appendChild(image.container);
         return image;
     }
     async buildRightMarginBlock(container: HTMLDivElement, blockDto: IBlockDto) {
-        const self = this;
         const rightMargin = this.createRightMarginBlock(blockDto);
-        if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => { 
-                let block = await self.recursivelyBuildBlock(rightMargin.container, b) as IBlock;
-                rightMargin.blocks.push(block);
-            });
-        }
-        this.addParentSiblingRelations(rightMargin);
+        await this.buildChildren(rightMargin, blockDto);
         container.appendChild(rightMargin.container);
         return rightMargin;
     }
     async buildCodeMirrorBlock(container: HTMLDivElement, blockDto: ICodeMirrorBlockDto) {
-        const self = this;
         const cm = this.createCodeMirrorBlock(blockDto);
-        if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => {
-                let child = await self.recursivelyBuildBlock(cm.container, b) as IBlock;
-                cm.blocks.push(child);
-            });
-        }
+        await this.buildChildren(cm, blockDto);
         if (blockDto.text)  {
             cm.bind(blockDto.text);
         }
-        this.addParentSiblingRelations(cm);
         container.appendChild(cm.container);
         return cm;
     }
     async buildPlainTextBlock(container: HTMLDivElement, blockDto: IPlainTextBlockDto) {
-        const self = this;
         const plainText = this.createPlainTextBlock(blockDto);
-        if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => {
-                let rowBlock = await self.recursivelyBuildBlock(plainText.container, b) as GridRowBlock;
-                plainText.blocks.push(rowBlock);
-            });
-        }
+        await this.buildChildren(plainText, blockDto);
         if (blockDto.text)  {
             plainText.bind(blockDto.text);
         }
-        this.addParentSiblingRelations(plainText);
         container.appendChild(plainText.container);
         return plainText;
     }
     async buildGridBlock(container: HTMLDivElement, blockDto: IBlockDto) {
-        const self = this;
         const gridBlock = this.createGridBlock();
-        if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => {
-                let rowBlock = await self.recursivelyBuildBlock(gridBlock.container, b) as GridRowBlock;
-                gridBlock.blocks.push(rowBlock);
-            });
-        }
-        this.addParentSiblingRelations(gridBlock);
+        await this.buildChildren(gridBlock, blockDto);
         container.appendChild(gridBlock.container);
         return gridBlock;
     }
-    buildGridRowBlock(container: HTMLDivElement, blockDto: IBlockDto) {
-        const self = this;
+    async buildGridRowBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const rowBlock = this.createGridRowBlock();
-        if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => {
-                let cellBlock = await self.recursivelyBuildBlock(rowBlock.container, b) as GridCellBlock;
-                if (b.metadata?.width) {
-                    updateElement(cellBlock.container, {
-                        style: {
-                            width: b.metadata?.width
-                        }
-                    });
-                }
-                rowBlock.blocks.push(cellBlock);
-            });
-        }
-        this.addParentSiblingRelations(rowBlock);
+        await this.buildChildren(rowBlock, blockDto);
+        // if (blockDto.children) {
+        //     blockDto.children.forEach(async (b,i) => {
+        //         let cellBlock = await self.recursivelyBuildBlock(rowBlock.container, b) as GridCellBlock;
+        //         if (b.metadata?.width) {
+        //             updateElement(cellBlock.container, {
+        //                 style: {
+        //                     width: b.metadata?.width
+        //                 }
+        //             });
+        //         }
+        //         rowBlock.blocks.push(cellBlock);
+        //     });
+        // }
+        // this.addParentSiblingRelations(rowBlock);
         container.appendChild(rowBlock.container);
         return rowBlock;
     }
-    buildGridCellBlock(container: HTMLDivElement, blockDto: IBlockDto) {
-        const self = this;
+    async buildGridCellBlock(container: HTMLDivElement, blockDto: IBlockDto) {
         const cellBlock = this.createGridCellBlock(blockDto);
-        if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => {
-                let block = await self.recursivelyBuildBlock(cellBlock.container, b) as IBlock;
-                cellBlock.blocks.push(block);
-            });
-        }
-        this.addParentSiblingRelations(cellBlock);
+        await this.buildChildren(cellBlock, blockDto);
         container.appendChild(cellBlock.container);
         return cellBlock;
     }
     async buildEmbedDocumentBlock(container: HTMLDivElement, blockDto: IEmbedDocumentBlockDto){
-        const self = this;
         const embed = this.createEmbedDocumentBlock(blockDto);
-        if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => {
-                let block = await self.recursivelyBuildBlock(embed.container, b) as IBlock;
-                embed.blocks.push(block);
-            });
-        }
+        await this.buildChildren(embed, blockDto);
         embed.filename = blockDto.filename;
         if (embed.filename) {
             const manager = new BlockManager();
@@ -1877,49 +1817,37 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 }
             })
         }
-        this.addParentSiblingRelations(embed);
         container.appendChild(embed.container);
         return embed;
     }
     async buildVideoBlock(container: HTMLDivElement, blockDto: IBlockDto){
-        const self = this;
         const video = this.createVideoBlock(blockDto);
-        if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => {
-                let tabBlock = await self.recursivelyBuildBlock(video.container, b) as TabBlock;
-                video.blocks.push(tabBlock);
-            });
-        }
+        await this.buildChildren(video, blockDto);
         video.build();
-        this.addParentSiblingRelations(video);
         container.appendChild(video.container);
         return video;
     }
-    buildIframeBlock(container: HTMLDivElement, blockDto: IBlockDto){
-        const self = this;
-        const iframe = this.createIFrameBlock(blockDto);
+    async buildChildren(parent: AbstractBlock, blockDto: IBlockDto) {
         if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => {
-                let tabBlock = await self.recursivelyBuildBlock(iframe.container, b) as TabBlock;
-                iframe.blocks.push(tabBlock);
-            });
+            const len = blockDto.children.length;
+            for (let i = 0; i < len; i++) {
+                let childDto = blockDto.children[i];
+                let block = await this.recursivelyBuildBlock(parent.container, childDto) as IBlock;
+                parent.blocks.push(block);
+            }
         }
+        this.addParentSiblingRelations(parent);
+    }
+    async buildIframeBlock(container: HTMLDivElement, blockDto: IBlockDto){
+        const iframe = this.createIFrameBlock(blockDto);
+        await this.buildChildren(iframe, blockDto);
         iframe.build();
-        this.addParentSiblingRelations(iframe);
         container.appendChild(iframe.container);
         return iframe;
     }
     async buildTabRowBlock(container: HTMLDivElement, blockDto: IBlockDto) {
-        const self = this;
         const rowBlock = this.createTabRowBlock(blockDto);
-        if (blockDto.children) {
-            for (let i = 0; i < blockDto.children.length; i++) {
-                let b = blockDto.children[i];
-                let tabBlock = await self.recursivelyBuildBlock(rowBlock.container, b) as TabBlock;
-                rowBlock.blocks.push(tabBlock);
-            }
-        }
-        this.addParentSiblingRelations(rowBlock);
+        await this.buildChildren(rowBlock, blockDto);
         rowBlock.renderLabels();
         (rowBlock.blocks[0] as TabBlock)?.setActive();
         container.appendChild(rowBlock.container);
@@ -1954,39 +1882,31 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return newTab;
     }
     async buildTabBlock(container: HTMLDivElement, blockDto: IBlockDto) {
-        const self = this;
         const tabBlock = this.createTabBlock(blockDto);
-        if (blockDto.children) {
-            blockDto.children.forEach(async (b,i) => {
-                let block = await self.recursivelyBuildBlock(tabBlock.panel, b) as IBlock;
-                tabBlock.blocks.push(block);
-            });
-        }
-        this.addParentSiblingRelations(tabBlock);
+        await this.buildChildren(tabBlock, blockDto);
         container.appendChild(tabBlock.container);
         return tabBlock;
     }
     async buildIndentedListBlock(container: HTMLDivElement, blockDto: IBlockDto) {
-        const self = this;
         const indentedListBlock = this.createIndentedListBlock();
-            if (blockDto.children) {
-                blockDto.children.forEach(async (b,i) => {
-                    let block = await self.recursivelyBuildBlock(indentedListBlock.container, b) as IBlock;
-                    indentedListBlock.blocks.push(block);
-                    updateElement(block.container, {
-                        style: {
-                            display: "list-item",
-                            "list-style": "square"
-                        }
-                    });
-                });
-            }
-            this.addParentSiblingRelations(indentedListBlock);
-            const level = indentedListBlock.metadata.indentLevel || 0 as number;
-            indentedListBlock.metadata.indentLevel = level + 1;
-            this.renderIndent(indentedListBlock);
-            container.appendChild(indentedListBlock.container);
-            return indentedListBlock;
+        await this.buildChildren(indentedListBlock, blockDto);
+        // if (blockDto.children) {
+        //     blockDto.children.forEach(async (b,i) => {
+        //         let block = await self.recursivelyBuildBlock(indentedListBlock.container, b) as IBlock;
+        //         indentedListBlock.blocks.push(block);
+        //         updateElement(block.container, {
+        //             style: {
+        //                 display: "list-item",
+        //                 "list-style": "square"
+        //             }
+        //         });
+        //     });ß
+        // }ß
+        const level = indentedListBlock.metadata.indentLevel || 0 as number;
+        indentedListBlock.metadata.indentLevel = level + 1;
+        this.renderIndent(indentedListBlock);
+        container.appendChild(indentedListBlock.container);
+        return indentedListBlock;
     }
     addParentSiblingRelations<T extends AbstractBlock>(parent: T) {
         parent.blocks.forEach((block, i) => {
@@ -2027,14 +1947,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (blockDto.type == BlockType.TabRowBlock) {
             return await this.buildTabRowBlock(container, blockDto);
         }
+        if (blockDto.type == BlockType.TabBlock) {
+            return await this.buildTabBlock(container, blockDto);
+        }
         if (blockDto.type == BlockType.PlainTextBlock) {
             return await this.buildPlainTextBlock(container, blockDto as IPlainTextBlockDto);
         }
         if (blockDto.type == BlockType.CodeMirrorBlock) {
             return await this.buildCodeMirrorBlock(container, blockDto as ICodeMirrorBlockDto);
-        }
-        if (blockDto.type == BlockType.TabBlock) {
-            return await this.buildTabBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.IndentedListBlock) {
             return await this.buildIndentedListBlock(container, blockDto);

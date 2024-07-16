@@ -1,5 +1,3 @@
-
-import { classList } from "solid-js/web";
 import { AbstractBlock } from "./abstract-block";
 import { updateElement } from "./svg";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "./types";
@@ -10,7 +8,6 @@ export class TabRowBlock extends AbstractBlock {
         super(args);
         this.type = BlockType.TabRowBlock;
         this.header = document.createElement("DIV") as HTMLDivElement;
-        this.header.classList.add("tab-row");
         this.container.appendChild(this.header);
         //this.attachEventHandlers();
     }
