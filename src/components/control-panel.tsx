@@ -242,8 +242,8 @@ export const ControlPanel : Component<Props> = (props) => {
         setModel("file", files[0]);
     })
     return (
-        <div class="control-panel">
-            <div style="display: inline-block; margin-right: 10px;">
+        <div style="text-align: left;">
+            <div>
                 <form onSubmit={onSubmit}>
                     <input
                         type="text"
@@ -251,10 +251,11 @@ export const ControlPanel : Component<Props> = (props) => {
                         class="form-control"
                         onInput={(e) => setModel("command", e.currentTarget.value)}
                     />
-                    <button type="submit" style="float: right; margin-left: 10px;" class="btn btn-default">Run</button>
+                    <button type="submit" class="btn btn-default">Run</button>
                 </form>
             </div>
-            <div style="display: inline-block; margin-right: 10px;">
+            <hr/>
+            <div>
                 <select value={model.file} onInput={(e) => setModel("file", e.currentTarget.value)}>
                     <For each={resources.files}>{(file) =>
                         <option value={file}>

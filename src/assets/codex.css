@@ -36,7 +36,7 @@
 }
 
 .App {
-    text-align: center;
+    
   }
   
   .block-window {
@@ -104,14 +104,20 @@
     border: 1px solid #333;
     margin: 3px;
   }
+  .workspace {
+    position: absolute;
+    left: 400px;
+  }
   .control-panel {
-    position: sticky;
-    bottom: 0;
-    height: 35px;
-    width: 100%;
+    width: 150px;
+    top: 0;
     left: 0;
-    background-color: #333;
-    padding-top: 10px;
+    padding: 5px;
+    background-color: #666;
+    color: white;
+    height: auto;
+    position: fixed;
+    height: 900px;
   }
   .style_blur {
     filter: blur(4px);

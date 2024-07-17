@@ -10,10 +10,14 @@ const App: Component = () => {
   const [model, setModel] = createStore<Model>({} as Model);
   return (
     <div class="App">
-      <BlockManagerWindow getInstance={(inst) => { setModel("manager", inst) }} />
-      <Show when={model.manager}>
-        <ControlPanel manager={model.manager} />
-      </Show>
+      <div class="control-panel">
+        <Show when={model.manager}>
+          <ControlPanel manager={model.manager} />
+        </Show>
+      </div>
+      <div class="workspace">
+        <BlockManagerWindow getInstance={(inst) => { setModel("manager", inst) }} />
+      </div>
     </div>
   );
 };
