@@ -103,6 +103,10 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                 {
                     type: BlockType.StandoffEditorBlock,
                     text: "... and back to a regular text block [centre aligned]",
+                    standoffProperties: [
+                        { type: "codex/entity-reference", start: 5, end: 18, value: "abd-def-ghi-123" },
+                        { type: "codex/block-reference", start: 10, end: 28, value: "abd-def-ghi-321" }
+                    ],
                     blockProperties: [
                         { type: "block/alignment/centre" }
                     ]

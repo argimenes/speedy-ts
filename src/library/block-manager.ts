@@ -1510,17 +1510,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             })) as SVGElement[];
         const frag = document.createDocumentFragment();
         frag.append(...underlines);
-        updateElement(overlay.container, {
-            classList: ["overlay"],
-            style: {
-                position: "absolute",
-                width: "100%",
-                top: 0,
-                left: 0
-            },
-            parent: block.container,
-            children: [frag]
-        });
+        block.wrapper.appendChild(frag);
+        // updateElement(overlay.container, {
+        //     classList: ["overlay"],
+        //     style: {
+        //         position: "relative",
+        //         width: "100%",
+        //         top: 0,
+        //         left: 0
+        //     },
+        //     parent: block.container,
+        //     children: [frag]
+        // });
     }
     getPlatformKey(codes: TPlatformKey[]) {
         return codes.find(x=> x.platform == Platform.Windows);
