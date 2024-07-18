@@ -27,7 +27,7 @@ export class StandoffProperty {
         this.end = end;
         this.schema = schema;
         this.metadata = {};
-        this.value = value;
+        this.value = value || "";
         this.block = block;
         this.cache = {};
         this.styled = false;

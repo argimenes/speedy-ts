@@ -14,12 +14,13 @@ import { AbstractBlock } from "./abstract-block";
 import { BlockProperty } from "./block-property";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { StandoffProperty } from "./standoff-property";
-import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto } from "./types";
+import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin } from "./types";
 import { PlainTextBlock } from "./plain-text-block";
 import { CodeMirrorBlock } from "./code-mirror-block";
 import { ClockPlugin } from "./plugins/clock";
 import { TextProcessor } from "./text-processor";
 import { EmbedDocumentBlock } from "./embed-document-block";
+import { SearchEntitiesWindow, renderToNode } from "../components/search-entities";
 
 export class BlockManager extends AbstractBlock implements IBlockManager {
     id: string;
@@ -1344,7 +1345,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 action: {
                     name: "Entity reference",
                     description: "Links to an entity in the graph database.",
-                    handler: this.applyEntityReferenceToText
+                    handler: this.applyEntityReferenceToText.bind(this)
                 }
             }
         ];
@@ -2491,11 +2492,35 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     applyEntityReferenceToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
         const selection = block.getSelection();
-        if (selection) {
-            block.createStandoffProperty("codex/entity-reference", selection);
-        } else {
-            // TBC
-        }      
+        const jsx = SearchEntitiesWindow({
+            onSelected: (item: any) => {
+                if (selection) {
+                    const prop = block.createStandoffProperty("codex/entity-reference", selection) as StandoffProperty;
+                    prop.value = item.Value;
+                }
+                node.remove();
+            },
+            onClose: () => {
+                node.remove();
+            }
+        });
+        const node = renderToNode(jsx);
+        const top = selection ? selection.start.cache.offset.y : block.cache.offset.y;
+        const left = selection ? selection.start.cache.offset.x : block.cache.offset.x;
+        updateElement(node, {
+            style: {
+                position: "absolute",
+                top: (top + 30) + "px",
+                left: left + "px",
+                "z-index": this.getHighestZIndex() + 1,
+                width: "300px",
+                height: "50px"
+            }
+        });
+        this.container.appendChild(node);
+    }
+    getHighestZIndex() {
+        return 200;
     }
     moveCaretLeft(args: IBindingHandlerArgs) {
         /**
