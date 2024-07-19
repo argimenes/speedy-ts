@@ -168,6 +168,17 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.wrapper.addEventListener("keydown", this.handleKeyDown.bind(this));
         this.wrapper.addEventListener("mouseup", this.handleMouseUpEvent.bind(this));
         this.wrapper.addEventListener("click", this.handleClickEvent.bind(this));
+        this.wrapper.addEventListener("dblclick", this.handleDoubleClickEvent.bind(this));
+    }
+    handleDoubleClickEvent(e: MouseEvent) {
+        const self = this;
+        const caret = this.getCaret() as Caret;
+        const props = this.getEnclosingProperties(caret.right);
+        props.forEach(p => {
+            if (p.schema?.event?.onDoubleClick) {
+                p.schema?.event?.onDoubleClick({ property: p, block: self, caret });
+            }
+        })
     }
     handleClickEvent(e: MouseEvent) {
         const mouseEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Mouse);

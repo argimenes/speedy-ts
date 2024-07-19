@@ -1466,6 +1466,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 event: {
                     beforeStyling: async (args: any) => {
                         // TBC : will show a panel where the entity can be searched for
+                    },
+                    onDoubleClick: async (args: any) => {
+                        const prop = args.property;
+                        alert(prop.value);
                     }
                 },
                 render: {
@@ -2490,6 +2494,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }  
     }
     applyEntityReferenceToText(args: IBindingHandlerArgs) {
+        const self = this;
         const block = args.block as StandoffEditorBlock;
         const selection = block.getSelection();
         const jsx = SearchEntitiesWindow({
@@ -2499,9 +2504,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     prop.value = item.Value;
                 }
                 node.remove();
+                self.setBlockFocus(block);
+                block.setCaret(block.lastCaret.index, block.lastCaret.offset);
             },
             onClose: () => {
                 node.remove();
+                self.setBlockFocus(block);
+                block.setCaret(block.lastCaret.index, block.lastCaret.offset);
             }
         });
         const node = renderToNode(jsx);
