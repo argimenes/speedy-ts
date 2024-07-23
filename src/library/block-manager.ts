@@ -20,7 +20,9 @@ import { CodeMirrorBlock } from "./code-mirror-block";
 import { ClockPlugin } from "./plugins/clock";
 import { TextProcessor } from "./text-processor";
 import { EmbedDocumentBlock } from "./embed-document-block";
-import { SearchEntitiesWindow, renderToNode } from "../components/search-entities";
+import { SearchEntitiesWindow } from "../components/search-entities";
+import { renderToNode } from "./common";
+import { StandoffEditorBlockMonitor } from "../components/monitor";
 
 export class BlockManager extends AbstractBlock implements IBlockManager {
     id: string;
@@ -500,9 +502,60 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         ]
         return events;
     }
+    handleContextMenuClicked(args: IBindingHandlerArgs) {
+        const { caret } = args;
+        const block = args.block as StandoffEditorBlock;
+        const anchor = caret.left || caret.right;
+        block.setMarker(anchor, this.container);
+        const props = block.getEnclosingProperties(anchor);
+        if (block.cache.monitor) {
+            block.cache.monitor.remove();
+            block.cache.monitor = undefined;
+        }
+        const component = StandoffEditorBlockMonitor({
+            properties: props,
+            onMoveLeft: (p) => {
+                
+            },
+            onMoveRight: (p) => {
+
+            },
+            onExpand: (p) => {
+
+            },
+            onContract: (p) => {
+
+            },
+            onDelete: (p) => {
+                
+            },
+        });
+        const node = block.cache.monitor = renderToNode(component) as HTMLDivElement;
+        const top = anchor.cache.offset.y + anchor.cache.offset.y + 30;
+        const left = anchor.cache.offset.x;
+        updateElement(node, {
+            style: {
+                position: "absolute",
+                top: top + "px",
+                left: left + "px"
+            },
+            parent: this.container
+        });
+    }
     getEditorEvents() {
         const events: InputEvent[] = [
-            
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Mouse,
+                    match: "contextmenu"
+                },
+                action: {
+                    name: "Right-click handler",
+                    description: "",
+                    handler: this.handleContextMenuClicked.bind(this)
+                }
+            },
             {
                 mode: "default",
                 trigger: {
@@ -2497,6 +2550,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const self = this;
         const block = args.block as StandoffEditorBlock;
         const selection = block.getSelection();
+        if (!selection) return;
         const jsx = SearchEntitiesWindow({
             onSelected: (item: any) => {
                 if (selection) {

@@ -5,7 +5,7 @@ import { StandoffProperty } from "./standoff-property";
 import { AbstractBlock } from "./abstract-block";
 import { Cell, Row } from "./cell";
 import { KEYS } from "./keyboard";
-import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto } from "./types";
+import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor } from "./types";
 
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     const map = new Map();
@@ -32,6 +32,8 @@ export class StandoffEditorBlock extends AbstractBlock {
             x: number|null;
         },
         containerWidth: number;
+        marker?: HTMLSpanElement;
+        monitor?: HTMLDivElement;
     };
     standoffProperties: StandoffProperty[];
     schemas: IStandoffPropertySchema[];
@@ -55,6 +57,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         offset: CARET;
     };
     wrapper: HTMLDivElement;
+    monitors: IStandoffEditorBlockMonitor[];
     constructor(args: IStandoffEditorBlockConstructor) {
         super(args);
         this.type = BlockType.StandoffEditorBlock;
@@ -88,6 +91,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.cells = [];
         this.rows = [];
         this.schemas = [];
+        this.monitors = [];
         this.standoffProperties = [];
         this.selections = [];
         this.attachBindings();
@@ -157,6 +161,29 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         return results;
     }
+    setMarker(anchor: Cell, container?: HTMLDivElement) {
+        const cache = anchor.cache;
+        if (this.cache.marker) {
+            this.cache.marker.remove();
+            this.cache.marker = undefined;
+        }
+        let top = cache.offset.y + cache.offset.h + 18;
+        let left = cache.offset.x + cache.offset.w + 10;
+        const marker = this.cache.marker = document.createElement("SPAN") as HTMLSpanElement;
+        updateElement(marker, {
+            style: {
+                position: "absolute",
+                top: top + "px",
+                left: left + "px",
+                color: "red",
+                margin: 0,
+                padding: 0,
+                "font-weight": 600
+            },
+            innerHTML: "&Hat;",
+            parent: container || this.container
+        });
+    }
     getLastCell() {
         const len = this.cells.length;
         return this.cells[len-1];
@@ -169,6 +196,19 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.wrapper.addEventListener("mouseup", this.handleMouseUpEvent.bind(this));
         this.wrapper.addEventListener("click", this.handleClickEvent.bind(this));
         this.wrapper.addEventListener("dblclick", this.handleDoubleClickEvent.bind(this));
+        this.wrapper.addEventListener("contextmenu", this.handleContextMenuClickEvent.bind(this));
+    }
+    handleContextMenuClickEvent(e: MouseEvent) {
+        const mouseEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Mouse);
+        const found = mouseEvents.find(x => x.trigger.match == "contextmenu");
+        const caret = this.getCaret() as Caret;
+        if (found) {
+            e.preventDefault();
+            found.action.handler({
+                block: this,
+                caret
+            });
+        }
     }
     handleDoubleClickEvent(e: MouseEvent) {
         const self = this;
@@ -530,6 +570,17 @@ export class StandoffEditorBlock extends AbstractBlock {
     deserialize(json: any) {
         this.bind(json as IStandoffEditorBlockDto);
         return this;
+    }
+    addMonitor(monitor: IStandoffEditorBlockMonitor) {
+        this.monitors.push(monitor);
+    }
+    updateMonitors() {
+        if (!this.monitors?.length) return;
+        const caret = this.getCaret() as Caret;
+        const cell = caret.left || caret.right;
+        const properties = this.getEnclosingProperties(cell);
+        const block = this;
+        this.monitors.forEach(m => m.update({ caret, block, properties }));
     }
     addStandoffPropertiesDto(props: StandoffPropertyDto[], cells?: Cell[]) {
         cells = cells || this.cells;

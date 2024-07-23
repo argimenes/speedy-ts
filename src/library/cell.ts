@@ -8,7 +8,8 @@ export class Cell {
     text: string;
     cache: {
         previousOffset: ICellCoordOffsets,
-        offset: ICellCoordOffsets
+        offset: ICellCoordOffsets,
+        marker?: HTMLSpanElement
     };
     element?: CellHtmlElement;
     isEOL: boolean;

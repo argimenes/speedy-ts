@@ -18,6 +18,15 @@ export interface IMainListBlockDto extends IBlockDto {
 
 }
 
+export interface IStandoffEditorBlockMonitorUpdateArgs {
+    caret: Caret;
+    block: StandoffEditorBlock;
+    properties: StandoffProperty[];
+}
+export interface IStandoffEditorBlockMonitor {
+    update: (args: IStandoffEditorBlockMonitorUpdateArgs) => void;
+}
+
 export enum BlockType {
     RootBlock = "root-block",
     MainListBlock = "main-list-block",

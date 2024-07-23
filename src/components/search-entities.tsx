@@ -1,21 +1,10 @@
-import {  JSX } from "solid-js"
 import { createStore } from "solid-js/store";
-import { render } from "solid-js/web";
-import { buttons, form } from 'bootstrap-css'
 import { autofocus } from "@solid-primitives/autofocus";
 
 type Model = {
     search: string;
 }
-export const renderToNode = (jsx: JSX.Element) => {
-    const node = document.createElement("DIV");
-    render(() => jsx, node);
-    return node;
-};
- /**
-  * const jsx = InfoWindow(model);
-    const content = renderToNode(jsx);
-  */
+
 export function SearchEntitiesWindow(props: any) {
     const [model, setModel] = createStore<Model>({
         search: ""
