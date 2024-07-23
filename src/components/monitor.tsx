@@ -51,7 +51,7 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                                 <button class="btn"
                                     onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
                                     onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
-                                    onClick={(e) => { e.preventDefault(); item.property.destroy() }}>&times;</button>
+                                    onClick={(e) => { e.preventDefault(); onDelete(item.property) }}>&times;</button>
                             </div>
                         </Show>
                     </div>

@@ -91,7 +91,7 @@ export class StandoffProperty {
     }
     expand() {
         var nextEndCell = this.end.next as Cell;
-        if (!!nextEndCell) {
+        if (!nextEndCell) {
             return;
         }
         this.removeStyling();

@@ -516,11 +516,11 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const component = StandoffEditorBlockMonitor({
             properties: props,
             onDelete: (p) => {
-                
+                p.destroy();
             },
         });
         const node = block.cache.monitor = renderToNode(component) as HTMLDivElement;
-        const top = anchor.cache.offset.y + anchor.cache.offset.y + 30;
+        const top = anchor.cache.offset.y + anchor.cache.offset.y + 38;
         const left = anchor.cache.offset.x;
         updateElement(node, {
             style: {
@@ -558,6 +558,11 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
                         manager.setBlockFocus(block);
+                        if (block.cache.monitor) {
+                            block.cache.monitor.remove();
+                            block.cache.monitor = undefined;
+                        }
+                        block.setMarker(args.caret.left || args.caret.right, manager.container);
                     }
                 }
             },

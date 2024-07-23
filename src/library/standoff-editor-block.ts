@@ -168,7 +168,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             this.cache.marker = undefined;
         }
         let top = cache.offset.y + cache.offset.h + 18;
-        let left = cache.offset.x + cache.offset.w + 10;
+        let left = cache.offset.x + cache.offset.w + 13;
         const marker = this.cache.marker = document.createElement("SPAN") as HTMLSpanElement;
         updateElement(marker, {
             style: {
@@ -478,6 +478,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.insertIntoCellArrayBefore(index, cells);
         this.reindexCells();
         this.insertElementsBefore(right.element as HTMLElement, cells.map(c => c.element as HTMLElement));
+        //this.setMarker(this.cells[index + cells.length], this.container?.parentElement);
         this.updateView();
         if (index == len-1) {
             let caret = this.getCaret();
@@ -970,6 +971,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.reindexCells();
         // const enclosing = this.getEnclosingProperties(cell);
         // this.renderProperties(enclosing);
+        //this.setMarker(this.cells[index -1], this.container?.parentElement);
         this.updateView();
         if (updateCaret) {
             this.setCaret(index);
