@@ -26,10 +26,10 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
         setProperties(properties.filter(x=> x.property != p));
     };
     return (
-        <>
+        <div class="monitor">
             <For each={properties}>{(item) =>
                 <>
-                    <div>
+                    <div class="line-item">
                         <div style="display: inline-block;" onClick={(e) => { e.preventDefault(); setItemVisible(item, !item.visible); }}>
                             {item.property.type}
                         </div>
@@ -46,6 +46,6 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                     </div>
                 </>
             }</For>
-        </>
+        </div>
     )
 }

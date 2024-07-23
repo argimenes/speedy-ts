@@ -507,11 +507,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const block = args.block as StandoffEditorBlock;
         const anchor = caret.left || caret.right;
         block.setMarker(anchor, this.container);
-        const props = block.getEnclosingProperties(anchor);
         if (block.cache.monitor) {
             block.cache.monitor.remove();
             block.cache.monitor = undefined;
         }
+        const props = block.getEnclosingProperties(anchor);
+        if (!props.length) return;
         const component = StandoffEditorBlockMonitor({
             properties: props,
             onMoveLeft: (p) => {

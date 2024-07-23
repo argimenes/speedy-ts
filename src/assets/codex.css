@@ -85,6 +85,19 @@
     border: 1px solid #ccc;
     box-shadow: 5px 5px 5px #666;
   }
+  .btn {
+    margin: 0 3px; 
+  }
+  .monitor {
+    background-color: #eee;
+    padding: 10px 15px;
+    border-radius: 10px;
+    box-shadow: 5px 5px 5px #ccc;
+
+    .line-item {
+      margin-bottom: 5px;
+    }
+  }
   .tab-label {
     display: inline;
     color: #333;
