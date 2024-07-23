@@ -8,10 +8,6 @@ type StandoffPropertyState = {
 }
 type Props = {
     properties: StandoffProperty[];
-    onMoveLeft: (p: StandoffProperty) => void;
-    onMoveRight: (p: StandoffProperty) => void;
-    onExpand: (p: StandoffProperty) => void;
-    onContract: (p: StandoffProperty) => void;
     onDelete: (p: StandoffProperty) => void;
 }
 export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
@@ -22,7 +18,7 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
         setProperties(i, { visible });
     }
     const onDelete = (p: StandoffProperty) => {
-        props.onDelete(p);
+        p.destroy();
         setProperties(properties.filter(x=> x.property != p));
     };
     return (
@@ -36,11 +32,26 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                         <Show when={item.visible}>
                             <div style="display: inline-block;">
                                 <button class="btn">edit</button>
-                                <button class="btn" onClick={(e) => { e.preventDefault(); props.onMoveLeft(item.property); }}>&lsaquo;</button>
-                                <button class="btn" onClick={(e) => { e.preventDefault(); props.onMoveRight(item.property); }}>&rsaquo;</button>
-                                <button class="btn" onClick={(e) => { e.preventDefault(); props.onExpand(item.property); }}>&plus;</button>
-                                <button class="btn" onClick={(e) => { e.preventDefault(); props.onContract(item.property); }}>&ndash;</button>
-                                <button class="btn" onClick={(e) => { e.preventDefault(); onDelete(item.property); }}>&times;</button>
+                                <button class="btn"
+                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
+                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
+                                    onClick={(e) => { e.preventDefault(); item.property.shiftLeft() }}>&lsaquo;</button>
+                                <button class="btn"
+                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
+                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
+                                    onClick={(e) => { e.preventDefault(); item.property.shiftRight() }}>&rsaquo;</button>
+                                <button class="btn"
+                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
+                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
+                                    onClick={(e) => { e.preventDefault(); item.property.expand() }}>&plus;</button>
+                                <button class="btn"
+                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
+                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
+                                    onClick={(e) => { e.preventDefault(); item.property.contract() }}>&ndash;</button>
+                                <button class="btn"
+                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
+                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
+                                    onClick={(e) => { e.preventDefault(); item.property.destroy() }}>&times;</button>
                             </div>
                         </Show>
                     </div>

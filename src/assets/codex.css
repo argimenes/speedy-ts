@@ -106,6 +106,9 @@
     background-color: #fff;
     
   }
+  .text-highlight {
+    background-color: lightyellow;
+  }
 .tab-label.active {
     color: #fff;
     background-color: #aaa;

@@ -515,18 +515,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (!props.length) return;
         const component = StandoffEditorBlockMonitor({
             properties: props,
-            onMoveLeft: (p) => {
-                
-            },
-            onMoveRight: (p) => {
-
-            },
-            onExpand: (p) => {
-
-            },
-            onContract: (p) => {
-
-            },
             onDelete: (p) => {
                 
             },

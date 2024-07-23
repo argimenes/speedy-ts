@@ -52,6 +52,52 @@ export class StandoffProperty {
         this.onDestroy();
         this.removeStyling();
     }
+    highlight() {
+        this.applyCssClass("text-highlight");
+    }
+    unhighlight() {
+        this.removeCssClassFromRange("text-highlight");
+    }
+    contract() {
+        var previousEndCell = this.end.previous;
+        if (!previousEndCell || previousEndCell == this.start) {
+            return;
+        }
+        this.removeStyling();
+        this.end = previousEndCell;
+        this.applyStyling();
+    }
+    shiftLeft() {
+        var previousStartCell = this.start.previous;
+        var previousEndCell = this.end.previous;
+        if (!previousStartCell || !previousEndCell) {
+            return;
+        }
+        this.removeStyling();
+        this.start = previousStartCell;
+        this.end = previousEndCell;
+        this.applyStyling();
+    }
+    shiftRight() {
+        var nextStartCell = this.start.next;
+        var nextEndCell = this.end.next;
+        if (!nextStartCell || !nextEndCell) {
+            return;
+        }
+        this.removeStyling();
+        this.start = nextStartCell;
+        this.end = nextEndCell;
+        this.applyStyling();
+    }
+    expand() {
+        var nextEndCell = this.end.next as Cell;
+        if (!!nextEndCell) {
+            return;
+        }
+        this.removeStyling();
+        this.end = nextEndCell;
+        this.applyStyling();
+    }
     hasOffsetChanged() {
         let spoff = this.start.cache.previousOffset;
         let soff = this.start.cache.offset;
