@@ -114,6 +114,7 @@ export type DrawUnderlineOptions = {
     stroke?: string;
     strokeWidth?: string;
     strokeOpacity?: string;
+    fill?: string;
 }
 
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
@@ -128,6 +129,80 @@ function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
         }
     });
     return map;
+};
+
+export const drawFilledRectangle = (p: StandoffProperty, options: DrawUnderlineOptions) => {
+    options = options || {};
+    if (p.cache.svg) {
+        p.cache.svg.remove();
+    }
+    const mx = 60;
+    const mx2 = 3;
+    const my2 = 4;
+    const container = p.block.container;
+    const containerRect = container.getBoundingClientRect();
+    const buffer = p.start.cache.offset.y;
+    const topLeftX = p.start.cache.offset.x;
+    const topLeftY = p.start.cache.offset.y;
+    const bottomRightX = p.end.cache.offset.x + p.end.cache.offset.w;
+    const bottomRightY = p.end.cache.offset.y + p.end.cache.offset.h;
+    const svg = p.cache.svg = createSvg({
+        style: {
+            position: "absolute",
+            left: 0,
+            top: topLeftY - 2,
+            width: containerRect.width,
+            height: bottomRightY - topLeftY + my2,
+            "pointer-events": "none"
+        }
+    });
+    var pairs = [];
+    var onSameLine = (p.start.cache.offset.y == p.end.cache.offset.y);
+    if (onSameLine) {
+        pairs = [
+            [topLeftX - mx2, topLeftY - buffer],
+            [topLeftX - mx2, bottomRightY - buffer + my2],
+            [bottomRightX + mx2, bottomRightY - buffer + my2],
+            [bottomRightX + mx2, topLeftY - buffer],
+            [topLeftX - mx2, topLeftY - buffer]
+        ];
+    } else {
+        pairs = [
+            [topLeftX - mx2, topLeftY - buffer],
+            [topLeftX - mx2, topLeftY + p.start.cache.offset.h - buffer + my2],
+            [mx, topLeftY + p.start.cache.offset.h - buffer + my2],
+            [mx, bottomRightY - buffer + my2],
+            [bottomRightX + mx2, bottomRightY - buffer + my2],
+            [bottomRightX + mx2, p.end.cache.offset.y - buffer],
+            [containerRect.width - mx, p.end.cache.offset.y - buffer],
+            [containerRect.width - mx, topLeftY - buffer],
+            [topLeftX - mx2, topLeftY - buffer]
+        ];
+    }
+    var path = pairs.map(x => { return x[0] + " " + x[1]; }).join(", ");
+    var polygon = svgElement(svg, "polygon", {
+        attribute: {
+            points: path,
+            fill: "transparent"
+        }
+    });
+    if (options.fill) {
+        polygon.style.fill = options.fill;
+        //polygon.style.fillOpacity = "0.4";
+        polygon.style.strokeOpacity = "0";
+        polygon.style["mix-blend-mode"] = "multiply";
+    }
+    if (options.stroke) {
+        polygon.style.stroke = options.stroke;
+        polygon.style.strokeWidth = options.strokeWidth || "1";
+    }
+    svg.speedy = {
+        stream: 1
+    };
+    svg.appendChild(polygon);
+    const parent = p.start.element?.parentNode as ParentNode;
+    parent.insertBefore(svg, p.start?.element as Node);
+    return svg;
 };
 
 export const createUnderline = (p: StandoffProperty, options: DrawUnderlineOptions) => {
@@ -189,6 +264,11 @@ export const createUnderline = (p: StandoffProperty, options: DrawUnderlineOptio
     });
     underline.append(...segments);
     return underline;
+};
+
+const svgElement = (svg: SVGElement, type: string, config: any) => {
+    var el = document.createElementNS(svg.namespaceURI, type);
+    return updateSVGElement(el, config);
 };
 
 export const createSvgLine = (config: any) => {
