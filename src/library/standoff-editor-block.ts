@@ -161,6 +161,12 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         return results;
     }
+    unsetMarker() {
+        if (this.cache.marker) {
+            this.cache.marker.remove();
+            this.cache.marker = undefined;
+        }
+    }
     setMarker(anchor: Cell, container?: HTMLDivElement) {
         const cache = anchor.cache;
         if (this.cache.marker) {

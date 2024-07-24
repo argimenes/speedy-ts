@@ -51,6 +51,7 @@ export class StandoffProperty {
         this.isDeleted = true;
         this.onDestroy();
         this.removeStyling();
+        this.unhighlight();
     }
     highlight() {
         this.applyCssClass("text-highlight");
@@ -58,45 +59,71 @@ export class StandoffProperty {
     unhighlight() {
         this.removeCssClassFromRange("text-highlight");
     }
-    contract() {
+    contract(suppressFlash?: boolean) {
         var previousEndCell = this.end.previous;
         if (!previousEndCell || previousEndCell == this.start) {
             return;
         }
+        this.unhighlight();
         this.removeStyling();
         this.end = previousEndCell;
         this.applyStyling();
+        if (!suppressFlash) {
+            this.flashHighlight();
+        }
     }
-    shiftLeft() {
+    render() {
+        if (this.schema?.render?.update) {
+            this.schema.render?.update({ block: this.block, properties: [this] });
+        }
+    }
+    shiftLeft(suppressFlash?: boolean) {
         var previousStartCell = this.start.previous;
         var previousEndCell = this.end.previous;
         if (!previousStartCell || !previousEndCell) {
             return;
         }
+        this.unhighlight();
         this.removeStyling();
         this.start = previousStartCell;
         this.end = previousEndCell;
         this.applyStyling();
+        if (!suppressFlash) {
+            this.flashHighlight();
+        }
     }
-    shiftRight() {
+    flashHighlight() {
+        var self = this;
+        this.highlight();
+        setTimeout(() => self.unhighlight(), 125);
+    }
+    shiftRight(suppressFlash?: boolean) {
         var nextStartCell = this.start.next;
         var nextEndCell = this.end.next;
         if (!nextStartCell || !nextEndCell) {
             return;
         }
+        this.unhighlight();
         this.removeStyling();
         this.start = nextStartCell;
         this.end = nextEndCell;
         this.applyStyling();
+        if (!suppressFlash) {
+            this.flashHighlight();
+        }
     }
-    expand() {
+    expand(suppressFlash?: boolean) {
         var nextEndCell = this.end.next as Cell;
         if (!nextEndCell) {
             return;
         }
+        this.unhighlight();
         this.removeStyling();
         this.end = nextEndCell;
         this.applyStyling();
+        if (!suppressFlash) {
+            this.flashHighlight();
+        }
     }
     hasOffsetChanged() {
         let spoff = this.start.cache.previousOffset;
@@ -131,6 +158,9 @@ export class StandoffProperty {
             const wrapper = this.wrapper = wrapRange(this);
             wrapper.classList.add(this.schema?.wrap?.cssClass);
             this.styled = true;
+        }
+        if (this.schema?.render) {
+            this.render();
         }
     }
     removeStyling() {

@@ -562,7 +562,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                             block.cache.monitor.remove();
                             block.cache.monitor = undefined;
                         }
-                        block.setMarker(args.caret.left || args.caret.right, manager.container);
+                        block.unsetMarker();
                     }
                 }
             },
