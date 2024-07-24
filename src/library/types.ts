@@ -96,9 +96,10 @@ export interface IPlainTextBindingHandlerArgs {
     caret: CaretAnchor;
     allowPassthrough?: () => void;
 }
+export type AsyncBindingHandler = (args: IBindingHandlerArgs) => Promise<void>;
 export type BindingHandler = (args: IBindingHandlerArgs) => void;
 export type BlockBindingHandler = (block: BlockProperty) => void;
-export type KeyboardBinding = Record<string, BindingHandler>;
+export type KeyboardBinding = Record<string, AsyncBindingHandler>;
 export type MouseBinding = KeyboardBinding;
 export type InputBindings = {
     keyboard: KeyboardBinding[];
@@ -267,7 +268,7 @@ export type InputEvent = {
 export type InputAction = {
     name: string;                   // "copy"
     description?: string;           // "Copies text in the selection for pasting elsewhere."
-    handler: BindingHandler;        // The function that carries out the task.
+    handler: AsyncBindingHandler;        // The function that carries out the task.
 }
 export enum CARET {
     LEFT = 0,

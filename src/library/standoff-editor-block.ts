@@ -321,7 +321,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.inputBuffer.splice(0, 1);
         this.addToInputBuffer(key);
     }
-    private handleKeyDown(e: KeyboardEvent) {
+    private async handleKeyDown(e: KeyboardEvent) {
         e.preventDefault();
         const ALLOW = true, FORBID = false;
         const input = this.toKeyboardInput(e);
@@ -336,7 +336,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                 block: this, caret: this.getCaret(), selection: this.getSelection(),
                 allowPassthrough: () => passthrough = true
             } as IBindingHandlerArgs;
-            match.action.handler(args);
+            await match.action.handler(args);
             if (!passthrough) return FORBID;
         }
         if (input.key.length == 1) {
@@ -412,6 +412,11 @@ export class StandoffEditorBlock extends AbstractBlock {
         //     document.selection.empty();
         // }
         //this.clearSelectionMode();
+    }
+    isEmpty() {
+        const len = this.cells.length;
+        if (len != 1) return false;
+        return this.cells[0].isEOL;
     }
     getSelection() {
         const range = window.getSelection()?.getRangeAt(0);

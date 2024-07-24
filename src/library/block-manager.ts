@@ -9,7 +9,7 @@ import { ImageBlock } from "./image-block";
 import { VideoBlock } from "./video-block";
 import { IframeBlock } from "./iframe-block";
 import { Cell } from "./cell";
-import _ from "underscore";
+import _, { property } from "underscore";
 import { AbstractBlock } from "./abstract-block";
 import { BlockProperty } from "./block-property";
 import { StandoffEditorBlock } from "./standoff-editor-block";
@@ -115,7 +115,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 action: {
                     name: "Set focus to the block below.",
                     description: "",
-                    handler: (args: any) => {
+                    handler: async (args: any) => {
                         const { characterIndex, textLength, allowPassthrough } = args;
                         if (characterIndex.start >= textLength - 10) {
                             self.moveCaretDown(args);
@@ -163,7 +163,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 action: {
                     name: "Set focus to the block above.",
                     description: "",
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block;
                         if (block.relation.previous) {
                             self.setBlockFocus(block.relation.previous);
@@ -471,7 +471,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 action: {
                     name: "Set focus to the current block.",
                     description: "",
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block;
                         const manager = block.owner as BlockManager;
                         manager.setBlockFocus(block);
@@ -492,7 +492,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 action: {
                     name: "Set focus to the current block.",
                     description: "",
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as ImageBlock;
                         const manager = block.owner as BlockManager;
                         manager.setBlockFocus(block);
@@ -502,7 +502,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         ]
         return events;
     }
-    handleContextMenuClicked(args: IBindingHandlerArgs) {
+    async handleContextMenuClicked(args: IBindingHandlerArgs) {
         const { caret } = args;
         const block = args.block as StandoffEditorBlock;
         const anchor = caret.left || caret.right;
@@ -554,7 +554,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 action: {
                     name: "Set focus to the current block.",
                     description: "",
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
                         manager.setBlockFocus(block);
@@ -577,7 +577,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         Let's describe how this works ...
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
@@ -652,7 +652,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         Let's describe how this works ...
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
@@ -790,7 +790,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         If at the start of the block (i.e., no character to the left) then issues an event
                         named "DELETE_CHARACTER_FROM_START_OF_BLOCK" (?).
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const selection = block.getSelection();
@@ -800,18 +800,40 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                             return;
                         }
                         const manager = block.owner as BlockManager;
-                        if (!caret.left) {
-                            let previous = block.relation.previous;
-                            if (previous) {
-                                manager.deleteBlock(previous.id);
-                                if (caret.right.isEOL) {
-                                
-                                }
+                        if (block.isEmpty()) {
+                            manager.deleteBlock(block.id);
+                            let nearestNeighbour = block.relation.previous || block.relation.next;
+                            const parent = this.getParent(block) as AbstractBlock;
+                            if (parent) {
+                                manager.addParentSiblingRelations(parent);
                             }
-                            
+                            manager.setBlockFocus(nearestNeighbour);
+                            if (nearestNeighbour.type == BlockType.StandoffEditorBlock) {
+                                (nearestNeighbour as StandoffEditorBlock).setCaret(0, CARET.LEFT);
+                            }
                             return;
                         }
-                        block.removeCellAtIndex(caret.left.index, true);
+                        block.removeCellAtIndex(caret.left?.index as number, true);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-S"
+                },
+                action: {
+                    name: "Save document",
+                    description: "",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const manager = args.block.owner as BlockManager;
+                        let filename = manager.metadata.filename;
+                        if (!filename) {
+                            filename = prompt("Filename?");
+                            manager.metadata.filename = filename;
+                        }
+                        await manager.saveServerDocument(filename);
                     }
                 }
             },
@@ -826,7 +848,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         /**
                          * Not working properly yet.
                          */
@@ -862,7 +884,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         If at the start of the block (i.e., no character to the left) then issues an event
                         named "DELETE_CHARACTER_FROM_START_OF_BLOCK" (?).
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const last = block.cells[-1];
@@ -885,7 +907,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         /**
                          * NB: not working as expected. Check the removeCellsAtIndex method chain carefully.
                          */
@@ -913,7 +935,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
                         // const previous = manager.getPreviousOf(block.id);
@@ -1007,7 +1029,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
@@ -1061,7 +1083,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
@@ -1114,7 +1136,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         if (!caret.left) {
@@ -1144,7 +1166,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         ... Or skip to the end of the previous block.
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         /**
                          * Move the cursor right one cell ...
                          */
@@ -1186,7 +1208,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         if (caret.right.isEOL) {
@@ -1243,7 +1265,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         return null;
     }
-    moveSelectionOneCharacterRightwards(args: IBindingHandlerArgs) {
+    async moveSelectionOneCharacterRightwards(args: IBindingHandlerArgs) {
         const { caret } = args;
         const block = args.block as StandoffEditorBlock;
         const range = block.getSelection();
@@ -1263,7 +1285,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             block.setSelection(selection);
         };
     }
-    moveSelectionOneCharacterLeftwards(args: IBindingHandlerArgs){
+    async moveSelectionOneCharacterLeftwards(args: IBindingHandlerArgs){
         const { caret } = args;
         const block = args.block as StandoffEditorBlock;
         const range = block.getSelection();
@@ -1279,14 +1301,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             block.setSelection(selection);
         };
     }
-    moveCaretToStartOfTextBlock(args: IBindingHandlerArgs) {
+    async moveCaretToStartOfTextBlock(args: IBindingHandlerArgs) {
         const { caret } = args;
         const block = args.block as StandoffEditorBlock;
         const first = block.cells[0];
         if (!first) return;
         block.setCaret(0, CARET.LEFT);
     }
-    moveCaretToEndOfTextBlock(args: IBindingHandlerArgs) {
+    async moveCaretToEndOfTextBlock(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
         const last = block.getLastCell();
         if (!last) return;
@@ -1353,7 +1375,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         Sets the background of the block to blue, and font to white.
                     `,
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as StandoffEditorBlock;
                         block.createBlockProperty("block/blue-and-white");     
                     }
@@ -1584,7 +1606,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     commit(msg: Commit) {
         this.commits.push(msg);
     }
-    handleDeleteBlock(args: IBindingHandlerArgs) {
+    async handleDeleteBlock(args: IBindingHandlerArgs) {
         const block = args.block;
         const i = this.blocks.findIndex(x => x.id == block.id);
         const { previous, next, parent, firstChild } = block.relation;
@@ -2430,7 +2452,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.blocks.push(block);
         return block;
     }
-    handleEnterKey(args: IBindingHandlerArgs) {
+    async handleEnterKey(args: IBindingHandlerArgs) {
         const { caret } = args;
         const block = args.block as StandoffEditorBlock;
         const next = block.relation.next;
@@ -2449,7 +2471,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         newBlock.setCaret(0, CARET.LEFT);
         this.setBlockFocus(newBlock);
     }
-    handleTabKey(args: IBindingHandlerArgs) {
+    async handleTabKey(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
         const parent = block.relation.parent;
         if (parent) {
@@ -2485,12 +2507,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         // block.setCaret(0, CARET.LEFT);
         // this.setBlockFocus(block);
     }
-    applyImageBackgroundToBlock(args: IBindingHandlerArgs) {
+    async applyImageBackgroundToBlock(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
         block.addBlockProperties([{ type: "block/background/image" }]);
         block.applyBlockPropertyStyling();
     }
-    applyClockToText(args: IBindingHandlerArgs) {
+    async applyClockToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
         const selection = block.getSelection();
         if (selection) {
@@ -2499,7 +2521,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             // TBC
         }      
     }
-    applyMirrorToText(args: IBindingHandlerArgs) {
+    async applyMirrorToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
         const selection = block.getSelection();
         if (selection) {
@@ -2508,7 +2530,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             // TBC
         }      
     }
-    applyFlipToText(args: IBindingHandlerArgs) {
+    async applyFlipToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
         const selection = block.getSelection();
         if (selection) {
@@ -2517,7 +2539,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             // TBC
         }      
     }
-    applyItalicsToText(args: IBindingHandlerArgs) {
+    async applyItalicsToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
         const selection = block.getSelection();
         if (selection) {
@@ -2526,10 +2548,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             // TBC
         }      
     }
-    applyBoldToText(args: IBindingHandlerArgs) {
+    async applyBoldToText(args: IBindingHandlerArgs) {
         this.applyStandoffProperty(args.block as StandoffEditorBlock, "style/bold") 
     }
-    applyBlurToText(args: IBindingHandlerArgs) {
+    async applyBlurToText(args: IBindingHandlerArgs) {
         this.applyStandoffProperty(args.block as StandoffEditorBlock, "style/blur") 
     }
     applyStandoffProperty(block: StandoffEditorBlock, type: string) {
@@ -2540,7 +2562,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             // TBC
         }  
     }
-    applyEntityReferenceToText(args: IBindingHandlerArgs) {
+    async applyEntityReferenceToText(args: IBindingHandlerArgs) {
         const self = this;
         const block = args.block as StandoffEditorBlock;
         const selection = block.getSelection();
@@ -2579,7 +2601,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     getHighestZIndex() {
         return 200;
     }
-    moveCaretLeft(args: IBindingHandlerArgs) {
+    async moveCaretLeft(args: IBindingHandlerArgs) {
         /**
          * Move the cursor back one cell ...
          */
@@ -2773,7 +2795,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.appendSibling(block.container, grid.container);
         cell1.container.append(block.container);
     }
-    moveCaretDown(args: IBindingHandlerArgs) {
+    async moveCaretDown(args: IBindingHandlerArgs) {
         const { caret } = args;
         const block = args.block;
         if (args.block.type == BlockType.StandoffEditorBlock) {
