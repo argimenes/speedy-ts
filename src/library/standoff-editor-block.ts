@@ -68,6 +68,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                 contenteditable: "true"
             },
             style: {
+                position: "relative", // important for keeping the offsets relative to this element
                 margin: "0 10px",
                 //border: "1px solid #ccc",
                 padding: "10px"
