@@ -20,6 +20,18 @@ app.get("/api/listDocuments", function (req, res) {
           res.send({ files: files });
      });
 });
+app.get('/api/loadGraphJson', function(req, res) {
+     const filename = req.query.filename;
+     const filepath = path.join(__dirname + "/data/" + filename);
+     const data = fs.readFileSync(filepath);
+     const json = JSON.parse(data);
+     res.send({
+          Success: true,
+          Data: {
+               document: json
+          }
+     });
+});
 app.get('/api/loadDocumentJson', function(req, res) {
      const filename = req.query.filename;
      const filepath = path.join(__dirname + "/data/" + filename);
