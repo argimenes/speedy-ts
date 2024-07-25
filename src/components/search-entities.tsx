@@ -49,6 +49,7 @@ export function SearchEntitiesWindow(props: any) {
                 Text: item.name, Value: item.id
             });
         }
+
     }
     onMount(async () => {
         await loadGraph("default.graph.json");
@@ -64,6 +65,7 @@ export function SearchEntitiesWindow(props: any) {
                             value={model.search}
                             use:autofocus autofocus
                             class="form-control"
+                            
                             onInput={(e) => setModel("search", e.currentTarget.value)}
                         />
                         <button type="submit" class="btn btn-primary">SELECT</button>
