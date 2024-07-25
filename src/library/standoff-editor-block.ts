@@ -789,6 +789,8 @@ export class StandoffEditorBlock extends AbstractBlock {
                 endProperties.forEach(p => p.end = previousCell);
             }
         }
+        const props = singles.concat(endProperties);
+        this.renderProperties(props);
     }
     private shiftPropertyStartNodesRight(cell: Cell) {
         const nextCell = cell.next;
@@ -805,6 +807,8 @@ export class StandoffEditorBlock extends AbstractBlock {
                 startProperties.forEach(p => p.start = nextCell);
             }
         }
+        const props = singles.concat(startProperties);
+        this.renderProperties(props);
     }
     private unknit(cell: Cell) {
         const left = cell.previous;
@@ -1002,7 +1006,6 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.reindexCells();
         // const enclosing = this.getEnclosingProperties(cell);
         // this.renderProperties(enclosing);
-        //this.setMarker(this.cells[index -1], this.container?.parentElement);
         this.updateView();
         if (updateCaret) {
             this.setCaret(index);
