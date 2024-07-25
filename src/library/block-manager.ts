@@ -14,7 +14,7 @@ import { AbstractBlock } from "./abstract-block";
 import { BlockProperty } from "./block-property";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { StandoffProperty } from "./standoff-property";
-import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin } from "./types";
+import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret } from "./types";
 import { PlainTextBlock } from "./plain-text-block";
 import { CodeMirrorBlock } from "./code-mirror-block";
 import { ClockPlugin } from "./plugins/clock";
@@ -815,6 +815,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         }
                         block.removeCellAtIndex(caret.left?.index as number, true);
                     }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Custom,
+                    match: "paste"
+                },
+                action: {
+                    name: "Paste",
+                    description: "Pastes plain text",
+                    handler: this.handlePaste.bind(this)
                 }
             },
             {
@@ -2438,7 +2450,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 action: {
                     name: "",
                     description: "",
-                    handler: (args: IBindingHandlerArgs) => {
+                    handler: async (args: IBindingHandlerArgs) => {
                         console.log("onTextChanged", { args });
                         textProcessor.process(args);
                     }
@@ -2794,6 +2806,35 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         parent?.blocks.splice(i, 0, grid);
         this.appendSibling(block.container, grid.container);
         cell1.container.append(block.container);
+    }
+    splitLines(t: string) {
+        return t.split(/\r\n|\r|\n/);
+    }
+    async handlePaste(args: IBindingHandlerArgs) {
+        const caret = args.caret as Caret;
+        const block = args.block as StandoffEditorBlock;
+        const e = args.e as ClipboardEvent;
+        const clipboardData = e.clipboardData as DataTransfer; // || window.clipboardData;
+        const text = clipboardData.getData('text');
+        const lines = this.splitLines(text);
+        let currentBlock = block;
+        let temp = [block];
+        const len = lines.length;
+        for (let i = 0; i < len; i++) {
+            if (i == 0) {
+                const ci = caret.left ? caret.left.index + 1 : 0;
+                block.insertTextAtIndex(lines[0], ci);
+                continue;
+            }
+            currentBlock = temp[i-1];
+            const newBlock = this.createStandoffEditorBlock();
+            newBlock.bind({
+                type: BlockType.StandoffEditorBlock,
+                text: lines[i]
+            });
+            this.addNextBlock(newBlock, currentBlock);
+            temp.push(newBlock);
+        }
     }
     async moveCaretDown(args: IBindingHandlerArgs) {
         const { caret } = args;

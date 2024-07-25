@@ -199,13 +199,24 @@ export class StandoffEditorBlock extends AbstractBlock {
         /*
         We also need to keep track of keyboard input combinations, e.g., [CTRL-K, CTRL-D].
         */
+        const self= this;
         this.wrapper.addEventListener("keydown", this.handleKeyDown.bind(this));
         this.wrapper.addEventListener("mouseup", this.handleMouseUpEvent.bind(this));
         this.wrapper.addEventListener("click", this.handleClickEvent.bind(this));
         this.wrapper.addEventListener("dblclick", this.handleDoubleClickEvent.bind(this));
         this.wrapper.addEventListener("contextmenu", this.handleContextMenuClickEvent.bind(this));
+        this.wrapper.addEventListener("paste", this.handleOnPasteEvent.bind(this));
     }
-    handleContextMenuClickEvent(e: MouseEvent) {
+    private async handleOnPasteEvent(e: ClipboardEvent) {
+        e.preventDefault();
+        const customEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Custom);
+        const found = customEvents.find(x => x.trigger.match == "paste");
+        const caret = this.getCaret() as Caret;
+        if (found) {
+            await found.action.handler({ block: this, caret, e });
+        }
+    }
+    private async handleContextMenuClickEvent(e: MouseEvent) {
         const mouseEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Mouse);
         const found = mouseEvents.find(x => x.trigger.match == "contextmenu");
         const caret = this.getCaret() as Caret;
@@ -217,7 +228,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             });
         }
     }
-    handleDoubleClickEvent(e: MouseEvent) {
+    private async handleDoubleClickEvent(e: MouseEvent) {
         const self = this;
         const caret = this.getCaret() as Caret;
         const props = this.getEnclosingProperties(caret.right);
@@ -227,7 +238,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             }
         })
     }
-    handleClickEvent(e: MouseEvent) {
+    private async handleClickEvent(e: MouseEvent) {
         const mouseEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Mouse);
         const found = mouseEvents.find(x => x.trigger.match == "click");
         const caret = this.getCaret();
@@ -244,7 +255,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             });
         }
     }
-    handleMouseUpEvent(e: MouseEvent) {
+    private async handleMouseUpEvent(e: MouseEvent) {
         const target = e.target as CellHtmlElement;
         // if (!target || target.speedy?.role != ELEMENT_ROLE.CELL) {
         //     return;
@@ -322,28 +333,32 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.addToInputBuffer(key);
     }
     private async handleKeyDown(e: KeyboardEvent) {
-        e.preventDefault();
         const ALLOW = true, FORBID = false;
         const input = this.toKeyboardInput(e);
-        const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
-        if (modifiers.some(x => x == input.key)) {
+        if (input.command || input.control || input.option || input.shift) {
             return ALLOW;
         }
         const match = this.getFirstMatchingInputEvent(input);
+        let passthrough = false;
         if (match) {
-            let passthrough = false;
             const args = {
-                block: this, caret: this.getCaret(), selection: this.getSelection(),
-                allowPassthrough: () => passthrough = true
+                block: this,
+                caret: this.getCaret(),
+                selection: this.getSelection() as IRange,
+                allowPassthrough: () => passthrough = true,
+                e
             } as IBindingHandlerArgs;
             await match.action.handler(args);
-            if (!passthrough) return FORBID;
+            if (!passthrough) {
+                e.preventDefault();
+                return FORBID;
+            }
         }
         if (input.key.length == 1) {
             // Ignoring UNICODE code page implications for the moment.
             this.insertCharacterAtCaret(input);
         }
-        return FORBID;
+        return passthrough;
     }
     getCellFromNode(node: CellNode) {
         let current = node;

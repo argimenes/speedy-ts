@@ -90,6 +90,8 @@ export interface IBindingHandlerArgs {
     block: IBlock;
     caret: Caret;
     allowPassthrough?: () => void;
+    selection?: IRange;
+    e?: Event;
 }
 export interface IPlainTextBindingHandlerArgs {
     block: IBlock;
