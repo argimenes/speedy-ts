@@ -88,13 +88,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         });
     }
     private handleKeyDown(e: KeyboardEvent) {
-        e.preventDefault();
+        //e.preventDefault();
         const ALLOW = true, FORBID = false;
         const input = this.toKeyboardInput(e);
         const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
         if (modifiers.some(x => x == input.key)) {
             return ALLOW;
         }
+        e.preventDefault();
         const match = this.getFirstMatchingInputEvent(input);
         if (match) {
             const args = { block: this.getBlockInFocus() } as any;
@@ -827,6 +828,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     name: "Paste",
                     description: "Pastes plain text",
                     handler: this.handlePaste.bind(this)
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-V"
+                },
+                action: {
+                    name: "Paste",
+                    description: "Pastes plain text",
+                    handler: async (args) => {
+                        args.allowPassthrough && args.allowPassthrough();
+                    }
                 }
             },
             {

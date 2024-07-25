@@ -335,7 +335,8 @@ export class StandoffEditorBlock extends AbstractBlock {
     private async handleKeyDown(e: KeyboardEvent) {
         const ALLOW = true, FORBID = false;
         const input = this.toKeyboardInput(e);
-        if (input.command || input.control || input.option || input.shift) {
+        const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
+        if (modifiers.some(x => x == input.key)) {
             return ALLOW;
         }
         const match = this.getFirstMatchingInputEvent(input);
@@ -350,13 +351,17 @@ export class StandoffEditorBlock extends AbstractBlock {
             } as IBindingHandlerArgs;
             await match.action.handler(args);
             if (!passthrough) {
-                e.preventDefault();
+                e.preventDefault();        
                 return FORBID;
+            } else {
+                return ALLOW;
             }
         }
         if (input.key.length == 1) {
             // Ignoring UNICODE code page implications for the moment.
             this.insertCharacterAtCaret(input);
+            e.preventDefault();        
+            return FORBID;
         }
         return passthrough;
     }
@@ -712,7 +717,6 @@ export class StandoffEditorBlock extends AbstractBlock {
         const chars = [...text];
         const len = chars.length;
         const cells: Cell[] = [];
-        
         for (let i = 0; i < len; i ++) {
             let cell = new Cell({ text: chars[i], block: this });
             cells.push(cell);

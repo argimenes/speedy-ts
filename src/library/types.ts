@@ -211,6 +211,7 @@ export type Caret = {
 export type CellElement = {
     cell: Cell;
     role: ELEMENT_ROLE;
+    isSpace: boolean;
 }
 export interface ICellConstructor {
     block: StandoffEditorBlock;
