@@ -1,4 +1,5 @@
 import { StandoffEditorBlock } from "./standoff-editor-block";
+import { updateElement } from "./svg";
 import { ICellCoordOffsets, CellHtmlElement, ICellConstructor, ELEMENT_ROLE, DIRECTION } from "./types";
 
 export class Cell {
@@ -39,10 +40,19 @@ export class Cell {
     }
     createSpan() {
         const span = document.createElement("SPAN") as CellHtmlElement;
-        span.innerHTML = this.text == " " ? "&nbsp;" : this.text;
         span.speedy = {
             cell: this,
-            role: ELEMENT_ROLE.CELL
+            role: ELEMENT_ROLE.CELL,
+            isSpace: false
+        }
+        span.innerHTML = this.text === " " ? " " : this.text;
+        if (this.text === " ") {
+            updateElement(span, {
+                style: {
+                    width: "1rem"
+                }
+            });
+            span.speedy.isSpace = true;
         }
         return span;
     }
