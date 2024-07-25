@@ -848,6 +848,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Meta-V"
+                },
+                action: {
+                    name: "Paste",
+                    description: "Pastes plain text",
+                    handler: async (args) => {
+                        args.allowPassthrough && args.allowPassthrough();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "Control-S"
                 },
                 action: {
@@ -2835,9 +2849,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         let currentBlock = block;
         let temp = [block];
         const len = lines.length;
+        const ci = caret.left ? caret.left.index + 1 : 0;
         for (let i = 0; i < len; i++) {
             if (i == 0) {
-                const ci = caret.left ? caret.left.index + 1 : 0;
                 block.insertTextAtIndex(lines[0], ci);
                 continue;
             }
@@ -2850,6 +2864,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             this.addNextBlock(newBlock, currentBlock);
             temp.push(newBlock);
         }
+        if (len == 1) {
+            currentBlock.setCaret(ci + text.length, CARET.LEFT);
+            return;
+        }
+        const lastBlock = temp[len-1];
+        this.setBlockFocus(lastBlock);
+        const lastCell = lastBlock.getLastCell();
+        lastBlock.setCaret(lastCell.index, CARET.LEFT);
     }
     async moveCaretDown(args: IBindingHandlerArgs) {
         const { caret } = args;
