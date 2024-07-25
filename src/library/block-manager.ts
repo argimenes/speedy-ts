@@ -42,6 +42,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     blockProperties: BlockProperty[];
     blockSchemas: IBlockPropertySchema[];
     plugins: IPlugin[];
+    highestZIndex: number;
     constructor(props?: IBlockManagerConstructor) {
         super({ id: props?.id, container: props?.container });
         this.id = props?.id || uuidv4();
@@ -59,6 +60,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.inputEvents = this.getGlobalInputEvents();
         this.inputActions = [];
         this.modes = ["global"];
+        this.highestZIndex = this.getHighestZIndex();
         this.plugins = [];
         this.attachEventBindings();
     }
@@ -521,13 +523,15 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             },
         });
         const node = block.cache.monitor = renderToNode(component) as HTMLDivElement;
-        const top = anchor.cache.offset.y + anchor.cache.offset.y + 38;
-        const left = anchor.cache.offset.x;
+        const offset = anchor.cache.offset;
+        const top = offset.cy + offset.y + offset.h + 5;
+        const left = offset.x;
         updateElement(node, {
             style: {
                 position: "absolute",
                 top: top + "px",
-                left: left + "px"
+                left: left + "px",
+                "z-index": this.getHighestZIndex()
             },
             parent: this.container
         });
@@ -2632,7 +2636,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 position: "absolute",
                 top: (top + 30) + "px",
                 left: left + "px",
-                "z-index": this.getHighestZIndex() + 1,
+                "z-index": this.getHighestZIndex(),
                 width: "300px",
                 height: "50px"
             }
@@ -2640,7 +2644,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.container.appendChild(node);
     }
     getHighestZIndex() {
-        return 200;
+        return ++this.highestZIndex;
     }
     async moveCaretLeft(args: IBindingHandlerArgs) {
         /**
