@@ -554,7 +554,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Alt-V"
+                    match: "Control-C"
                 },
                 action: {
                     name: "Copy",
@@ -563,31 +563,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         const block = args.block as StandoffEditorBlock;
                         const selection = args.selection as IRange;
                         const text = block.getText();
+                        const allProps = block.standoffProperties.map(x => x.serialize());
                         const si = selection.start.index, ei = selection.end.index;
                         const textSelection = text.substring(selection.start.index, selection.end.index + 1);
                         const len = textSelection.length;
-                        /**
-                         * Need to rewrite this to fetch props that start before the selection range.
-                         */
-                        const props1 = block.getEnclosingProperties(selection.start);
-                        const props2 = block.getEnclosingProperties(selection.end);
-                        const props = _.unique(props1.concat(props2))
-                            .map(x => x.serialize())
+                        const overlappingProps = allProps
+                            .filter(x => x.end >= si || x.start <= ei || (si <= x.start && x.end <= ei));
+                        const standoffProperties = overlappingProps
                             .map(x => {
                                 const si2 = x.start < si ? 0 : x.start - si;
                                 const ei2 = x.end > ei ? len : x.end - si;
                                 return {...x, start: si2, end: ei2 }
                             });
-                        console.log("Copy .. dump", { 
-                            block,
-                            text,
-                            textSelection,
-                            props,
-                            si, ei
-                        });
-                        /**
-                         * Probably push the object onto an array of copy items.
-                         */
+                        const data = { type: BlockType.StandoffEditorBlock, text, standoffProperties };
+                        console.log("Copy .. dump", {  block, text, data, si, ei });
                     }
                 }
             },
@@ -1420,7 +1409,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Control-C"
+                    match: "Control-K"
                 },
                 action: {
                     name: "Clock",
