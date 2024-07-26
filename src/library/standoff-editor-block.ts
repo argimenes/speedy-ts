@@ -335,6 +335,7 @@ export class StandoffEditorBlock extends AbstractBlock {
     private async handleKeyDown(e: KeyboardEvent) {
         const ALLOW = true, FORBID = false;
         const input = this.toKeyboardInput(e);
+        console.log("handleKeyDown", { input });
         const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
         if (modifiers.some(x => x == input.key)) {
             return ALLOW;
