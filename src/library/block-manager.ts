@@ -14,7 +14,7 @@ import { AbstractBlock } from "./abstract-block";
 import { BlockProperty } from "./block-property";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { StandoffProperty } from "./standoff-property";
-import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret } from "./types";
+import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto } from "./types";
 import { PlainTextBlock } from "./plain-text-block";
 import { CodeMirrorBlock } from "./code-mirror-block";
 import { ClockPlugin } from "./plugins/clock";
@@ -43,6 +43,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     blockSchemas: IBlockPropertySchema[];
     plugins: IPlugin[];
     highestZIndex: number;
+    clipboard: Record<string, any>[];
     constructor(props?: IBlockManagerConstructor) {
         super({ id: props?.id, container: props?.container });
         this.id = props?.id || uuidv4();
@@ -62,6 +63,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.modes = ["global"];
         this.highestZIndex = this.getHighestZIndex();
         this.plugins = [];
+        this.clipboard = [];
         this.attachEventBindings();
     }
     deserialize(json: any): IBlock {
@@ -567,15 +569,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         const si = selection.start.index, ei = selection.end.index;
                         const textSelection = text.substring(selection.start.index, selection.end.index + 1);
                         const len = textSelection.length;
-                        const overlappingProps = allProps
-                            .filter(x => x.end >= si || x.start <= ei || (si <= x.start && x.end <= ei));
-                        const standoffProperties = overlappingProps
-                            .map(x => {
-                                const si2 = x.start < si ? 0 : x.start - si;
-                                const ei2 = x.end > ei ? len : x.end - si;
-                                return {...x, start: si2, end: ei2 }
-                            });
-                        const data = { type: BlockType.StandoffEditorBlock, text, standoffProperties };
+                        const overlappingProps = allProps.filter(x => x.end >= si || x.start <= ei || (si <= x.start && x.end <= ei));
+                        const standoffProperties = overlappingProps.map(x => {
+                            const si2 = x.start < si ? 0 : x.start - si;
+                            const ei2 = x.end > ei ? len : x.end - si;
+                            return {...x, start: si2, end: ei2 }
+                        });
+                        const data = {
+                            source: "Codex", format: "StandoffEditorBlock",
+                            context: { block, selection: { start: si, end: ei } },
+                            data: { text: textSelection, standoffProperties }
+                        };
+                        this.clipboard.push(data);
                         console.log("Copy .. dump", {  block, text, data, si, ei });
                     }
                 }
@@ -2891,13 +2896,46 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
         const e = args.e as ClipboardEvent;
-        const clipboardData = e.clipboardData as DataTransfer; // || window.clipboardData;
-        const text = clipboardData.getData('text');
+        // const clipboardData = e.clipboardData as DataTransfer; // || window.clipboardData;
+        // const text = clipboardData.getData('text');
+        // if (text) {
+        //     const data = {
+        //         source: "External",
+        //         format: "PlainText",
+        //         data: {
+        //             text
+        //         }
+        //     };
+        //     this.clipboard.push(data);
+        //     navigator.clipboard.writeText("");
+        // }
+        const item = this.clipboard[this.clipboard.length-1];
+        const ci = caret.left ? caret.left.index + 1 : 0;
+        if (item.source == "External") {
+            this.pastePlainTextItem(block.id, ci, item);
+        }
+        if (item.source == "Codex") {
+            this.pasteCodexItem(block.id, ci, item);
+        }
+    }
+    pasteCodexItem(targetBlockId: GUID, ci: number, item: any) {
+        const block = this.getBlock(targetBlockId) as StandoffEditorBlock;
+        const text = item.data.text;
+        const props = item.data.standoffProperties
+            .map(x => {
+                return {...x, start: x.start + ci, end: x.end + ci} as StandoffPropertyDto
+            });
+        block.insertTextAtIndex(text, ci);
+        block.addStandoffPropertiesDto(props);
+        block.applyStandoffPropertyStyling();
+    }
+    pastePlainTextItem(targetBlockId: GUID, ci: number, item: any) {
+        const block = this.getBlock(targetBlockId) as StandoffEditorBlock;
+        const text = item.data.text;
         const lines = this.splitLines(text);
         let currentBlock = block;
         let temp = [block];
         const len = lines.length;
-        const ci = caret.left ? caret.left.index + 1 : 0;
         for (let i = 0; i < len; i++) {
             if (i == 0) {
                 block.insertTextAtIndex(lines[0], ci);
