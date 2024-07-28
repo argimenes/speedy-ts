@@ -867,6 +867,16 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                             }
                             return;
                         }
+                        if (!caret.left) {
+                            const previous = block.relation.previous as StandoffEditorBlock;
+                            if (previous) {
+                                const li = previous.getLastCell()?.index;
+                                this.mergeBlocks(block.id, previous.id);
+                                this.setBlockFocus(previous);
+                                previous.setCaret(li, CARET.LEFT);
+                                return;
+                            }
+                        }
                         block.removeCellAtIndex(caret.left?.index as number, true);
                     }
                 }
