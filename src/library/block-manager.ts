@@ -544,7 +544,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Alt-."
+                    match: "Meta-M"
                 },
                 action: {
                     name: "Monitor panel",
@@ -2521,8 +2521,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const insertAbove = parent && caret.left == null;
         if (insertAbove) {
             this.addPreviousBlock(newBlock, block);
-        } else {
+        } else if (caret.right.isEOL) {
             this.addNextBlock(newBlock, block);
+        } else {
+            const ci = caret.left?.index as number;
+            const split = this.splitBlock(block.id, ci);
+            this.setBlockFocus(split);
+            split.setCaret(0, CARET.LEFT);
+            return;
         }
         newBlock.setCaret(0, CARET.LEFT);
         this.setBlockFocus(newBlock);
@@ -2898,6 +2904,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.removeCellsAtIndex(ci, remaining);
         block.updateView();
         block.applyStandoffPropertyStyling();
+
+        return secondBlock;
     }
     splitLines(t: string) {
         return t.split(/\r\n|\r|\n/);
