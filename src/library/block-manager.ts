@@ -2541,7 +2541,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             this.addNextBlock(newBlock, block);
         } else {
             const ci = caret.left?.index as number;
-            const split = this.splitBlock(block.id, ci);
+            const split = this.splitBlock(block.id, ci + 1);
             this.setBlockFocus(split);
             split.setCaret(0, CARET.LEFT);
             return;
