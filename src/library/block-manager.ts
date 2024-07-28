@@ -2870,17 +2870,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const block = this.getBlock(blockId) as StandoffEditorBlock;
         const text = block.getText();
         const props = block.standoffProperties;
-        const lastCell = block.cells[ci];
-        props.filter(x => x.end.index < ci || x.start.index < ci)
-             .forEach(x => {
-                x.end = x.end.index < ci ? x.end : lastCell;
-                x.removeStyling();
-                x.applyStyling();
-        });
-        const remaining = text.length - ci + 1;
-        block.removeCellsAtIndex(ci, remaining);
-        block.updateView();
-        block.applyStandoffPropertyStyling();
 
         const second = text.substring(ci);
         const secondProps = props.filter(x => x.end.index >= ci || x.start.index >= ci)
@@ -2897,6 +2886,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         });
         this.addNextBlock(secondBlock, block);
         secondBlock.applyStandoffPropertyStyling();
+
+        const lastCell = block.cells[ci];
+        props.filter(x => x.end.index < ci)
+             .forEach(x => {
+                x.end = x.end.index < ci ? x.end : lastCell;
+                x.removeStyling();
+                x.applyStyling();
+        });
+        const remaining = text.length - ci + 1;
+        block.removeCellsAtIndex(ci, remaining);
+        block.updateView();
+        block.applyStandoffPropertyStyling();
     }
     splitLines(t: string) {
         return t.split(/\r\n|\r|\n/);
