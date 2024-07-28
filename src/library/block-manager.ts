@@ -1738,44 +1738,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         });
     }
-    mergeBlocks(firstBlockId: GUID, secondBlockId: GUID) {
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "mergeBlocks",
-                value: {
-                    firstBlockId, secondBlockId
-                }
-            }
-        });
-        /**
-         * The following isn't really correct because we would also need to update the block references for each
-         * Standoff- and BlockProperty object to point to 'first' AND we need to propagate these changes to the
-         * StandoffProperty objects on 'second' to the objects in the data store, also.
-         * 
-         * So this is really no more than a high-level sketch of what's involved in merging two blocks.
-         * 
-         * We would also need to update relationships between first, second, and the 'next' block after 'second' (if there is one).
-         * It should look roughly as follows:
-         * 
-         * CREATE:
-         *      (first)-[:has_next]->(next), (next)-[:has_previous]->(first)
-         * 
-         * DELETE:
-         *      (first)-[:has_next]->(second), (second)-[:has_previous]->(first), (second)-[:has_next]->(next)
-         * 
-         * None of this takes into account the case where 'second' is a *child block* in a nested list.
-         */
-        const first = this.getBlock(firstBlockId) as StandoffEditorBlock;
-        const second = this.getBlock(secondBlockId) as StandoffEditorBlock;
-        const lastIndex = (first?.cells.length as number) -1;
-        first?.removeCellAtIndex(lastIndex);
-        first?.cells.push(...second?.cells as Cell[]);
-        first?.standoffProperties.push(...second?.standoffProperties as StandoffProperty[]);
-        first?.blockProperties.push(...second?.blockProperties as BlockProperty[]);
-        first?.updateView();
-        this.deleteBlock(secondBlockId);
-    }
     reset() {
         this.container.innerHTML = "";
         this.blocks = [];
@@ -2888,6 +2850,51 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         parent?.blocks.splice(i, 0, grid);
         this.appendSibling(block.container, grid.container);
         cell1.container.append(block.container);
+    }
+    mergeBlocks(sourceId: GUID, targetId: GUID) {
+        const source = this.getBlock(sourceId) as StandoffEditorBlock;
+        const target = this.getBlock(targetId) as StandoffEditorBlock;
+        const text = source.getText();
+        const ci = target.getText().length - 1;
+        const props = source.standoffProperties
+            .map(x => x.serialize())
+            .map(x => {
+                return { ...x, start: x.start + ci, end: x.end + ci } as StandoffPropertyDto
+            });
+        target.insertTextAtIndex(text, ci);
+        target.addStandoffPropertiesDto(props);
+        target.applyStandoffPropertyStyling();
+        this.deleteBlock(sourceId);
+    }
+    splitBlock(blockId: GUID, ci: number) {
+        const block = this.getBlock(blockId) as StandoffEditorBlock;
+        const text = block.getText();
+        const props = block.standoffProperties;
+        const lastCell = block.cells[ci];
+        props.filter(x => x.end.index < ci || x.start.index < ci)
+             .forEach(x => {
+                x.end = x.end.index < ci ? x.end : lastCell;
+                x.removeStyling();
+                x.applyStyling();
+        });
+        const remaining = text.length - ci + 1;
+        block.removeCellsAtIndex(ci, remaining);
+        block.updateView();
+        block.applyStandoffPropertyStyling();
+
+        const second = text.substring(ci);
+        const secondProps = props.filter(x => x.end.index >= ci || x.start.index >= ci)
+            .map(x => x.serialize())
+            .map(x => {
+                return { ...x, start: x.start < ci ? 0 : x.start - ci, end: x.end - ci} as StandoffPropertyDto;
+            });
+        const secondBlock = this.createStandoffEditorBlock();
+        secondBlock.bind({
+            type: BlockType.StandoffEditorBlock,
+            text: second,
+            standoffProperties: secondProps
+        });
+        this.addNextBlock(secondBlock, block);
     }
     splitLines(t: string) {
         return t.split(/\r\n|\r|\n/);
