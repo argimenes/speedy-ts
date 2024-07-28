@@ -2860,7 +2860,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             .map(x => x.serialize())
             .map(x => {
                 return { ...x, start: x.start + ci, end: x.end + ci } as StandoffPropertyDto
-            });
+        });
         target.insertTextAtIndex(text, ci);
         target.addStandoffPropertiesDto(props);
         target.applyStandoffPropertyStyling();
@@ -2892,9 +2892,11 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         secondBlock.bind({
             type: BlockType.StandoffEditorBlock,
             text: second,
+            blockProperties: block.blockProperties.map(x=> x.serialize()),
             standoffProperties: secondProps
         });
         this.addNextBlock(secondBlock, block);
+        secondBlock.applyStandoffPropertyStyling();
     }
     splitLines(t: string) {
         return t.split(/\r\n|\r|\n/);

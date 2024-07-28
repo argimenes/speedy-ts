@@ -5,7 +5,7 @@ import { GridBlock, GridCellBlock } from "../library/grid-block";
 import { TabBlock, TabRowBlock } from "../library/tabs-block";
 import { IndentedListBlock } from "../library/indented-list-block";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
-import { BlockType, CARET, IBlock, IRange } from "../library/types";
+import { BlockType, Caret, CARET, IBlock, IRange } from "../library/types";
 
 type Model = {
     command: string;
@@ -182,6 +182,19 @@ export const ControlPanel : Component<Props> = (props) => {
         if (!block || block.type != BlockType.IndentedListBlock) return;
         block.expand();
     }
+    const mergeNext= () => {
+        const block = props.manager?.getBlockInFocus() as StandoffEditorBlock;
+        if (!block) return;
+        const next = block.relation.next;
+        if (!next) return;
+        props.manager?.mergeBlocks(next.id, block.id);
+    }
+    const split = () => {
+        const block = props.manager?.getBlockInFocus() as StandoffEditorBlock;
+        if (!block) return;
+        const caret = block.lastCaret;
+        props.manager?.splitBlock(block.id, caret.index || 0);
+    }
     const swapGridCells = () => {
         const block = props.manager?.getBlockInFocus() as IBlock;
         if (!block) return;
@@ -233,6 +246,8 @@ export const ControlPanel : Component<Props> = (props) => {
             case "test-load-doc": testLoadDocument(parameters[0]); return;
             case "load-micro-doc": await loadMicroDocument(parameters); return;
             case "embed-doc": await embedDocument(parameters); return;
+            case "merge-next": mergeNext(); return;
+            case "split": split(); return;
             default: break;
         }
     }
