@@ -992,8 +992,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const last = block.cells[-1];
-                        if (caret.right == last) {
+                        if (caret.right.isEOL) {
                             // TBC: merge with the next block.
+                            const next = block.relation.next as StandoffEditorBlock;
+                            if (next) {
+                                this.mergeBlocks(next.id, block.id);
+                                this.setBlockFocus(block);
+                                block.setCaret(caret.left?.index + 1, CARET.LEFT);
+                            }
                             return;
                         }
                         block.removeCellAtIndex(caret.right.index, true);
