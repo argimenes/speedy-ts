@@ -2159,15 +2159,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.container.appendChild(container);
     }
     addPreviousBlock(newBlock: IBlock, sibling: IBlock) {
-        const parent = sibling.relation.parent;
-        parent.relation.firstChild = newBlock;
-        newBlock.relation.parent = parent;
+        const parent = this.getParent(sibling) as IBlock;
         newBlock.relation.next = sibling;
         sibling.relation.previous = newBlock;
-        delete sibling.relation.parent;
-        const i = parent.blocks.findIndex(x => x.id == newBlock.id);
-        if (i > 0) {
-            parent.blocks.splice(i - 1, 0, sibling);
+        const siblingIndex = parent.blocks.findIndex(x => x.id == sibling.id);
+        if (siblingIndex > 0) {
+            parent.blocks.splice(siblingIndex - 1, 0, newBlock);
         } else {
             parent.blocks = [newBlock, ...parent.blocks];
         }
@@ -2527,14 +2524,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     async handleEnterKey(args: IBindingHandlerArgs) {
         const { caret } = args;
         const block = args.block as StandoffEditorBlock;
-        const next = block.relation.next;
-        const parent = block.relation.parent;
         const newBlock = this.createStandoffEditorBlock();
         const blockData = block.serialize();
         newBlock.addBlockProperties(blockData.blockProperties || []);
         newBlock.applyBlockPropertyStyling();
         newBlock.addEOL();
-        const insertAbove = parent && caret.left == null;
+        const insertAbove = caret.left == null;
         if (insertAbove) {
             this.addPreviousBlock(newBlock, block);
         } else if (caret.right.isEOL) {
