@@ -544,7 +544,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         frag.append(...elements);
         requestAnimationFrame(() => anchor.parentNode.insertBefore(frag, anchor));
     }
-    private reindexCells() {
+     reindexCells() {
         this.cells.forEach((cell, index) => cell.index = index);
     }
     private insertIntoCellArrayBefore(index: number, cells: Cell[]) {
@@ -985,6 +985,13 @@ export class StandoffEditorBlock extends AbstractBlock {
         if (closestCell) {
             this.setCaret(closestCell.index, CARET.LEFT);
         }
+    }
+    removeEOL() {
+        const len = this.cells.length;
+        if (len == 1) return;
+        const eol = this.cells[len - 1];
+        const previous = eol.previous;
+        
     }
     removeCellAtIndex(index: number, updateCaret?: boolean) {
         const cell = this.cells[index];
