@@ -2525,26 +2525,28 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     async handleEnterKey(args: IBindingHandlerArgs) {
         const { caret } = args;
         const block = args.block as StandoffEditorBlock;
+        const atStart = caret.left == null;
+        const atEnd = caret.right.isEOL;
+        const isInside = !atStart && !atEnd;
+        if (isInside) {
+            const ci = caret.left?.index as number;
+            const split = this.splitBlock(block.id, ci + 1);
+            split.setCaret(0, CARET.LEFT);
+            this.setBlockFocus(split);
+            return;
+        }
         const newBlock = this.createStandoffEditorBlock();
         const blockData = block.serialize();
         newBlock.addBlockProperties(blockData.blockProperties || []);
         newBlock.applyBlockPropertyStyling();
         newBlock.addEOL();
-        const insertAbove = caret.left == null;
-        if (insertAbove) {
+        if (atStart) {
             this.addPreviousBlock(newBlock, block);
-            newBlock.setCaret(0, CARET.LEFT);
-            this.setBlockFocus(newBlock);
-        } else if (caret.right.isEOL) {
+        } else if (atEnd) {
             this.addNextBlock(newBlock, block);
-            newBlock.setCaret(0, CARET.LEFT);
-            this.setBlockFocus(newBlock);
-        } else {
-            const ci = caret.left?.index as number;
-            const split = this.splitBlock(block.id, ci + 1);
-            this.setBlockFocus(split);
-            split.setCaret(0, CARET.LEFT);
         }
+        newBlock.setCaret(0, CARET.LEFT);
+        this.setBlockFocus(newBlock);
     }
     async handleTabKey(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
@@ -2918,17 +2920,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 x.removeStyling();
                 x.applyStyling();
         });
-        const remaining = text.length - ci + 1;
+        const remaining = text.length - ci;
         block.removeCellsAtIndex(ci, remaining);
-        const last = block.getLastCell();
-        const charCode = this.getPlatformKey(KEYS.ENTER)!.code;
-        const eol = new Cell({ text: String.fromCharCode(charCode), block });
-        eol.isEOL = true;
-        last.next = eol;
-        eol.previous = last;
-        block.cells.push(eol);
         block.reindexCells();
-        block.wrapper.append(eol.element as HTMLSpanElement);
         block.updateView();
         block.applyStandoffPropertyStyling();
 
