@@ -3079,6 +3079,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         console.log("Copy .. dump", {  block, text, data, si, ei });
     }
     async handleBackspaceForStandoffEditorBlock(args: IBindingHandlerArgs) {
+        const self = this;
         const { caret } = args;
         const block = args.block as StandoffEditorBlock;
         const selection = block.getSelection();
@@ -3116,13 +3117,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 }
                 const li = previous.getLastCell().index;
                 this.mergeBlocks(block.id, previous.id);
-                this.setBlockFocus(previous);
-                previous.setCaret(li, CARET.LEFT);
+                setTimeout(() => {
+                    self.setBlockFocus(previous);
+                    previous.setCaret(li, CARET.LEFT);
+                }, 1);
                 return;
             } else {
-                this.deleteBlock(block.relation.previous.id);
-                this.setBlockFocus(block);
-                block.moveCaretStart();
+                this.setBlockFocus(block.relation.previous);
                 return;
             }
         }
