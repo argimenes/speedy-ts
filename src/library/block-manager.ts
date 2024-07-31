@@ -654,7 +654,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                             leftMargin.addBlockProperties([ { type: "block/marginalia/left" } ]);
                             leftMargin.applyBlockPropertyStyling();
                             manager.stageLeftMarginBlock(leftMargin, block);
-                            child.setCaret(0, CARET.LEFT);
+                            child.moveCaretStart();
                             manager.setBlockFocus(child);
                             // updateElement(leftMargin.container, {
                             //     style: {
@@ -690,7 +690,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                             return;
                         } else {
                             const child = leftMargin.relation.firstChild as StandoffEditorBlock;
-                            child.setCaret(0, CARET.LEFT);
+                            child.moveCaretStart();
                             manager.setBlockFocus(child);
                         }
                     }
@@ -736,13 +736,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                             firstChild.relation.parent = rightMargin;
                             rightMargin.container.appendChild(firstChild.container);
                             firstChild.addEOL();
-                            firstChild.setCaret(0, CARET.LEFT);
+                            firstChild.moveCaretStart();
                             rightMargin.setFocus();
                             
                         } else {
                             const firstChild = rightMargin.relation.firstChild as StandoffEditorBlock;
                             if (!firstChild) return;
-                            firstChild.setCaret(0, CARET.LEFT);
+                            firstChild.moveCaretStart();
                             firstChild.setFocus();
                         }
                     }
@@ -864,7 +864,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                             }
                             manager.setBlockFocus(nearestNeighbour);
                             if (nearestNeighbour.type == BlockType.StandoffEditorBlock) {
-                                (nearestNeighbour as StandoffEditorBlock).setCaret(0, CARET.LEFT);
+                                (nearestNeighbour as StandoffEditorBlock).moveCaretStart();
                             }
                             return;
                         }
@@ -1161,7 +1161,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         }
                         let parent = block.relation.parent;
                         if (!parent) {
-                            block.setCaret(0, CARET.LEFT);
+                            block.moveCaretStart();
                             return;
                         }
                         if (parent.type == BlockType.IndentedListBlock) {
@@ -1203,7 +1203,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                             return;
                         }
                         const first = next.relation.firstChild as StandoffEditorBlock;
-                        first.setCaret(0, CARET.LEFT);
+                        first.moveCaretStart();
                         manager.setBlockFocus(first);
                     }
                 }
@@ -1258,7 +1258,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         const words = block.getWordsFromText(text);
                         const nearest = this.findNearestWord(i, words);
                         if (!nearest) {
-                            block.setCaret(0, CARET.LEFT);
+                            block.moveCaretStart();
                             return;
                         }
                         const start = i >= nearest.start ? nearest.start : nearest.previous?.start;
@@ -1296,12 +1296,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         const next = block.relation.next as IndentedListBlock;
                         if (next?.type == BlockType.IndentedListBlock) {
                             const first = next.relation.firstChild as StandoffEditorBlock;
-                            first.setCaret(0, CARET.LEFT)
+                            first.moveCaretStart();
                             manager.setBlockFocus(first);
                             return;
                         }
                         if (next?.type == BlockType.StandoffEditorBlock) {
-                            (next as StandoffEditorBlock).setCaret(0, CARET.LEFT);
+                            (next as StandoffEditorBlock).moveCaretStart();
                             manager.setBlockFocus(next);
                             return;
                         }
@@ -1331,7 +1331,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         const words = block.getWordsFromText(text);
                         const nearest = this.findNearestWord(i, words);
                         if (!nearest) {
-                            block.setCaret(0, CARET.LEFT);
+                            block.moveCaretStart();
                             return;
                         }
                         const start = !nearest.next ? last.index : nearest.next.start;
@@ -1413,17 +1413,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         };
     }
     async moveCaretToStartOfTextBlock(args: IBindingHandlerArgs) {
-        const { caret } = args;
         const block = args.block as StandoffEditorBlock;
-        const first = block.cells[0];
-        if (!first) return;
-        block.setCaret(0, CARET.LEFT);
+        block.moveCaretStart();
     }
     async moveCaretToEndOfTextBlock(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
-        const last = block.getLastCell();
-        if (!last) return;
-        block.setCaret(last.index, CARET.LEFT);
+        block.moveCaretEnd();
     }
     getStandoffPropertyEvents() {
         const events: InputEvent[] = [
@@ -3028,7 +3023,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if(block.relation.firstChild) {
             let firstChild = block.relation.firstChild;
             if (firstChild.type == BlockType.StandoffEditorBlock) {
-                (firstChild as StandoffEditorBlock).setCaret(0, CARET.LEFT);
+                (firstChild as StandoffEditorBlock).moveCaretStart();
             }
             this.setBlockFocus(firstChild);
             return;
@@ -3044,7 +3039,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const uncle = this.findNearestUncle(block);
         if (uncle) {
             if (uncle.type == BlockType.StandoffEditorBlock) {
-                (uncle as StandoffEditorBlock).setCaret(0, CARET.LEFT);
+                (uncle as StandoffEditorBlock).moveCaretStart();
             }
             this.setBlockFocus(uncle);
             return;
