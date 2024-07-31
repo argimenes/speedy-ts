@@ -206,14 +206,26 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.wrapper.addEventListener("dblclick", this.handleDoubleClickEvent.bind(this));
         this.wrapper.addEventListener("contextmenu", this.handleContextMenuClickEvent.bind(this));
         this.wrapper.addEventListener("paste", this.handleOnPasteEvent.bind(this));
+        this.wrapper.addEventListener("copy", this.handleOnCopyEvent.bind(this));
     }
-    private async handleOnPasteEvent(e: ClipboardEvent) {
+    protected async handleOnCopyEvent(e: ClipboardEvent) {
+        e.preventDefault();
+        const customEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Custom);
+        const found = customEvents.find(x => x.trigger.match == "copy");
+        const caret = this.getCaret() as Caret;
+        const selection = this.getSelection() as IRange;
+        if (found) {
+            await found.action.handler({ block: this, caret, e, selection });
+        }
+    }
+    protected async handleOnPasteEvent(e: ClipboardEvent) {
         e.preventDefault();
         const customEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Custom);
         const found = customEvents.find(x => x.trigger.match == "paste");
         const caret = this.getCaret() as Caret;
+        const selection = this.getSelection() as IRange;
         if (found) {
-            await found.action.handler({ block: this, caret, e });
+            await found.action.handler({ block: this, caret, e, selection });
         }
     }
     private async handleContextMenuClickEvent(e: MouseEvent) {

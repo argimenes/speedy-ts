@@ -563,26 +563,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     name: "Copy",
                     description: "",
                     handler: async (args) => {
-                        const block = args.block as StandoffEditorBlock;
-                        const selection = args.selection as IRange;
-                        const text = block.getText();
-                        const allProps = block.standoffProperties.map(x => x.serialize());
-                        const si = selection.start.index, ei = selection.end.index;
-                        const textSelection = text.substring(selection.start.index, selection.end.index + 1);
-                        const len = textSelection.length;
-                        const overlappingProps = allProps.filter(x => x.end >= si || x.start <= ei || (si <= x.start && x.end <= ei));
-                        const standoffProperties = overlappingProps.map(x => {
-                            const si2 = x.start < si ? 0 : x.start - si;
-                            const ei2 = x.end > ei ? len : x.end - si;
-                            return {...x, start: si2, end: ei2 }
-                        });
-                        const data = {
-                            source: "Codex", format: "StandoffEditorBlock",
-                            context: { block, selection: { start: si, end: ei } },
-                            data: { text: textSelection, standoffProperties }
-                        };
-                        this.clipboard.push(data);
-                        console.log("Copy .. dump", {  block, text, data, si, ei });
+                        args.allowPassthrough && args.allowPassthrough();
                     }
                 }
             },
@@ -857,7 +838,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 action: {
                     name: "Paste",
                     description: "Pastes plain text",
-                    handler: this.handlePaste.bind(this)
+                    handler: this.handlePasteForStandoffEditorBlock.bind(this)
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Custom,
+                    match: "copy"
+                },
+                action: {
+                    name: "Copy",
+                    description: "Copies standoff text",
+                    handler: this.handleCopyForStandoffEditorBlock.bind(this)
                 }
             },
             {
@@ -2917,29 +2910,26 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     splitLines(t: string) {
         return t.split(/\r\n|\r|\n/);
     }
-    async handlePaste(args: IBindingHandlerArgs) {
+    async handlePasteForStandoffEditorBlock(args: IBindingHandlerArgs) {
+        document.body.focus();
         const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
         const e = args.e as ClipboardEvent;
-        // const clipboardData = e.clipboardData as DataTransfer; // || window.clipboardData;
-        // const text = clipboardData.getData('text');
-        // if (text) {
-        //     const data = {
-        //         source: "External",
-        //         format: "PlainText",
-        //         data: {
-        //             text
-        //         }
-        //     };
-        //     this.clipboard.push(data);
-        //     navigator.clipboard.writeText("");
-        // }
-        const item = this.clipboard[this.clipboard.length-1];
+        const clipboardData = e.clipboardData as DataTransfer; // || window.clipboardData;
+        const json = clipboardData.getData('application/json');
+        const text = clipboardData.getData('text');
+        console.log("handlePasteForStandoffEditorBlock", { e, json, text })
         const ci = caret.left ? caret.left.index + 1 : 0;
-        if (item.source == "External") {
+        if (text) {
+            const item = {
+                data: {
+                    text: text
+                }
+            };
             this.pastePlainTextItem(block.id, ci, item);
         }
-        if (item.source == "Codex") {
+        if (json) {
+            const item = JSON.parse(json);
             this.pasteCodexItem(block.id, ci, item);
         }
     }
@@ -3063,6 +3053,30 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.container.innerHTML = "";
         const i = this.blocks.findIndex(x=> x.id == id);
         this.blocks.splice(i, 1);
+    }
+    async handleCopyForStandoffEditorBlock(args: IBindingHandlerArgs) {
+        const block = args.block as StandoffEditorBlock;
+        const selection = args.selection as IRange;
+        const text = block.getText();
+        const allProps = block.standoffProperties.map(x => x.serialize());
+        const si = selection.start.index, ei = selection.end.index;
+        const textSelection = text.substring(selection.start.index, selection.end.index + 1);
+        const len = textSelection.length;
+        const overlappingProps = allProps.filter(x => x.end >= si || x.start <= ei || (si <= x.start && x.end <= ei));
+        const standoffProperties = overlappingProps.map(x => {
+            const si2 = x.start < si ? 0 : x.start - si;
+            const ei2 = x.end > ei ? len : x.end - si;
+            return {...x, start: si2, end: ei2 }
+        });
+        const data = {
+            source: "Codex", format: "StandoffEditorBlock",
+            context: { blockId: block.id, selection: { start: si, end: ei } },
+            data: { text: textSelection, standoffProperties }
+        };
+        const e = args.e as ClipboardEvent;
+        e.clipboardData?.setData("application/json", JSON.stringify(data));
+        this.clipboard.push(data);
+        console.log("Copy .. dump", {  block, text, data, si, ei });
     }
     async handleBackspaceForStandoffEditorBlock(args: IBindingHandlerArgs) {
         const { caret } = args;
