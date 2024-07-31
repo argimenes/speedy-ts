@@ -948,22 +948,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         If at the start of the block (i.e., no character to the left) then issues an event
                         named "DELETE_CHARACTER_FROM_START_OF_BLOCK" (?).
                     `,
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        const last = block.cells[-1];
-                        if (caret.right.isEOL) {
-                            // TBC: merge with the next block.
-                            const next = block.relation.next as StandoffEditorBlock;
-                            if (next) {
-                                this.mergeBlocks(next.id, block.id);
-                                this.setBlockFocus(block);
-                                block.setCaret(caret.left?.index + 1, CARET.LEFT);
-                            }
-                            return;
-                        }
-                        block.removeCellAtIndex(caret.right.index, true);
-                    }
+                    handler: this.handleDeleteForStandoffEditorBlock.bind(this)
                 }
             },
             {
@@ -3129,6 +3114,36 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         const ci = caret.left?.index as number;
         block.removeCellAtIndex(ci, true);
+    }
+    async handleDeleteForStandoffEditorBlock(args: IBindingHandlerArgs) {
+        const self = this;
+        const { caret } = args;
+        const block = args.block as StandoffEditorBlock;
+        const cri = caret.right.index;
+        if (caret.right.isEOL) {
+            if (block.relation.next) {
+                if (block.relation.next.type == BlockType.StandoffEditorBlock) {
+                    const next = block.relation.next as StandoffEditorBlock;
+                    if (next.isEmpty()) {
+                        this.deleteBlock(next.id);
+                        setTimeout(() => {
+                            self.setBlockFocus(block);
+                            block.moveCaretEnd();
+                        }, 1);
+                    } else {
+                        this.mergeBlocks(next.id, block.id);
+                        setTimeout(() => {
+                            self.setBlockFocus(block);
+                            block.setCaret(cri, CARET.LEFT);
+                        }, 1);
+                    }
+                } else {
+                    this.setBlockFocus(block.relation.next);
+                }
+            }
+        } else {
+            block.removeCellAtIndex(caret.right.index, true);
+        }
     }
     appendSibling(anchor: HTMLElement, sibling: HTMLElement) {
         anchor.insertAdjacentElement("afterend", sibling);
