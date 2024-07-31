@@ -2159,15 +2159,25 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(mainBlock.container);
         this.container.appendChild(container);
     }
+    insertItem<T>(list: T[], index: number, item: T) {
+        list.splice(index, 0, item);
+    }
     addPreviousBlock(newBlock: IBlock, sibling: IBlock) {
-        const parent = this.getParent(sibling) as IBlock;
+        const previous = sibling.relation.previous;
+        if (previous) {
+            previous.relation.next = newBlock;
+            newBlock.relation.previous = previous;
+        }
         newBlock.relation.next = sibling;
         sibling.relation.previous = newBlock;
+        const parent = this.getParent(sibling) as IBlock;
         const siblingIndex = parent.blocks.findIndex(x => x.id == sibling.id);
         if (siblingIndex > 0) {
-            parent.blocks.splice(siblingIndex - 1, 0, newBlock);
+            this.insertItem(parent.blocks, siblingIndex - 1, newBlock);
         } else {
-            parent.blocks = [newBlock, ...parent.blocks];
+            this.insertItem(parent.blocks, 0, newBlock);
+            parent.relation.firstChild = sibling;
+            sibling.relation.parent = parent;
         }
         sibling.container.insertAdjacentElement("beforebegin", newBlock.container);
     }
@@ -2531,8 +2541,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (isInside) {
             const ci = caret.left?.index as number;
             const split = this.splitBlock(block.id, ci + 1);
-            split.setCaret(0, CARET.LEFT);
             this.setBlockFocus(split);
+            split.moveCaretStart();
             return;
         }
         const newBlock = this.createStandoffEditorBlock();
@@ -2542,11 +2552,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         newBlock.addEOL();
         if (atStart) {
             this.addPreviousBlock(newBlock, block);
+            this.setBlockFocus(block);
+            block.moveCaretStart();
         } else if (atEnd) {
             this.addNextBlock(newBlock, block);
+            this.setBlockFocus(newBlock);
+            newBlock.moveCaretStart();
         }
-        newBlock.setCaret(0, CARET.LEFT);
-        this.setBlockFocus(newBlock);
     }
     async handleTabKey(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;

@@ -742,6 +742,13 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         return null;
     }
+    moveCaretStart() {
+        this.setCaret(0, CARET.LEFT);
+    }
+    moveCaretEnd() {
+        const len = this.cells.length;
+        this.setCaret(len - 1, CARET.LEFT);
+    }
     setCaret(index: number, offset?: CARET) {
         /**
          * Might want to investigate setting the caret by absolutely positioning an SVG ...
