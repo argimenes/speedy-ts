@@ -545,7 +545,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Meta-M"
+                    match: "Control-Shift-M"
                 },
                 action: {
                     name: "Monitor panel",
@@ -845,41 +845,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         If at the start of the block (i.e., no character to the left) then issues an event
                         named "DELETE_CHARACTER_FROM_START_OF_BLOCK" (?).
                     `,
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        const selection = block.getSelection();
-                        if (selection) {
-                            const len = (selection.end.index - selection.start.index) + 1;
-                            block.removeCellsAtIndex(selection.start.index, len, true);
-                            return;
-                        }
-                        const manager = block.owner as BlockManager;
-                        if (block.isEmpty()) {
-                            manager.deleteBlock(block.id);
-                            let nearestNeighbour = block.relation.previous || block.relation.next;
-                            const parent = this.getParent(block) as AbstractBlock;
-                            if (parent) {
-                                manager.addParentSiblingRelations(parent);
-                            }
-                            manager.setBlockFocus(nearestNeighbour);
-                            if (nearestNeighbour.type == BlockType.StandoffEditorBlock) {
-                                (nearestNeighbour as StandoffEditorBlock).moveCaretStart();
-                            }
-                            return;
-                        }
-                        if (!caret.left) {
-                            const previous = block.relation.previous as StandoffEditorBlock;
-                            if (previous) {
-                                const li = previous.getLastCell()?.index;
-                                this.mergeBlocks(block.id, previous.id);
-                                this.setBlockFocus(previous);
-                                previous.setCaret(li, CARET.LEFT);
-                                return;
-                            }
-                        }
-                        block.removeCellAtIndex(caret.left?.index as number, true);
-                    }
+                    handler: this.handleBackspaceForStandoffEditorBlock.bind(this)
                 }
             },
             {
@@ -1737,6 +1703,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     deleteBlock(blockId: GUID) {
         const block = this.getBlock(blockId) as StandoffEditorBlock;
+        const previous = block.relation.previous;
+        const next = block.relation.next;
+        const parent = block.relation.parent;
+        if (previous) {
+            previous.relation.next = next;
+        }
+        if (next) {
+            next.relation.previous = previous;
+            parent && (next.relation.parent = parent);
+        }
+        if (parent) {
+            parent.relation.firstChild = next;
+        }
         const i = this.blocks.findIndex(x => x.id == blockId);
         this.blocks.splice(i, 1);
         block.destroy();
@@ -3084,6 +3063,57 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.container.innerHTML = "";
         const i = this.blocks.findIndex(x=> x.id == id);
         this.blocks.splice(i, 1);
+    }
+    async handleBackspaceForStandoffEditorBlock(args: IBindingHandlerArgs) {
+        const { caret } = args;
+        const block = args.block as StandoffEditorBlock;
+        const selection = block.getSelection();
+        if (selection) {
+            const len = (selection.end.index - selection.start.index) + 1;
+            block.removeCellsAtIndex(selection.start.index, len, true);
+            return;
+        }
+        if (block.isEmpty()) {
+            const previous = block.relation.previous;
+            if (previous) {
+                this.deleteBlock(block.id);
+                this.setBlockFocus(previous);
+                if (previous.type == BlockType.StandoffEditorBlock) {
+                    (previous as StandoffEditorBlock).moveCaretEnd();
+                }
+                return;
+            }
+            const parent = block.relation.parent;
+            if (parent) {
+                this.deleteBlock(block.id);
+                this.setBlockFocus(parent);
+                return;
+            }
+        }
+        const atStart = !caret.left;
+        if (atStart) {
+            if (block.relation.previous?.type == BlockType.StandoffEditorBlock) {
+                const previous = block.relation.previous as StandoffEditorBlock;
+                if (previous.isEmpty()) {
+                    this.deleteBlock(block.relation.previous.id);
+                    this.setBlockFocus(block);
+                    block.moveCaretStart();
+                    return;
+                }
+                const li = previous.getLastCell().index;
+                this.mergeBlocks(block.id, previous.id);
+                this.setBlockFocus(previous);
+                previous.setCaret(li, CARET.LEFT);
+                return;
+            } else {
+                this.deleteBlock(block.relation.previous.id);
+                this.setBlockFocus(block);
+                block.moveCaretStart();
+                return;
+            }
+        }
+        const ci = caret.left?.index as number;
+        block.removeCellAtIndex(ci, true);
     }
     appendSibling(anchor: HTMLElement, sibling: HTMLElement) {
         anchor.insertAdjacentElement("afterend", sibling);
