@@ -20,6 +20,8 @@
     "vite-plugin-solid": "^2.7.0"
   },
   "dependencies": {
+    "@atjson/offset-annotations": "^0.55.2",
+    "@atjson/source-html": "^0.41.2",
     "@codemirror/lang-javascript": "^6.2.2",
     "@codemirror/lang-markdown": "^6.2.5",
     "@codemirror/language-data": "^6.5.1",

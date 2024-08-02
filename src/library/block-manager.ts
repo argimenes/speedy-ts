@@ -1,3 +1,5 @@
+import HTMLSource from "@atjson/source-html";
+import OffsetSource from "@atjson/offset-annotations";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 import { LeftMarginBlock, RightMarginBlock } from "./margin-block";
@@ -861,6 +863,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 },
                 action: {
                     name: "Paste",
+                    description: "Pastes plain text",
+                    handler: async (args) => {
+                        args.allowPassthrough && args.allowPassthrough();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Meta-C"
+                },
+                action: {
+                    name: "Copy passthrough",
                     description: "Pastes plain text",
                     handler: async (args) => {
                         args.allowPassthrough && args.allowPassthrough();
@@ -3114,6 +3130,22 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         const ci = caret.left?.index as number;
         block.removeCellAtIndex(ci, true);
+    }
+    convertHtmlToStandoff(html: string) {
+        let doc = HTMLSource.fromRaw(html).convertTo(OffsetSource).canonical();
+        const text = doc.content;
+        const standoffProperties = doc.annotations.map(x => {
+            return {
+                type: x.type,
+                start: x.start,
+                end: x.end
+            } as StandoffPropertyDto
+        });
+        return {
+            text,
+            standoffProperties,
+            doc
+        };
     }
     async handleDeleteForStandoffEditorBlock(args: IBindingHandlerArgs) {
         const self = this;
