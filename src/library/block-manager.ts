@@ -2919,9 +2919,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const clipboardData = e.clipboardData as DataTransfer; // || window.clipboardData;
         const json = clipboardData.getData('application/json');
         const text = clipboardData.getData('text');
+        const html = clipboardData.getData("text/html");
         console.log("handlePasteForStandoffEditorBlock", { e, json, text })
         const ci = caret.left ? caret.left.index + 1 : 0;
-        if (text) {
+        if (!html && text) {
             const item = {
                 data: {
                     text: text
@@ -2932,6 +2933,16 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (json) {
             const item = JSON.parse(json);
             this.pasteCodexItem(block.id, ci, item);
+        }
+        if (html) {
+            const converted = this.convertHtmlToStandoff(html);
+            const item = {
+                data: {
+                    text: converted.text,
+                    standoffProperties: converted.standoffProperties
+                }
+            };
+            this.pastePlainTextItem(block.id, ci, item);
         }
     }
     pasteCodexItem(targetBlockId: GUID, ci: number, item: any) {
@@ -3136,7 +3147,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const text = doc.content;
         const standoffProperties = doc.annotations.map(x => {
             return {
-                type: x.type,
+                type: this.toCodexAnnotationType(x.type),
                 start: x.start,
                 end: x.end
             } as StandoffPropertyDto
@@ -3146,6 +3157,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             standoffProperties,
             doc
         };
+    }
+    toCodexAnnotationType(offsetSourceType: string) {
+        switch (offsetSourceType) {
+            case "italics": return "style/italics";
+            case "bold": return "style/bold";
+            default: return offsetSourceType;
+        }
     }
     async handleDeleteForStandoffEditorBlock(args: IBindingHandlerArgs) {
         const self = this;
