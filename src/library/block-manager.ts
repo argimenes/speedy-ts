@@ -506,6 +506,27 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         manager.setBlockFocus(block);
                     }
                 }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Enter"
+                },
+                action: {
+                    name: "Create a new text block underneath.",
+                    description: "",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const imageBlock = args.block as ImageBlock;
+                        const manager = imageBlock.owner as BlockManager;
+                        const newBlock = manager.createStandoffEditorBlock();
+                        manager.addNextBlock(newBlock, imageBlock);
+                        setTimeout(() => {
+                            manager.setBlockFocus(newBlock);
+                            newBlock.setCaret(0, CARET.LEFT);
+                        })
+                    }
+                }
             }
         ]
         return events;
@@ -2942,7 +2963,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     standoffProperties: converted.standoffProperties
                 }
             };
-            this.pastePlainTextItem(block.id, ci, item);
+            this.pasteCodexItem(block.id, ci, item);
         }
     }
     pasteCodexItem(targetBlockId: GUID, ci: number, item: any) {
@@ -3160,7 +3181,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     toCodexAnnotationType(offsetSourceType: string) {
         switch (offsetSourceType) {
-            case "italics": return "style/italics";
+            case "italic": return "style/italics";
             case "bold": return "style/bold";
             default: return offsetSourceType;
         }

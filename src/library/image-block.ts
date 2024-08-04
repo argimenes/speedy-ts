@@ -13,6 +13,29 @@ export class ImageBlock extends AbstractBlock {
     }
     attachEventHandlers() {
         this.container.addEventListener("click", this.handleClick.bind(this));
+        this.container.addEventListener("keydown", this.handleKeyDown.bind(this));
+    }
+    private handleKeyDown(e: KeyboardEvent) {
+        const ALLOW = true, FORBID = false;
+        const input = this.toKeyboardInput(e);
+        const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
+        if (modifiers.some(x => x == input.key)) {
+            return ALLOW;
+        }
+        const match = this.getFirstMatchingInputEvent(input);
+        if (match) {
+            let passthrough = false;
+            const args = {
+                block: this,
+                allowPassthrough: () => passthrough = true
+            } as any;
+            match.action.handler(args);
+            if (!passthrough) {
+                e.preventDefault();
+                return FORBID;
+            }
+        }
+        return ALLOW;
     }
     handleClick(e: MouseEvent) {
         const onClick = this.inputEvents.find(x => (x.trigger.match as string).toLowerCase() == "click");
