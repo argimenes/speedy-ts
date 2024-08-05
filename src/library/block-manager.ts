@@ -657,45 +657,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         Let's describe how this works ...
                     `,
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        const manager = block.owner as BlockManager;
-                        let rightMargin = block.relation.rightMargin as RightMarginBlock;
-                        if (!rightMargin) {
-                            rightMargin = this.createRightMarginBlock();
-                            rightMargin.relation.parent = block;
-                            block.relation.rightMargin = rightMargin;
-                            manager.blocks.push(rightMargin);
-                            const offset = block.cache.offset;
-                            updateElement(rightMargin.container, {
-                                style: {
-                                    top: offset.y + "px",
-                                    left: (offset.x + offset.w + 20) + "px"
-                                }
-                            });
-                            block.container.parentElement?.appendChild(rightMargin.container);
-                            rightMargin.container.classList.add("block-window");
-                            rightMargin.addBlockProperties([
-                                { type: "block/marginalia/right" },
-                                { type: "block/alignment/left" },
-                            ]);
-                            rightMargin.applyBlockPropertyStyling();
-                            const firstChild = this.createStandoffEditorBlock();
-                            rightMargin.relation.firstChild = firstChild;
-                            firstChild.relation.parent = rightMargin;
-                            rightMargin.container.appendChild(firstChild.container);
-                            firstChild.addEOL();
-                            firstChild.moveCaretStart();
-                            rightMargin.setFocus();
-                            
-                        } else {
-                            const firstChild = rightMargin.relation.firstChild as StandoffEditorBlock;
-                            if (!firstChild) return;
-                            firstChild.moveCaretStart();
-                            firstChild.setFocus();
-                        }
-                    }
+                    handler: this.handleCreateRightMargin.bind(this)
                 }
             },
             {
@@ -1714,12 +1676,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.pointer++;
     }
     stageRightMarginBlock(rightMargin: LeftMarginBlock, mainBlock: StandoffEditorBlock) {
-        this.batchRelate({
-            toAdd: [
-                { sourceId: mainBlock.id, name: "rightMargin", targetId: rightMargin.id },
-                { sourceId: rightMargin.id, name: "parent", targetId: mainBlock.id }
-            ]
-        });
         updateElement(mainBlock.container, {
             style: {
                 position: "relative"
@@ -1728,7 +1684,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         updateElement(rightMargin.container, {
             style: {
                 position: "absolute",
-                top: mainBlock.cache.offset.h,
+                top: 0,
                 width: "200px",
                 "max-width": "200px",
                 right: "-250px"
@@ -3205,6 +3161,43 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         } else {
             const child = leftMargin.relation.firstChild as StandoffEditorBlock;
+            setTimeout(() => {
+                manager.setBlockFocus(child);
+                child.moveCaretStart();
+            }, 1);
+        }
+    }
+    async handleCreateRightMargin(args: IBindingHandlerArgs){
+        const block = args.block as StandoffEditorBlock;
+        const manager = block.owner as BlockManager;
+        let rightMargin = block.relation.rightMargin as RightMarginBlock;
+        /**
+         * If there is no LeftMarginBlock already then create one and add
+         * a StandoffEditorBlock to it.
+         */
+        if (!rightMargin) {
+            rightMargin = manager.createRightMarginBlock();
+            const child = manager.createStandoffEditorBlock();
+            child.addEOL();
+            child.addBlockProperties([ { type: "block/alignment/left" }, { type: "block/font/size/half" } ]);
+            child.applyBlockPropertyStyling();
+            rightMargin.relation.marginParent = block;
+            block.relation.rightMargin = rightMargin;
+            rightMargin.relation.firstChild = child;
+            child.relation.parent = rightMargin;
+            rightMargin.blocks.push(child);
+            manager.blocks.push(rightMargin);
+            manager.blocks.push(child);
+            rightMargin.container.appendChild(child.container);
+            manager.stageRightMarginBlock(rightMargin, block);
+            block.container.appendChild(rightMargin.container);
+            setTimeout(() => {
+                manager.setBlockFocus(child);
+                child.moveCaretStart();
+            }, 1);
+            return;
+        } else {
+            const child = rightMargin.relation.firstChild as StandoffEditorBlock;
             setTimeout(() => {
                 manager.setBlockFocus(child);
                 child.moveCaretStart();
