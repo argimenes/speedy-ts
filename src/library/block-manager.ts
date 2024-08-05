@@ -1599,6 +1599,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 }
             },
             {
+                type: "reference/url",
+                name: "URL",
+                decorate: {
+                    cssClass: "reference_url"
+                },
+                event: {
+                    onDoubleClick: async (args: any) => {
+                        const url = args.property.metadata.url;
+                        window.open(url, '_blank')?.focus();
+                    }
+                }
+            },
+            {
                 type: "codex/block-reference",
                 name: "Block reference",
                 event: {
@@ -3170,9 +3183,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return {
                 type: this.toCodexAnnotationType(x.type),
                 start: x.start,
-                end: x.end
+                end: x.end,
+                metadata: x.attributes
             } as StandoffPropertyDto
-        });
+        }).filter(x => x.type != "unknown");
         return {
             text,
             standoffProperties,
@@ -3183,6 +3197,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         switch (offsetSourceType) {
             case "italic": return "style/italics";
             case "bold": return "style/bold";
+            case "link": return "reference/url";
             default: return offsetSourceType;
         }
     }

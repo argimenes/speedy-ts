@@ -19,14 +19,14 @@ export class StandoffProperty {
     bracket: { left?: HTMLElement; right?: HTMLElement };
     styled: boolean;
     wrapper?: CellHtmlElement;
-    constructor({ type, start, end, block, id, schema, value }: IStandoffPropertyConstructor) {
+    constructor({ type, start, end, block, id, schema, value, metadata }: IStandoffPropertyConstructor) {
         this.id = id || uuidv4();
         this.isDeleted = false;
         this.type = type;
         this.start = start;
         this.end = end;
         this.schema = schema;
-        this.metadata = {};
+        this.metadata = metadata || {};
         this.value = value || "";
         this.block = block;
         this.cache = {};

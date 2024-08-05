@@ -648,7 +648,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                 console.log("Schema not found for the standoff property type.", { p });
                 // Need to handle this properly ... can't just return early in a map().
             }
-            const sproc = new StandoffProperty({ type: p.type, block: self, start, end, schema, value: p.value });
+            const sproc = new StandoffProperty({ type: p.type, block: self, start, end, schema, value: p.value, metadata: p.metadata });
             return sproc;
         });
         this.standoffProperties.push(...properties);

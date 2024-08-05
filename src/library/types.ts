@@ -296,6 +296,7 @@ export type StandoffPropertyDto = {
     end: number,
     type: string,
     value?: string
+    metadata?: Record<string, any>;
 }
 
 export type StandoffEditorBlockDto = {
@@ -328,7 +329,8 @@ export interface IStandoffPropertyConstructor {
     end: Cell,
     value?: string;
     block: StandoffEditorBlock,
-    schema: IStandoffPropertySchema
+    schema: IStandoffPropertySchema,
+    metadata?: Record<string, any>;
 }
 export interface IRange {
     start: Cell;

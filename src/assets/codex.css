@@ -34,7 +34,10 @@
 .style_bold {
     font-weight: 600;
 }
-
+.reference_url {
+    text-decoration: underline;
+    text-decoration-color: blue;
+}
 .App {
     
   }
