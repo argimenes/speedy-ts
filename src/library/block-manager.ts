@@ -295,6 +295,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     getBlockSchemas() {
         return [
             {
+                type: "block/font/size/half",
+                name: "Half-sized font",
+                decorate: {
+                    blockClass: "font_size_half"
+                }
+            },
+            {
                 type: "block/font-size/three-quarters",
                 name: "3/4 the regular font size",
                 decorate: {
@@ -636,68 +643,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         Let's describe how this works ...
                     `,
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        const manager = block.owner as BlockManager;
-                        let leftMargin = block.relation.leftMargin as LeftMarginBlock;
-                        if (!leftMargin) {
-                            leftMargin = manager.createLeftMarginBlock();
-                            const child = manager.createStandoffEditorBlock();
-                            child.addEOL();
-                            manager.batchRelate({
-                                toAdd: [
-                                    { sourceId: leftMargin.id, name: "firstChild", targetId: child.id },
-                                    { sourceId: child.id, name: "parent", targetId: leftMargin.id },
-                                ]
-                            });
-                            leftMargin.container.classList.add("block-window");
-                            child.container.classList.add("block-window");
-                            child.addBlockProperties([ { type: "block/alignment/left" } ]);
-                            child.applyBlockPropertyStyling();
-                            leftMargin.addBlockProperties([ { type: "block/marginalia/left" } ]);
-                            leftMargin.applyBlockPropertyStyling();
-                            manager.stageLeftMarginBlock(leftMargin, block);
-                            child.moveCaretStart();
-                            manager.setBlockFocus(child);
-                            // updateElement(leftMargin.container, {
-                            //     style: {
-                            //         top: block.cache.offset.y + "px",
-                            //         left: "-200px"
-                            //     }
-                            // });
-                            // const hand = document.createElement("SPAN") as HTMLSpanElement;
-                            // hand.innerHTML = "☞";
-                            // updateElement(hand, {
-                            //     style: {
-                            //         "font-size": "1.5rem",
-                            //         position: "absolute",
-                            //         top: 0,
-                            //         right: 0
-                            //     }
-                            // });
-                            // manager.blocks.push(leftMargin);
-                            // manager.blocks.push(child);
-                            // // leftMargin.relation.firstChild = child;
-                            // // child.relation.parent = leftMargin;
-                            // manager.batchRelate({
-                            //     toAdd: [
-                            //         { sourceId: block.id, name: "leftMargin", targetId: leftMargin.id },
-                            //         { sourceId: leftMargin.id, name: "parent", targetId: block.id },
-                            //     ]
-                            // });
-                            // // block.relation.leftMargin = leftMargin;
-                            // // leftMargin.relation.parent = block;
-                            // block.container.parentElement?.appendChild(leftMargin.container);
-                            // leftMargin.container.appendChild(child.container);
-                            
-                            return;
-                        } else {
-                            const child = leftMargin.relation.firstChild as StandoffEditorBlock;
-                            child.moveCaretStart();
-                            manager.setBlockFocus(child);
-                        }
-                    }
+                    handler: this.handleCreateLeftMargin.bind(this)
                 }
             },
             {
@@ -1591,6 +1537,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     cssClass: "style_italics"
                 }
             },
+            
             {
                 type: "style/bold",
                 name: "Bold",
@@ -1800,12 +1747,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         rightMargin.container.appendChild(hand);
     }
     stageLeftMarginBlock(leftMargin: LeftMarginBlock, mainBlock: StandoffEditorBlock) {
-        this.batchRelate({
-            toAdd: [
-                { sourceId: mainBlock.id, name: "leftMargin", targetId: leftMargin.id },
-                { sourceId: leftMargin.id, name: "parent", targetId: mainBlock.id }
-            ]
-        });
         updateElement(mainBlock.container, {
             style: {
                 position: "relative"
@@ -1814,10 +1755,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         updateElement(leftMargin.container, {
             style: {
                 position: "absolute",
-                top: mainBlock.cache.offset.h,
+                top: 0,
                 width: "200px",
                 "max-width": "200px",
-                left: "-250px"
+                left: "-250px",
             }
         });
         const hand = document.createElement("SPAN") as HTMLSpanElement;
@@ -3229,6 +3170,45 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         } else {
             block.removeCellAtIndex(caret.right.index, true);
+        }
+    }
+    async handleCreateLeftMargin(args: IBindingHandlerArgs){
+        const block = args.block as StandoffEditorBlock;
+        const manager = block.owner as BlockManager;
+        let leftMargin = block.relation.leftMargin as LeftMarginBlock;
+        /**
+         * If there is no LeftMarginBlock already then create one and add
+         * a StandoffEditorBlock to it.
+         */
+        if (!leftMargin) {
+            leftMargin = manager.createLeftMarginBlock();
+            const child = manager.createStandoffEditorBlock();
+            child.addEOL();
+            child.addBlockProperties([ { type: "block/alignment/left" } ]);
+            child.addBlockProperties([ { type: "block/font/size/half" } ]);
+            child.applyBlockPropertyStyling();
+            leftMargin.relation.marginParent = block;
+            block.relation.leftMargin = leftMargin;
+            leftMargin.relation.firstChild = child;
+            child.relation.parent = leftMargin;
+            leftMargin.blocks.push(child);
+            manager.blocks.push(leftMargin);
+            manager.blocks.push(child);
+            leftMargin.container.appendChild(child.container);
+            manager.stageLeftMarginBlock(leftMargin, block);
+            const parent = manager.getParent(block) as AbstractBlock;
+            block.container.appendChild(leftMargin.container);
+            setTimeout(() => {
+                manager.setBlockFocus(child);
+                child.moveCaretStart();
+            }, 1);
+            return;
+        } else {
+            const child = leftMargin.relation.firstChild as StandoffEditorBlock;
+            setTimeout(() => {
+                manager.setBlockFocus(child);
+                child.moveCaretStart();
+            }, 1);
         }
     }
     appendSibling(anchor: HTMLElement, sibling: HTMLElement) {
