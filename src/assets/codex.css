@@ -113,6 +113,31 @@
     color: #fff;
     background-color: #aaa;
   }
+  .font_size_quarter {
+    font-size: .25rem;
+  }
+  .font_size_half {
+    font-size: 0.5rem;
+  }
+  .font_size_three_quarter {
+    font-size: 0.5rem;
+  }
+  .font_size_normal {
+    font-size: 1rem;
+  }
+  .font_size_h1 {
+    font-size: 6rem;
+  }
+  .font_size_h2 {
+    font-size: 3rem;
+  }
+  .font_size_h3 {
+    font-size: 1.5rem;
+  }
+  .font_size_h4 {
+    font-size: 1rem;
+    font-weight: 600;
+  }
   .grid-cell {
     display: inline-block;
     border-radius: 3px;

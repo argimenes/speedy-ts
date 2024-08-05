@@ -295,6 +295,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     getBlockSchemas() {
         return [
             {
+                type: "block/font/size/half",
+                name: "Half-sized font",
+                decorate: {
+                    blockClass: "font_size_half"
+                }
+            },
+            {
                 type: "block/font-size/three-quarters",
                 name: "3/4 the regular font size",
                 decorate: {
@@ -1530,6 +1537,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     cssClass: "style_italics"
                 }
             },
+            
             {
                 type: "style/bold",
                 name: "Bold",
@@ -1734,10 +1742,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         updateElement(leftMargin.container, {
             style: {
                 position: "absolute",
-                top: mainBlock.cache.offset.h,
+                top: 0,
                 width: "200px",
                 "max-width": "200px",
-                left: "-250px"
+                left: "-250px",
             }
         });
         const hand = document.createElement("SPAN") as HTMLSpanElement;
@@ -3162,6 +3170,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             const child = manager.createStandoffEditorBlock();
             child.addEOL();
             child.addBlockProperties([ { type: "block/alignment/left" } ]);
+            child.addBlockProperties([ { type: "block/font/size/half" } ]);
             child.applyBlockPropertyStyling();
             leftMargin.relation.marginParent = block;
             block.relation.leftMargin = leftMargin;
