@@ -112,6 +112,10 @@
   .text-highlight {
     background-color: lightyellow;
   }
+  .cell-space {
+    display: inline-block;
+    width: 0.3rem;
+  }
 .tab-label.active {
     color: #fff;
     background-color: #aaa;

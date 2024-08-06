@@ -1427,6 +1427,29 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Control-Shift-T"
+                },
+                action: {
+                    name: "To tab/add tab",
+                    description: "Either wraps the text in a new tab, or creates a new tab",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block as StandoffEditorBlock;
+                        const self = block.owner as BlockManager;
+                        const parent = self.getParent(block) as IBlock;
+                        if (!parent) return;
+                        if (parent.type == BlockType.TabBlock) {
+                            const previous = parent.relation.previous;
+                            self.addTab({ tabId: parent.id, name: "...", copyTextBlockId: block.id });
+                        } else {
+                            self.convertBlockToTab(block.id);
+                        }
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "Control-Enter"
                 },
                 action: {
@@ -1944,7 +1967,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(rowBlock.container);
         return rowBlock;
     }
-    addTab({ tabId, name }: { tabId: string, name: string }) {
+    addTab({ tabId, name, copyTextBlockId }: { tabId: string, name: string, copyTextBlockId?: string }) {
         const tab = this.getBlock(tabId) as TabBlock;
         const row = this.getParentOfType(tab, BlockType.TabRowBlock) as TabRowBlock;
         if (!row) return;
@@ -1954,12 +1977,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 name: name
             }
         }) as TabBlock;
-        const textBlock = this.createStandoffEditorBlock({
-            type: BlockType.StandoffEditorBlock,
-            blockProperties:[
-                { type: "block/alignment/left" }
-            ]
-        }) as StandoffEditorBlock;
+        let textBlock: StandoffEditorBlock;
+        if (copyTextBlockId) {
+            const block = this.getBlock(copyTextBlockId) as StandoffEditorBlock;
+            const dto = block.serialize();
+            textBlock = this.createStandoffEditorBlock(dto);
+        } else {
+            textBlock = this.createStandoffEditorBlock({
+                type: BlockType.StandoffEditorBlock,
+                blockProperties:[
+                    { type: "block/alignment/left" }
+                ]
+            }) as StandoffEditorBlock;
+        }
         textBlock.addEOL();
         newTab.blocks.push(textBlock);
         row.blocks.push(newTab);

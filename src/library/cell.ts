@@ -1,3 +1,4 @@
+import { classList } from "solid-js/web";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { updateElement } from "./svg";
 import { ICellCoordOffsets, CellHtmlElement, ICellConstructor, ELEMENT_ROLE, DIRECTION } from "./types";
@@ -48,9 +49,7 @@ export class Cell {
         span.innerHTML = this.text === " " ? " " : this.text;
         if (this.text === " ") {
             updateElement(span, {
-                style: {
-                    width: "1rem"
-                }
+                classList: ["cell-space"]
             });
             span.speedy.isSpace = true;
         }
