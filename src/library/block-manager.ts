@@ -1404,6 +1404,29 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Control-T"
+                },
+                action: {
+                    name: "To tab/add tab",
+                    description: "Either wraps the text in a new tab, or creates a new tab",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block as StandoffEditorBlock;
+                        const self = block.owner as BlockManager;
+                        const parent = self.getParent(block) as IBlock;
+                        if (!parent) return;
+                        if (parent.type == BlockType.TabBlock) {
+                            const previous = parent.relation.previous;
+                            self.addTab({ tabId: parent.id, name: "..." });
+                        } else {
+                            self.convertBlockToTab(block.id);
+                        }
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "Control-Enter"
                 },
                 action: {
@@ -1412,7 +1435,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.owner as BlockManager;
-                        const tabRow = manager.getParentOfType(block, BlockType.TabRowBlock) as TabRowBlock;
+                        const tab = manager.getParentOfType(block, BlockType.TabBlock) as TabBlock;
+                        if (!tab) return;
+                        const tabRow = manager.getParent(tab) as TabRowBlock;
                         if (!tabRow) return;
                         const newBlock = manager.createStandoffEditorBlock();
                         newBlock.addEOL();
@@ -1939,12 +1964,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         newTab.blocks.push(textBlock);
         row.blocks.push(newTab);
         this.addParentSiblingRelations(row);
+        textBlock.relation.parent = newTab;
+        newTab.relation.firstChild = textBlock;
+        tab.relation.next = newTab;
+        newTab.relation.previous = tab;
         row.renderLabels();
         newTab.panel.appendChild(textBlock.container);
         row.container.appendChild(newTab.container);
         const label = newTab.container.querySelector(".tab-label") as HTMLSpanElement;
         row.setTabActive(newTab, label);
-        this.setBlockFocus(textBlock);
+        setTimeout(() => {
+            this.setBlockFocus(textBlock);
+            textBlock.setCaret(0, CARET.LEFT);
+        }, 1);
         return newTab;
     }
     async buildTabBlock(container: HTMLDivElement, blockDto: IBlockDto) {
