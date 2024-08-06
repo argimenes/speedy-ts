@@ -3202,6 +3202,42 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }, 1);
         }
     }
+    convertBlockToTab(blockId: GUID) {
+        const block = this.getBlock(blockId) as IBlock;
+        if (!block) return;
+        const tabRow = this.createTabRowBlock();
+        const tab = this.createTabBlock();
+        /**
+         * Sort out all the tab panel stuff, rendering the label, etc.
+         */
+        tab.container.appendChild(block.container);
+        setTimeout(() => {
+            this.setBlockFocus(block);
+            if (block.type == BlockType.StandoffEditorBlock) {
+                const _block = block as StandoffEditorBlock;
+                const caret = _block.lastCaret;
+                _block.setCaret(caret.index, CARET.LEFT);
+            }
+        }, 1);
+    }
+    addTabRowAfter(blockId: GUID) {
+        const target = this.getBlock(blockId) as IBlock;
+        if (!target) return;
+        /**
+         * Create a TabRow, add a TabBlock to it, and a StandoffTextEditor, then set the focus to the editor.
+         */
+    }
+    explodeTabs(blockId: GUID) {
+        const target = this.getBlock(blockId) as IBlock;
+        if (!target) return;
+        const tabRow = this.getParentOfType(target, BlockType.TabRowBlock);
+        if (!tabRow) return;
+        /**
+         * Extract all of the blocks inside each tab and put them as siblings of 'tabRow'.
+         * Then delete all of the TabBlocks inside 'tabRow', then 'tabRow' itself, leaving the contents
+         * disgorged into the document.
+         */
+    }
     appendSibling(anchor: HTMLElement, sibling: HTMLElement) {
         anchor.insertAdjacentElement("afterend", sibling);
     }

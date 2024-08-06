@@ -213,8 +213,20 @@ export const ControlPanel : Component<Props> = (props) => {
         const block = props.manager?.getBlockInFocus();
         props.manager?.setMultiColumns(block!.id, parseInt(cols));
     }
+    const explodeTabs = () => {
+        const block = props.manager?.getBlockInFocus();
+        props.manager?.explodeTabs(block!.id);
+    }
     const testLoadDocument =(rows: string) => {
         props.manager?.testLoadDocument(parseInt(rows));
+    }
+    const newTabRow = () => {
+        const sibling = props.manager?.getBlockInFocus();
+        props.manager?.addTabRowAfter(sibling!.id);
+    }
+    const toTab = () => {
+        const block = props.manager?.getBlockInFocus();
+        props.manager?.convertBlockToTab(block!.id);
     }
     const runCommand = async () => {
         if (!model.command) {
@@ -242,6 +254,9 @@ export const ControlPanel : Component<Props> = (props) => {
             case "cm": createCodeMirrorBlock(); return;
             case "set-tab-name": setTabName(parameters[0]); return;
             case "add-tab": addTab(parameters[0]); return;
+            case "new-tab-row": newTabRow(); return;
+            case "to-tab": toTab(); return;
+            case "explode-tabs": explodeTabs(); return;
             case "multicols": setMultiColumns(parameters[0]); return;
             case "test-load-doc": testLoadDocument(parameters[0]); return;
             case "load-micro-doc": await loadMicroDocument(parameters); return;
