@@ -302,7 +302,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 }
             },
             {
-                type: "block/font-size/three-quarters",
+                type: "block/font/size/three-quarters",
                 name: "3/4 the regular font size",
                 decorate: {
                     blockClass: "block_font-size_three-quarters"
@@ -3140,8 +3140,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             leftMargin = manager.createLeftMarginBlock();
             const child = manager.createStandoffEditorBlock();
             child.addEOL();
-            child.addBlockProperties([ { type: "block/alignment/left" } ]);
-            child.addBlockProperties([ { type: "block/font/size/half" } ]);
+            child.addBlockProperties([ { type: "block/alignment/left" }, { type: "block/font/size/three-quarters" } ]);
             child.applyBlockPropertyStyling();
             leftMargin.relation.marginParent = block;
             block.relation.leftMargin = leftMargin;
@@ -3152,7 +3151,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             manager.blocks.push(child);
             leftMargin.container.appendChild(child.container);
             manager.stageLeftMarginBlock(leftMargin, block);
-            const parent = manager.getParent(block) as AbstractBlock;
             block.container.appendChild(leftMargin.container);
             setTimeout(() => {
                 manager.setBlockFocus(child);
@@ -3179,7 +3177,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             rightMargin = manager.createRightMarginBlock();
             const child = manager.createStandoffEditorBlock();
             child.addEOL();
-            child.addBlockProperties([ { type: "block/alignment/left" }, { type: "block/font/size/half" } ]);
+            child.addBlockProperties([ { type: "block/alignment/left" }, { type: "block/font/size/three-quarters" } ]);
             child.applyBlockPropertyStyling();
             rightMargin.relation.marginParent = block;
             block.relation.rightMargin = rightMargin;
