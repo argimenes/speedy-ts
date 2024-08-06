@@ -1404,6 +1404,30 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Control-Enter"
+                },
+                action: {
+                    name: "ENTER break",
+                    description: "Breaks out of current container",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.owner as BlockManager;
+                        const tabRow = manager.getParentOfType(block, BlockType.TabRowBlock) as TabRowBlock;
+                        if (!tabRow) return;
+                        const newBlock = manager.createStandoffEditorBlock();
+                        newBlock.addEOL();
+                        manager.addNextBlock(newBlock, tabRow);
+                        setTimeout(() => {
+                            manager.setBlockFocus(newBlock);
+                            newBlock.setCaret(0, CARET.LEFT);
+                        }, 1);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "Control-E"
                 },
                 action: {
@@ -3206,11 +3230,46 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const block = this.getBlock(blockId) as IBlock;
         if (!block) return;
         const tabRow = this.createTabRowBlock();
-        const tab = this.createTabBlock();
+        const tab = this.createTabBlock({
+            type: BlockType.TabBlock,
+            metadata: {
+                name: "1"
+            }
+        });
+        const parent = this.getParent(block) as IBlock;
+        const bi = parent.blocks.findIndex(x=> x.id == block.id);
+        parent.blocks.splice(bi, 1);
+        tab.blocks.push(block);
+        tabRow.blocks.push(tab);
+        parent.blocks.splice(bi, 0, tabRow);
+        tabRow.renderLabels();
+        (tabRow.blocks[0] as TabBlock)?.setActive();
+        const previous = block.relation.previous;
+        if (previous) {
+            previous.relation.next = tabRow;
+            tabRow.relation.previous = previous;
+        }
+        const next = block.relation.next;
+        if (next) {
+            next.relation.previous = tabRow;
+            tabRow.relation.next = next;
+        }
+        const _parent = block.relation.parent;
+        if (_parent) {
+            _parent.relation.firstChild = tabRow;
+            tabRow.relation.parent = _parent;
+        }
+        tabRow.relation.firstChild = tab;
+        tab.relation.parent = tabRow;
+        delete block.relation.previous;
+        tab.relation.firstChild = block;
+        block.relation.parent = tab;
         /**
          * Sort out all the tab panel stuff, rendering the label, etc.
          */
-        tab.container.appendChild(block.container);
+        block.container.insertAdjacentElement("afterend", tabRow.container);
+        tabRow.container.appendChild(tab.container);
+        tab.panel.appendChild(block.container);
         setTimeout(() => {
             this.setBlockFocus(block);
             if (block.type == BlockType.StandoffEditorBlock) {
