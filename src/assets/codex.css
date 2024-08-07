@@ -113,7 +113,9 @@
     background-color: lightyellow;
   }
   .cell-space {
-    display: inline-block;
+    margin:0;
+    padding: 0;
+    display: inline;
     width: 0.3rem;
     min-width: 0.3rem;
   }
