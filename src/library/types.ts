@@ -85,6 +85,7 @@ export interface IBlockPropertyConstructor {
     event?: Record<string, BlockBindingHandler>;
     block: IBlock;
     value?: string;
+    metadata?: Record<string, any>;
 }
 export interface IBindingHandlerArgs {
     block: IBlock;
@@ -122,6 +123,7 @@ export type BlockPropertyDto = {
     blockGuid?: GUID,
     type: string,
     value?: string
+    metadata?: Record<string, any>;
 }
 export interface IKeyboardInput {
     control: boolean;

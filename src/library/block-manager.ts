@@ -1,3 +1,4 @@
+import axios from 'axios';
 import HTMLSource from "@atjson/source-html";
 import OffsetSource from "@atjson/offset-annotations";
 import { createUnderline, updateElement } from "./svg";
@@ -16,7 +17,7 @@ import { AbstractBlock } from "./abstract-block";
 import { BlockProperty } from "./block-property";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { StandoffProperty } from "./standoff-property";
-import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto } from "./types";
+import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto, BlockPropertyDto } from "./types";
 import { PlainTextBlock } from "./plain-text-block";
 import { CodeMirrorBlock } from "./code-mirror-block";
 import { ClockPlugin } from "./plugins/clock";
@@ -290,10 +291,43 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setFocus();
     }
     getImageBlockSchemas() {
-        return []
+        return [
+            {
+                type: "style/dimensions",
+                name: "Block dimensions",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const container = p.block.container;
+                        const {width, height} = p.metadata;
+                        updateElement(container, {
+                            style: {
+                                height: height + "px",
+                                width: width + "px"
+                            }
+                        });
+                    }
+                }
+            }
+        ]
     }
     getBlockSchemas() {
         return [
+            {
+                type: "style/dimensions",
+                name: "Block dimensions",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const container = p.block.container;
+                        const {width, height} = p.metadata;
+                        updateElement(container, {
+                            style: {
+                                height: height + "px",
+                                width: width + "px"
+                            }
+                        });
+                    }
+                }
+            },
             {
                 type: "block/font/size/half",
                 name: "Half-sized font",
@@ -2455,7 +2489,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         this.loadDocument(nextDoc);
     }
-    addImageBlock(sibling: IBlock, url: string) {
+    addImageBlock(sibling: IBlock, url: string) {        
         const image = this.createImageBlock({
             type: BlockType.ImageBlock,
             metadata: {
@@ -2463,7 +2497,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         }) as ImageBlock;
         image.build();
-        this.addNextBlock(sibling, image);
+        this.addNextBlock(image, sibling);
+        return image;
     }
     addVideoBlock(sibling: IBlock, url: string) {
         const video = this.createVideoBlock({
@@ -2934,6 +2969,31 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     splitLines(t: string) {
         return t.split(/\r\n|\r|\n/);
     }
+    async saveImageToServer(file: File) {
+        let formData = new FormData();
+        await formData.append('image', file);
+        const data = await axios
+            .post(`http://localhost:3002/upload`, formData , {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            })
+            .then((res): any => {
+                return res.data;
+            });
+        return data;
+    }
+    async getImageDimensions(file: File) {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        await new Promise(resolve => img.onload = resolve);
+        const dimensions = {
+            width: img.width,
+            height: img.height
+        };
+        URL.revokeObjectURL(img.src);
+        return dimensions;
+    }
     async handlePasteForStandoffEditorBlock(args: IBindingHandlerArgs) {
         document.body.focus();
         const caret = args.caret as Caret;
@@ -2943,6 +3003,25 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const json = clipboardData.getData('application/json');
         const text = clipboardData.getData('text');
         const html = clipboardData.getData("text/html");
+        if (clipboardData.files.length) {
+            const file = clipboardData.files[0];
+            const dimensions = await this.getImageDimensions(file);
+            const save = await this.saveImageToServer(file);
+            console.log("handlePasteForStandoffEditorBlock", { save, file });
+            const fileData = save[0];
+            const image = this.addImageBlock(block, fileData.path);
+            image.addBlockProperties([
+                {
+                    type: "style/dimensions",
+                    metadata: {
+                        height: dimensions.height,
+                        width: dimensions.width
+                    }
+                } as BlockPropertyDto
+            ]);
+            image.applyBlockPropertyStyling();
+            return;
+        }
         console.log("handlePasteForStandoffEditorBlock", { e, json, text })
         const ci = caret.left ? caret.left.index + 1 : 0;
         if (!html && text) {

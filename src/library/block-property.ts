@@ -9,7 +9,8 @@ export class BlockProperty {
     block: IBlock;
     value?: string;
     styled: boolean;
-    constructor({ id, type, block, schema, value, event }: IBlockPropertyConstructor) {
+    metadata: Record<string, any>;
+    constructor({ id, type, block, schema, value, event, metadata }: IBlockPropertyConstructor) {
         this.id = id || uuidv4();
         this.type = type;
         this.schema = schema;
@@ -17,6 +18,7 @@ export class BlockProperty {
         this.block = block;
         this.value = value;
         this.styled = false;
+        this.metadata = metadata || {};
         this.onInit();
     }
     onInit() {
@@ -28,7 +30,8 @@ export class BlockProperty {
         return {
             id: this.id,
             type: this.type,
-            value: this.value
+            value: this.value,
+            metadata: this.metadata
         }
     }
     applyStyling() {

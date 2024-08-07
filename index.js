@@ -1,16 +1,54 @@
-// Import essential libraries 
 import express from "express";
 import path from "path";
+import multer from 'multer'
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
 import fs from "fs";
-import cors from "cors";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express(); 
 app.use(bodyParser.json());
 app.use(express.static('public'));
+app.use('/uploads', express.static('uploads'))
+
+const storage = multer.diskStorage({
+     destination: function (req, file, cb) {
+       cb(null, 'uploads');
+     },
+     filename: function (req, file, cb) {
+       cb(null, Date.now() + path.extname(file.originalname));
+     },
+});
+   
+const upload = multer({
+     storage: storage,
+     fileFilter: (req, file, cb) => {
+          if (
+               file.mimetype == 'image/png' ||
+               file.mimetype == 'image/jpg' ||
+               file.mimetype == 'image/jpeg'
+          ) {
+               cb(null, true);
+          } else {
+               cb(null, false);
+               return cb(new Error('Only .png, .jpg and .jpeg format allowed!'));
+          }
+     },
+});
+const uploadImages = upload.array('image');
+
+app.post('/upload', function(req, res) {
+     uploadImages(req, res, function (err) {
+       if (err) {
+         return res.status(400).send({ message: err.message });
+       }
+       // Everything went fine.
+       const files = req.files;
+       res.json(files);
+     });
+   });
+   
 app.get('/api/textJson', function(req, res) {
      const text = req.query.text;
      res.send(text);

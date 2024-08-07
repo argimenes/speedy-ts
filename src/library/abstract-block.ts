@@ -144,6 +144,7 @@ export abstract class AbstractBlock implements IBlock {
                 type: x.type,
                 block: self,
                 value: x.value,
+                metadata: x.metadata,
                 schema: self.blockSchemas.find(x2 => x2.type == x.type) as IBlockPropertySchema
             }),
         );
