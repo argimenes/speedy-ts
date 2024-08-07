@@ -57,11 +57,9 @@
     width: 200px;
   }
 .block-window .focus-highlight {
-  box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-  border: 2px solid yellow;
-  border-radius: 3px;
+  -webkit-box-shadow:inset 0px 0px 0px 2px yellow;
+  -moz-box-shadow:inset 0px 0px 0px 2px yellow;
+  box-shadow:inset 0px 0px 0px 2px yellow;
 }
   .block-window .block_marginalia_right { 
     position: absolute;
