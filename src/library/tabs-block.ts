@@ -4,10 +4,12 @@ import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "./types
 
 export class TabRowBlock extends AbstractBlock {
     header: HTMLDivElement;
+    labels: HTMLSpanElement[];
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.TabRowBlock;
         this.header = document.createElement("DIV") as HTMLDivElement;
+        this.labels = [];
         this.container.appendChild(this.header);
         //this.attachEventHandlers();
     }
@@ -19,24 +21,28 @@ export class TabRowBlock extends AbstractBlock {
         if (!onClick) return;
         onClick.action.handler({ block: tab || this, caret: {} as any });
     }
-    setTabActive(tab: TabBlock, label: HTMLSpanElement) {
+    setTabActive(tab: TabBlock) {
+        const label = this.labels.find(x => x.id == tab.id) as HTMLSpanElement;
         Array.from(this.header.children).forEach(n => n.classList.remove("active"));
         (this.blocks as TabBlock[]).forEach((t: TabBlock)=> t.setInactive());
         tab.setActive();
-        label.classList.add("active");
+        label && label.classList.add("active");
     }
     renderLabels() {
         const self = this;
         const header = this.header;
         const tabs = this.blocks.filter(x => x.type == BlockType.TabBlock) as TabBlock[];
         header.innerHTML = "";
+        self.labels.forEach(x => x.remove());
+        self.labels = [];
         tabs.forEach((tab, i) => {
             const label = (tab.container.querySelector("span.tab-label") || document.createElement("SPAN")) as HTMLSpanElement;
+            label.setAttribute("id", tab.id);
             label.innerHTML = tab.metadata?.name || ("Tab " + (i+1));
             label.classList.add("tab-label");
-            if (i == 0) label.classList.add("active");
+            self.labels.push(label);
             label.addEventListener("click", (e) => {
-                self.setTabActive(tab, label);
+                self.setTabActive(tab);
                 self.handleClick(e, tab);
             });
             header.appendChild(label);
@@ -61,11 +67,10 @@ export class TabRowBlock extends AbstractBlock {
 
 export class TabBlock extends AbstractBlock {
     panel: HTMLDivElement;
-    isActive: boolean;
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.TabBlock;
-        this.isActive = false;
+        this.metadata.active = false;
         this.panel = document.createElement("DIV") as HTMLDivElement;
         this.panel.classList.add("tab-panel");
         this.container.appendChild(this.panel);
@@ -83,14 +88,14 @@ export class TabBlock extends AbstractBlock {
         this.metadata.name = name;
     }
     setActive() {
-        this.isActive = true;
+        this.metadata.active = true;
         updateElement(this.container, {
             classList: ["tab"]
         });
         this.panel.classList.add("active");
     }
     setInactive() {
-        this.isActive = false;
+        this.metadata.active = false;
         this.panel.classList.remove("active");
         updateElement(this.container, {
             style: {

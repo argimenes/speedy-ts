@@ -1409,18 +1409,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 action: {
                     name: "To tab/add tab",
                     description: "Either wraps the text in a new tab, or creates a new tab",
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const block = args.block as StandoffEditorBlock;
-                        const self = block.owner as BlockManager;
-                        const parent = self.getParent(block) as IBlock;
-                        if (!parent) return;
-                        if (parent.type == BlockType.TabBlock) {
-                            const previous = parent.relation.previous;
-                            self.addTab({ tabId: parent.id, name: "..." });
-                        } else {
-                            self.convertBlockToTab(block.id);
-                        }
-                    }
+                    handler: this.handleCreateNewTab.bind(this)
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Alt-T"
+                },
+                action: {
+                    name: "To tab/add tab",
+                    description: "Either wraps the text in a new tab, or creates a new tab",
+                    handler: this.handleCreateNewTab.bind(this)
                 }
             },
             {
@@ -1963,7 +1964,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const rowBlock = this.createTabRowBlock(blockDto);
         await this.buildChildren(rowBlock, blockDto);
         rowBlock.renderLabels();
-        (rowBlock.blocks[0] as TabBlock)?.setActive();
+        const activeBlock = rowBlock.blocks.find(x => x.metadata.active) as TabBlock;
+        if (activeBlock) {
+            rowBlock.setTabActive(activeBlock);
+        } else {
+            rowBlock.setTabActive(rowBlock.blocks[0] as TabBlock);
+        }
         container.appendChild(rowBlock.container);
         return rowBlock;
     }
@@ -3358,6 +3364,27 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
          * Then delete all of the TabBlocks inside 'tabRow', then 'tabRow' itself, leaving the contents
          * disgorged into the document.
          */
+    }
+    tryParseInt(value: string): [boolean, number|null] {
+        try {
+            return [true, parseInt(value)]
+        } catch {
+            return [false, null];
+        }
+    }
+    async handleCreateNewTab(args: IBindingHandlerArgs) {
+        const block = args.block as StandoffEditorBlock;
+        const self = block.owner as BlockManager;
+        const parent = self.getParent(block) as IBlock;
+        if (!parent) return;
+        if (parent.type == BlockType.TabBlock) {
+            const previousTabName = parent.metadata.name || "";
+            const [parsed, tabNum] = this.tryParseInt(previousTabName);
+            const newTabName = parsed ? ((tabNum as number) + 1) + "" : "...";
+            self.addTab({ tabId: parent.id, name: newTabName });
+        } else {
+            self.convertBlockToTab(block.id);
+        }
     }
     appendSibling(anchor: HTMLElement, sibling: HTMLElement) {
         anchor.insertAdjacentElement("afterend", sibling);

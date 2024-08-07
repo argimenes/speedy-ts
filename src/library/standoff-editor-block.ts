@@ -532,7 +532,6 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.insertIntoCellArrayBefore(index, cells);
         this.reindexCells();
         this.insertElementsBefore(right.element as HTMLElement, cells.map(c => c.element as HTMLElement));
-        //this.setMarker(this.cells[index + cells.length], this.container?.parentElement);
         this.updateView();
         if (index == len-1) {
             let caret = this.getCaret();

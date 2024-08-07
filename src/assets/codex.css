@@ -85,8 +85,8 @@
     display: inline;
   }
   .tab {
-    border: 1px solid #ccc;
-    box-shadow: 5px 5px 5px #666;
+    /* border: 1px solid #ccc; */
+    box-shadow: 2px 2px 2px #fbfbfb;
   }
   .btn {
     margin: 0 3px; 
@@ -115,10 +115,11 @@
   .cell-space {
     display: inline-block;
     width: 0.3rem;
+    min-width: 0.3rem;
   }
 .tab-label.active {
-    color: #fff;
-    background-color: #aaa;
+    color: #333;
+    background-color: #f9f9f9;
   }
   .font_size_quarter {
     font-size: .25rem;
