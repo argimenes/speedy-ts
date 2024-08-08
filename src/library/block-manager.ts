@@ -3050,7 +3050,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const clipboardData = e.clipboardData as DataTransfer; // || window.clipboardData;
         const json = clipboardData.getData('application/json');
         const text = clipboardData.getData('text');
-        const html = clipboardData.getData("text/html");
+        //const html = clipboardData.getData("text/html");
         if (clipboardData.files.length) {
             const file = clipboardData.files[0];
             const dimensions = await this.getImageDimensions(file);
@@ -3072,7 +3072,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         console.log("handlePasteForStandoffEditorBlock", { e, json, text })
         const ci = caret.left ? caret.left.index + 1 : 0;
-        if (!html && text) {
+        if (text) {
             const item = {
                 data: {
                     text: text
@@ -3084,16 +3084,16 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             const item = JSON.parse(json);
             this.pasteCodexItem(block.id, ci, item);
         }
-        if (html) {
-            const converted = this.convertHtmlToStandoff(html);
-            const item = {
-                data: {
-                    text: converted.text,
-                    standoffProperties: converted.standoffProperties
-                }
-            };
-            this.pasteCodexItem(block.id, ci, item);
-        }
+        // if (html) {
+        //     const converted = this.convertHtmlToStandoff(html);
+        //     const item = {
+        //         data: {
+        //             text: converted.text,
+        //             standoffProperties: converted.standoffProperties
+        //         }
+        //     };
+        //     this.pasteCodexItem(block.id, ci, item);
+        // }
     }
     pasteCodexItem(targetBlockId: GUID, ci: number, item: any) {
         const block = this.getBlock(targetBlockId) as StandoffEditorBlock;
@@ -3124,6 +3124,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 type: BlockType.StandoffEditorBlock,
                 text: lines[i]
             });
+            if (lines[i].length == 0) {
+                newBlock.addEOL();
+            }
             this.addNextBlock(newBlock, currentBlock);
             temp.push(newBlock);
         }
