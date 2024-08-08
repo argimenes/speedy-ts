@@ -154,7 +154,7 @@ export const ControlPanel : Component<Props> = (props) => {
         const block = props.manager?.getBlockInFocus();
         if (!block) return;
         const gridBlock = props.manager?.createGrid(rows, cells) as GridBlock;
-        props.manager?.addNextBlock(block, gridBlock);
+        props.manager?.addNextBlock(gridBlock, block);
     }
     const setTabName = (name: string) => {
         const block = props.manager?.getBlockInFocus();
