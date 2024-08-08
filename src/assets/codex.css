@@ -148,9 +148,10 @@
   }
   .grid-cell {
     display: inline-block;
+    vertical-align: top;
     border-radius: 3px;
     padding: 3px;
-    border: 1px solid #333;
+    border: 1px dotted #efefef;
     margin: 3px;
   }
   .workspace {
