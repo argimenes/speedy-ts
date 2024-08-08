@@ -343,6 +343,34 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 }
             },
             {
+                type: "block/font/size/h1",
+                name: "H1",
+                decorate: {
+                    blockClass: "block_font-size_h1"
+                }
+            },
+            {
+                type: "block/font/size/h2",
+                name: "H2",
+                decorate: {
+                    blockClass: "block_font-size_h2"
+                }
+            },
+            {
+                type: "block/font/size/h3",
+                name: "H3",
+                decorate: {
+                    blockClass: "block_font-size_h3"
+                }
+            },
+            {
+                type: "block/font/size/h4",
+                name: "h4",
+                decorate: {
+                    blockClass: "block_font-size_h4"
+                }
+            },
+            {
                 type: "block/marginalia/left",
                 name: "Left margin block",
                 description: "Handles the alignment of a left margin block to the one to its right.",
@@ -2594,7 +2622,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: "",
                     handler: async (args: IBindingHandlerArgs) => {
                         console.log("onTextChanged", { args });
-                        textProcessor.process(args);
+                        await textProcessor.process(args);
                     }
                 }
             }

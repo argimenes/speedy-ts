@@ -10,6 +10,7 @@ export class BlockProperty {
     value?: string;
     styled: boolean;
     metadata: Record<string, any>;
+    isDeleted: boolean;
     constructor({ id, type, block, schema, value, event, metadata }: IBlockPropertyConstructor) {
         this.id = id || uuidv4();
         this.type = type;
@@ -18,6 +19,7 @@ export class BlockProperty {
         this.block = block;
         this.value = value;
         this.styled = false;
+        this.isDeleted = false;
         this.metadata = metadata || {};
         this.onInit();
     }
@@ -47,5 +49,8 @@ export class BlockProperty {
             this.block.container.classList.remove(schema.decorate.blockClass);
             this.styled = false;
         }
+    }
+    destroy() {
+        this.block && this.block.removeBlockProperty(this);
     }
 }
