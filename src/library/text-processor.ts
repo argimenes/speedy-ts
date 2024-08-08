@@ -1,18 +1,47 @@
+import { Cell } from "./cell";
 import { StandoffEditorBlock } from "./standoff-editor-block";
-import { CARET, IBindingHandlerArgs } from "./types";
+import { BlockPropertyDto, CARET, IBindingHandlerArgs, IPropertySchema, IRange, StandoffPropertyDto } from "./types";
 
 export interface ITextProcessorConstructor {
     editor: StandoffEditorBlock;
 }
+type Wrapper = {
+    start: string;
+    end: string;
+};
+export interface ITextPatternRecogniserHandler {
+    block: StandoffEditorBlock;
+    text: string;
+    cells: Cell[];
+    match: IRange;
+    container: HTMLDivElement;
+    rule: Rule
+}
 export type Rule = {
     pattern: string;
     type?: string;
-    wrapper?: string | {
-        start: string;
-        end?: string;
-    };
-    process?: (args: any) => void;
+    wrapper?: Wrapper;
+    process?: (args: any) => Promise<void>;
 }
+const getMatches = (args: any) => {
+    const { text, search } = args;
+    var options = args.options || "gi";
+    const re = new RegExp(search, options);
+    var results = [], match;
+    while ((match = re.exec(text)) != null) {
+        if (re.lastIndex == 0) {
+            return [];
+        }
+        let span = match[0];
+        results.push({
+            start: match.index,
+            end: match.index + span.length - 1,
+            text: text.substr(match.index, span.length)
+        });
+    }
+    return results;
+};
+
 export class TextProcessor {
     editor: StandoffEditorBlock;
     replacements: string[][];
@@ -59,13 +88,13 @@ export class TextProcessor {
         ];
         this.rules = [
             {
-                pattern: "\\^\\^(.*?)\\^\\^", type: "superscript", wrapper: "^^"
+                pattern: "\\^\\^(.*?)\\^\\^", type: "superscript", wrapper: { start: "^^", end: "^^" }
             },
             {
-                pattern: "~~(.*?)~~", type: "strike", wrapper: "~~"
+                pattern: "~~(.*?)~~", type: "strike", wrapper: { start: "~~", end: "~~" }
             },
             {
-                pattern: "_(.*?)_", type: "italics", wrapper: "_"
+                pattern: "_(.*?)_", type: "italics", wrapper: { start: "_", end: "_" }
             },
             {
                 pattern: "\\[\\((.*?)\\)\\]",
@@ -76,10 +105,10 @@ export class TextProcessor {
                 pattern: "\\[<(.*?)>\\]", type: "rectangle", wrapper: { start: "[<", end: ">]" }
             },
             {
-                pattern: "`(.*?)`", type: "code", wrapper: "`"
+                pattern: "`(.*?)`", type: "code", wrapper: { start: "`", end: "`" }
             },
             {
-                pattern: "\\*(.*?)\\*", type: "bold", wrapper: "*"
+                pattern: "\\*(.*?)\\*", type: "bold", wrapper: { start: "*", end: "*" }
             },
             //capital
             {
@@ -94,20 +123,38 @@ export class TextProcessor {
                 wrapper: {
                     start: "[image/", end: "]"
                 },
-                process: (args) => {
-                    const { text, cells, match, container, editor, rule } = args;
-                    const { wrapper } = rule;
+                /*
+                export interface ITextPatternRecogniserHandler {
+                    block: StandoffBlockEditor;
+                    text: string;
+                    cells: Cell[];
+                    match: IRange;
+                    container: HTMLDivElement;
+                    editor: BlockManager;
+                    rule: {
+                        type: string;
+                        wrapper: {
+                            start: string;
+                            end: string;
+                        }
+                        pattern: string;
+                    }
+                }
+                */
+                process:async(args: ITextPatternRecogniserHandler) => {
+                    const { text, cells, match, container, block, rule } = args;
+                    const wrapper = rule.wrapper as Wrapper;
                     const startLen = wrapper.start.length;
                     const endLen = wrapper.end.length;
-                    const textStart = match.start + startLen;
-                    const textEnd = match.end - endLen;
-                    const url = text.substr(textStart, textEnd - textStart + 1);
-                    const anchor = cells[match.end];
-                    const p = editor.createZero({ type: rule.type, value: url, cell: anchor });
-                    const { schema } = p;
-                    //schema.render.update(p);
-                    schema.animation.init(p);
-                    schema.animation.start(p);
+                    const textStart = match.start.index + startLen;
+                    const textEnd = match.end.index - endLen;
+                    const url = text.substring(textStart, textEnd - textStart + 1);
+                    const anchor = match.end;
+                    // const p = editor.createZero({ type: rule.type, value: url, cell: anchor });
+                    // const { schema } = p;
+                    // //schema.render.update(p);
+                    // schema.animation.init(p);
+                    // schema.animation.start(p);
                     for (var i = match.start; i <= match.end; i++) {
                         let cell = cells[i];
                         //self.removeCell({ cell, container });
@@ -121,7 +168,7 @@ export class TextProcessor {
                 pattern: "/sub/(.*?)/", type: "subscript", wrapper: { start: "/sub/", end: "/" }
             },
             {
-                pattern: "__(.*?)__", type: "underline", wrapper: "__"
+                pattern: "__(.*?)__", type: "underline", wrapper: { start: "__", end: "__" }
             },
             {
                 pattern: "/spin/(.*?)/", type: "clock", wrapper: { start: "/spin/", end: "/" }
@@ -152,10 +199,10 @@ export class TextProcessor {
             },
             {
                 pattern: "/br/",
-                process: (args) => {
+                process: async (args: ITextPatternRecogniserHandler) => {
                     const { cells, match, container } = args;
-                    const next = cells[match.end + 1];
-                    for (var i = match.start; i <= match.end; i++) {
+                    const next = cells[match.end.index + 1];
+                    for (var i = match.start.index; i <= match.end.index; i++) {
                         const cell = cells[i];
                         //self.removeCell({ cell, container });
                     }
@@ -164,9 +211,9 @@ export class TextProcessor {
             },
             {
                 pattern: "/pp/(.*?)/", wrapper: { start: "/pp/", end: "/" },
-                process: (args) => {
+                process: async (args: ITextPatternRecogniserHandler) => {
                     const { cells, match, container, rule } = args;
-                    const textStart = cells[match.start + 4], textEnd = cells[match.end - 1];
+                    const textStart = cells[match.start.index + 4], textEnd = cells[match.end.index - 1];
                     // self.removeWrapper({ wrapper: rule.wrapper, cells, match, container });
                     // self.insertBeforeAnchor(textStart, "😼");
                     // self.insertAfterAnchor(textEnd, "😼");
@@ -174,7 +221,7 @@ export class TextProcessor {
             },
             {
                 pattern: "/lg/(.*?)/", type: "size", wrapper: { start: "/lg/", end: "/" },
-                process: (args) => {
+                process: async (args) => {
                     const { cells, match, container, editor, rule } = args;
                     const start = cells[match.start + 4], end = cells[match.end - 1];
                     // self.removeWrapper({ wrapper: rule.wrapper, cells, match, container });
@@ -183,7 +230,7 @@ export class TextProcessor {
             },
             {
                 pattern: "/sm/(.*?)/", type: "size", wrapper: { start: "/sm/", end: "/" },
-                process: (args) => {
+                process: async (args) => {
                     const { cells, match, container, editor, rule } = args;
                     const start = cells[match.start + 4], end = cells[match.end - 1];
                     // self.removeWrapper({ wrapper: rule.wrapper, cells, match, container });
@@ -191,8 +238,8 @@ export class TextProcessor {
                 }
             },
             {
-                pattern: "/right/", type: "alignment/right", wrapper: { start: "/right/" },
-                process: (args) => {
+                pattern: "/right/", type: "alignment/right", wrapper: { start: "/right/",end:"" },
+                process: async (args) => {
                     const { cells, match, container, editor, rule } = args;
                     // self.removeWrapper({ wrapper: rule.wrapper, cells, match, container });
                     const start = cells[match.end].speedy.next;
@@ -200,8 +247,8 @@ export class TextProcessor {
                 }
             },
             {
-                pattern: "/center/", type: "alignment/center", wrapper: { start: "/center/" },
-                process: (args) => {
+                pattern: "/center/", type: "alignment/center", wrapper: { start: "/center/", end: "" },
+                process: async (args) => {
                     const { cells, match, container, editor, rule } = args;
                     // self.removeWrapper({ wrapper: rule.wrapper, cells, match, container });
                     const start = cells[match.end].speedy.next;
@@ -209,131 +256,87 @@ export class TextProcessor {
                 }
             },
             {
-                pattern: "/h1/", type: "size", wrapper: { start: "/h1/" },
-                process: (args) => {
-                    const { cells, match, container, editor, rule } = args;
-                    // self.removeWrapper({ wrapper: rule.wrapper, cells, match, container });
-                    editor.createProperty("size", "2.5rem", { start: cells[0], end: cells[cells.length - 1] });
+                pattern: "/h1/", type: "size", wrapper: { start: "/h1/", end: "" },
+                process: async (args) => {
+                    const { block } = args;
+                    block.addBlockProperties([ { type: "block/font/size/h1" } ]);
+                    block.applyBlockPropertyStyling();
                 }
             },
             {
-                pattern: "/h2/", type: "size", wrapper: { start: "/h2/" },
-                process: (args) => {
-                    const { cells, match, container, editor, rule } = args;
-                    // self.removeWrapper({ wrapper: rule.wrapper, cells, match, container });
-                    editor.createProperty("size", "2rem", { start: cells[0], end: cells[cells.length - 1] });
+                pattern: "/h2/", type: "size", wrapper: { start: "/h2/", end: "" },
+                process: async (args: ITextPatternRecogniserHandler) => {
+                    const { block } = args;
+                    block.addBlockProperties([ { type: "block/font/size/h2" } ]);
+                    block.applyBlockPropertyStyling();
                 }
             },
             {
-                pattern: "/h3/", type: "size", wrapper: { start: "/h3/" },
-                process: (args) => {
-                    const { cells, match, container, editor, rule } = args;
-                    // self.removeWrapper({ wrapper: rule.wrapper, cells, match, container });
-                    // const bcells = self.editor.getContainerCells(container);
-                    // editor.createProperty("size", "1.5rem", { start: bcells[0], end: bcells[bcells.length - 1] });
+                pattern: "/h3/", type: "size", wrapper: { start: "/h3/", end: "" },
+                process: async (args: ITextPatternRecogniserHandler) => {
+                    const { block } = args;
+                    block.addBlockProperties([ { type: "block/font/size/h3" } ]);
+                    block.applyBlockPropertyStyling();
                 }
             },
             {
                 pattern: "/arial/(.*?)/", type: "font", wrapper: { start: "/arial/", end: "/" },
-                process: (args) => {
-                    const { cells, match, container, editor, rule } = args;
-                    const textStart = cells[match.start], textEnd = cells[match.end];
-                    editor.createProperty("font", "Arial", { start: textStart, end: textEnd });
-                    // self.removeWrapper({ wrapper: rule.wrapper, cells, match, container });
+                process: async (args: ITextPatternRecogniserHandler) => {
+                    const { match, block } = args;
+                    block.addStandoffPropertiesDto([{
+                        type: "font/family/arial",
+                        start: match.start.index, end: match.end.index
+                    }]);
+                    block.applyStandoffPropertyStyling();
                 }
             },
             {
                 pattern: "/mono/(.*?)/", type: "font", wrapper: { start: "/mono/", end: "/" },
-                process: (args) => {
-                    const { cells, match, container, editor, rule } = args;
-                    const textStart = cells[match.start], textEnd = cells[match.end];
-                    editor.createProperty("font", "Monospace", { start: textStart, end: textEnd });
-                    // self.removeWrapper({ wrapper: rule.wrapper, cells, match, container });
+                process: async (args: ITextPatternRecogniserHandler) => {
+                    const { match, block } = args;
+                    block.addStandoffPropertiesDto([{
+                        type: "font/family/mono",
+                        start: match.start.index, end: match.end.index
+                    }]);
+                    block.applyStandoffPropertyStyling();
                 }
             },
             {
                 pattern: "/red/(.*?)/", type: "colour", wrapper: { start: "/red/", end: "/" },
-                process: (args) => {
-                    const { cells, match, container, editor, rule } = args;
-                    const textStart = cells[match.start], textEnd = cells[match.end];
-                    editor.createProperty("colour", "red", { start: textStart, end: textEnd });
-                    // self.removeWrapper({ wrapper: rule.wrapper, cells, match, container });
+                process: async (args: ITextPatternRecogniserHandler) => {
+                    const { match, block } = args;
+                    block.addStandoffPropertiesDto([{
+                        type: "font/color",
+                        value: "red",
+                        start: match.start.index, end: match.end.index
+                    }]);
+                    block.applyStandoffPropertyStyling();
                 }
             },
             {
                 pattern: "/blue/(.*?)/", type: "colour", wrapper: { start: "/blue/", end: "/" },
-                process: (args) => {
-                    const { cells, match, container, editor, rule } = args;
-                    const textStart = cells[match.start], textEnd = cells[match.end];
-                    editor.createProperty("colour", "blue", { start: textStart, end: textEnd });
-                    // self.removeWrapper({ wrapper: rule.wrapper, cells, match, container });
-                }
-            },
-            {
-                pattern: "&&", type: "metaRelation",
-                process: (args) => {
-                    const { cells, match, container } = args;
-                    // self.extendMetaRelation({ match, cells, text, container });
-                    // rulesProcessed = false;
-                }
-            },
-            {
-                type: "agent",
-                pattern: "(?:(?:https?|ftp|file):\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])",
-                process: (args) => {
-                    return;
-
-                    //const { text, cells, match, container, editor, rule } = args;
-                    //const { startNode, endNode } = container.speedy;
-                    //const properties = editor.getPropertiesWithin(startNode, endNode);
-                    //const textStart = cells[match.start], textEnd = cells[match.end];
-                    //const url = text.substr(match.start, match.end - match.start + 1);
-                    //const exists = properties.find(p => !p.isDeleted && p.startIndex() == textStart.speedy.index && p.endIndex() == textEnd.speedy.index && p.attributes.url == url);
-                    //if (exists) {
-                    //    return;
-                    //}
-                    //const params = {
-                    //    AgentType: "Website",
-                    //    Name: url,
-                    //    Value: url
-                    //};
-                    //$.get("/Admin/Agent/FindOrCreate", params, (response) => {
-                    //    if (!response.Success) {
-                    //        return;
-                    //    }
-                    //    const guid = response.Data.Guid;
-                    //    const p = editor.addProperty({
-                    //        type: rule.type,
-                    //        value: guid,
-                    //        startIndex: textStart.speedy.index,
-                    //        endIndex: textEnd.speedy.index,
-                    //        attributes: {
-                    //            url: url
-                    //        }
-                    //    });
-                    //});
+                process:async (args: ITextPatternRecogniserHandler) => {
+                    const { match, block } = args;
+                    block.addStandoffPropertiesDto([{
+                        type: "font/color",
+                        value: "blue",
+                        start: match.start.index, end: match.end.index
+                    }]);
+                    block.applyStandoffPropertyStyling();
                 }
             },
             {
                 type: "agent",
                 pattern: "\\[today\\]",
-                process: (args) => {
-                    const { cells, match, container, editor, rule } = args;
-                    const next = cells[match.end + 1];
-                    for (var i = match.start; i <= match.end; i++) {
-                        const cell = cells[i];
-                        // self.removeCell({ cell, container });
-                    }
+                process: async (args: ITextPatternRecogniserHandler) => {
+                    const { match, block } = args;
+                    block.removeCellsAtIndex(match.start.index, match.end.index - match.start.index + 1)
                     const now = new Date();
                     const day = ("0" + now.getDate()).slice(-2);
                     const month = ("0" + (now.getMonth() + 1)).slice(-2);
                     const year = now.getFullYear();
                     const dateText = `${day}/${month}/${year}`;
-                    // const textCells = self.insertBeforeAnchor(next, dateText);
-                    // const start = textCells[0], end = textCells[textCells.length - 1];
-                    // const params = {
-                    //     Name: dateText
-                    // };
+                    block.insertTextAtIndex(dateText, match.start.index);
                     // $.get("/Admin/Agent/FindOrCreate", params, (response) => {
                     //     if (!response.Success) {
                     //         return;
@@ -363,57 +366,59 @@ export class TextProcessor {
             return;
         }
     }
-    processRules(){
+    processRules(args: IBindingHandlerArgs){
+        const self = this;
+        let rulesProcessed = false;
+        const { caret } = args;
+        const block = args.block as StandoffEditorBlock;
+        const text = block.getText();
+        const cells = block.cells;
         this.rules.forEach(rule => {
-            // const matches = getMatches({ text, search: rule.pattern });
-            // if (matches.length) {
-            //     rulesProcessed = true;
-            //     matches.forEach(m => {
-            //         if (rule.process) {
-            //             rule.process({ editor, container, text, cells, match: m, rule })
-            //             return;
-            //         }
-            //         var wrapperStart = 0, wrapperEnd = 0;
-            //         if (rule.wrapper) {
-            //             if (!rule.wrapper) {
-            //                 // skip
-            //             } else if (typeof rule.wrapper == "string") {
-            //                 wrapperStart = wrapperEnd = rule.wrapper.length;
-            //             } else {
-            //                 wrapperStart = rule.wrapper.start.length;
-            //                 wrapperEnd = rule.wrapper.end.length;
-            //             }
-            //         }
-            //         const textStart = cells[m.start + wrapperStart], textEnd = cells[m.end - wrapperEnd];
-            //         const type = editor.propertyType[rule.type];
-            //         for (var i = 0; i < wrapperStart; i++) {
-            //             const start = cells[m.start + i];
-            //             self.removeCell({ cell: start, container });
-            //         }
-            //         for (var i = 0; i < wrapperEnd; i++) {
-            //             const end = cells[m.end - i];
-            //             self.removeCell({ cell: end, container });
-            //         }
-            //         if (type.format == "block") {
-            //             const p = this.editor.createBlockProperty(rule.type, { start: textStart, end: textEnd });
-            //             if (p.schema) {
-            //                 if (p.schema.animation) {
-            //                     if (p.schema.animation.init) {
-            //                         p.schema.animation.init(p);
-            //                     }
-            //                     if (p.schema.animation.start) {
-            //                         p.schema.animation.start(p);
-            //                     }
-            //                 }
-            //             }
-            //         } else {
-            //             const p = editor.createProperty(rule.type, null, { start: textStart, end: textEnd });
-            //         }
-            //     });
-            //     if (rulesProcessed) {
-            //         editor.setCarotByNode(caret.right, 0);
-            //     }
-            // }
+            const matches = getMatches({ text, search: rule.pattern });
+            if (matches.length) {
+                rulesProcessed = true;
+                matches.forEach(m => {
+                    if (rule.process) {
+                        rule.process({ block, text, cells, match: m, rule })
+                        return;
+                    }
+                    var wrapperStart = 0, wrapperEnd = 0;
+                    if (rule.wrapper) {
+                        if (!rule.wrapper) {
+                            // skip
+                        } else {
+                            wrapperStart = rule.wrapper.start.length;
+                            wrapperEnd = rule.wrapper.end.length;
+                        }
+                    }
+                    const textStart = m.start + wrapperStart, textEnd = m.end - wrapperEnd;
+                    const schemas = (block.schemas as IPropertySchema[]).concat(block.blockSchemas);
+                    const type = schemas.find(x => x.type == rule.type) as IPropertySchema;
+                    block.removeCellsAtIndex(m.start, wrapperStart);
+                    block.removeCellsAtIndex(m.end, wrapperEnd);
+                    // for (var i = 0; i < wrapperStart; i++) {
+                    //     const start = cells[m.start + i];
+                    //     self.removeCell({ cell: start, container });
+                    // }
+                    // for (var i = 0; i < wrapperEnd; i++) {
+                    //     const end = cells[m.end - i];
+                    //     self.removeCell({ cell: end, container });
+                    // }
+                    if (type.type.indexOf("block") >= 0 ) {
+                        const prop = { type: rule.type } as BlockPropertyDto;
+                        block.addBlockProperties([prop]);
+                        block.applyBlockPropertyStyling();
+                    } else {
+                        block.addStandoffPropertiesDto([
+                            { type: rule.type, start: textStart, end: textEnd } as StandoffPropertyDto
+                        ]);
+                        block.applyStandoffPropertyStyling();
+                    }
+                });
+                if (rulesProcessed) {
+                    block.moveCaretStart();
+                }
+            }
         });
         // if (rulesProcessed) {
         //     this.close();

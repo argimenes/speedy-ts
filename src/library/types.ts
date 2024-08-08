@@ -4,7 +4,7 @@ import { StandoffEditorBlock } from "./standoff-editor-block";
 import { StandoffProperty } from "./standoff-property";
 
 export type GUID = string;
-export interface IBlockPropertySchema {
+export interface IBlockPropertySchema extends IPropertySchema {
     type: string;
     event?: Record<string, BlockBindingHandler>;
     decorate?: {
@@ -351,11 +351,13 @@ export interface IStandoffProperty {
     endIndex: number;
     value?: string;
 }
-export interface IStandoffPropertySchema {
+export interface IPropertySchema {
     type: string;
     name?: string;
     description?: string;
-    event: any;
+}
+export interface IStandoffPropertySchema extends IPropertySchema {
+    event?: any;
     decorate?: {
         cssClass?: string;
         batchRender?: (args: { block: StandoffEditorBlock, properties: StandoffProperty[] }) => void;
