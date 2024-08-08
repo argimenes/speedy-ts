@@ -797,6 +797,54 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             {
                 mode: "default",
                 trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Shift-Backspace"
+                },
+                action: {
+                    name: "Delete the entire block.",
+                    description: ``,
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        const manager = block.owner as BlockManager;
+                        const next = block.relation.next;
+                        const previous = block.relation.previous;
+                        const parent= block.relation.parent;
+                        manager.deleteBlock(block.id);
+                        const switchToBlock = previous || next || parent;
+                        if (!switchToBlock) return;
+                        manager.setBlockFocus(switchToBlock);
+                        if (switchToBlock.type == BlockType.StandoffEditorBlock) (switchToBlock as StandoffEditorBlock).moveCaretStart();
+                        return;
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Shift-Delete"
+                },
+                action: {
+                    name: "Delete the entire block.",
+                    description: ``,
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        const manager = block.owner as BlockManager;
+                        const next = block.relation.next;
+                        const previous = block.relation.previous;
+                        const parent= block.relation.parent;
+                        manager.deleteBlock(block.id);
+                        const switchToBlock = next || previous || parent;
+                        if (!switchToBlock) return;
+                        manager.setBlockFocus(switchToBlock);
+                        if (switchToBlock.type == BlockType.StandoffEditorBlock) (switchToBlock as StandoffEditorBlock).moveCaretStart();
+                        return;
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
                     source: InputEventSource.Custom,
                     match: "paste"
                 },
