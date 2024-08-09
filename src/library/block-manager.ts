@@ -1,6 +1,6 @@
 import axios from 'axios';
-import HTMLSource from "@atjson/source-html";
-import OffsetSource from "@atjson/offset-annotations";
+// import HTMLSource from "@atjson/source-html";
+// import OffsetSource from "@atjson/offset-annotations";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 import { LeftMarginBlock, RightMarginBlock } from "./margin-block";
@@ -11,8 +11,7 @@ import { GridBlock, GridCellBlock, GridRowBlock } from "./grid-block";
 import { ImageBlock } from "./image-block";
 import { VideoBlock } from "./video-block";
 import { IframeBlock } from "./iframe-block";
-import { Cell } from "./cell";
-import _, { property } from "underscore";
+import _ from "underscore";
 import { AbstractBlock } from "./abstract-block";
 import { BlockProperty } from "./block-property";
 import { StandoffEditorBlock } from "./standoff-editor-block";
@@ -26,7 +25,6 @@ import { EmbedDocumentBlock } from "./embed-document-block";
 import { SearchEntitiesWindow } from "../components/search-entities";
 import { renderToNode } from "./common";
 import { StandoffEditorBlockMonitor } from "../components/monitor";
-import { KEYS } from "./keyboard";
 
 export class BlockManager extends AbstractBlock implements IBlockManager {
     id: string;
