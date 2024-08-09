@@ -61,6 +61,12 @@ export abstract class AbstractBlock implements IBlock {
         if (!o) return;
         o.container.remove();
     }
+    removeBlockProperty(bp: BlockProperty) {
+        bp.removeStyling();
+        const bi = this.blockProperties.findIndex(x => x.id == bp.id);
+        this.blockProperties.splice(bi, 1);
+        bp.isDeleted = true;
+    }
     addOverlay(name: string) {
         const blockIndex = 100;
         const container = document.createElement("DIV") as HTMLDivElement;

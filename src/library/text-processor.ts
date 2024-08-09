@@ -157,7 +157,7 @@ export class TextProcessor {
                 pattern: "/sm/(.*?)/", type: "style/font/size/small", wrapper: { start: "/sm/", end: "/" },
             },
             {
-                pattern: "/left/", type: "block/alignment/left", wrapper: { start: "/right/",end:"" },
+                pattern: "/l/", type: "block/alignment/left", wrapper: { start: "/l/",end:"" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
                     self.removeBlockProperties(block, (x) => x.type.indexOf("block/alignment/") >= 0);
@@ -166,7 +166,7 @@ export class TextProcessor {
                 }
             },
             {
-                pattern: "/right/", type: "block/alignment/right", wrapper: { start: "/right/",end:"" },
+                pattern: "/r/", type: "block/alignment/right", wrapper: { start: "/r/",end:"" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
                     self.removeBlockProperties(block, (x) => x.type.indexOf("block/alignment/") >= 0);
@@ -175,11 +175,20 @@ export class TextProcessor {
                 }
             },
             {
-                pattern: "/center/", type: "block/alignment/center", wrapper: { start: "/center/", end: "" },
+                pattern: "/c/", type: "block/alignment/center", wrapper: { start: "/c/", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
                     self.removeBlockProperties(block, (x) => x.type.indexOf("block/alignment/") >= 0);
                     block.addBlockProperties([ { type: "block/alignment/center" } ]);
+                    block.applyBlockPropertyStyling();
+                }
+            },
+            {
+                pattern: "/j/", type: "block/alignment/justify", wrapper: { start: "/j/", end: "" },
+                process: async (args: ITextPatternRecogniserHandler) => {
+                    const { block } = args;
+                    self.removeBlockProperties(block, (x) => x.type.indexOf("block/alignment/") >= 0);
+                    block.addBlockProperties([ { type: "block/alignment/justify" } ]);
                     block.applyBlockPropertyStyling();
                 }
             },
@@ -329,8 +338,9 @@ export class TextProcessor {
                     block.addBlockProperties([prop]);
                     block.applyBlockPropertyStyling();
                 } else {
+                    const textStart = m.start - wrapperStart + 1, textEnd = m.end - wrapperEnd - 1;
                     block.addStandoffPropertiesDto([
-                        { type: rule.type, start: m.start, end: m.end } as StandoffPropertyDto
+                        { type: rule.type, start: textStart, end: textEnd } as StandoffPropertyDto
                     ]);
                     block.applyStandoffPropertyStyling();
                 }
@@ -344,7 +354,7 @@ export class TextProcessor {
         const props = block
             .blockProperties
             .filter(getter);
-        if (props.length) props.forEach(p => p.destroy());
+        if (props.length) props.forEach(p => p.block?.removeBlockProperty(p));
     }
     replaceTextWith(args: any) {
         const { text, cells, source, target } = args;

@@ -70,6 +70,7 @@ export interface IBlock {
     //updateView: () => void;
     getBlock: (id: GUID) => IBlock;
     applyBlockPropertyStyling(): void;
+    removeBlockProperty(bp: BlockProperty): void;
 }
 
 export interface IBlockRelation {

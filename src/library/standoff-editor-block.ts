@@ -405,12 +405,6 @@ export class StandoffEditorBlock extends AbstractBlock {
         if (left == null) return BLOCK_POSITION.Start;
         return BLOCK_POSITION.Inside;
     }
-    removeBlockProperty(bp: BlockProperty) {
-        bp.removeStyling();
-        const bi = this.blockProperties.findIndex(x => x.id == bp.id);
-        this.blockProperties.slice(bi, 1);
-        bp.isDeleted = true;
-    }
     getCaret() {
         const len = this.cells.length;
         if (len == 1) {

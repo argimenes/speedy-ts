@@ -33,7 +33,8 @@ export class BlockProperty {
             id: this.id,
             type: this.type,
             value: this.value,
-            metadata: this.metadata
+            metadata: this.metadata,
+            isDeleted: this.isDeleted
         }
     }
     applyStyling() {
@@ -49,8 +50,5 @@ export class BlockProperty {
             this.block.container.classList.remove(schema.decorate.blockClass);
             this.styled = false;
         }
-    }
-    destroy() {
-        this.block && this.block.removeBlockProperty(this);
-    }
+    }    
 }
