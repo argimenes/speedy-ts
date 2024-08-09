@@ -14,7 +14,7 @@ export interface ITextPatternRecogniserHandler {
     block: StandoffEditorBlock;
     text: string;
     cells: Cell[];
-    match: IRange;
+    match: { start: number; end: number; };
     container: HTMLDivElement;
     rule: Rule
 }
@@ -148,7 +148,7 @@ export class TextProcessor {
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { match, block } = args;
                     block.addStandoffPropertiesDto([
-                        { type: "style/font/size/large", start: match.start.index, end: match.end.index }
+                        { type: "style/font/size/large", start: match.start, end: match.end }
                     ]);
                     block.applyStandoffPropertyStyling();
                 }
@@ -158,7 +158,7 @@ export class TextProcessor {
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { match, block } = args;
                     block.addStandoffPropertiesDto([
-                        { type: "style/font/size/small", start: match.start.index, end: match.end.index }
+                        { type: "style/font/size/small", start: match.start, end: match.end }
                     ]);
                     block.applyStandoffPropertyStyling();
                 }
@@ -182,10 +182,11 @@ export class TextProcessor {
             {
                 pattern: "/h1/", type: "size", wrapper: { start: "/h1/", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
-                    const { block } = args;
+                    const { block, match } = args;
                     self.removeBlockProperties(block, (x) => x.type.indexOf("block/font/size/") >= 0);
                     block.addBlockProperties([ { type: "block/font/size/h1" } ]);
                     block.applyBlockPropertyStyling();
+                    block.removeCellsAtIndex(match.start, match.end - match.start + 1);
                 }
             },
             {
@@ -221,7 +222,7 @@ export class TextProcessor {
                     const { match, block } = args;
                     block.addStandoffPropertiesDto([{
                         type: "font/family/arial",
-                        start: match.start.index, end: match.end.index
+                        start: match.start, end: match.end
                     }]);
                     block.applyStandoffPropertyStyling();
                 }
@@ -232,7 +233,7 @@ export class TextProcessor {
                     const { match, block } = args;
                     block.addStandoffPropertiesDto([{
                         type: "font/family/mono",
-                        start: match.start.index, end: match.end.index
+                        start: match.start, end: match.end
                     }]);
                     block.applyStandoffPropertyStyling();
                 }
@@ -244,7 +245,7 @@ export class TextProcessor {
                     block.addStandoffPropertiesDto([{
                         type: "font/color",
                         value: "red",
-                        start: match.start.index, end: match.end.index
+                        start: match.start, end: match.end
                     }]);
                     block.applyStandoffPropertyStyling();
                 }
@@ -256,7 +257,7 @@ export class TextProcessor {
                     block.addStandoffPropertiesDto([{
                         type: "font/color",
                         value: "blue",
-                        start: match.start.index, end: match.end.index
+                        start: match.start, end: match.end
                     }]);
                     block.applyStandoffPropertyStyling();
                 }
@@ -266,13 +267,13 @@ export class TextProcessor {
                 pattern: "\\[today\\]",
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { match, block } = args;
-                    block.removeCellsAtIndex(match.start.index, match.end.index - match.start.index + 1)
+                    block.removeCellsAtIndex(match.start, match.end - match.start + 1)
                     const now = new Date();
                     const day = ("0" + now.getDate()).slice(-2);
                     const month = ("0" + (now.getMonth() + 1)).slice(-2);
                     const year = now.getFullYear();
                     const dateText = `${day}/${month}/${year}`;
-                    block.insertTextAtIndex(dateText, match.start.index);
+                    block.insertTextAtIndex(dateText, match.start);
                     // $.get("/Admin/Agent/FindOrCreate", params, (response) => {
                     //     if (!response.Success) {
                     //         return;
