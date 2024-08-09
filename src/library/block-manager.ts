@@ -291,8 +291,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     getImageBlockSchemas() {
         return [
             {
-                type: "style/dimensions",
-                name: "Block dimensions",
+                type: "block/size",
+                name: "Block size",
                 event: {
                     onInit: (p: BlockProperty) => {
                         const container = p.block.container;
@@ -311,7 +311,23 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     getBlockSchemas() {
         return [
             {
-                type: "style/dimensions",
+                type: "block/absolute-position",
+                name: "Block absolute position",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const container = p.block.container;
+                        const {x, y} = p.metadata;
+                        updateElement(container, {
+                            style: {
+                                left: x + "px",
+                                top: y + "px"
+                            }
+                        });
+                    }
+                }
+            },
+            {
+                type: "block/size",
                 name: "Block dimensions",
                 event: {
                     onInit: (p: BlockProperty) => {
@@ -3086,7 +3102,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             const image = this.addImageBlock(block, fileData.path);
             image.addBlockProperties([
                 {
-                    type: "style/dimensions",
+                    type: "block/size",
                     metadata: {
                         height: dimensions.height,
                         width: dimensions.width

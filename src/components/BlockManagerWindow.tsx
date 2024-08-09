@@ -7,6 +7,25 @@ type Props = {
 }
 export const BlockManagerWindow : Component<Props> = (props) => {
     const initialise = (el: HTMLDivElement) => {
+        const template: IBlockDto = {
+            type: BlockType.MainListBlock,
+            children: [
+                {
+                    type: BlockType.ImageBlock,
+                    metadata: {
+                        url: ""
+                    },
+                    blockProperties: [
+                        {
+                            type: "block/size", 
+                            metadata: {
+                                width: 250, height: 190
+                            }
+                        }
+                    ]
+                }
+            ]
+        };
         const nextDoc: IBlockDto = {
             type: BlockType.MainListBlock,
             children: [
