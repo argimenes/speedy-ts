@@ -395,7 +395,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 }
             },
             {
-                type: "block/alignment/centre",
+                type: "block/alignment/center",
                 name: "Centre Alignment",
                 description: "Align text in the block to the middle.",
                 decorate: {

@@ -90,13 +90,13 @@ export class TextProcessor {
         ];
         this.rules = [
             {
-                pattern: "\\^\\^(.*?)\\^\\^", type: "superscript", wrapper: { start: "^^", end: "^^" }
+                pattern: "\\^\\^(.*?)\\^\\^", type: "style/superscript", wrapper: { start: "^^", end: "^^" }
             },
             {
-                pattern: "~~(.*?)~~", type: "strike", wrapper: { start: "~~", end: "~~" }
+                pattern: "~~(.*?)~~", type: "style/strike", wrapper: { start: "~~", end: "~~" }
             },
             {
-                pattern: "_(.*?)_", type: "italics", wrapper: { start: "_", end: "_" }
+                pattern: "_(.*?)_", type: "style/italics", wrapper: { start: "_", end: "_" }
             },
             {
                 pattern: "\\[\\((.*?)\\)\\]",
@@ -110,7 +110,7 @@ export class TextProcessor {
                 pattern: "`(.*?)`", type: "code", wrapper: { start: "`", end: "`" }
             },
             {
-                pattern: "\\*(.*?)\\*", type: "bold", wrapper: { start: "*", end: "*" }
+                pattern: "\\*(.*?)\\*", type: "style/bold", wrapper: { start: "*", end: "*" }
             },
             //capital
             {
@@ -120,31 +120,31 @@ export class TextProcessor {
                 pattern: '""(.*?)""', type: "air-quotes", wrapper: { start: '""', end: '""' },
             },
             {
-                pattern: "/sup/(.*?)/", type: "superscript", wrapper: { start: "/sup/", end: "/" }
+                pattern: "/sup/(.*?)/", type: "style/superscript", wrapper: { start: "/sup/", end: "/" }
             },
             {
-                pattern: "/sub/(.*?)/", type: "subscript", wrapper: { start: "/sub/", end: "/" }
+                pattern: "/sub/(.*?)/", type: "style/subscript", wrapper: { start: "/sub/", end: "/" }
             },
             {
-                pattern: "__(.*?)__", type: "underline", wrapper: { start: "__", end: "__" }
+                pattern: "__(.*?)__", type: "style/underline", wrapper: { start: "__", end: "__" }
             },
             {
                 pattern: "/spin/(.*?)/", type: "animation/clock", wrapper: { start: "/spin/", end: "/" }
             },
             {
-                pattern: "/h/(.*?)/", type: "highlight", wrapper: { start: "/h/", end: "/" }
+                pattern: "/h/(.*?)/", type: "style/highlight", wrapper: { start: "/h/", end: "/" }
             },
             {
-                pattern: "/u/(.*?)/", type: "underline", wrapper: { start: "/u/", end: "/" }
+                pattern: "/u/(.*?)/", type: "style/underline", wrapper: { start: "/u/", end: "/" }
             },
             {
-                pattern: "/b/(.*?)/", type: "bold", wrapper: { start: "/b/", end: "/" }
+                pattern: "/b/(.*?)/", type: "style/bold", wrapper: { start: "/b/", end: "/" }
             },
             {
-                pattern: "/strike/(.*?)/", type: "strike", wrapper: { start: "/s/", end: "/" }
+                pattern: "/strike/(.*?)/", type: "style/strike", wrapper: { start: "/s/", end: "/" }
             },
             {
-                pattern: "/lg/(.*?)/", type: "size", wrapper: { start: "/lg/", end: "/" },
+                pattern: "/lg/(.*?)/", type: "style/font/size/large", wrapper: { start: "/lg/", end: "/" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { match, block } = args;
                     block.addStandoffPropertiesDto([
@@ -154,19 +154,22 @@ export class TextProcessor {
                 }
             },
             {
-                pattern: "/sm/(.*?)/", type: "size", wrapper: { start: "/sm/", end: "/" },
+                pattern: "/sm/(.*?)/", type: "style/font/size/small", wrapper: { start: "/sm/", end: "/" },
+            },
+            {
+                pattern: "/left/", type: "block/alignment/left", wrapper: { start: "/right/",end:"" },
                 process: async (args: ITextPatternRecogniserHandler) => {
-                    const { match, block } = args;
-                    block.addStandoffPropertiesDto([
-                        { type: "style/font/size/small", start: match.start, end: match.end }
-                    ]);
-                    block.applyStandoffPropertyStyling();
+                    const { block } = args;
+                    self.removeBlockProperties(block, (x) => x.type.indexOf("block/alignment/") >= 0);
+                    block.addBlockProperties([ { type: "block/alignment/left" } ]);
+                    block.applyBlockPropertyStyling();
                 }
             },
             {
                 pattern: "/right/", type: "block/alignment/right", wrapper: { start: "/right/",end:"" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
+                    self.removeBlockProperties(block, (x) => x.type.indexOf("block/alignment/") >= 0);
                     block.addBlockProperties([ { type: "block/alignment/right" } ]);
                     block.applyBlockPropertyStyling();
                 }
@@ -175,22 +178,22 @@ export class TextProcessor {
                 pattern: "/center/", type: "block/alignment/center", wrapper: { start: "/center/", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
+                    self.removeBlockProperties(block, (x) => x.type.indexOf("block/alignment/") >= 0);
                     block.addBlockProperties([ { type: "block/alignment/center" } ]);
                     block.applyBlockPropertyStyling();
                 }
             },
             {
-                pattern: "/h1/", type: "size", wrapper: { start: "/h1/", end: "" },
+                pattern: "/h1/", type: "block/font/size/h1", wrapper: { start: "/h1/", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block, match } = args;
                     self.removeBlockProperties(block, (x) => x.type.indexOf("block/font/size/") >= 0);
                     block.addBlockProperties([ { type: "block/font/size/h1" } ]);
                     block.applyBlockPropertyStyling();
-                    block.removeCellsAtIndex(match.start, match.end - match.start + 1);
                 }
             },
             {
-                pattern: "/h2/", type: "size", wrapper: { start: "/h2/", end: "" },
+                pattern: "/h2/", type: "block/font/size/h2", wrapper: { start: "/h2/", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
                     self.removeBlockProperties(block, (x) => x.type.indexOf("block/font/size/") >= 0);
@@ -199,7 +202,7 @@ export class TextProcessor {
                 }
             },
             {
-                pattern: "/h3/", type: "size", wrapper: { start: "/h3/", end: "" },
+                pattern: "/h3/", type: "block/font/size/h3", wrapper: { start: "/h3/", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
                     self.removeBlockProperties(block, (x) => x.type.indexOf("block/font/size/") >= 0);
@@ -208,7 +211,7 @@ export class TextProcessor {
                 }
             },
             {
-                pattern: "/h4/", type: "size", wrapper: { start: "/h4/", end: "" },
+                pattern: "/h4/", type: "block/font/size/h4", wrapper: { start: "/h4/", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
                     self.removeBlockProperties(block, (x) => x.type.indexOf("block/font/size/") >= 0);
@@ -217,29 +220,13 @@ export class TextProcessor {
                 }
             },
             {
-                pattern: "/arial/(.*?)/", type: "font", wrapper: { start: "/arial/", end: "/" },
-                process: async (args: ITextPatternRecogniserHandler) => {
-                    const { match, block } = args;
-                    block.addStandoffPropertiesDto([{
-                        type: "font/family/arial",
-                        start: match.start, end: match.end
-                    }]);
-                    block.applyStandoffPropertyStyling();
-                }
+                pattern: "/arial/(.*?)/", type: "font/family/arial", wrapper: { start: "/arial/", end: "/" }
             },
             {
-                pattern: "/mono/(.*?)/", type: "font", wrapper: { start: "/mono/", end: "/" },
-                process: async (args: ITextPatternRecogniserHandler) => {
-                    const { match, block } = args;
-                    block.addStandoffPropertiesDto([{
-                        type: "font/family/mono",
-                        start: match.start, end: match.end
-                    }]);
-                    block.applyStandoffPropertyStyling();
-                }
+                pattern: "/mono/(.*?)/", type: "font/family/mono", wrapper: { start: "/mono/", end: "/" }
             },
             {
-                pattern: "/red/(.*?)/", type: "colour", wrapper: { start: "/red/", end: "/" },
+                pattern: "/red/(.*?)/", type: "font/color", wrapper: { start: "/red/", end: "/" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { match, block } = args;
                     block.addStandoffPropertiesDto([{
@@ -251,7 +238,7 @@ export class TextProcessor {
                 }
             },
             {
-                pattern: "/blue/(.*?)/", type: "colour", wrapper: { start: "/blue/", end: "/" },
+                pattern: "/blue/(.*?)/", type: "font/color", wrapper: { start: "/blue/", end: "/" },
                 process:async (args: ITextPatternRecogniserHandler) => {
                     const { match, block } = args;
                     block.addStandoffPropertiesDto([{
@@ -318,10 +305,6 @@ export class TextProcessor {
             if (!matches.length) return;
             rulesProcessed = true;
             matches.forEach(m => {
-                if (rule.process) {
-                    rule.process({ block, text, cells, match: m, rule })
-                    return;
-                }
                 let wrapperStart = 0, wrapperEnd = 0;
                 if (rule.wrapper) {
                     if (!rule.wrapper) {
@@ -331,26 +314,23 @@ export class TextProcessor {
                         wrapperEnd = rule.wrapper.end.length;
                     }
                 }
-                const textStart = m.start + wrapperStart, textEnd = m.end - wrapperEnd;
+                if (rule.process) {
+                    rule.process({ block, text, cells, match: m, rule });
+                    block.removeCellsAtIndex(m.end, wrapperEnd);
+                    block.removeCellsAtIndex(m.start, wrapperStart);
+                    return;
+                }
                 const schemas = (block.schemas as IPropertySchema[]).concat(block.blockSchemas);
                 const type = schemas.find(x => x.type == rule.type) as IPropertySchema;
-                block.removeCellsAtIndex(m.start, wrapperStart);
                 block.removeCellsAtIndex(m.end, wrapperEnd);
-                // for (var i = 0; i < wrapperStart; i++) {
-                //     const start = cells[m.start + i];
-                //     self.removeCell({ cell: start, container });
-                // }
-                // for (var i = 0; i < wrapperEnd; i++) {
-                //     const end = cells[m.end - i];
-                //     self.removeCell({ cell: end, container });
-                // }
+                block.removeCellsAtIndex(m.start, wrapperStart);
                 if (type.type.indexOf("block") >= 0 ) {
                     const prop = { type: rule.type } as BlockPropertyDto;
                     block.addBlockProperties([prop]);
                     block.applyBlockPropertyStyling();
                 } else {
                     block.addStandoffPropertiesDto([
-                        { type: rule.type, start: textStart, end: textEnd } as StandoffPropertyDto
+                        { type: rule.type, start: m.start, end: m.end } as StandoffPropertyDto
                     ]);
                     block.applyStandoffPropertyStyling();
                 }
