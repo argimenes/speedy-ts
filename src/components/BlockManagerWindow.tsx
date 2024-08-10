@@ -1,27 +1,81 @@
 import { Component } from "solid-js"
 import { BlockManager } from "../library/block-manager"
-import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto, IEmbedDocumentBlockDto } from "../library/types";
+import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto, IEmbedDocumentBlockDto, IBlock } from "../library/types";
+import { StandoffEditorBlock } from "../library/standoff-editor-block";
 
 type Props = {
     getInstance: (inst: BlockManager) => void;
 }
 export const BlockManagerWindow : Component<Props> = (props) => {
     const initialise = (el: HTMLDivElement) => {
+        /**
+         * left: 180px;
+        top: 160px;
+        width: 590px;
+        height: 820px;
+         */
         const template: IBlockDto = {
             type: BlockType.MainListBlock,
             children: [
                 {
                     type: BlockType.ImageBlock,
                     metadata: {
-                        url: ""
+                        url: "/uploads/medieval-template.jpg"
                     },
                     blockProperties: [
                         {
                             type: "block/size", 
                             metadata: {
-                                width: 250, height: 190
+                                width: 914, height: 1252
                             }
                         }
+                    ],
+                    children: [
+                        {
+                            type: BlockType.GridBlock,
+                            blockProperties: [
+                                {
+                                    type: "block/size", 
+                                    metadata: {
+                                        width: 590, height: 820,
+                                        "overflow-y": "scroll",
+                                        "overflow-x": "hidden"
+                                    }
+                                },
+                                {
+                                    type: "block/position", 
+                                    metadata: {
+                                        x: 195, y: 180, position: "absolute"
+                                    }
+                                }
+                            ],
+                            children: [
+                                {
+                                    type: BlockType.GridRowBlock,
+                                    children: [
+                                        {
+                                            type: BlockType.GridCellBlock,
+                                            blockProperties: [
+                                                {
+                                                    type: "block/size", 
+                                                    metadata: {
+                                                        position: "relative",
+                                                        width: "100%"
+                                                    }
+                                                }
+                                            ],
+                                            children: [
+                                                {
+                                                    type: BlockType.StandoffEditorBlock,
+                                                    text: "HELL",
+                                                    blockProperties: []
+                                                } as IStandoffEditorBlockDto
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }                        
                     ]
                 }
             ]
@@ -305,6 +359,9 @@ export const BlockManagerWindow : Component<Props> = (props) => {
         const manager = new BlockManager();
         manager.container = el;
         manager.loadDocument(nextDoc);
+        const standoff = manager.blocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
+        manager.setBlockFocus(standoff);
+        standoff.moveCaretStart();
         props.getInstance(manager);
         console.log("== GLOBAL ==", { manager, block: manager.blocks[0] })
     }

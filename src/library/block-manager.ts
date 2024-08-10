@@ -26,6 +26,9 @@ import { SearchEntitiesWindow } from "../components/search-entities";
 import { renderToNode } from "./common";
 import { StandoffEditorBlockMonitor } from "../components/monitor";
 
+const isStr = (value: any) => typeof (value) == "string";
+const isNum = (value: any) => typeof (value) == "number";
+ 
 export class BlockManager extends AbstractBlock implements IBlockManager {
     id: string;
     type: BlockType;
@@ -289,7 +292,26 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setFocus();
     }
     getImageBlockSchemas() {
+        const self = this;
         return [
+            {
+                type: "block/position",
+                name: "Block position",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const container = p.block.container;
+                        const {x, y, position } = p.metadata;
+                        updateElement(container, {
+                            style: {
+                                position: position || "absolute",
+                                left: x + "px",
+                                top: y + "px",
+                                "z-index": self.getHighestZIndex()
+                            }
+                        });
+                    }
+                }
+            },
             {
                 type: "block/size",
                 name: "Block size",
@@ -299,8 +321,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         const {width, height} = p.metadata;
                         updateElement(container, {
                             style: {
-                                height: height + "px",
-                                width: width + "px"
+                                height: isStr(height) ? height : height + "px",
+                                width: isStr(width) ? width : width + "px"
                             }
                         });
                     }
@@ -309,18 +331,21 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         ]
     }
     getBlockSchemas() {
+        const self = this;
         return [
             {
-                type: "block/absolute-position",
-                name: "Block absolute position",
+                type: "block/position",
+                name: "Block position",
                 event: {
                     onInit: (p: BlockProperty) => {
                         const container = p.block.container;
-                        const {x, y} = p.metadata;
+                        const {x, y, position } = p.metadata;
                         updateElement(container, {
                             style: {
+                                position: position || "absolute",
                                 left: x + "px",
-                                top: y + "px"
+                                top: y + "px",
+                                "z-index": self.getHighestZIndex()
                             }
                         });
                     }
@@ -335,10 +360,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         const {width, height} = p.metadata;
                         updateElement(container, {
                             style: {
-                                height: height + "px",
-                                width: width + "px"
+                                height: isStr(height) ? height : height + "px",
+                                width: isStr(width) ? width : width + "px",
+                                "overflow-y": "auto",
+                                "overflow-x": "hidden"
                             }
                         });
+                        const minWidth = p.metadata["min-width"];
+                        if (minWidth) {
+                            updateElement(container, {
+                            style: {
+                                "min-width": minWidth + "px"
+                            }
+                        });
+                        }
                     }
                 }
             },
@@ -1958,7 +1993,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     async buildStandoffEditorBlock(container: HTMLDivElement, blockDto: IBlockDto) {
-        const textBlock = this.createStandoffEditorBlock();
+        const textBlock = this.createStandoffEditorBlock(blockDto);
         textBlock.bind(blockDto as IStandoffEditorBlockDto);
         if (blockDto.relation?.leftMargin) {
             const leftMargin = await this.recursivelyBuildBlock(textBlock.container, blockDto.relation.leftMargin) as LeftMarginBlock;
@@ -2014,13 +2049,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return plainText;
     }
     async buildGridBlock(container: HTMLDivElement, blockDto: IBlockDto) {
-        const gridBlock = this.createGridBlock();
+        const gridBlock = this.createGridBlock(blockDto);
         await this.buildChildren(gridBlock, blockDto);
         container.appendChild(gridBlock.container);
         return gridBlock;
     }
     async buildGridRowBlock(container: HTMLDivElement, blockDto: IBlockDto) {
-        const rowBlock = this.createGridRowBlock();
+        const rowBlock = this.createGridRowBlock(blockDto);
         await this.buildChildren(rowBlock, blockDto, (b) => {
             if (b.metadata?.width) {
                 updateElement(b.container, {

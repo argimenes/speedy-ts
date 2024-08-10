@@ -65,6 +65,7 @@ export abstract class AbstractBlock implements IBlock {
         bp.removeStyling();
         const bi = this.blockProperties.findIndex(x => x.id == bp.id);
         this.blockProperties.splice(bi, 1);
+        if (!this.blockProperties) this.blockProperties = [];
         bp.isDeleted = true;
     }
     addOverlay(name: string) {
