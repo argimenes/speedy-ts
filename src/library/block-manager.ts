@@ -25,6 +25,7 @@ import { EmbedDocumentBlock } from "./embed-document-block";
 import { SearchEntitiesWindow } from "../components/search-entities";
 import { renderToNode } from "./common";
 import { StandoffEditorBlockMonitor } from "../components/monitor";
+import { TableBlock, TableCellBlock, TableRowBlock } from './tables-blocks';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
@@ -32,7 +33,7 @@ const isNum = (value: any) => typeof (value) == "number";
 export class BlockManager extends AbstractBlock implements IBlockManager {
     id: string;
     type: BlockType;
-    container: HTMLDivElement;
+    container: HTMLElement;
     blocks: IBlock[];
     relation: Record<string, IBlock>;
     metadata: Record<string,any>;
@@ -53,7 +54,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         super({ id: props?.id, container: props?.container });
         this.id = props?.id || uuidv4();
         this.type = BlockType.IndentedListBlock;
-        this.container = props?.container || document.createElement("DIV") as HTMLDivElement;
+        this.container = props?.container || document.createElement("DIV") as HTMLElement;
         this.blocks = [this];
         this.metadata = {};
         this.relation = {};
@@ -389,6 +390,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 name: "3/4 the regular font size",
                 decorate: {
                     blockClass: "block_font-size_three-quarters"
+                }
+            },
+            {
+                type: "block/margin/top/20px",
+                name: "Top margin - 20",
+                decorate: {
+                    blockClass: "block_margin_top_20px"
+                }
+            },
+            {
+                type: "block/margin/top/40px",
+                name: "Top margin - 40",
+                decorate: {
+                    blockClass: "block_margin_top_40px"
                 }
             },
             {
@@ -1966,6 +1981,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const json = await res.json();
         return json.files as string[];
     }
+    async listTemplates() {
+        const res = await fetch("/api/listDocuments?folder=templates");
+        const json = await res.json();
+        return json.files as string[];
+    }
+    async loadServerTemplate(filename: string) {
+        const res = await fetch("/api/loadDocumentJson?folder=templates&filename=" + filename, { method: "GET" });
+        const json = await res.json();
+        console.log("loadServerTemplate", { filename, json });
+        if (!json.Success) {
+            return;
+        }
+        this.loadDocument(json.Data.document);
+    }
     async loadServerDocument(filename: string) {
         const res = await fetch("/api/loadDocumentJson?filename=" + filename, { method: "GET" });
         const json = await res.json();
@@ -1992,7 +2021,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         }
     }
-    async buildStandoffEditorBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildStandoffEditorBlock(container: HTMLElement, blockDto: IBlockDto) {
         const textBlock = this.createStandoffEditorBlock(blockDto);
         textBlock.bind(blockDto as IStandoffEditorBlockDto);
         if (blockDto.relation?.leftMargin) {
@@ -2011,26 +2040,26 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(textBlock.container);
         return textBlock;
     }
-    async buildLeftMarginBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildLeftMarginBlock(container: HTMLElement, blockDto: IBlockDto) {
         const leftMargin = this.createLeftMarginBlock(blockDto);
         await this.buildChildren(leftMargin, blockDto);
         container.appendChild(leftMargin.container);
         return leftMargin;
     }
-    async buildImageBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildImageBlock(container: HTMLElement, blockDto: IBlockDto) {
         const image = this.createImageBlock(blockDto);
         image.build();
         await this.buildChildren(image, blockDto);
         container.appendChild(image.container);
         return image;
     }
-    async buildRightMarginBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildRightMarginBlock(container: HTMLElement, blockDto: IBlockDto) {
         const rightMargin = this.createRightMarginBlock(blockDto);
         await this.buildChildren(rightMargin, blockDto);
         container.appendChild(rightMargin.container);
         return rightMargin;
     }
-    async buildCodeMirrorBlock(container: HTMLDivElement, blockDto: ICodeMirrorBlockDto) {
+    async buildCodeMirrorBlock(container: HTMLElement, blockDto: ICodeMirrorBlockDto) {
         const cm = this.createCodeMirrorBlock(blockDto);
         await this.buildChildren(cm, blockDto);
         if (blockDto.text)  {
@@ -2039,7 +2068,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(cm.container);
         return cm;
     }
-    async buildPlainTextBlock(container: HTMLDivElement, blockDto: IPlainTextBlockDto) {
+    async buildPlainTextBlock(container: HTMLElement, blockDto: IPlainTextBlockDto) {
         const plainText = this.createPlainTextBlock(blockDto);
         await this.buildChildren(plainText, blockDto);
         if (blockDto.text)  {
@@ -2048,13 +2077,31 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(plainText.container);
         return plainText;
     }
-    async buildGridBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildTableBlock(container: HTMLElement, blockDto: IBlockDto) {
+        const table = this.createTableBlock(blockDto);
+        await this.buildChildren(table, blockDto);
+        container.appendChild(table.container);
+        return table;
+    }
+    async buildTableRowBlock(container: HTMLElement, blockDto: IBlockDto) {
+        const table = this.createTableRowBlock(blockDto);
+        await this.buildChildren(table, blockDto);
+        container.appendChild(table.container);
+        return table;
+    }
+    async buildTableCellBlock(container: HTMLElement, blockDto: IBlockDto) {
+        const table = this.createTableCellBlock(blockDto);
+        await this.buildChildren(table, blockDto);
+        container.appendChild(table.container);
+        return table;
+    }
+    async buildGridBlock(container: HTMLElement, blockDto: IBlockDto) {
         const gridBlock = this.createGridBlock(blockDto);
         await this.buildChildren(gridBlock, blockDto);
         container.appendChild(gridBlock.container);
         return gridBlock;
     }
-    async buildGridRowBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildGridRowBlock(container: HTMLElement, blockDto: IBlockDto) {
         const rowBlock = this.createGridRowBlock(blockDto);
         await this.buildChildren(rowBlock, blockDto, (b) => {
             if (b.metadata?.width) {
@@ -2068,13 +2115,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(rowBlock.container);
         return rowBlock;
     }
-    async buildGridCellBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildGridCellBlock(container: HTMLElement, blockDto: IBlockDto) {
         const cellBlock = this.createGridCellBlock(blockDto);
         await this.buildChildren(cellBlock, blockDto);
         container.appendChild(cellBlock.container);
         return cellBlock;
     }
-    async buildEmbedDocumentBlock(container: HTMLDivElement, blockDto: IEmbedDocumentBlockDto){
+    async buildEmbedDocumentBlock(container: HTMLElement, blockDto: IEmbedDocumentBlockDto){
         const embed = this.createEmbedDocumentBlock(blockDto);
         await this.buildChildren(embed, blockDto);
         embed.filename = blockDto.filename;
@@ -2093,7 +2140,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(embed.container);
         return embed;
     }
-    async buildVideoBlock(container: HTMLDivElement, blockDto: IBlockDto){
+    async buildVideoBlock(container: HTMLElement, blockDto: IBlockDto){
         const video = this.createVideoBlock(blockDto);
         await this.buildChildren(video, blockDto);
         video.build();
@@ -2112,14 +2159,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         this.addParentSiblingRelations(parent);
     }
-    async buildIframeBlock(container: HTMLDivElement, blockDto: IBlockDto){
+    async buildIframeBlock(container: HTMLElement, blockDto: IBlockDto){
         const iframe = this.createIFrameBlock(blockDto);
         await this.buildChildren(iframe, blockDto);
         iframe.build();
         container.appendChild(iframe.container);
         return iframe;
     }
-    async buildTabRowBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildTabRowBlock(container: HTMLElement, blockDto: IBlockDto) {
         const rowBlock = this.createTabRowBlock(blockDto);
         await this.buildChildren(rowBlock, blockDto);
         rowBlock.renderLabels();
@@ -2167,20 +2214,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         newTab.panel.appendChild(textBlock.container);
         row.container.appendChild(newTab.container);
         const label = newTab.container.querySelector(".tab-label") as HTMLSpanElement;
-        row.setTabActive(newTab, label);
+        row.setTabActive(newTab);
         setTimeout(() => {
             this.setBlockFocus(textBlock);
             textBlock.setCaret(0, CARET.LEFT);
         }, 1);
         return newTab;
     }
-    async buildTabBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildTabBlock(container: HTMLElement, blockDto: IBlockDto) {
         const tabBlock = this.createTabBlock(blockDto);
         await this.buildChildren(tabBlock, blockDto, (b) => tabBlock.panel.appendChild(b.container));
         container.appendChild(tabBlock.container);
         return tabBlock;
     }
-    async buildIndentedListBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async buildIndentedListBlock(container: HTMLElement, blockDto: IBlockDto) {
         const indentedListBlock = this.createIndentedListBlock();
         await this.buildChildren(indentedListBlock, blockDto, (b) =>
             updateElement(b.container, {
@@ -2209,7 +2256,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         });
         return parent;
     }
-    async recursivelyBuildBlock(container: HTMLDivElement, blockDto: IBlockDto) {
+    async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
         if (blockDto.type == BlockType.StandoffEditorBlock) {
             return await this.buildStandoffEditorBlock(container, blockDto);
         }
@@ -2218,6 +2265,15 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         if (blockDto.type == BlockType.RightMarginBlock) {
             return await this.buildRightMarginBlock(container, blockDto);
+        }
+        if (blockDto.type == BlockType.TableBlock) {
+            return await this.buildTableBlock(container, blockDto);
+        }
+        if (blockDto.type == BlockType.TableRowBlock) {
+            return await this.buildTableRowBlock(container, blockDto);
+        }
+        if (blockDto.type == BlockType.TableCellBlock) {
+            return await this.buildTableCellBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.GridBlock) {
             return await this.buildGridBlock(container, blockDto);
@@ -2286,7 +2342,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             this.blocks = [];
         }
         this.id = dto.id || uuidv4();
-        const container = document.createElement("DIV") as HTMLDivElement;
+        const container = document.createElement("DIV") as HTMLElement;
         const mainBlock = this.createMainListBlock();
         mainBlock.bind(dto);
         if (dto.children) {
@@ -2472,6 +2528,45 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
         block.setEvents(events);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+        block.applyBlockPropertyStyling();
+        this.blocks.push(block);
+        return block;
+    }
+    createTableBlock(dto?: IBlockDto) {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new TableBlock({
+            owner: this,
+            id: dto?.id
+        });
+        if (dto?.metadata) block.metadata = dto.metadata;
+        block.setBlockSchemas(blockSchemas);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+        block.applyBlockPropertyStyling();
+        this.blocks.push(block);
+        return block;
+    }
+    createTableRowBlock(dto?: IBlockDto) {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new TableRowBlock({
+            owner: this,
+            id: dto?.id
+        });
+        if (dto?.metadata) block.metadata = dto.metadata;
+        block.setBlockSchemas(blockSchemas);
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+        block.applyBlockPropertyStyling();
+        this.blocks.push(block);
+        return block;
+    }
+    createTableCellBlock(dto?: IBlockDto) {
+        const blockSchemas = this.getBlockSchemas();
+        const block = new TableCellBlock({
+            owner: this,
+            id: dto?.id
+        });
+        if (dto?.metadata) block.metadata = dto.metadata;
+        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.blocks.push(block);
@@ -3373,21 +3468,21 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.removeCellAtIndex(ci, true);
     }
     convertHtmlToStandoff(html: string) {
-        let doc = HTMLSource.fromRaw(html).convertTo(OffsetSource).canonical();
-        const text = doc.content;
-        const standoffProperties = doc.annotations.map(x => {
-            return {
-                type: this.toCodexAnnotationType(x.type),
-                start: x.start,
-                end: x.end,
-                metadata: x.attributes
-            } as StandoffPropertyDto
-        }).filter(x => x.type != "unknown");
-        return {
-            text,
-            standoffProperties,
-            doc
-        };
+        // let doc = HTMLSource.fromRaw(html).convertTo(OffsetSource).canonical();
+        // const text = doc.content;
+        // const standoffProperties = doc.annotations.map(x => {
+        //     return {
+        //         type: this.toCodexAnnotationType(x.type),
+        //         start: x.start,
+        //         end: x.end,
+        //         metadata: x.attributes
+        //     } as StandoffPropertyDto
+        // }).filter(x => x.type != "unknown");
+        // return {
+        //     text,
+        //     standoffProperties,
+        //     doc
+        // };
     }
     toCodexAnnotationType(offsetSourceType: string) {
         switch (offsetSourceType) {

@@ -21,7 +21,7 @@ export abstract class AbstractBlock implements IBlock {
     owner?: IBlock;
     blockProperties: BlockProperty[];
     blockSchemas: IBlockPropertySchema[];
-    container: HTMLDivElement;
+    container: HTMLElement;
     relation: Record<string, IBlock>;
     /**
      * A place to store data about the Block, especially the kind that may not be relevant to every instance

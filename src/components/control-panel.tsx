@@ -10,9 +10,11 @@ import { BlockType, Caret, CARET, IBlock, IRange } from "../library/types";
 type Model = {
     command: string;
     file: string;
+    template: string;
 }
 type Resources = {
     files: string[];
+    templates: string[];
 }
 type Props = {
     manager?: BlockManager;
@@ -20,10 +22,11 @@ type Props = {
 export const ControlPanel : Component<Props> = (props) => {
     const [model, setModel] = createStore<Model>({
         command: "",
-        file: ""
+        file: "",
+        template: ""
     });
     const [resources, setResources] = createStore<Resources>({
-        files: []
+        files: [], templates: []
     });
     const onSubmit = (e:Event) => {
         e.preventDefault();
@@ -56,6 +59,11 @@ export const ControlPanel : Component<Props> = (props) => {
         const filename = parameters && parameters[0] || model.file;
         await props.manager.loadServerDocument(filename);
     }
+    const loadTemplate = async (parameters: string[]) => {
+        if (!props.manager) return;
+        const filename = parameters && parameters[0] || model.file;
+        await props.manager.loadServerTemplate(filename);
+    }
     const save = async (parameters: string[]) => {
         if (!props.manager) return;
         const filename = parameters && parameters[0] || model.file;
@@ -67,9 +75,18 @@ export const ControlPanel : Component<Props> = (props) => {
         const files = await props.manager.listDocuments();
         setResources("files", files);
     }
+    const listTemplates = async () => {
+        if (!props?.manager) return;
+        const files = await props.manager.listTemplates();
+        setResources("templates", files);
+    }
     const loadSelectedFileClicked = async (e: Event) => {
         e.preventDefault();
         await load([model.file]);
+    }
+    const loadSelectedTemplateClicked = async (e: Event) => {
+        e.preventDefault();
+        await loadTemplate([model.template]);
     }
     const createCodeMirrorBlock = () => {
         const block = props.manager?.getBlockInFocus();
@@ -268,7 +285,9 @@ export const ControlPanel : Component<Props> = (props) => {
     }
     onMount(async () => {
         const files = await props.manager?.listDocuments() as string[];
+        const templates = await props.manager?.listTemplates() as string[];
         setResources("files", files);
+        setResources("templates", templates);
         setModel("file", files[0]);
     })
     return (
@@ -294,6 +313,17 @@ export const ControlPanel : Component<Props> = (props) => {
                     }</For>
                 </select>
                 <button class="form-control" onClick={loadSelectedFileClicked}>Load</button>
+            </div>
+            <hr/>
+            <div>
+                <select value={model.template} onInput={(e) => setModel("template", e.currentTarget.value)}>
+                    <For each={resources.templates}>{(template) =>
+                        <option value={template}>
+                            {template}
+                        </option>
+                    }</For>
+                </select>
+                <button class="form-control" onClick={loadSelectedTemplateClicked}>Load</button>
             </div>
         </div>
     )

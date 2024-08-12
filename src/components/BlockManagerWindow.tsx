@@ -85,6 +85,11 @@ export const BlockManagerWindow : Component<Props> = (props) => {
             children: [
                 {
                     type: BlockType.StandoffEditorBlock,
+                    text: "Standoff Property Text Editor",
+                    blockProperties: [ { type: "block/font/size/h3" }]
+                },
+                {
+                    type: BlockType.StandoffEditorBlock,
                     text: "Once upon a midnight dreary ... [left aligned]",
                     standoffProperties: [
                         { type: "style/italics", start: 5, end: 12 },
@@ -138,9 +143,53 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                     }
                 } as IStandoffEditorBlockDto,
                 {
-                    type: BlockType.PlainTextBlock,
-                    text: "... and this is just a plain text block ..."
-                } as IPlainTextBlockDto,
+                    type: BlockType.StandoffEditorBlock,
+                    text: "Other Text Editors",
+                    blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
+                },
+                {
+                    type: BlockType.GridBlock,
+                    children: [
+                        {
+                            type: BlockType.GridRowBlock,
+                            children: [
+                                {
+                                    type: BlockType.GridCellBlock,
+                                    metadata: {
+                                        width: "48%"
+                                    },
+                                    children: [
+                                        {
+                                            type: BlockType.PlainTextBlock,
+                                            text: "... and this is just a plain text block ..."
+                                        } as IPlainTextBlockDto
+                                    ]
+                                },
+                                {
+                                    type: BlockType.GridCellBlock,
+                                    metadata: {
+                                        width: "48%"
+                                    },
+                                    children: [
+                                        {
+                                            type: BlockType.CodeMirrorBlock,
+                                            text:
+`// And this is a Javascript function in Code Mirror
+const foo = (bar) => {
+    alert("Hello, " + bar);
+}`
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    type: BlockType.StandoffEditorBlock,
+                    text: "Nested Lists",
+                    blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
+                },
                 {
                     type: BlockType.IndentedListBlock,
                     children: [
@@ -184,6 +233,11 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         { type: "block/alignment/centre" }
                     ]
                 } as IStandoffEditorBlockDto,
+                {
+                    type: BlockType.StandoffEditorBlock,
+                    text: "Tabs",
+                    blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
+                },
                 {
                     type: BlockType.TabRowBlock,
                     children: [
@@ -260,6 +314,11 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             ]
                         }
                     ]
+                },
+                {
+                    type: BlockType.StandoffEditorBlock,
+                    text: "Grids",
+                    blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
                 },
                 {
                     type: BlockType.GridBlock,
@@ -347,6 +406,80 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                         {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "Row 2 - Cell 3"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    type: BlockType.StandoffEditorBlock,
+                    text: "Tables",
+                    blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
+                },
+                {
+                    type: BlockType.TableBlock,
+                    children: [
+                        {
+                            type: BlockType.TableRowBlock,
+                            children: [
+                                {
+                                    type: BlockType.TableCellBlock,
+                                    children: [
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Table Cell 01/01"
+                                        }
+                                    ]
+                                },
+                                {
+                                    type: BlockType.TableCellBlock,
+                                    children: [
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Table Cell 01/02"
+                                        }
+                                    ]
+                                },
+                                {
+                                    type: BlockType.TableCellBlock,
+                                    children: [
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Table Cell 01/03"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            type: BlockType.TableRowBlock,
+                            children: [
+                                {
+                                    type: BlockType.TableCellBlock,
+                                    children: [
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Table Cell 02/01"
+                                        }
+                                    ]
+                                },
+                                {
+                                    type: BlockType.TableCellBlock,
+                                    children: [
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Table Cell 02/02"
+                                        }
+                                    ]
+                                },
+                                {
+                                    type: BlockType.TableCellBlock,
+                                    children: [
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Table Cell 02/03"
                                         }
                                     ]
                                 }

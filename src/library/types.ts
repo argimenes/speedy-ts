@@ -33,6 +33,9 @@ export enum BlockType {
     IndentedListBlock = "indented-list-block",
     TabRowBlock = "tab-row-block",
     TabBlock = "tab-block",
+    TableBlock = "table-block",
+    TableRowBlock = "table-row-block",
+    TableCellBlock = "table-cell-block",
     StandoffEditorBlock = "standoff-editor-block",
     HTMLEditorBlock = "html-editor-block",
     IFrameBlock = "iframe-block",
@@ -59,7 +62,7 @@ export interface IBlock {
     relation: Record<string, IBlock>;
     metadata: Record<string, any>;
 
-    container: HTMLDivElement; // rendering system
+    container: HTMLElement; // rendering system
 
     serialize(): IBlockDto;
     deserialize(json: any|any[]): IBlock;

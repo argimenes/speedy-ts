@@ -54,7 +54,8 @@ app.get('/api/textJson', function(req, res) {
      res.send(text);
 });
 app.get("/api/listDocuments", function (req, res) {
-     fs.readdir(path.join(__dirname + "/data/"), (err, files) => {
+     const folder = req?.query?.folder || "data";
+     fs.readdir(path.join(__dirname + "/" + folder + "/"), (err, files) => {
           res.send({ files: files });
      });
 });
@@ -72,7 +73,8 @@ app.get('/api/loadGraphJson', function(req, res) {
 });
 app.get('/api/loadDocumentJson', function(req, res) {
      const filename = req.query.filename;
-     const filepath = path.join(__dirname + "/data/" + filename);
+     const folder = req.query?.folder || "data";
+     const filepath = path.join(__dirname + "/" + folder + "/" + filename);
      const data = fs.readFileSync(filepath);
      const json = JSON.parse(data);
      res.send({

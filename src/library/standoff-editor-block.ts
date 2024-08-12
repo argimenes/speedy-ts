@@ -168,7 +168,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             this.cache.marker = undefined;
         }
     }
-    setMarker(anchor: Cell, container?: HTMLDivElement) {
+    setMarker(anchor: Cell, container?: HTMLElement) {
         const cache = anchor.cache;
         if (this.cache.marker) {
             this.cache.marker.remove();
