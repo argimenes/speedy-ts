@@ -1,0 +1,67 @@
+{
+    "type": "main-list-block",
+    "children": [
+      {
+        "type": "image-block",
+        "metadata": {
+          "url": "/templates/images/medieval-template.jpg"
+        },
+        "blockProperties": [
+          {
+            "type": "block/size",
+            "metadata": {
+              "width": 914,
+              "height": 1252
+            }
+          }
+        ],
+        "children": [
+          {
+            "type": "grid-block",
+            "blockProperties": [
+              {
+                "type": "block/size",
+                "metadata": {
+                  "width": 590,
+                  "height": 820
+                }
+              },
+              {
+                "type": "block/position",
+                "metadata": {
+                  "x": 195,
+                  "y": 180,
+                  "position": "absolute"
+                }
+              }
+            ],
+            "children": [
+              {
+                "type": "grid-row-block",
+                "children": [
+                  {
+                    "type": "grid-cell-block",
+                    "blockProperties": [
+                      {
+                        "type": "block/size",
+                        "metadata": {
+                          "position": "relative",
+                          "width": "100%"
+                        }
+                      }
+                    ],
+                    "children": [
+                      {
+                        "type": "standoff-editor-block",
+                        "text": ""
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
