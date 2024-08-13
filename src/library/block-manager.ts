@@ -89,6 +89,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const self = this;
         document.body.addEventListener("keydown", function (e) {
             const ALLOW = true, FORBID = false;
+            console.log("BlockManager.keydown", { e })
             if (e.target != document.body) {
                 return ALLOW;
             }
@@ -680,6 +681,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             onDelete: (p) => {
                 p.destroy();
             },
+            onClose: () => {
+                block.cache.monitor?.remove();
+            }
         });
         const node = block.cache.monitor = renderToNode(component) as HTMLDivElement;
         const offset = anchor.cache.offset;
@@ -694,6 +698,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             },
             parent: this.container
         });
+        
     }
     getEditorEvents() {
         const events: InputEvent[] = [
@@ -1803,7 +1808,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     },
                     update: (args) => {
                         const owner = args.block.owner as BlockManager;
-                        owner.renderUnderlines("codex/entity-reference", args.properties, args.block, "purple", 3);
+                        owner.renderUnderlines("codex/entity-reference", args.properties, args.block, "purple", 1);
                     }
                 }
             }

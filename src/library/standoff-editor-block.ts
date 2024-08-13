@@ -69,9 +69,9 @@ export class StandoffEditorBlock extends AbstractBlock {
             },
             style: {
                 position: "relative", // important for keeping the offsets relative to this element
-                margin: "0 10px",
+                //margin: "0 10px",
                 //border: "1px solid #ccc",
-                padding: "10px"
+                //padding: "10px"
             }
         });
         

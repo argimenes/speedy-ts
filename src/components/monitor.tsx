@@ -1,4 +1,4 @@
-import { Component, For, Show } from "solid-js";
+import { Component, For, onCleanup, Show } from "solid-js";
 import { StandoffProperty } from "../library/standoff-property";
 import { createStore } from "solid-js/store";
 
@@ -9,8 +9,10 @@ type StandoffPropertyState = {
 type Props = {
     properties: StandoffProperty[];
     onDelete: (p: StandoffProperty) => void;
+    onClose: () => void;
 }
 export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
+    let node: HTMLDivElement;
     const toStandoffPropertyState = (props: StandoffProperty[]) => props.map(x => ({ visible: false, property: x } as StandoffPropertyState));
     const [properties, setProperties] = createStore<StandoffPropertyState[]>(toStandoffPropertyState(props.properties));
     const setItemVisible = (item: StandoffPropertyState, visible: boolean) => {
@@ -21,8 +23,23 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
         p.destroy();
         setProperties(properties.filter(x=> x.property != p));
     };
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.currentTarget != node) return;
+        e.preventDefault();
+        if (e.key == "Escape") {
+            props.onClose();
+            return;
+        }
+    }
+    const onInit = (node: HTMLDivElement) => {
+        node.focus();
+        document.addEventListener("keydown", handleKeyDown);
+    }
+    onCleanup(() => {
+        document.removeEventListener("keydown", handleKeyDown);
+    })
     return (
-        <div class="monitor">
+        <div class="monitor" ref={onInit}>
             <For each={properties}>{(item) =>
                 <>
                     <div class="line-item">
