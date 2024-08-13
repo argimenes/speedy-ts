@@ -1,16 +1,52 @@
 import { Component, For, onCleanup, Show } from "solid-js";
 import { StandoffProperty } from "../library/standoff-property";
 import { createStore } from "solid-js/store";
+import { AbstractBlock } from "../library/abstract-block";
+import { IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
+import { BlockManager } from "../library/block-manager";
 
 type StandoffPropertyState = {
     visible: boolean;
     property: StandoffProperty;
 }
 type Props = {
+    monitor: MonitorBlock;
     properties: StandoffProperty[];
     onDelete: (p: StandoffProperty) => void;
     onClose: () => void;
 }
+export interface IMonitorBlockConstructor {
+    owner: BlockManager;
+}
+export interface IHandleyKeyboardInput {
+    handleKeyboardInput(e: KeyboardEvent): Promise<void>;
+}
+export class MonitorBlock extends AbstractBlock implements IHandleyKeyboardInput {
+    constructor(args: IMonitorBlockConstructor) {
+        super({ owner: args.owner });
+        this.canSerialize = false;
+    }
+    setContainer(node: HTMLDivElement) {
+        this.container = node;
+    }
+    async handleKeyboardInput(e: KeyboardEvent) {
+        const input = this.toKeyboardInput(e);
+        const match = super.getFirstMatchingInputEvent(input);
+        console.log("MonitorBlock.handleKeyboardInput", { e, match });
+        if (!match) return;
+        await match.action.handler({ e, block: this });
+    }
+    destroy() {
+        throw new Error();
+    }
+    serialize(): IBlockDto {
+        throw new Error();
+    }
+    deserialize(json: any | any[]): IBlock {
+        throw new Error();
+    }
+}
+
 export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
     let node: HTMLDivElement;
     const toStandoffPropertyState = (props: StandoffProperty[]) => props.map(x => ({ visible: false, property: x } as StandoffPropertyState));
@@ -23,20 +59,26 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
         p.destroy();
         setProperties(properties.filter(x=> x.property != p));
     };
-    const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.currentTarget != node) return;
-        e.preventDefault();
-        if (e.key == "Escape") {
-            props.onClose();
-            return;
-        }
-    }
+    let monitor = props.monitor;
     const onInit = (node: HTMLDivElement) => {
-        node.focus();
-        document.addEventListener("keydown", handleKeyDown);
+        monitor.inputEvents.push({
+            mode: "default",
+            trigger: {
+                source: InputEventSource.Keyboard,
+                match: "Escape"
+            },
+            action: {
+                name: "Close Monitor",
+                description: "",
+                handler: async (args: IBindingHandlerArgs) => {
+                    props.onClose();
+                }
+            }
+        })
+        monitor.setContainer(node);
     }
     onCleanup(() => {
-        document.removeEventListener("keydown", handleKeyDown);
+        
     })
     return (
         <div class="monitor" ref={onInit}>

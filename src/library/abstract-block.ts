@@ -23,6 +23,7 @@ export abstract class AbstractBlock implements IBlock {
     blockSchemas: IBlockPropertySchema[];
     container: HTMLElement;
     relation: Record<string, IBlock>;
+    canSerialize: boolean;
     /**
      * A place to store data about the Block, especially the kind that may not be relevant to every instance
      * of Block in every circumstance. For example, 'indentLevel: number' is relevant to a Block in a nested-list
@@ -47,7 +48,7 @@ export abstract class AbstractBlock implements IBlock {
         this.inputEvents = [];
         this.inputBuffer = [];
         this.inputActions = [];
-        
+        this.canSerialize = true;
         this.modes = ["default"];
     }
     

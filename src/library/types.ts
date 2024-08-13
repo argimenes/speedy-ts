@@ -61,7 +61,7 @@ export interface IBlock {
     blockProperties: BlockProperty[];
     relation: Record<string, IBlock>;
     metadata: Record<string, any>;
-
+    canSerialize: boolean;
     container: HTMLElement; // rendering system
 
     serialize(): IBlockDto;

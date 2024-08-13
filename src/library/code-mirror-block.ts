@@ -1,10 +1,7 @@
 import { AbstractBlock } from "./abstract-block";
-import { updateElement } from "./svg";
-import { IAbstractBlockConstructor, BlockType, IPlainTextBlockDto, IBlock, ICodeMirrorBlockDto } from "./types";
+import { BlockType, IBlock, ICodeMirrorBlockDto } from "./types";
 import {basicSetup, EditorView} from "codemirror"
 import {javascript} from "@codemirror/lang-javascript"
-import {markdown} from "@codemirror/lang-markdown"
-import {languages} from "@codemirror/language-data"
 
 export class CodeMirrorBlock extends AbstractBlock {
     text: string;

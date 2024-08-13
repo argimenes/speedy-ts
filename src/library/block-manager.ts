@@ -24,7 +24,7 @@ import { TextProcessor } from "./text-processor";
 import { EmbedDocumentBlock } from "./embed-document-block";
 import { SearchEntitiesWindow } from "../components/search-entities";
 import { renderToNode } from "./common";
-import { StandoffEditorBlockMonitor } from "../components/monitor";
+import { IHandleyKeyboardInput, MonitorBlock, StandoffEditorBlockMonitor } from "../components/monitor";
 import { TableBlock, TableCellBlock, TableRowBlock } from './tables-blocks';
 
 const isStr = (value: any) => typeof (value) == "string";
@@ -87,9 +87,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     attachEventBindings() {
         const self = this;
-        document.body.addEventListener("keydown", function (e) {
+        document.body.addEventListener("keydown", async function (e) {
             const ALLOW = true, FORBID = false;
-            console.log("BlockManager.keydown", { e })
+            console.log("BlockManager.keydown", { e });
+            const focus = self.focus as IBlock;
+            if (focus?.handleKeyboardInput) {
+                await focus.handleKeyboardInput(e);
+                return;
+            }
             if (e.target != document.body) {
                 return ALLOW;
             }
@@ -676,7 +681,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         const props = block.getEnclosingProperties(anchor);
         if (!props.length) return;
+        const monitor = new MonitorBlock({ owner: this });
         const component = StandoffEditorBlockMonitor({
+            monitor,
             properties: props,
             onDelete: (p) => {
                 p.destroy();
@@ -698,7 +705,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             },
             parent: this.container
         });
-        
+        this.blocks.push(monitor);
+        this.setBlockFocus(monitor);
     }
     getEditorEvents() {
         const events: InputEvent[] = [
@@ -1786,7 +1794,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     },
                     update: (args) => {
                         const owner = args.block.owner as BlockManager;
-                        owner.renderUnderlines("codex/block-reference", args.properties, args.block, "orange", 1);
+                        owner.renderUnderlines("codex/block-reference", args.properties, args.block, "orange", 3);
                     }
                 }
             },
