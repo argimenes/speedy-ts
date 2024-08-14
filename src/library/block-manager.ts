@@ -64,7 +64,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.direction = PointerDirection.Undo;
         this.blockProperties= [];
         this.blockSchemas=[];
-        this.inputEvents = this.getGlobalInputEvents();
+        this.inputEvents = this.getEditorEvents();
         this.inputActions = [];
         this.modes = ["global"];
         this.highestZIndex = this.getHighestZIndex();
@@ -89,17 +89,47 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const self = this;
         document.body.addEventListener("keydown", async function (e) {
             const ALLOW = true, FORBID = false;
-            console.log("BlockManager.keydown", { e });
-            const focus = self.focus as IBlock;
-            if (focus?.handleKeyboardInput) {
-                await focus.handleKeyboardInput(e);
-                return;
-            }
-            if (e.target != document.body) {
+            const input = self.toKeyboardInput(e);
+            const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
+            if (modifiers.some(x => x == input.key)) {
                 return ALLOW;
             }
-            const block = self.getBlockInFocus();
-            self.handleKeyDown(e);
+            const focus = self.getBlockInFocus() as IBlock;
+            const match = self.getFirstMatchingInputEvent(input);
+            const isStandoffBlock = focus.type == BlockType.StandoffEditorBlock;
+            if (match) {
+                let passthrough = false;
+                const caret = isStandoffBlock ? (focus as StandoffEditorBlock).getCaret() : undefined;
+                const selection = isStandoffBlock ? (focus as StandoffEditorBlock).getSelection() : undefined
+                const args = {
+                    block: focus,
+                    caret,
+                    selection,
+                    allowPassthrough: () => passthrough = true,
+                    e
+                } as IBindingHandlerArgs;
+                match.action.handler(args);
+                if (passthrough) {
+                    return ALLOW;
+                } else {
+                    e.preventDefault();
+                    return FORBID;
+                }
+            }
+            if (isStandoffBlock) {
+                const _focus = focus as StandoffEditorBlock;
+                if (input.key.length == 1) {
+                    _focus.insertCharacterAtCaret(input);
+                    e.preventDefault();        
+                    return FORBID;
+                }
+            }
+            if (focus?.handleKeyDown) {
+                await focus.handleKeyDown(e);
+                e.preventDefault();
+                return FORBID;
+            }
+            // self.handleKeyDown(e);
             return ALLOW;
         });
     }
@@ -189,7 +219,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     }
                 }
             }
-        ]
+        ] as InputEvent[];
     }
     
     updateView() {
@@ -714,18 +744,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Control-Shift-M"
-                },
-                action: {
-                    name: "Monitor panel",
-                    description: "",
-                    handler: this.handleContextMenuClicked.bind(this)
-                }
-            },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
                     match: "Control-C"
                 },
                 action: {
@@ -853,34 +871,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         
                     `,
                     handler: this.moveSelectionOneCharacterLeftwards
-                }
-            },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: "Home"
-                },
-                action: {
-                    name: "Move the caret to the left of the first character.",
-                    description: `
-                        
-                    `,
-                    handler: this.moveCaretToStartOfTextBlock.bind(this)
-                }
-            },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: "End"
-                },
-                action: {
-                    name: "Move the caret to the right of the last character.",
-                    description: `
-                        
-                    `,
-                    handler: this.moveCaretToEndOfTextBlock
                 }
             },
             {
@@ -1037,40 +1027,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Control-Backspace"
-                },
-                action: {
-                    name: "Deletes leftwards one word at a time.",
-                    description: `
-                        
-                    `,
-                    handler: async (args: IBindingHandlerArgs) => {
-                        /**
-                         * Not working properly yet.
-                         */
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        if (!caret.left) {
-                            return;
-                        }
-                        const i = caret.left.index;
-                        const text = block.getText();
-                        const words = block.getWordsFromText(text);
-                        const nearest = this.findNearestWord(i, words);
-                        if (!nearest) {
-                            return;
-                        }
-                        const start = !nearest.previous ? 0 : nearest.previous.start;
-                        const len = (i - start) + 1;
-                        block.removeCellsAtIndex(start, len);
-                        block.setCaret(start, CARET.LEFT);
-                    }
-                }
-            },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
                     match: "Delete"
                 },
                 action: {
@@ -1081,128 +1037,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         named "DELETE_CHARACTER_FROM_START_OF_BLOCK" (?).
                     `,
                     handler: this.handleDeleteForStandoffEditorBlock.bind(this)
-                }
-            },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: "Control-Delete"
-                },
-                action: {
-                    name: "Delete all the characters to the right, up to the end of the text block.",
-                    description: `
-                        
-                    `,
-                    handler: async (args: IBindingHandlerArgs) => {
-                        /**
-                         * NB: not working as expected. Check the removeCellsAtIndex method chain carefully.
-                         */
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        if (caret.right.isEOL) {
-                            return;
-                        }
-                        const last = block.getLastCell();
-                        const si = caret.right.index;
-                        const len = last.index - si;
-                        block.removeCellsAtIndex(si, len);
-                        block.setCaret(si, CARET.RIGHT);
-                    }
-                }
-            },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: "Control-Y"
-                },
-                action: {
-                    name: "Delete the current text block.",
-                    description: `
-                        
-                    `,
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const block = args.block as StandoffEditorBlock;
-                        const manager = block.owner as BlockManager;
-                        // const previous = manager.getPreviousOf(block.id);
-                        // const next = manager.getNextOf(block.id);
-                        // const parent = manager.getParentOf(block.id);
-                        // const leftMargin = manager.getLeftMarginOf(block.id);
-                        // const rightMargin = manager.getRightMarginOf(block.id);
-                        // if (!parent && !previous && !next) {
-                        //     return;
-                        // }
-                        // if (leftMargin) {
-                        //     const batch: IBatchRelateArgs = {};
-                        //     batch.toDelete = [
-                        //         { sourceId: block.id, name: RelationType.has_left_margin, targetId: leftMargin.id },
-                        //         { sourceId: leftMargin.id, name: RelationType.has_left_margin_parent, targetId: block.id }
-                        //     ];
-                        //     manager.batchRelate(batch);
-                        // }
-                        // if (rightMargin) {
-                        //     const batch: IBatchRelateArgs = {};
-                        //     batch.toDelete = [
-                        //         { sourceId: block.id, name: RelationType.has_right_margin, targetId: rightMargin.id },
-                        //         { sourceId: rightMargin.id, name: RelationType.has_right_margin_parent, targetId: block.id }
-                        //     ];
-                        //     manager.batchRelate(batch);
-                        // }
-                        // if (parent) {
-                        //     const batch: IBatchRelateArgs = {};
-                        //     batch.toDelete = [
-                        //         { sourceId: parent.id, name: RelationType.has_first_child, targetId: block.id },
-                        //         { sourceId: block.id, name: RelationType.has_parent, targetId: parent.id }
-                        //     ];
-                        //     if (next) {
-                        //         batch.toAdd = [
-                        //             { sourceId: parent.id, name: RelationType.has_first_child, targetId: next.id },
-                        //             { sourceId: next.id, name: RelationType.has_parent, targetId: parent.id },
-                        //         ]
-                        //     }
-                        //     manager.batchRelate(batch);
-                        // }
-                        // if (previous) {
-                        //     const batch: IBatchRelateArgs = {};
-                        //     batch.toDelete = [
-                        //         { sourceId: previous.id, name: RelationType.has_next, targetId: block.id },
-                        //         { sourceId: block.id, name: RelationType.has_previous, targetId: previous.id }
-                        //     ];
-                        //     if (next) {
-                        //         batch.toAdd = [
-                        //             { sourceId: previous.id, name: RelationType.has_next, targetId: next.id },
-                        //             { sourceId: next.id, name: RelationType.has_previous, targetId: previous.id },
-                        //         ]
-                        //     }
-                        //     manager.batchRelate(batch);
-                        // }
-                        // if (next && !previous && !parent) {
-                        //     const batch: IBatchRelateArgs = {};
-                        //     batch.toDelete = [
-                        //         { sourceId: block.id, name: RelationType.has_next, targetId: next.id },
-                        //         { sourceId: next.id, name: RelationType.has_previous, targetId: block.id }
-                        //     ];
-                        //     manager.batchRelate(batch);
-                        // }
-                        // manager.deleteBlock(block.id);
-                        // manager.updateView();
-                        // if (next) {
-                        //     manager.setBlockFocus(next);
-                        //     next.setCaret(0, CARET.LEFT);
-                        //     return;
-                        // }
-                        // if (previous) {
-                        //     manager.setBlockFocus(previous);
-                        //     previous.setCaret(0, CARET.LEFT);
-                        //     return;
-                        // }
-                        // if (parent) {
-                        //     manager.setBlockFocus(parent);
-                        //     parent.setCaret(0, CARET.LEFT);
-                        //     return;
-                        // }
-                    }
                 }
             },
             {
@@ -1383,38 +1217,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         }
                     }
                 }
-            },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: "Control-ArrowRight"
-                },
-                action: {
-                    name: "Skip back to the start of the previous word.",
-                    description: `
-                        
-                    `,
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        if (caret.right.isEOL) {
-                            return;
-                        }
-                        const i = caret.right.index;
-                        const last = block.getLastCell();
-                        const text = block.getText();
-                        const words = block.getWordsFromText(text);
-                        const nearest = this.findNearestWord(i, words);
-                        if (!nearest) {
-                            block.moveCaretStart();
-                            return;
-                        }
-                        const start = !nearest.next ? last.index : nearest.next.start;
-                        block.setCaret(start as number, CARET.LEFT);
-                    }
-                }
-            },
+            }
         ];
         return events;
     }
@@ -1498,6 +1301,139 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     getStandoffPropertyEvents() {
         const events: InputEvent[] = [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-ArrowRight"
+                },
+                action: {
+                    name: "Skip back to the start of the previous word.",
+                    description: `
+                        
+                    `,
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        if (caret.right.isEOL) {
+                            return;
+                        }
+                        const i = caret.right.index;
+                        const last = block.getLastCell();
+                        const text = block.getText();
+                        const words = block.getWordsFromText(text);
+                        const nearest = this.findNearestWord(i, words);
+                        if (!nearest) {
+                            block.moveCaretStart();
+                            return;
+                        }
+                        const start = !nearest.next ? last.index : nearest.next.start;
+                        block.setCaret(start as number, CARET.LEFT);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-Delete"
+                },
+                action: {
+                    name: "Delete all the characters to the right, up to the end of the text block.",
+                    description: `
+                        
+                    `,
+                    handler: async (args: IBindingHandlerArgs) => {
+                        /**
+                         * NB: not working as expected. Check the removeCellsAtIndex method chain carefully.
+                         */
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        if (caret.right.isEOL) {
+                            return;
+                        }
+                        const last = block.getLastCell();
+                        const si = caret.right.index;
+                        const len = last.index - si;
+                        block.removeCellsAtIndex(si, len);
+                        block.setCaret(si, CARET.RIGHT);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-Backspace"
+                },
+                action: {
+                    name: "Deletes leftwards one word at a time.",
+                    description: `
+                        
+                    `,
+                    handler: async (args: IBindingHandlerArgs) => {
+                        /**
+                         * Not working properly yet.
+                         */
+                        const { caret } = args;
+                        const block = args.block as StandoffEditorBlock;
+                        if (!caret.left) {
+                            return;
+                        }
+                        const i = caret.left.index;
+                        const text = block.getText();
+                        const words = block.getWordsFromText(text);
+                        const nearest = this.findNearestWord(i, words);
+                        if (!nearest) {
+                            return;
+                        }
+                        const start = !nearest.previous ? 0 : nearest.previous.start;
+                        const len = (i - start) + 1;
+                        block.removeCellsAtIndex(start, len);
+                        block.setCaret(start, CARET.LEFT);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Home"
+                },
+                action: {
+                    name: "Move the caret to the left of the first character.",
+                    description: `
+                        
+                    `,
+                    handler: this.moveCaretToStartOfTextBlock.bind(this)
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "End"
+                },
+                action: {
+                    name: "Move the caret to the right of the last character.",
+                    description: `
+                        
+                    `,
+                    handler: this.moveCaretToEndOfTextBlock
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-Shift-M"
+                },
+                action: {
+                    name: "Monitor panel",
+                    description: "",
+                    handler: this.handleContextMenuClicked.bind(this)
+                }
+            },
             {
                 mode: "default",
                 trigger: {
@@ -2764,7 +2700,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setSchemas(standoffSchemas);
         block.setBlockSchemas(blockSchemas);
         block.setEvents(standoffEvents);
-        block.setEvents(editorEvents);
+        //block.setEvents(editorEvents);
         block.setCommitHandler(this.storeCommit.bind(this));
         const textProcessor = new TextProcessor({ editor: block });
         const custom = [

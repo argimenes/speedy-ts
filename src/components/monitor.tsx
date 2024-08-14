@@ -19,7 +19,7 @@ export interface IMonitorBlockConstructor {
     owner: BlockManager;
 }
 export interface IHandleyKeyboardInput {
-    handleKeyboardInput(e: KeyboardEvent): Promise<void>;
+    handleKeyDown(e: KeyboardEvent): Promise<void>;
 }
 export class MonitorBlock extends AbstractBlock implements IHandleyKeyboardInput {
     constructor(args: IMonitorBlockConstructor) {
@@ -29,10 +29,10 @@ export class MonitorBlock extends AbstractBlock implements IHandleyKeyboardInput
     setContainer(node: HTMLDivElement) {
         this.container = node;
     }
-    async handleKeyboardInput(e: KeyboardEvent) {
+    async handleKeyDown(e: KeyboardEvent) {
         const input = this.toKeyboardInput(e);
         const match = super.getFirstMatchingInputEvent(input);
-        console.log("MonitorBlock.handleKeyboardInput", { e, match });
+        console.log("MonitorBlock.handleKeyDown", { e, match });
         if (!match) return;
         await match.action.handler({ e, block: this });
     }

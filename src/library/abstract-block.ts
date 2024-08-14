@@ -124,6 +124,7 @@ export abstract class AbstractBlock implements IBlock {
         for (let i = maxIndex; i >= 0; i--) {
             let mode = this.modes[i];
             let events = modeEvents[mode];
+            if (!events) continue;
             let match = events.find(x => {
                 let trigger = self.toChord(x.trigger.match as string);
                 return self.compareChords(input, trigger);

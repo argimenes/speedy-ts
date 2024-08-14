@@ -200,7 +200,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         We also need to keep track of keyboard input combinations, e.g., [CTRL-K, CTRL-D].
         */
         const self= this;
-        this.wrapper.addEventListener("keydown", (this.handleKeyDown.bind(this)));
+        //this.wrapper.addEventListener("keydown", (this.handleKeyDown.bind(this)));
         this.wrapper.addEventListener("beforeinput", (e) => {
             if (e.data == ". ") {
                 e.preventDefault();
