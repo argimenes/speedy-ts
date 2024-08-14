@@ -66,7 +66,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.blockSchemas=[];
         this.inputEvents = this.getEditorEvents();
         this.inputActions = [];
-        this.modes = ["global"];
+        this.modes = ["global","default"];
         this.highestZIndex = this.getHighestZIndex();
         this.plugins = [];
         this.clipboard = [];
@@ -85,8 +85,26 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.selections = [];
         this.container.remove();
     }
-    attachEventBindings() {
+    findParentBlock(el: HTMLElement) {
+        let current = el;
+        while (current) {
+            let match = this.blocks.find(x=> x.container == current);
+            if (match) return match;
+            current = current.parentElement as HTMLElement;
+        }
+        return null;
+    }
+    async attachEventBindings() {
         const self = this;
+        document.body.addEventListener("click", async function(e) {
+            console.log("attachEventBindings.click", { manager: self, e });
+            const target = self.findParentBlock(e.target as HTMLElement);
+            if (!target) {
+                console.log("Could not find a container parent.")
+                return;
+            }
+            self.setBlockFocus(target);
+        });
         document.body.addEventListener("keydown", async function (e) {
             const ALLOW = true, FORBID = false;
             const input = self.toKeyboardInput(e);
@@ -95,25 +113,30 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 return ALLOW;
             }
             const focus = self.getBlockInFocus() as IBlock;
-            const match = self.getFirstMatchingInputEvent(input);
             const isStandoffBlock = focus.type == BlockType.StandoffEditorBlock;
-            if (match) {
-                let passthrough = false;
-                const caret = isStandoffBlock ? (focus as StandoffEditorBlock).getCaret() : undefined;
-                const selection = isStandoffBlock ? (focus as StandoffEditorBlock).getSelection() : undefined
-                const args = {
-                    block: focus,
-                    caret,
-                    selection,
-                    allowPassthrough: () => passthrough = true,
-                    e
-                } as IBindingHandlerArgs;
-                match.action.handler(args);
-                if (passthrough) {
-                    return ALLOW;
-                } else {
-                    e.preventDefault();
-                    return FORBID;
+            const blocks = [self, focus];
+            for (let i = 0; i < blocks.length; i++) {
+                const b = blocks[i];
+                if (!b.getFirstMatchingInputEvent) continue;
+                const match = b.getFirstMatchingInputEvent(input);
+                if (match) {
+                    let passthrough = false;
+                    const caret = isStandoffBlock ? (focus as StandoffEditorBlock).getCaret() : undefined;
+                    const selection = isStandoffBlock ? (focus as StandoffEditorBlock).getSelection() : undefined
+                    const args = {
+                        block: focus,
+                        caret,
+                        selection,
+                        allowPassthrough: () => passthrough = true,
+                        e
+                    } as IBindingHandlerArgs;
+                    await match.action.handler(args);
+                    if (passthrough) {
+                        return ALLOW;
+                    } else {
+                        e.preventDefault();
+                        return FORBID;
+                    }
                 }
             }
             if (isStandoffBlock) {
@@ -129,7 +152,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 e.preventDefault();
                 return FORBID;
             }
-            // self.handleKeyDown(e);
             return ALLOW;
         });
     }
