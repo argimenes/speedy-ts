@@ -22,7 +22,7 @@ export interface IHandleyKeyboardInput {
     handleKeyDown(e: KeyboardEvent): Promise<void>;
 }
 export class MonitorBlock extends AbstractBlock implements IHandleyKeyboardInput {
-    properties: StandoffProperty[];
+    properties: StandoffPropertyState[];
     constructor(args: IMonitorBlockConstructor) {
         super({ owner: args.owner });
         this.canSerialize = false;
@@ -30,13 +30,6 @@ export class MonitorBlock extends AbstractBlock implements IHandleyKeyboardInput
     }
     setContainer(node: HTMLDivElement) {
         this.container = node;
-    }
-    async handleKeyDown(e: KeyboardEvent) {
-        const input = this.toKeyboardInput(e);
-        const match = super.getFirstMatchingInputEvent(input);
-        console.log("MonitorBlock.handleKeyDown", { e, match });
-        if (!match) return;
-        await match.action.handler({ e, block: this });
     }
     destroy() {
         throw new Error();
@@ -71,59 +64,93 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
     };
     let monitor = props.monitor;
     const onInit = (node: HTMLDivElement) => {
-        monitor.properties = props.properties;
-        monitor.inputEvents.push({
-            mode: "default",
-            trigger: {
-                source: InputEventSource.Keyboard,
-                match: "Escape"
+        monitor.properties = properties;
+        monitor.inputEvents.push(
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Escape"
+                },
+                action: {
+                    name: "Close Monitor",
+                    description: "",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        props.onClose();
+                    }
+                },
             },
-            action: {
-                name: "Close Monitor",
-                description: "",
-                handler: async (args: IBindingHandlerArgs) => {
-                    props.onClose();
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "ArrowUp"
+                },
+                action: {
+                    name: "Set focus to the item above.",
+                    description: "",
+                    handler: async (args: any) => {
+                        properties.forEach((__,i) => setProperties(i, "visible", false));
+                        const len = monitor.properties.length;
+                        if (state.activeItem == 1) {
+                            setState("activeItem", len)
+                            return;
+                        }
+                        setState("activeItem", state.activeItem - 1);
+                    }
                 }
             },
-        },
-        {
-            mode: "default",
-            trigger: {
-                source: InputEventSource.Keyboard,
-                match: "ArrowUp"
-            },
-            action: {
-                name: "Set focus to the item above.",
-                description: "",
-                handler: async (args: any) => {
-                    const len = monitor.properties.length;
-                    if (state.activeItem == 1) {
-                        setState("activeItem", len)
-                        return;
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "ArrowDown"
+                },
+                action: {
+                    name: "Set focus to the block below.",
+                    description: "",
+                    handler: async (args: any) => {
+                        properties.forEach((__,i) => setProperties(i, "visible", false));
+                        const len = monitor.properties.length;
+                        if (state.activeItem >= len) {
+                            setState("activeItem", 1)
+                            return;
+                        }
+                        setState("activeItem", state.activeItem + 1);
                     }
-                    setState("activeItem", state.activeItem - 1);
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "ArrowRight"
+                },
+                action: {
+                    name: "Set property at current index visible.",
+                    description: "",
+                    handler: async (args: any) => {
+                        properties.forEach((__,i) => setProperties(i, "visible", false));
+                        setProperties(state.activeItem - 1, "visible", true);
+                    }
                 }
             }
-        },
-        {
-            mode: "default",
-            trigger: {
-                source: InputEventSource.Keyboard,
-                match: "ArrowDown"
-            },
-            action: {
-                name: "Set focus to the block below.",
-                description: "",
-                handler: async (args: any) => {
-                    const len = monitor.properties.length;
-                    if (state.activeItem >= len) {
-                        setState("activeItem", 1)
-                        return;
+            ,
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "ArrowLeft"
+                },
+                action: {
+                    name: "Set property at current index invisible.",
+                    description: "",
+                    handler: async (args: any) => {
+                        setProperties(state.activeItem - 1, "visible", false);
                     }
-                    setState("activeItem", state.activeItem + 1);
                 }
             }
-        });
+        );
         monitor.setContainer(node);
     }
     onCleanup(() => {
@@ -134,37 +161,52 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
             <For each={properties}>{(item, index) =>
                 <>
                     <div class="line-item">
-                        <Show when={index() + 1 == state.activeItem}>
-                            <button>&rsaquo;</button>
-                        </Show>
-                        <div style="display: inline-block;" onClick={(e) => { e.preventDefault(); setItemVisible(item, !item.visible); }}>
-                            {item.property.type}
-                        </div>
-                        <Show when={item.visible}>
-                            <div style="display: inline-block;">
-                                <button class="btn">edit</button>
-                                <button class="btn"
-                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
-                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
-                                    onClick={(e) => { e.preventDefault(); item.property.shiftLeft() }}>&lsaquo;</button>
-                                <button class="btn"
-                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
-                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
-                                    onClick={(e) => { e.preventDefault(); item.property.shiftRight() }}>&rsaquo;</button>
-                                <button class="btn"
-                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
-                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
-                                    onClick={(e) => { e.preventDefault(); item.property.expand() }}>&plus;</button>
-                                <button class="btn"
-                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
-                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
-                                    onClick={(e) => { e.preventDefault(); item.property.contract() }}>&ndash;</button>
-                                <button class="btn"
-                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
-                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
-                                    onClick={(e) => { e.preventDefault(); onDelete(item.property) }}>&times;</button>
-                            </div>
-                        </Show>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td style="width: 25px;">
+                                        <Show when={index() + 1 == state.activeItem}>
+                                            <button>&rsaquo;</button>
+                                        </Show>
+                                    </td>
+                                    <td>
+                                        <div style="display: inline-block;" onClick={(e) => { e.preventDefault(); setItemVisible(item, !item.visible); }}>
+                                            {item.property.type}
+                                        </div>
+                                        <Show when={item.visible}>
+                                            <div style="display: inline-block;">
+                                                <button class="btn" tabIndex={0}>edit</button>
+                                                <button class="btn"
+                                                    tabIndex={1}
+                                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
+                                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
+                                                    onClick={(e) => { e.preventDefault(); item.property.shiftLeft() }}>&lsaquo;</button>
+                                                <button class="btn"
+                                                    tabIndex={2}
+                                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
+                                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
+                                                    onClick={(e) => { e.preventDefault(); item.property.shiftRight() }}>&rsaquo;</button>
+                                                <button class="btn"
+                                                    tabIndex={3}
+                                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
+                                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
+                                                    onClick={(e) => { e.preventDefault(); item.property.expand() }}>&plus;</button>
+                                                <button class="btn"
+                                                    tabIndex={4}
+                                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
+                                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
+                                                    onClick={(e) => { e.preventDefault(); item.property.contract() }}>&ndash;</button>
+                                                <button class="btn"
+                                                    tabIndex={5}
+                                                    onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
+                                                    onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
+                                                    onClick={(e) => { e.preventDefault(); onDelete(item.property) }}>&times;</button>
+                                            </div>
+                                        </Show>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </>
             }</For>
