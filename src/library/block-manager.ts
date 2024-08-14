@@ -98,6 +98,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const self = this;
         document.body.addEventListener("click", async function(e: MouseEvent) {
             console.log("attachEventBindings.click", { manager: self, e });
+            if (!self.container.contains(e.target as HTMLElement)) {
+                return;
+            }
             const target = self.findParentBlock(e.target as HTMLElement);
             if (!target) {
                 console.log("Could not find a container parent.")
@@ -120,6 +123,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         });
         document.body.addEventListener("keydown", async function (e) {
+            if (!self.container.contains(e.target as HTMLElement)) {
+                return;
+            }
             const ALLOW = true, FORBID = false;
             const input = self.toKeyboardInput(e);
             const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
