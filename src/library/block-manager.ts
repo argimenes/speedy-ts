@@ -96,14 +96,29 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     async attachEventBindings() {
         const self = this;
-        document.body.addEventListener("click", async function(e) {
+        document.body.addEventListener("click", async function(e: MouseEvent) {
             console.log("attachEventBindings.click", { manager: self, e });
             const target = self.findParentBlock(e.target as HTMLElement);
             if (!target) {
                 console.log("Could not find a container parent.")
                 return;
             }
+            const input = self.toMouseInput(e);
             self.setBlockFocus(target);
+            const isStandoffBlock = target.type == BlockType.StandoffEditorBlock;
+            const blocks = [self, target];
+            for (let i = 0; i < blocks.length; i++) {
+                const b = blocks[i];
+                if (!b.getFirstMatchingInputEvent) continue;
+                const match = b.getFirstMatchingInputEvent(input);
+                if (match) {
+                    const args = {
+                        block: target,
+                        e
+                    } as any;
+                    await match.action.handler(args);
+                }
+            }
         });
         document.body.addEventListener("keydown", async function (e) {
             const ALLOW = true, FORBID = false;

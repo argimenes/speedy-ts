@@ -3,7 +3,7 @@ import _ from 'underscore';
 import { updateElement } from './svg';
 import { BlockProperty } from './block-property';
 import { KEYS } from './keyboard';
-import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto } from './types';
+import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput } from './types';
 
 export abstract class AbstractBlock implements IBlock {
     id: string;
@@ -132,6 +132,17 @@ export abstract class AbstractBlock implements IBlock {
             if (match) return match;
         }
         return null;
+    }
+    protected toMouseInput(e: MouseEvent): IMouseInput {
+        const input: IMouseInput = {
+            shift: e.shiftKey,
+            control: e.ctrlKey,
+            command: e.metaKey,
+            option: e.altKey,
+            leftButton: e.button == 0,
+            rightButton: e.button == 1
+        };
+        return input;
     }
     protected toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
         const input: IKeyboardInput = {

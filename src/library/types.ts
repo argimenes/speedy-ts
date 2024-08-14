@@ -138,6 +138,14 @@ export interface IKeyboardInput {
     key: string;
     keyCode: number;
 }
+export interface IMouseInput {
+    control: boolean;
+    shift: boolean;
+    option: boolean;
+    command: boolean;
+    leftButton: boolean;
+    rightButton: boolean;
+}
 export enum ActionKey {
     DEL,
     TAB,
