@@ -105,7 +105,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
             const input = self.toMouseInput(e);
             self.setBlockFocus(target);
-            const isStandoffBlock = target.type == BlockType.StandoffEditorBlock;
             const blocks = [self, target];
             for (let i = 0; i < blocks.length; i++) {
                 const b = blocks[i];
@@ -129,7 +128,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
             const focus = self.getBlockInFocus() as IBlock;
             const isStandoffBlock = focus.type == BlockType.StandoffEditorBlock;
-            const blocks = [self, focus];
+            const blocks = [focus, self];
             for (let i = 0; i < blocks.length; i++) {
                 const b = blocks[i];
                 if (!b.getFirstMatchingInputEvent) continue;

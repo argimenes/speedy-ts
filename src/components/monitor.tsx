@@ -22,9 +22,11 @@ export interface IHandleyKeyboardInput {
     handleKeyDown(e: KeyboardEvent): Promise<void>;
 }
 export class MonitorBlock extends AbstractBlock implements IHandleyKeyboardInput {
+    properties: StandoffProperty[];
     constructor(args: IMonitorBlockConstructor) {
         super({ owner: args.owner });
         this.canSerialize = false;
+        this.properties = [];
     }
     setContainer(node: HTMLDivElement) {
         this.container = node;
@@ -47,8 +49,16 @@ export class MonitorBlock extends AbstractBlock implements IHandleyKeyboardInput
     }
 }
 
+type State = {
+    activeItem: number;
+    isOpen: boolean;
+}
 export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
     let node: HTMLDivElement;
+    const [state, setState] = createStore<State>({
+        activeItem: 1,
+        isOpen: false
+    });
     const toStandoffPropertyState = (props: StandoffProperty[]) => props.map(x => ({ visible: false, property: x } as StandoffPropertyState));
     const [properties, setProperties] = createStore<StandoffPropertyState[]>(toStandoffPropertyState(props.properties));
     const setItemVisible = (item: StandoffPropertyState, visible: boolean) => {
@@ -61,6 +71,7 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
     };
     let monitor = props.monitor;
     const onInit = (node: HTMLDivElement) => {
+        monitor.properties = props.properties;
         monitor.inputEvents.push({
             mode: "default",
             trigger: {
@@ -73,8 +84,46 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                 handler: async (args: IBindingHandlerArgs) => {
                     props.onClose();
                 }
+            },
+        },
+        {
+            mode: "default",
+            trigger: {
+                source: InputEventSource.Keyboard,
+                match: "ArrowUp"
+            },
+            action: {
+                name: "Set focus to the item above.",
+                description: "",
+                handler: async (args: any) => {
+                    const len = monitor.properties.length;
+                    if (state.activeItem == 1) {
+                        setState("activeItem", len)
+                        return;
+                    }
+                    setState("activeItem", state.activeItem - 1);
+                }
             }
-        })
+        },
+        {
+            mode: "default",
+            trigger: {
+                source: InputEventSource.Keyboard,
+                match: "ArrowDown"
+            },
+            action: {
+                name: "Set focus to the block below.",
+                description: "",
+                handler: async (args: any) => {
+                    const len = monitor.properties.length;
+                    if (state.activeItem >= len) {
+                        setState("activeItem", 1)
+                        return;
+                    }
+                    setState("activeItem", state.activeItem + 1);
+                }
+            }
+        });
         monitor.setContainer(node);
     }
     onCleanup(() => {
@@ -82,9 +131,12 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
     })
     return (
         <div class="monitor" ref={onInit}>
-            <For each={properties}>{(item) =>
+            <For each={properties}>{(item, index) =>
                 <>
                     <div class="line-item">
+                        <Show when={index() + 1 == state.activeItem}>
+                            <button>&rsaquo;</button>
+                        </Show>
                         <div style="display: inline-block;" onClick={(e) => { e.preventDefault(); setItemVisible(item, !item.visible); }}>
                             {item.property.type}
                         </div>
