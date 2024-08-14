@@ -161,11 +161,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     return FORBID;
                 }
             }
-            if (focus?.handleKeyDown) {
-                await focus.handleKeyDown(e);
-                e.preventDefault();
-                return FORBID;
-            }
             return ALLOW;
         });
     }
@@ -355,7 +350,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     setFocus() {
-
+        this.container.focus();
     }
     setBlockFocus(block: IBlock) {
         const oldFocus = this.focus;

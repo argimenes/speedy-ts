@@ -28,6 +28,9 @@ export class PlainTextBlock extends AbstractBlock {
         });
         this.textarea.addEventListener("keydown", this.handleKeyDown.bind(this));
     }
+    setFocus() {
+        this.textarea.focus();
+    }
     getSelection() {
         const sel = window.getSelection() as Selection
         return sel;
