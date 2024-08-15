@@ -93,7 +93,7 @@ export interface IBlockPropertyConstructor {
 }
 export interface IBindingHandlerArgs {
     block: IBlock;
-    caret: Caret;
+    caret?: Caret;
     allowPassthrough?: () => void;
     selection?: IRange;
     e?: Event;

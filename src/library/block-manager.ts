@@ -176,50 +176,49 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return ALLOW;
     }
     async attachEventBindings() {
+        document.body.addEventListener("keydown", this.handleKeyboardInputEvents.bind(this));
         document.body.addEventListener("click", this.handleMouseInputEvents.bind(this));
         document.body.addEventListener("dblclick", this.handleMouseInputEvents.bind(this));
-        document.body.addEventListener("keydown", this.handleKeyboardInputEvents.bind(this));
-        /**
-         * this.wrapper.addEventListener("contextmenu", this.handleContextMenuClickEvent.bind(this));
-        this.wrapper.addEventListener("paste", this.handleOnPasteEvent.bind(this));
-        this.wrapper.addEventListener("copy", this.handleOnCopyEvent.bind(this));
-         */
+        document.body.addEventListener("contextmenu", this.handleMouseInputEvents.bind(this));
+        document.body.addEventListener("copy", this.handleOnCopyEvent.bind(this));
+        document.body.addEventListener("paste", this.handleOnPasteEvent.bind(this));
+        document.body.addEventListener("beforeinput", (e) => {
+            const focusedBlock = this.getBlockInFocus() as StandoffEditorBlock;
+            const isStandoffBlock = focusedBlock.type == BlockType.StandoffEditorBlock;
+            if (e.data == ". ") {
+                // MacOS
+                e.preventDefault();
+                if (isStandoffBlock) {
+                    const caret = focusedBlock.getCaret() as Caret;
+                    const i = caret.left ? caret.left.index : 0;
+                    focusedBlock.insertTextAtIndex(" ", i + 1);
+                }
+                return false;
+            }
+        });
     }
-    /**
-     * 
-     * @returns protected async handleOnCopyEvent(e: ClipboardEvent) {
-        e.preventDefault();
-        const customEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Custom);
-        const found = customEvents.find(x => x.trigger.match == "copy");
-        const caret = this.getCaret() as Caret;
-        const selection = this.getSelection() as IRange;
-        if (found) {
-            await found.action.handler({ block: this, caret, e, selection });
-        }
+    async handleOnCopyEvent(e: ClipboardEvent) {
+        await this.handleCustomEvent(e, InputEventSource.Custom, "copy");
     }
-    protected async handleOnPasteEvent(e: ClipboardEvent) {
-        e.preventDefault();
-        const customEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Custom);
-        const found = customEvents.find(x => x.trigger.match == "paste");
-        const caret = this.getCaret() as Caret;
-        const selection = this.getSelection() as IRange;
-        if (found) {
-            await found.action.handler({ block: this, caret, e, selection });
-        }
+    async handleOnPasteEvent(e: ClipboardEvent) {
+        await this.handleCustomEvent(e, InputEventSource.Custom, "paste");
     }
-    private async handleContextMenuClickEvent(e: MouseEvent) {
-        const mouseEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Mouse);
-        const found = mouseEvents.find(x => x.trigger.match == "contextmenu");
-        const caret = this.getCaret() as Caret;
+    async handleCustomEvent(e: Event, source: InputEventSource, match: string) {
+        const focusedBlock = this.getBlockInFocus() as StandoffEditorBlock;
+        const isStandoffBlock = focusedBlock.type == BlockType.StandoffEditorBlock;
+        const customEvents = this.inputEvents.filter(x => x.trigger.source == source);
+        const found = customEvents.find(x => x.trigger.match == match);
         if (found) {
             e.preventDefault();
-            found.action.handler({
-                block: this,
-                caret
-            });
+            if (isStandoffBlock) {
+                const caret = focusedBlock.getCaret() as Caret;
+                const selection = focusedBlock.getSelection() as IRange;
+                await found.action.handler({ block: focusedBlock, caret, e, selection });
+                return;
+            }
+            await found.action.handler({ block: focusedBlock, e });
         }
     }
-     */
     getPlainTextInputEvents():InputEvent[] {
         const self = this;
         return [

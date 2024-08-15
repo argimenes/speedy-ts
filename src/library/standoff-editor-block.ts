@@ -6,7 +6,6 @@ import { AbstractBlock } from "./abstract-block";
 import { Cell, Row } from "./cell";
 import { KEYS } from "./keyboard";
 import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor } from "./types";
-import { classList } from "solid-js/web";
 
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     const map = new Map();
@@ -91,7 +90,6 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.monitors = [];
         this.standoffProperties = [];
         this.selections = [];
-        this.attachBindings();
     }
     addMode(mode: string) {
         this.modes.push(mode);
@@ -190,142 +188,7 @@ export class StandoffEditorBlock extends AbstractBlock {
     getLastCell() {
         const len = this.cells.length;
         return this.cells[len-1];
-    }
-    private attachBindings() {
-        /*
-        We also need to keep track of keyboard input combinations, e.g., [CTRL-K, CTRL-D].
-        */
-        const self= this;
-        //this.wrapper.addEventListener("keydown", (this.handleKeyDown.bind(this)));
-        this.wrapper.addEventListener("beforeinput", (e) => {
-            if (e.data == ". ") {
-                e.preventDefault();
-                return false;
-            }
-        });
-        this.wrapper.addEventListener("compositionstart", (e) => console.log("compositionstart", { e }));
-        this.wrapper.addEventListener("compositionend", (e) => console.log("compositionend", { e }));
-        this.wrapper.addEventListener("compositionupdate", (e) => console.log("compositionupdate", { e }));
-        this.wrapper.addEventListener("mouseup", this.handleMouseUpEvent.bind(this));
-        this.wrapper.addEventListener("click", this.handleClickEvent.bind(this));
-        this.wrapper.addEventListener("dblclick", this.handleDoubleClickEvent.bind(this));
-        this.wrapper.addEventListener("contextmenu", this.handleContextMenuClickEvent.bind(this));
-        this.wrapper.addEventListener("paste", this.handleOnPasteEvent.bind(this));
-        this.wrapper.addEventListener("copy", this.handleOnCopyEvent.bind(this));
-    }
-    protected async handleOnCopyEvent(e: ClipboardEvent) {
-        e.preventDefault();
-        const customEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Custom);
-        const found = customEvents.find(x => x.trigger.match == "copy");
-        const caret = this.getCaret() as Caret;
-        const selection = this.getSelection() as IRange;
-        if (found) {
-            await found.action.handler({ block: this, caret, e, selection });
-        }
-    }
-    protected async handleOnPasteEvent(e: ClipboardEvent) {
-        e.preventDefault();
-        const customEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Custom);
-        const found = customEvents.find(x => x.trigger.match == "paste");
-        const caret = this.getCaret() as Caret;
-        const selection = this.getSelection() as IRange;
-        if (found) {
-            await found.action.handler({ block: this, caret, e, selection });
-        }
-    }
-    private async handleContextMenuClickEvent(e: MouseEvent) {
-        const mouseEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Mouse);
-        const found = mouseEvents.find(x => x.trigger.match == "contextmenu");
-        const caret = this.getCaret() as Caret;
-        if (found) {
-            e.preventDefault();
-            found.action.handler({
-                block: this,
-                caret
-            });
-        }
-    }
-    private async handleDoubleClickEvent(e: MouseEvent) {
-        const self = this;
-        const caret = this.getCaret() as Caret;
-        const props = this.getEnclosingProperties(caret.right);
-        props.forEach(p => {
-            if (p.schema?.event?.onDoubleClick) {
-                p.schema?.event?.onDoubleClick({ property: p, block: self, caret });
-            }
-        })
-    }
-    private async handleClickEvent(e: MouseEvent) {
-        const mouseEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Mouse);
-        const found = mouseEvents.find(x => x.trigger.match == "click");
-        const caret = this.getCaret();
-        if (caret) {
-            this.lastCaret = {
-                index: caret.right.index,
-                offset: CARET.LEFT
-            }
-        }
-        if (found) {
-            found.action.handler({
-                block: this,
-                caret: this.getCaret() as Caret
-            });
-        }
-    }
-    private async handleMouseUpEvent(e: MouseEvent) {
-        const target = e.target as CellHtmlElement;
-        // if (!target || target.speedy?.role != ELEMENT_ROLE.CELL) {
-        //     return;
-        // }
-        // this.updateCurrentRanges(e.target);
-        // var selection = this.getSelectionNodes();
-        // if (selection) {
-        //     selection.text = this.getRangeText(selection);
-        //     this.mode.selection.start = selection.start;
-        //     this.mode.selection.end = selection.end;
-        //     if (this.event.mouse) {
-        //         if (this.event.mouse.selection) {
-        //             e.preventDefault();
-        //             this.event.mouse.selection({ editor: this, e, selection });
-        //         }
-        //     }
-        // } else {
-        //     this.mode.selection.start = null;
-        //     this.mode.selection.end = null;
-        // }
-        const caret = this.getCaret() as Caret;
-        console.log("handleMouseUpEvent", { caret, e })
-        if (caret.left) {
-            updateElement(caret.left.element as HTMLElement, { "background-color": "pink" });
-        }
-        if (caret.right) {
-            updateElement(caret.right.element as HTMLElement, { "background-color": "green" });
-        }
-        // this.handleCaretMoveEvent(e, caret);
-        // var props = this.getCurrentRanges(e.target);
-        // if (props) {
-        //     props.forEach(p => {
-        //         try {
-        //             if (p.schema.event && p.schema.event.property) {
-        //                 var property = p.schema.event.property;
-        //                 if (property.mouseUp) {
-        //                     property.mouseUp(p);
-        //                 }
-        //             }
-        //         } catch (ex) {
-        //             log({ ex, p });
-        //         }
-        //     });
-        // }
-        // this.addCursorToHistory(e.target);
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "set-cursor",
-                value: { anchorIndex: caret.left?.index }
-            }
-        });
-    }                         
+    }              
     createEmptyBlock() {
         const linebreak = this.createLineBreakCell();
         this.wrapper.innerHTML = "";
@@ -348,40 +211,6 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         this.inputBuffer.splice(0, 1);
         this.addToInputBuffer(key);
-    }
-    private async handleKeyDown(e: KeyboardEvent) {
-        const ALLOW = true, FORBID = false;
-        const input = this.toKeyboardInput(e);
-        console.log("handleKeyDown", { e, input });
-        const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
-        if (modifiers.some(x => x == input.key)) {
-            return ALLOW;
-        }
-        const match = this.getFirstMatchingInputEvent(input);
-        let passthrough = false;
-        if (match) {
-            const args = {
-                block: this,
-                caret: this.getCaret(),
-                selection: this.getSelection() as IRange,
-                allowPassthrough: () => passthrough = true,
-                e
-            } as IBindingHandlerArgs;
-            await match.action.handler(args);
-            if (!passthrough) {
-                e.preventDefault();        
-                return FORBID;
-            } else {
-                return ALLOW;
-            }
-        }
-        if (input.key.length == 1) {
-            // Ignoring UNICODE code page implications for the moment.
-            this.insertCharacterAtCaret(input);
-            e.preventDefault();        
-            return FORBID;
-        }
-        return passthrough;
     }
     getCellFromNode(node: CellNode) {
         let current = node;
