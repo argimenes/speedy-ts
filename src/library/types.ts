@@ -252,6 +252,7 @@ export interface IAbstractBlockConstructor {
     id?: string;
     container?: HTMLDivElement;
     owner?: IBlock;
+    metadata?: Record<string, any>;
 }
 export enum InputEventSource {
     Keyboard,

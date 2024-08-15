@@ -93,6 +93,10 @@ export const ControlPanel : Component<Props> = (props) => {
         if (!block) return;
         props.manager?.addCodeMirrorBlock(block);
     }
+    const createNewDocumentClicked = (e: Event) => {
+        e.preventDefault();
+        createDocument();
+    }
     const createDocument = () => {
         if (!props.manager) return;
         const doc = {
@@ -172,6 +176,15 @@ export const ControlPanel : Component<Props> = (props) => {
         if (!block) return;
         const gridBlock = props.manager?.createGrid(rows, cells) as GridBlock;
         props.manager?.addNextBlock(gridBlock, block);
+    }
+    const createTable = (rows: number, cells: number) => {
+        const block = props.manager?.getBlockInFocus();
+        if (!block) return;
+        const tableBlock = props.manager?.createTable(rows, cells) as GridBlock;
+        props.manager?.addNextBlock(tableBlock, block);
+        const textBlock = tableBlock.blocks[0].blocks[0].blocks[0] as StandoffEditorBlock;
+        props.manager?.setBlockFocus(textBlock);
+        textBlock.moveCaretStart();
     }
     const setTabName = (name: string) => {
         const block = props.manager?.getBlockInFocus();
@@ -263,6 +276,7 @@ export const ControlPanel : Component<Props> = (props) => {
             case "add-url": addIFrame(parameters[0]); return;
             case "color": setFontColour(parameters[0]); return;
             case "bgcol": setBackgroundColour(parameters[0]); return;
+            case "add-table": createTable(parseInt(parameters[0]), parseInt(parameters[1])); return;
             case "add-grid": createGrid(parseInt(parameters[0]), parseInt(parameters[1])); return;
             // case "collapse": collapse(); return;
             // case "expand": expand(); return;
@@ -292,6 +306,9 @@ export const ControlPanel : Component<Props> = (props) => {
     })
     return (
         <div style="text-align: left;">
+            <div>
+                <button type="button" onClick={createNewDocumentClicked}>Create new document</button>
+            </div>
             <div>
                 <form onSubmit={onSubmit}>
                     <input

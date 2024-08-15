@@ -1,3 +1,4 @@
+import { classList } from "solid-js/web";
 import { AbstractBlock } from "./abstract-block";
 import { updateElement } from "./svg";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "./types";
@@ -42,7 +43,7 @@ export class TableRowBlock extends AbstractBlock {
     cells?: TableCellBlock;
     constructor(args: IAbstractBlockConstructor) {
         super(args);
-        this.type = BlockType.TabBlock;
+        this.type = BlockType.TableRowBlock;
         this.metadata.active = false;
         updateElement(this.container, {
             style: {
@@ -81,12 +82,14 @@ export class TableRowBlock extends AbstractBlock {
 export class TableCellBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
-        this.type = BlockType.TabBlock;
-        this.metadata.active = false;
+        this.type = BlockType.TableCellBlock;
+        this.metadata = {active: false, ...(args.metadata || {})};
         updateElement(this.container, {
             style: {
-                display: "table-cell"
-            }
+                display: "table-cell",
+                width: (this.metadata.width || 50) + "px"
+            },
+            classList: ["table-cell-block"]
         });
     }
     attachEventHandlers() {

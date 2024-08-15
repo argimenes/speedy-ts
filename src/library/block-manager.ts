@@ -1,6 +1,4 @@
 import axios from 'axios';
-// import HTMLSource from "@atjson/source-html";
-// import OffsetSource from "@atjson/offset-annotations";
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 import { LeftMarginBlock, RightMarginBlock } from "./margin-block";
@@ -24,7 +22,7 @@ import { TextProcessor } from "./text-processor";
 import { EmbedDocumentBlock } from "./embed-document-block";
 import { SearchEntitiesWindow } from "../components/search-entities";
 import { renderToNode } from "./common";
-import { IHandleyKeyboardInput, MonitorBlock, StandoffEditorBlockMonitor } from "../components/monitor";
+import { MonitorBlock, StandoffEditorBlockMonitor } from "../components/monitor";
 import { TableBlock, TableCellBlock, TableRowBlock } from './tables-blocks';
 
 const isStr = (value: any) => typeof (value) == "string";
@@ -181,7 +179,47 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         document.body.addEventListener("click", this.handleMouseInputEvents.bind(this));
         document.body.addEventListener("dblclick", this.handleMouseInputEvents.bind(this));
         document.body.addEventListener("keydown", this.handleKeyboardInputEvents.bind(this));
+        /**
+         * this.wrapper.addEventListener("contextmenu", this.handleContextMenuClickEvent.bind(this));
+        this.wrapper.addEventListener("paste", this.handleOnPasteEvent.bind(this));
+        this.wrapper.addEventListener("copy", this.handleOnCopyEvent.bind(this));
+         */
     }
+    /**
+     * 
+     * @returns protected async handleOnCopyEvent(e: ClipboardEvent) {
+        e.preventDefault();
+        const customEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Custom);
+        const found = customEvents.find(x => x.trigger.match == "copy");
+        const caret = this.getCaret() as Caret;
+        const selection = this.getSelection() as IRange;
+        if (found) {
+            await found.action.handler({ block: this, caret, e, selection });
+        }
+    }
+    protected async handleOnPasteEvent(e: ClipboardEvent) {
+        e.preventDefault();
+        const customEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Custom);
+        const found = customEvents.find(x => x.trigger.match == "paste");
+        const caret = this.getCaret() as Caret;
+        const selection = this.getSelection() as IRange;
+        if (found) {
+            await found.action.handler({ block: this, caret, e, selection });
+        }
+    }
+    private async handleContextMenuClickEvent(e: MouseEvent) {
+        const mouseEvents = this.inputEvents.filter(x => x.trigger.source == InputEventSource.Mouse);
+        const found = mouseEvents.find(x => x.trigger.match == "contextmenu");
+        const caret = this.getCaret() as Caret;
+        if (found) {
+            e.preventDefault();
+            found.action.handler({
+                block: this,
+                caret
+            });
+        }
+    }
+     */
     getPlainTextInputEvents():InputEvent[] {
         const self = this;
         return [
@@ -1975,6 +2013,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         }
         this.loadDocument(json.Data.document);
+        
     }
     async loadServerDocument(filename: string) {
         const res = await fetch("/api/loadDocumentJson?filename=" + filename, { method: "GET" });
@@ -2345,6 +2384,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.addParentSiblingRelations(mainBlock);
         container.appendChild(mainBlock.container);
         this.container.appendChild(container);
+
+        const textBlock = this.blocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
+        if (textBlock) {
+            this.setBlockFocus(textBlock);
+            textBlock.moveCaretStart();
+        }
     }
     insertItem<T>(list: T[], index: number, item: T) {
         list.splice(index, 0, item);
@@ -2381,6 +2426,33 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             newBlock.relation.next = next;
             next.relation.previous = newBlock;
         }
+    }
+    createTable(rows: number, cells: number) {
+        const table = this.createTableBlock();
+        const width = 100 / cells;
+        for (let row = 1; row <= rows; row++) {
+            const row = this.createTableRowBlock();
+            for (let cell = 1; cell <= cells; cell++) {
+                const cell = this.createTableCellBlock({
+                    type: BlockType.TableCellBlock,
+                    metadata: {
+                        width: "50px"
+                    }
+                });
+                const textBlock = this.createStandoffEditorBlock();
+                textBlock.addEOL();
+                cell.blocks.push(textBlock);
+                row.blocks.push(cell);
+                this.addParentSiblingRelations(cell);
+                cell.container.appendChild(textBlock.container);
+                row.container.appendChild(cell.container);
+            }
+            this.addParentSiblingRelations(row);
+            table.blocks.push(row);
+            table.container.appendChild(row.container);
+        }
+        this.addParentSiblingRelations(table);
+        return table;
     }
     createGrid(rows: number, cells: number) {
         const gridBlock = this.createGridBlock();

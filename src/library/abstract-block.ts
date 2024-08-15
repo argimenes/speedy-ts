@@ -114,7 +114,7 @@ export abstract class AbstractBlock implements IBlock {
         if (input.option != trigger.option) return false;
         if (input.shift != trigger.shift) return false;
         if (input.control != trigger.control) return false;
-        if (input.key.toUpperCase() != trigger.key.toUpperCase()) return false;
+        if (input.key?.toUpperCase() != trigger.key?.toUpperCase()) return false;
         return true;
     }
     protected getFirstMatchingInputEvent(input: IKeyboardInput) {
@@ -151,7 +151,7 @@ export abstract class AbstractBlock implements IBlock {
             command: e.metaKey,
             option: e.altKey,
             key: e.key,
-            keyCode: parseInt(e.code || e.keyCode)
+            keyCode: e.code ? parseInt(e.code) : 0
         };
         return input;
     }

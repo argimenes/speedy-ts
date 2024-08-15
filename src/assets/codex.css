@@ -128,6 +128,17 @@
     position: relative;
     padding: 2px;
   }
+  .table-block {
+    display: table;
+  }
+  .table-row-block {
+    display: table-row;
+  }
+  .table-cell-block {
+    display: table-cell;
+    border: 1px solid #ccc;
+    margin: 2px;
+  }
 .tab-label.active {
     color: #333;
     background-color: #f9f9f9;
