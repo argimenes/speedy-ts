@@ -6,6 +6,7 @@ import { AbstractBlock } from "./abstract-block";
 import { Cell, Row } from "./cell";
 import { KEYS } from "./keyboard";
 import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor } from "./types";
+import { classList } from "solid-js/web";
 
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     const map = new Map();
@@ -67,12 +68,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             attribute: {
                 contenteditable: "true"
             },
-            style: {
-                position: "relative", // important for keeping the offsets relative to this element
-                //margin: "0 10px",
-                //border: "1px solid #ccc",
-                //padding: "10px"
-            }
+            classList: ["standoff-editor-block"]
         });
         
         this.container.appendChild(this.wrapper);

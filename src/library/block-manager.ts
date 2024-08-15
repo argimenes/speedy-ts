@@ -94,98 +94,93 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         return null;
     }
-    async attachEventBindings() {
-        const self = this;
-        document.body.addEventListener("click", async function(e: MouseEvent) {
-            console.log("attachEventBindings.click", { manager: self, e });
-            if (!self.container.contains(e.target as HTMLElement)) {
-                return;
-            }
-            const target = self.findParentBlock(e.target as HTMLElement);
-            if (!target) {
-                console.log("Could not find a container parent.")
-                return;
-            }
-            const input = self.toMouseInput(e);
-            self.setBlockFocus(target);
-            const blocks = [self, target];
-            for (let i = 0; i < blocks.length; i++) {
-                const b = blocks[i];
-                if (!b.getFirstMatchingInputEvent) continue;
-                const match = b.getFirstMatchingInputEvent(input);
-                if (match) {
-                    const args = {
-                        block: target,
-                        e
-                    } as any;
-                    await match.action.handler(args);
+    async handleMouseInputEvents(e: MouseEvent) {
+        console.log("handleMouseInputEvents", { manager: this, e });
+        if (!this.container.contains(e.target as HTMLElement)) {
+            return;
+        }
+        const parentBlock = this.findParentBlock(e.target as HTMLElement);
+        if (!parentBlock) {
+            console.log("Could not find a container parent.")
+            return;
+        }
+        const input = this.toMouseInput(e);
+        this.setBlockFocus(parentBlock);
+        if (parentBlock.type == BlockType.StandoffEditorBlock) {
+            const textBlock = parentBlock as StandoffEditorBlock;
+            const caret = textBlock.getCaret();
+            if (caret) {
+                textBlock.lastCaret = {
+                    index: caret.right.index,
+                    offset: CARET.LEFT
                 }
             }
-        });
-        document.body.addEventListener("keydown", async function (e) {
-            if (!self.container.contains(e.target as HTMLElement)) {
-                return;
+        }
+        const blocks = [parentBlock, this];
+        for (let i = 0; i < blocks.length; i++) {
+            const b = blocks[i];
+            if (!b.getFirstMatchingInputEvent) continue;
+            const match = b.getFirstMatchingInputEvent(input);
+            if (match) {
+                const args = {
+                    block: parentBlock,
+                    e
+                } as any;
+                await match.action.handler(args);
             }
-            const ALLOW = true, FORBID = false;
-            const input = self.toKeyboardInput(e);
-            const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
-            if (modifiers.some(x => x == input.key)) {
-                return ALLOW;
-            }
-            const focus = self.getBlockInFocus() as IBlock;
-            const isStandoffBlock = focus.type == BlockType.StandoffEditorBlock;
-            const blocks = [focus, self];
-            for (let i = 0; i < blocks.length; i++) {
-                const b = blocks[i];
-                if (!b.getFirstMatchingInputEvent) continue;
-                const match = b.getFirstMatchingInputEvent(input);
-                if (match) {
-                    let passthrough = false;
-                    const caret = isStandoffBlock ? (focus as StandoffEditorBlock).getCaret() : undefined;
-                    const selection = isStandoffBlock ? (focus as StandoffEditorBlock).getSelection() : undefined
-                    const args = {
-                        block: focus,
-                        caret,
-                        selection,
-                        allowPassthrough: () => passthrough = true,
-                        e
-                    } as IBindingHandlerArgs;
-                    await match.action.handler(args);
-                    if (passthrough) {
-                        return ALLOW;
-                    } else {
-                        e.preventDefault();
-                        return FORBID;
-                    }
-                }
-            }
-            if (isStandoffBlock) {
-                const _focus = focus as StandoffEditorBlock;
-                if (input.key.length == 1) {
-                    _focus.insertCharacterAtCaret(input);
-                    e.preventDefault();        
-                    return FORBID;
-                }
-            }
-            return ALLOW;
-        });
+        }
     }
-    private handleKeyDown(e: KeyboardEvent) {
-        //e.preventDefault();
+    async handleKeyboardInputEvents(e: KeyboardEvent) {
+        if (!this.container.contains(e.target as HTMLElement)) {
+            return;
+        }
         const ALLOW = true, FORBID = false;
         const input = this.toKeyboardInput(e);
         const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
         if (modifiers.some(x => x == input.key)) {
             return ALLOW;
         }
-        e.preventDefault();
-        const match = this.getFirstMatchingInputEvent(input);
-        if (match) {
-            const args = { block: this.getBlockInFocus() } as any;
-            match.action.handler(args);
-            return FORBID;
+        const focusedBlock = this.getBlockInFocus() as IBlock;
+        const isStandoffBlock = focusedBlock.type == BlockType.StandoffEditorBlock;
+        const blocks = [focusedBlock, this];
+        for (let i = 0; i < blocks.length; i++) {
+            const b = blocks[i];
+            if (!b.getFirstMatchingInputEvent) continue;
+            const match = b.getFirstMatchingInputEvent(input);
+            if (match) {
+                let passthrough = false;
+                const caret = isStandoffBlock ? (focusedBlock as StandoffEditorBlock).getCaret() : undefined;
+                const selection = isStandoffBlock ? (focusedBlock as StandoffEditorBlock).getSelection() : undefined
+                const args = {
+                    block: focusedBlock,
+                    caret,
+                    selection,
+                    allowPassthrough: () => passthrough = true,
+                    e
+                } as IBindingHandlerArgs;
+                await match.action.handler(args);
+                if (passthrough) {
+                    return ALLOW;
+                } else {
+                    e.preventDefault();
+                    return FORBID;
+                }
+            }
+        }
+        if (isStandoffBlock) {
+            const _focus = focusedBlock as StandoffEditorBlock;
+            if (input.key.length == 1) {
+                _focus.insertCharacterAtCaret(input);
+                e.preventDefault();        
+                return FORBID;
+            }
         }
         return ALLOW;
+    }
+    async attachEventBindings() {
+        document.body.addEventListener("click", this.handleMouseInputEvents.bind(this));
+        document.body.addEventListener("dblclick", this.handleMouseInputEvents.bind(this));
+        document.body.addEventListener("keydown", this.handleKeyboardInputEvents.bind(this));
     }
     getPlainTextInputEvents():InputEvent[] {
         const self = this;

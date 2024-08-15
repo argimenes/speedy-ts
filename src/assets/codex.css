@@ -123,6 +123,11 @@
     width: 0.3rem;
     min-width: 0.3rem;
   }
+  .standoff-editor-block {
+    /* important for keeping the offsets relative to this element */
+    position: relative;
+    padding: 2px;
+  }
 .tab-label.active {
     color: #333;
     background-color: #f9f9f9;
