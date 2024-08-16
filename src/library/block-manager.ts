@@ -279,13 +279,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 action: {
                     name: "Set focus to the block above.",
                     description: "",
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const block = args.block;
-                        if (block.relation.previous) {
-                            self.setBlockFocus(block.relation.previous);
-                            return;
-                        }
-                    }
+                    handler: this.moveCaretUp.bind(this)
                 }
             }
         ] as InputEvent[];
@@ -3362,6 +3356,30 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.setBlockFocus(lastBlock);
         const lastCell = lastBlock.getLastCell();
         lastBlock.setCaret(lastCell.index, CARET.LEFT);
+    }
+    async moveCaretUp(args: IBindingHandlerArgs) {
+        const { caret } = args;
+        const block = args.block;
+        if (args.block.type == BlockType.StandoffEditorBlock) {
+            const textBlock = args.block as StandoffEditorBlock;
+            if (textBlock.cache.caret.x == null) {
+                textBlock.cache.caret.x = caret.right.cache.offset.x;
+            }
+            const match = textBlock.getCellAbove(caret.right);
+            if (match) {
+                textBlock.setCaret(match.cell.index, CARET.LEFT);
+                return;
+            }
+            
+        }
+        if (block.relation.previous) {
+            let previous = block.relation.previous as StandoffEditorBlock;
+            if (previous.type == BlockType.StandoffEditorBlock) {
+                previous.moveCaretEnd();
+            }
+            this.setBlockFocus(previous);
+            return;
+        }
     }
     async moveCaretDown(args: IBindingHandlerArgs) {
         const { caret } = args;

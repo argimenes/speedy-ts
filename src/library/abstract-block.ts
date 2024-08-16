@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import _ from 'underscore';
-import { updateElement } from './svg';
+import { updateElement, isElementVisible } from './svg';
 import { BlockProperty } from './block-property';
 import { KEYS } from './keyboard';
 import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput } from './types';
@@ -191,6 +191,12 @@ export abstract class AbstractBlock implements IBlock {
     // }
     setFocus(){
         this.container.focus();
+        // if (this.container && this.container?.parentElement) {
+        //     const isVisible = isElementVisible(this.container, this.container.parentElement as HTMLElement);
+        //     if (!isVisible) {
+        //         this.container.scrollIntoView();
+        //     }
+        // }
     }
     abstract serialize():IBlockDto;
     abstract deserialize(json: any|any[]): IBlock;

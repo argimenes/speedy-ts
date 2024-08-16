@@ -583,6 +583,15 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.chainCellsTogether(cells);
         return cells;
     }
+    getCellAbove(cell: Cell) {
+        const x = cell.cache.offset.x;
+        const cri = cell.row?.index as number;
+        if (cri > 0) {
+            const row = this.rows[cri - 1]; 
+            return row.findNearestCell(x);
+        }
+        return null;
+    }
     getCellBelow(cell: Cell) {
         const x = cell.cache.offset.x;
         const rLen = this.rows.length;
