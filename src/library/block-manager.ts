@@ -3363,6 +3363,34 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     async moveCaretDown(args: IBindingHandlerArgs) {
         args.block.handleArrowDown({ manager: this });
     }
+    generateIndexOfStandoffEditorBlocks(ancestor?: IBlock) {
+        let current = ancestor || this;
+        const list: IBlock[] = [];
+        while (current) {
+            if (current.type == BlockType.StandoffEditorBlock) {
+                list.push(current);
+            }
+            if (current.relation.firstChild) {
+                current = current.relation.firstChild;
+                continue;
+            }
+            if (current.relation.next) {
+                current = current.relation.next;
+                continue;
+            }
+            const parent = this.getParent(current);
+            if (parent) {
+                if (parent.relation.next) {
+                    current = parent.relation.next
+                    continue;
+                }
+                current = parent.relation.parent as IBlock;
+                continue;
+            }
+            return list;
+        }
+        return list;
+    }
     async embedDocument(sibling: IBlock, filename: string) {
         const parent = this.getParent(sibling) as AbstractBlock;
         const manager = new BlockManager();
