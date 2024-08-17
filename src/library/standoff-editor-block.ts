@@ -584,6 +584,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         return cells;
     }
     handleArrowUp(args: IArrowNavigation): void {
+        const self = this;
         const caret = this.getCaret() as Caret;
         const match = this.getCellAbove(caret.right);
         if (match) {
@@ -591,20 +592,27 @@ export class StandoffEditorBlock extends AbstractBlock {
             return;
         }
         this.clearSelection();
-        const previous = this.relation.previous;
-        if (previous) {
-            args.manager.setBlockFocus(previous);
-            if (previous.type == BlockType.StandoffEditorBlock) {
-                (previous as StandoffEditorBlock).moveCaretStart();
-            }
-            return;
-        }
-        const parent = this.relation.parent;
-        if (parent) {
-            args.manager.setBlockFocus(parent);
-        }
+
+        const ci = args.manager.index.findIndex(x => x.id == self.id);
+        const next = args.manager.index.reverse().find((x,i) => i < ci && x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
+        args.manager.setBlockFocus(next);
+        next.moveCaretStart();
+
+        // const previous = this.relation.previous;
+        // if (previous) {
+        //     args.manager.setBlockFocus(previous);
+        //     if (previous.type == BlockType.StandoffEditorBlock) {
+        //         (previous as StandoffEditorBlock).moveCaretStart();
+        //     }
+        //     return;
+        // }
+        // const parent = this.relation.parent;
+        // if (parent) {
+        //     args.manager.setBlockFocus(parent);
+        // }
     }
     handleArrowDown(args: IArrowNavigation) {
+        const self = this;
         const caret = this.getCaret() as Caret;
         const match = this.getCellBelow(caret.right);
         if (match) {
@@ -612,18 +620,22 @@ export class StandoffEditorBlock extends AbstractBlock {
             return;
         }
         this.clearSelection();
-        const next = this.relation.next;
-        if (next) {
-            args.manager.setBlockFocus(next);
-            if (next.type == BlockType.StandoffEditorBlock) {
-                (next as StandoffEditorBlock).moveCaretStart();
-            }
-            return;
-        }
-        const parent = this.relation.parent;
-        if (parent) {
-            args.manager.setBlockFocus(parent);
-        }
+        const ci = args.manager.index.findIndex(x => x.id == self.id);
+        const next = args.manager.index.find((x,i) => i > ci && x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
+        args.manager.setBlockFocus(next);
+        next.moveCaretStart();
+        // const next = this.relation.next;
+        // if (next) {
+        //     args.manager.setBlockFocus(next);
+        //     if (next.type == BlockType.StandoffEditorBlock) {
+        //         (next as StandoffEditorBlock).moveCaretStart();
+        //     }
+        //     return;
+        // }
+        // const parent = this.relation.parent;
+        // if (parent) {
+        //     args.manager.setBlockFocus(parent);
+        // }
     }
     getCellAbove(cell: Cell) {
         const x = cell.cache.offset.x;

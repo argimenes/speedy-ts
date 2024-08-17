@@ -48,6 +48,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     plugins: IPlugin[];
     highestZIndex: number;
     clipboard: Record<string, any>[];
+    index: IBlock[];
     constructor(props?: IBlockManagerConstructor) {
         super({ id: props?.id, container: props?.container });
         this.id = props?.id || uuidv4();
@@ -68,6 +69,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.highestZIndex = this.getHighestZIndex();
         this.plugins = [];
         this.clipboard = [];
+        this.index = [];
         this.attachEventBindings();
     }
     deserialize(json: any): IBlock {
@@ -3358,9 +3360,11 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         lastBlock.setCaret(lastCell.index, CARET.LEFT);
     }
     async moveCaretUp(args: IBindingHandlerArgs) {
+        this.index = this.indexDocumentTree(this.blocks[0]);
         args.block.handleArrowUp({ manager: this });
     }
     async moveCaretDown(args: IBindingHandlerArgs) {
+        this.index = this.indexDocumentTree(this.blocks[0]);
         args.block.handleArrowDown({ manager: this });
     }
     generateIndexOfStandoffEditorBlocks(ancestor?: IBlock) {
@@ -3391,6 +3395,23 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         return list;
     }
+    indexDocumentTree(rootBlock: IBlock) {
+        if (!rootBlock) return [];
+      
+        const queue = [rootBlock];
+        const indexedBlocks = [];
+      
+        while (queue.length > 0) {
+          const currentBlock = queue.shift() as IBlock;
+          indexedBlocks.push(currentBlock);
+      
+          if (currentBlock.blocks && Array.isArray(currentBlock.blocks)) {
+            queue.push(...currentBlock.blocks);
+          }
+        }
+        console.log("indexDocumentTree", { rootBlock, indexedBlocks })
+        return indexedBlocks;
+      }
     async embedDocument(sibling: IBlock, filename: string) {
         const parent = this.getParent(sibling) as AbstractBlock;
         const manager = new BlockManager();
