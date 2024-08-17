@@ -1,3 +1,4 @@
+import { BlockManager } from "./block-manager";
 import { BlockProperty } from "./block-property";
 import { Cell } from "./cell";
 import { StandoffEditorBlock } from "./standoff-editor-block";
@@ -90,6 +91,10 @@ export interface IBlockPropertyConstructor {
     block: IBlock;
     value?: string;
     metadata?: Record<string, any>;
+}
+export interface IArrowNavigation {
+    manager: BlockManager;
+    e?: Event;
 }
 export interface IBindingHandlerArgs {
     block: IBlock;

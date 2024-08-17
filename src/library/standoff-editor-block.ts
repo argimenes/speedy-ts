@@ -5,7 +5,7 @@ import { StandoffProperty } from "./standoff-property";
 import { AbstractBlock } from "./abstract-block";
 import { Cell, Row } from "./cell";
 import { KEYS } from "./keyboard";
-import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor } from "./types";
+import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation } from "./types";
 
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     const map = new Map();
@@ -582,6 +582,16 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         this.chainCellsTogether(cells);
         return cells;
+    }
+    handleArrowDown(args: IArrowNavigation) {
+        const caret = this.getCaret() as Caret;
+        const match = this.getCellBelow(caret.right);
+        if (match) {
+            this.setCaret(match.cell.index, CARET.LEFT);
+            return;
+        }
+        const next = this.relation.next;
+        args.manager.setBlockFocus(next);
     }
     getCellAbove(cell: Cell) {
         const x = cell.cache.offset.x;
