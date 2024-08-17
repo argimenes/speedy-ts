@@ -1,5 +1,5 @@
 import { AbstractBlock } from "./abstract-block";
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "./types";
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from "./types";
 
 export class IndentedListBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
@@ -14,6 +14,23 @@ export class IndentedListBlock extends AbstractBlock {
             blockProperties: this.blockProperties.map(x => x.serialize()),
             children: this.blocks.map(x => x.serialize())
         } as IBlockDto;
+    }
+    handleArrowDown(args: IArrowNavigation) {
+        if (this.relation.firstChild) {
+            args.manager.setBlockFocus(this.relation.firstChild);
+            return;
+        }
+        if (this.relation.next) {
+            args.manager.setBlockFocus(this.relation.next);
+            return;
+        }
+        const listStart = args.manager.getParentOfType(this, BlockType.IndentedListBlock);
+        if (listStart) {
+            if (listStart.relation.next) {
+                args.manager.setBlockFocus(this.relation.next);
+                return;
+            }
+        }
     }
     collapse() {
         this.metadata.collapsed = true;

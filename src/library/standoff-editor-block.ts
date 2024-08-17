@@ -591,7 +591,14 @@ export class StandoffEditorBlock extends AbstractBlock {
             return;
         }
         const next = this.relation.next;
-        args.manager.setBlockFocus(next);
+        if (next) {
+            args.manager.setBlockFocus(next);
+            return;
+        }
+        const parent = this.relation.parent;
+        if (parent) {
+            args.manager.setBlockFocus(parent);
+        }
     }
     getCellAbove(cell: Cell) {
         const x = cell.cache.offset.x;

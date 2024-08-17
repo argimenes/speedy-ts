@@ -3,7 +3,8 @@ import _ from 'underscore';
 import { updateElement, isElementVisible } from './svg';
 import { BlockProperty } from './block-property';
 import { KEYS } from './keyboard';
-import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput } from './types';
+import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET } from './types';
+import { StandoffEditorBlock } from './standoff-editor-block';
 
 export abstract class AbstractBlock implements IBlock {
     id: string;
@@ -197,6 +198,19 @@ export abstract class AbstractBlock implements IBlock {
         //         this.container.scrollIntoView();
         //     }
         // }
+    }
+    handleArrowDown(args: IArrowNavigation) {
+        if (this.relation.firstChild) {
+            args.manager.setBlockFocus(this.relation.firstChild);
+            return;
+        }
+        const next = this.relation.next;
+        if (next) {
+            args.manager.setBlockFocus(next);
+            if (next.type == BlockType.StandoffEditorBlock) {
+                setTimeout(() => (next as StandoffEditorBlock).setCaret(0, CARET.LEFT), 10);
+            }
+        }
     }
     abstract serialize():IBlockDto;
     abstract deserialize(json: any|any[]): IBlock;

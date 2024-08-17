@@ -69,6 +69,7 @@ export interface IBlock {
     deserialize(json: any|any[]): IBlock;
     destroy(): void;
     setFocus(): void;
+    handleArrowDown(args: IArrowNavigation): void;
 
     addBlockProperties: (props: BlockPropertyDto[]) => void;
     //updateView: () => void;
