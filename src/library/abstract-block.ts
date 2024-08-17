@@ -191,13 +191,17 @@ export abstract class AbstractBlock implements IBlock {
 
     // }
     setFocus(){
-        this.container.focus();
-        // if (this.container && this.container?.parentElement) {
-        //     const isVisible = isElementVisible(this.container, this.container.parentElement as HTMLElement);
-        //     if (!isVisible) {
-        //         this.container.scrollIntoView();
-        //     }
-        // }
+        this.container.focus({ });
+    }
+    handleArrowUp(args: IArrowNavigation) {
+        if (this.relation.previous) {
+            args.manager.setBlockFocus(this.relation.previous);
+            return;
+        }
+        const parent = this.relation.parent;
+        if (parent) {
+            args.manager.setBlockFocus(parent);
+        }
     }
     handleArrowDown(args: IArrowNavigation) {
         if (this.relation.firstChild) {

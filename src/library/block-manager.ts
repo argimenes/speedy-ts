@@ -3358,68 +3358,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         lastBlock.setCaret(lastCell.index, CARET.LEFT);
     }
     async moveCaretUp(args: IBindingHandlerArgs) {
-        const { caret } = args;
-        const block = args.block;
-        if (args.block.type == BlockType.StandoffEditorBlock) {
-            const textBlock = args.block as StandoffEditorBlock;
-            if (textBlock.cache.caret.x == null) {
-                textBlock.cache.caret.x = caret.right.cache.offset.x;
-            }
-            const match = textBlock.getCellAbove(caret.right);
-            if (match) {
-                textBlock.setCaret(match.cell.index, CARET.LEFT);
-                return;
-            }
-            
-        }
-        if (block.relation.previous) {
-            let previous = block.relation.previous as StandoffEditorBlock;
-            if (previous.type == BlockType.StandoffEditorBlock) {
-                previous.moveCaretEnd();
-            }
-            this.setBlockFocus(previous);
-            return;
-        }
+        args.block.handleArrowUp({ manager: this });
     }
     async moveCaretDown(args: IBindingHandlerArgs) {
-        const block = args.block;
-        block.handleArrowDown({ manager: this });
-        // if (args.block.type == BlockType.StandoffEditorBlock) {
-        //     const textBlock = args.block as StandoffEditorBlock;
-        //     if (textBlock.cache.caret.x == null) {
-        //         textBlock.cache.caret.x = caret.right.cache.offset.x;
-        //     }
-        //     const match = textBlock.getCellBelow(caret.right);
-        //     if (match) {
-        //         textBlock.setCaret(match.cell.index, CARET.LEFT);
-        //         return;
-        //     }
-            
-        // }
-        // if(block.relation.firstChild) {
-        //     let firstChild = block.relation.firstChild;
-        //     if (firstChild.type == BlockType.StandoffEditorBlock) {
-        //         (firstChild as StandoffEditorBlock).moveCaretStart();
-        //     }
-        //     this.setBlockFocus(firstChild);
-        //     return;
-        // }
-        // if (block.relation.next) {
-        //     let next = block.relation.next as StandoffEditorBlock;
-        //     if (next.type == BlockType.StandoffEditorBlock) {
-        //         next.setCaret(next.getLastCell().index, CARET.LEFT); 
-        //     }
-        //     this.setBlockFocus(next);
-        //     return;
-        // }
-        // const uncle = this.findNearestUncle(block);
-        // if (uncle) {
-        //     if (uncle.type == BlockType.StandoffEditorBlock) {
-        //         (uncle as StandoffEditorBlock).moveCaretStart();
-        //     }
-        //     this.setBlockFocus(uncle);
-        //     return;
-        // }
+        args.block.handleArrowDown({ manager: this });
     }
     async embedDocument(sibling: IBlock, filename: string) {
         const parent = this.getParent(sibling) as AbstractBlock;

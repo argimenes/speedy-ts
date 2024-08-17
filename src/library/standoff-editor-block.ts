@@ -583,6 +583,27 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.chainCellsTogether(cells);
         return cells;
     }
+    handleArrowUp(args: IArrowNavigation): void {
+        const caret = this.getCaret() as Caret;
+        const match = this.getCellAbove(caret.right);
+        if (match) {
+            this.setCaret(match.cell.index, CARET.LEFT);
+            return;
+        }
+        this.clearSelection();
+        const previous = this.relation.previous;
+        if (previous) {
+            args.manager.setBlockFocus(previous);
+            if (previous.type == BlockType.StandoffEditorBlock) {
+                (previous as StandoffEditorBlock).moveCaretStart();
+            }
+            return;
+        }
+        const parent = this.relation.parent;
+        if (parent) {
+            args.manager.setBlockFocus(parent);
+        }
+    }
     handleArrowDown(args: IArrowNavigation) {
         const caret = this.getCaret() as Caret;
         const match = this.getCellBelow(caret.right);
@@ -590,9 +611,13 @@ export class StandoffEditorBlock extends AbstractBlock {
             this.setCaret(match.cell.index, CARET.LEFT);
             return;
         }
+        this.clearSelection();
         const next = this.relation.next;
         if (next) {
             args.manager.setBlockFocus(next);
+            if (next.type == BlockType.StandoffEditorBlock) {
+                (next as StandoffEditorBlock).moveCaretStart();
+            }
             return;
         }
         const parent = this.relation.parent;

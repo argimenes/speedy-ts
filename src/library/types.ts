@@ -70,6 +70,7 @@ export interface IBlock {
     destroy(): void;
     setFocus(): void;
     handleArrowDown(args: IArrowNavigation): void;
+    handleArrowUp(args: IArrowNavigation): void;
 
     addBlockProperties: (props: BlockPropertyDto[]) => void;
     //updateView: () => void;
