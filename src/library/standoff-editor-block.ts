@@ -591,10 +591,11 @@ export class StandoffEditorBlock extends AbstractBlock {
             this.setCaret(match.cell.index, CARET.LEFT);
             return;
         }
+        const index = args.manager.index;
+        const ci = index.findIndex(x => x.id == self.id);
+        if (ci == 0) return;
         this.clearSelection();
-
-        const ci = args.manager.index.findIndex(x => x.id == self.id);
-        const next = args.manager.index.reverse().find((x,i) => i < ci && x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
+        const next = index[ci-1] as StandoffEditorBlock;
         args.manager.setBlockFocus(next);
         next.moveCaretStart();
 
@@ -619,9 +620,12 @@ export class StandoffEditorBlock extends AbstractBlock {
             this.setCaret(match.cell.index, CARET.LEFT);
             return;
         }
-        this.clearSelection();
         const ci = args.manager.index.findIndex(x => x.id == self.id);
-        const next = args.manager.index.find((x,i) => i > ci && x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
+        if (ci == args.manager.index.length - 1) {
+            return;
+        }
+        this.clearSelection();
+        const next = args.manager.index[ci+1] as StandoffEditorBlock;
         args.manager.setBlockFocus(next);
         next.moveCaretStart();
         // const next = this.relation.next;

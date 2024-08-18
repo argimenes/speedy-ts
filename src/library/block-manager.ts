@@ -224,25 +224,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     getPlainTextInputEvents():InputEvent[] {
         const self = this;
         return [
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: "ArrowDown"
-                },
-                action: {
-                    name: "Set focus to the block below.",
-                    description: "",
-                    handler: async (args: any) => {
-                        const { characterIndex, textLength, allowPassthrough } = args;
-                        if (characterIndex.start >= textLength - 10) {
-                            self.moveCaretDown(args);
-                            return;
-                        }
-                        allowPassthrough && allowPassthrough();
-                    }
-                }
-            },
+            
         ]
     }
     getGlobalInputEvents():InputEvent[] {
@@ -271,19 +253,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: "",
                     handler: this.moveCaretDown.bind(this)
                 }
-            },
-            {
-                mode: "global",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: "ArrowUp"
-                },
-                action: {
-                    name: "Set focus to the block above.",
-                    description: "",
-                    handler: this.moveCaretUp.bind(this)
-                }
             }
+            // {
+            //     mode: "global",
+            //     trigger: {
+            //         source: InputEventSource.Keyboard,
+            //         match: "ArrowUp"
+            //     },
+            //     action: {
+            //         name: "Set focus to the block above.",
+            //         description: "",
+            //         handler: this.moveCaretUp.bind(this)
+            //     }
+            // }
         ] as InputEvent[];
     }
     
@@ -1104,60 +1086,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     handler: this.handleDeleteForStandoffEditorBlock.bind(this)
                 }
             },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: "ArrowUp"
-                },
-                action: {
-                    name: "Move the cursor up one text block. If one isn't found, move to the start of the block.",
-                    description: `
-                        
-                    `,
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
-                        const block = args.block as StandoffEditorBlock;
-                        const manager = block.owner as BlockManager;
-                        if (block.cache.caret.x == null) {
-                            block.cache.caret.x = caret.right.cache.offset.x;
-                        }
-                        const match = block.getCellInRow(caret.right, RowPosition.Previous);
-                        if (match) {
-                            block.setCaret(match.cell.index, match.caret);
-                            return;
-                        }
-                        let previous = block.relation.previous as StandoffEditorBlock;
-                        if (previous) {
-                            const last = previous.getLastCell();
-                            previous.setCaret(last.index, CARET.LEFT);
-                            manager.setBlockFocus(previous);
-                            return;
-                        }
-                        let parent = block.relation.parent;
-                        if (!parent) {
-                            block.moveCaretStart();
-                            return;
-                        }
-                        if (parent.type == BlockType.IndentedListBlock) {
-                            let previous = parent.relation.previous as StandoffEditorBlock;
-                            if (previous) {
-                                const last = previous.getLastCell();
-                                previous.setCaret(last.index, CARET.LEFT);
-                                return;
-                            }
-                        }
-                        if (parent.type == BlockType.LeftMarginBlock) {
-                            let marginParent = parent.relation.parent as StandoffEditorBlock;
-                            if (marginParent) {
-                                const last = marginParent.getLastCell();
-                                marginParent.setCaret(last.index, CARET.LEFT);
-                                return;
-                            }
-                        }
-                    }
-                }
-            },
+            
             {
                 mode: "default",
                 trigger: {
@@ -1181,6 +1110,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         first.moveCaretStart();
                         manager.setBlockFocus(first);
                     }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "ArrowUp"
+                },
+                action: {
+                    name: "Move the cursor down one row. If one isn't found, move to the next block.",
+                    description: `
+                        
+                    `,
+                    handler: this.moveCaretUp.bind(this)
                 }
             },
             {
@@ -2386,7 +2329,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             textBlock.moveCaretStart();
         }
 
-        this.indexDocumentTree(this.blocks[0]);
+        this.index = this.indexDocumentTree(this.blocks[0]).filter(x => x.type == BlockType.StandoffEditorBlock);
     }
     insertItem<T>(list: T[], index: number, item: T) {
         list.splice(index, 0, item);
