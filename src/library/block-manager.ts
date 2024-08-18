@@ -2385,6 +2385,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             this.setBlockFocus(textBlock);
             textBlock.moveCaretStart();
         }
+
+        this.indexDocumentTree(this.blocks[0]);
     }
     insertItem<T>(list: T[], index: number, item: T) {
         list.splice(index, 0, item);
@@ -3360,11 +3362,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         lastBlock.setCaret(lastCell.index, CARET.LEFT);
     }
     async moveCaretUp(args: IBindingHandlerArgs) {
-        this.index = this.indexDocumentTree(this.blocks[0]);
         args.block.handleArrowUp({ manager: this });
     }
     async moveCaretDown(args: IBindingHandlerArgs) {
-        this.index = this.indexDocumentTree(this.blocks[0]);
         args.block.handleArrowDown({ manager: this });
     }
     generateIndexOfStandoffEditorBlocks(ancestor?: IBlock) {
@@ -3409,9 +3409,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             queue.push(...currentBlock.blocks);
           }
         }
-        console.log("indexDocumentTree", { rootBlock, indexedBlocks })
+        console.log("indexDocumentTree", { rootBlock, indexedBlocks: indexedBlocks
+            .filter(x => x.type == BlockType.StandoffEditorBlock)
+            .map((x,i) => ({
+            i, id: x.id, text: (x as StandoffEditorBlock).serialize().text
+        })) });
         return indexedBlocks;
-      }
+    }
     async embedDocument(sibling: IBlock, filename: string) {
         const parent = this.getParent(sibling) as AbstractBlock;
         const manager = new BlockManager();
