@@ -24,7 +24,7 @@ export interface IHandleyKeyboardInput {
 export class MonitorBlock extends AbstractBlock implements IHandleyKeyboardInput {
     properties: StandoffPropertyState[];
     constructor(args: IMonitorBlockConstructor) {
-        super({ owner: args.owner });
+        super({ manager: args.owner });
         this.canSerialize = false;
         this.properties = [];
     }

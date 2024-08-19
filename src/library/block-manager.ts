@@ -54,7 +54,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.id = props?.id || uuidv4();
         this.type = BlockType.IndentedListBlock;
         this.container = props?.container || document.createElement("DIV") as HTMLElement;
-        this.blocks = [this];
+        this.blocks = [];
         this.metadata = {};
         this.relation = {};
         this.selections = [];
@@ -63,7 +63,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.direction = PointerDirection.Undo;
         this.blockProperties= [];
         this.blockSchemas=[];
-        this.inputEvents = this.getEditorEvents();
+        this.inputEvents = this.getBlockManagerEvents();
         this.inputActions = [];
         this.modes = ["global","default"];
         this.highestZIndex = this.getHighestZIndex();
@@ -571,7 +571,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 description: "Animates the paragraph as a text sine wave.",
                 event: {
                     onInit: (p: BlockProperty) => {
-                        const manager = p.block.owner as BlockManager;
+                        const manager = p.block.manager as BlockManager;
                         manager.animateSineWave(p);
                     }
                 }
@@ -697,7 +697,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: "",
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block;
-                        const manager = block.owner as BlockManager;
+                        const manager = block.manager as BlockManager;
                         manager.setBlockFocus(block);
                     }
                 }
@@ -718,7 +718,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: "",
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as ImageBlock;
-                        const manager = block.owner as BlockManager;
+                        const manager = block.manager as BlockManager;
                         manager.setBlockFocus(block);
                     }
                 }
@@ -734,7 +734,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: "",
                     handler: async (args: IBindingHandlerArgs) => {
                         const imageBlock = args.block as ImageBlock;
-                        const manager = imageBlock.owner as BlockManager;
+                        const manager = imageBlock.manager as BlockManager;
                         const newBlock = manager.createStandoffEditorBlock();
                         manager.addNextBlock(newBlock, imageBlock);
                         setTimeout(() => {
@@ -785,57 +785,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.blocks.push(monitor);
         this.setBlockFocus(monitor);
     }
-    getEditorEvents() {
+    getBlockManagerEvents() {
         const events: InputEvent[] = [
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: "Control-C"
-                },
-                action: {
-                    name: "Copy",
-                    description: "",
-                    handler: async (args) => {
-                        args.allowPassthrough && args.allowPassthrough();
-                    }
-                }
-            },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Mouse,
-                    match: "contextmenu"
-                },
-                action: {
-                    name: "NOP",
-                    description: "",
-                    handler: async (args) => {
-                        // Suppress the right-click.
-                    }
-                }
-            },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Mouse,
-                    match: "click"
-                },
-                action: {
-                    name: "Set focus to the current block.",
-                    description: "",
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const block = args.block as StandoffEditorBlock;
-                        const manager = block.owner as BlockManager;
-                        manager.setBlockFocus(block);
-                        if (block.cache.monitor) {
-                            block.cache.monitor.remove();
-                            block.cache.monitor = undefined;
-                        }
-                        block.unsetMarker();
-                    }
-                }
-            },
             {
                 mode: "default",
                 trigger: {
@@ -871,7 +822,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     match: "Enter"
                 },
                 action: {
-                    name: "Move cursor to the start of the next text block. If one doesn't exist, create it.",
+                    name: "Create a new text block. Move text to the right of the caret into the new block.",
                     description: `
                         
                     `,
@@ -947,7 +898,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: ``,
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block;
-                        const manager = block.owner as BlockManager;
+                        const manager = block.manager as BlockManager;
                         const next = block.relation.next;
                         const previous = block.relation.previous;
                         const parent= block.relation.parent;
@@ -971,7 +922,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: ``,
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block;
-                        const manager = block.owner as BlockManager;
+                        const manager = block.manager as BlockManager;
                         const next = block.relation.next;
                         const previous = block.relation.previous;
                         const parent= block.relation.parent;
@@ -1060,7 +1011,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     name: "Save document",
                     description: "",
                     handler: async (args: IBindingHandlerArgs) => {
-                        const manager = args.block.owner as BlockManager;
+                        const manager = args.block.manager as BlockManager;
                         let filename = manager.metadata.filename;
                         if (!filename) {
                             filename = prompt("Filename?");
@@ -1101,7 +1052,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     handler: async (args: IBindingHandlerArgs) => {
                         const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
-                        const manager = block.owner as BlockManager;
+                        const manager = block.manager as BlockManager;
                         let next = block.relation.next as IndentedListBlock;
                         if (next?.type != BlockType.IndentedListBlock) {
                             return;
@@ -1203,7 +1154,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         const block = args.block as StandoffEditorBlock;
                         block.cache.caret.x = null;
                         const sel = block.getSelection() as IRange;
-                        const manager = block.owner as BlockManager;
+                        const manager = block.manager as BlockManager;
                         const len = block.cells.length;
                         if (sel) block.clearSelection();
                         const ri = sel ? sel.end.index : caret.right.index;
@@ -1566,7 +1517,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: "Either wraps the text in a new tab, or creates a new tab",
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as StandoffEditorBlock;
-                        const self = block.owner as BlockManager;
+                        const self = block.manager as BlockManager;
                         const parent = self.getParent(block) as IBlock;
                         if (!parent) return;
                         if (parent.type == BlockType.TabBlock) {
@@ -1589,7 +1540,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: "Breaks out of current container",
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as StandoffEditorBlock;
-                        const manager = block.owner as BlockManager;
+                        const manager = block.manager as BlockManager;
                         const tab = manager.getParentOfType(block, BlockType.TabBlock) as TabBlock;
                         if (!tab) return;
                         const tabRow = manager.getParent(tab) as TabRowBlock;
@@ -1737,7 +1688,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
-                        const owner = args.block.owner as BlockManager;
+                        const owner = args.block.manager as BlockManager;
                         owner.renderUnderlines("codex/block-reference", args.properties, args.block, "orange", 3);
                     }
                 }
@@ -1759,7 +1710,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
-                        const owner = args.block.owner as BlockManager;
+                        const owner = args.block.manager as BlockManager;
                         owner.renderUnderlines("codex/entity-reference", args.properties, args.block, "purple", 1);
                     }
                 }
@@ -2437,7 +2388,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createMainListBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new MainListBlock({
-            owner: this
+            manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
@@ -2449,7 +2400,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createIndentedListBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new IndentedListBlock({
-            owner: this
+            manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
@@ -2462,7 +2413,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const blockSchemas = this.getBlockSchemas();
         const inputEvents = this.getTabBlockEvents();
         const block = new TabBlock({
-            owner: this
+            manager: this
         });
         block.inputEvents = inputEvents;
         if (dto?.metadata) block.metadata = dto.metadata;
@@ -2475,7 +2426,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createGridCellBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new GridCellBlock({
-            owner: this,
+            manager: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
@@ -2501,7 +2452,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createGridRowBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new GridRowBlock({
-            owner: this,
+            manager: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
@@ -2515,7 +2466,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const blockSchemas = this.getBlockSchemas();
         const events = this.getPlainTextInputEvents();
         const block = new PlainTextBlock({
-            owner: this,
+            manager: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
@@ -2529,7 +2480,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createTableBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new TableBlock({
-            owner: this,
+            manager: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
@@ -2542,7 +2493,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createTableRowBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new TableRowBlock({
-            owner: this,
+            manager: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
@@ -2555,7 +2506,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createTableCellBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new TableCellBlock({
-            owner: this,
+            manager: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
@@ -2568,7 +2519,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createGridBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new GridBlock({
-            owner: this,
+            manager: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
@@ -2582,7 +2533,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const blockSchemas = this.getBlockSchemas();
         const inputEvents = this.getTabBlockEvents();
         const block = new TabRowBlock({
-            owner: this
+            manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.inputEvents = inputEvents;
@@ -2595,7 +2546,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createLeftMarginBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new LeftMarginBlock({
-            owner: this
+            manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
@@ -2608,7 +2559,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createEmbedDocumentBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new EmbedDocumentBlock({
-            owner: this
+            manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
@@ -2620,7 +2571,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createIFrameBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new IframeBlock({
-            owner: this
+            manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
@@ -2632,7 +2583,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createVideoBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new VideoBlock({
-            owner: this
+            manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
@@ -2645,7 +2596,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const blockSchemas = this.getImageBlockSchemas();
         const inputEvents = this.getImageBlockEvents();
         const block = new ImageBlock({
-            owner: this
+            manager: this
         });
         block.inputEvents = inputEvents;
         if (dto?.metadata) block.metadata = dto.metadata;
@@ -2658,7 +2609,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     createRightMarginBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
         const block = new RightMarginBlock({
-            owner: this
+            manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
@@ -2737,16 +2688,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const standoffSchemas = this.getStandoffSchemas();
         const blockSchemas = this.getBlockSchemas();
         const standoffEvents = this.getStandoffPropertyEvents();
-        const editorEvents = this.getEditorEvents();
-        const block = new StandoffEditorBlock({
-            owner: this
+        const textBlock = new StandoffEditorBlock({
+            manager: this
         });
-        block.setSchemas(standoffSchemas);
-        block.setBlockSchemas(blockSchemas);
-        block.setEvents(standoffEvents);
-        //block.setEvents(editorEvents);
-        block.setCommitHandler(this.storeCommit.bind(this));
-        const textProcessor = new TextProcessor({ editor: block });
+        textBlock.setSchemas(standoffSchemas);
+        textBlock.setBlockSchemas(blockSchemas);
+        textBlock.setEvents(standoffEvents);
+        textBlock.setCommitHandler(this.storeCommit.bind(this));
+        const textProcessor = new TextProcessor({ editor: textBlock });
         const custom = [
             {
                 mode: "default",
@@ -2764,37 +2713,49 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 }
             }
         ];
-        block.setEvents(custom);
-        if (dto?.metadata) block.metadata = dto.metadata;
-        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
-        block.applyBlockPropertyStyling();
-        this.blocks.push(block);
-        return block;
+        textBlock.setEvents(custom);
+        if (dto?.metadata) textBlock.metadata = dto.metadata;
+        if (dto?.blockProperties) textBlock.addBlockProperties(dto.blockProperties);
+        textBlock.applyBlockPropertyStyling();
+        this.blocks.push(textBlock);
+        return textBlock;
     }
     async handleEnterKey(args: IBindingHandlerArgs) {
-        const { caret } = args;
+        const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
+        if (block.type != BlockType.StandoffEditorBlock) {
+            const blockData = block.serialize();
+            const newBlock = this.createStandoffEditorBlock();
+            newBlock.addBlockProperties(blockData.blockProperties || []);
+            newBlock.applyBlockPropertyStyling();
+            newBlock.addEOL();
+            this.addNextBlock(newBlock, block);
+            this.setBlockFocus(newBlock);
+            newBlock.moveCaretStart();
+            return;
+        }
+        const textBlock = block as StandoffEditorBlock;
         const atStart = caret.left == null;
         const atEnd = caret.right.isEOL;
         const isInside = !atStart && !atEnd;
         if (isInside) {
             const ci = caret.left?.index as number;
-            const split = this.splitBlock(block.id, ci + 1);
+            const split = this.splitBlock(textBlock.id, ci + 1);
             this.setBlockFocus(split);
             split.moveCaretStart();
             return;
         }
         const newBlock = this.createStandoffEditorBlock();
-        const blockData = block.serialize();
+        const blockData = textBlock.serialize();
         newBlock.addBlockProperties(blockData.blockProperties || []);
         newBlock.applyBlockPropertyStyling();
         newBlock.addEOL();
         if (atStart) {
-            this.addPreviousBlock(newBlock, block);
-            this.setBlockFocus(block);
+            this.addPreviousBlock(newBlock, textBlock);
+            this.setBlockFocus(textBlock);
             block.moveCaretStart();
         } else if (atEnd) {
-            this.addNextBlock(newBlock, block);
+            this.addNextBlock(newBlock, textBlock);
             this.setBlockFocus(newBlock);
             newBlock.moveCaretStart();
         }
@@ -3532,7 +3493,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     async handleCreateLeftMargin(args: IBindingHandlerArgs){
         const block = args.block as StandoffEditorBlock;
-        const manager = block.owner as BlockManager;
+        const manager = block.manager as BlockManager;
         let leftMargin = block.relation.leftMargin as LeftMarginBlock;
         /**
          * If there is no LeftMarginBlock already then create one and add
@@ -3569,7 +3530,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     async handleCreateRightMargin(args: IBindingHandlerArgs){
         const block = args.block as StandoffEditorBlock;
-        const manager = block.owner as BlockManager;
+        const manager = block.manager as BlockManager;
         let rightMargin = block.relation.rightMargin as RightMarginBlock;
         /**
          * If there is no LeftMarginBlock already then create one and add
@@ -3684,7 +3645,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     async handleCreateNewTab(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
-        const self = block.owner as BlockManager;
+        const self = block.manager as BlockManager;
         const parent = self.getParent(block) as IBlock;
         if (!parent) return;
         if (parent.type == BlockType.TabBlock) {

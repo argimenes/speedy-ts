@@ -24,7 +24,7 @@ export class PlainTextBlock extends AbstractBlock {
     attachEventHandlers() {
         const self = this;
         this.textarea.addEventListener("click", () => {
-            (self.owner as BlockManager).setBlockFocus(self);
+            (self.manager as BlockManager).setBlockFocus(self);
         });
         this.textarea.addEventListener("keydown", this.handleKeyDown.bind(this));
     }

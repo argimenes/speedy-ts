@@ -56,7 +56,8 @@ export enum BlockType {
 }
 export interface IBlock {
     id: GUID;
-    owner?: IBlock; // parent
+    manager?: BlockManager; // for coordinating actions between Blocks
+    root?: IBlock;
     type: BlockType;
     blocks: IBlock[];
     blockProperties: BlockProperty[];
@@ -258,8 +259,9 @@ export interface ICursor {
 export interface IAbstractBlockConstructor {
     id?: string;
     container?: HTMLDivElement;
-    owner?: IBlock;
+    manager?: BlockManager;
     metadata?: Record<string, any>;
+    root?: IBlock;
 }
 export enum InputEventSource {
     Keyboard,

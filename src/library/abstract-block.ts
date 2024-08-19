@@ -1,10 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 import _ from 'underscore';
-import { updateElement, isElementVisible } from './svg';
+import { updateElement } from './svg';
 import { BlockProperty } from './block-property';
 import { KEYS } from './keyboard';
 import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET } from './types';
 import { StandoffEditorBlock } from './standoff-editor-block';
+import { BlockManager } from './block-manager';
 
 export abstract class AbstractBlock implements IBlock {
     id: string;
@@ -19,12 +20,12 @@ export abstract class AbstractBlock implements IBlock {
     inputEvents: InputEvent[];
     inputActions: InputAction[];
     modes: string[];
-    owner?: IBlock;
     blockProperties: BlockProperty[];
     blockSchemas: IBlockPropertySchema[];
     container: HTMLElement;
     relation: Record<string, IBlock>;
     canSerialize: boolean;
+    manager?: BlockManager;
     /**
      * A place to store data about the Block, especially the kind that may not be relevant to every instance
      * of Block in every circumstance. For example, 'indentLevel: number' is relevant to a Block in a nested-list
@@ -35,7 +36,7 @@ export abstract class AbstractBlock implements IBlock {
     commitHandler: (commit: Commit) => void;
     constructor(args: IAbstractBlockConstructor) {
         this.id = args?.id || uuidv4();
-        this.owner = args.owner;
+        this.manager = args.manager;
         this.relation = {};
         this.type = BlockType.RootBlock;
         this.container = args?.container || document.createElement("DIV") as HTMLDivElement;
@@ -59,16 +60,16 @@ export abstract class AbstractBlock implements IBlock {
         return this.addOverlay(name);
     }
     removeOverlay(name: string) {
-        const o = this.overlays.find(x => x.name == name);
-        if (!o) return;
-        o.container.remove();
+        const overlay = this.overlays.find(x => x.name == name);
+        if (!overlay) return;
+        overlay.container.remove();
     }
-    removeBlockProperty(bp: BlockProperty) {
-        bp.removeStyling();
-        const bi = this.blockProperties.findIndex(x => x.id == bp.id);
+    removeBlockProperty(prop: BlockProperty) {
+        prop.removeStyling();
+        const bi = this.blockProperties.findIndex(x => x.id == prop.id);
         this.blockProperties.splice(bi, 1);
         if (!this.blockProperties) this.blockProperties = [];
-        bp.isDeleted = true;
+        prop.isDeleted = true;
     }
     addOverlay(name: string) {
         const blockIndex = 100;
