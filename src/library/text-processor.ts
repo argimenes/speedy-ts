@@ -1,7 +1,7 @@
 import { BlockProperty } from "./block-property";
 import { Cell } from "./cell";
 import { StandoffEditorBlock } from "./standoff-editor-block";
-import { BlockPropertyDto, CARET, IBindingHandlerArgs, IPropertySchema, IRange, StandoffPropertyDto } from "./types";
+import { BlockPropertyDto, Caret, CARET, IBindingHandlerArgs, IPropertySchema, IRange, StandoffPropertyDto } from "./types";
 
 export interface ITextProcessorConstructor {
     editor: StandoffEditorBlock;
@@ -26,7 +26,7 @@ export type Rule = {
 }
 const getMatches = (args: any) => {
     const { text, search } = args;
-    var options = args.options || "gi";
+    const options = args.options || "gi";
     const re = new RegExp(search, options);
     var results = [], match;
     while ((match = re.exec(text)) != null) {
@@ -44,12 +44,10 @@ const getMatches = (args: any) => {
 };
 
 export class TextProcessor {
-    editor: StandoffEditorBlock;
     replacements: string[][];
     rules: Rule[];
-    constructor({ editor }: ITextProcessorConstructor) {
+    constructor() {
         const self = this;
-        this.editor = editor;
         this.replacements = [
             ["->", "➤"],
             ["<>", "🔷"],
@@ -195,7 +193,7 @@ export class TextProcessor {
             {
                 pattern: "/h1/", type: "block/font/size/h1", wrapper: { start: "/h1/", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
-                    const { block, match } = args;
+                    const { block } = args;
                     self.removeBlockProperties(block, (x) => x.type.indexOf("block/font/size/") >= 0);
                     block.addBlockProperties([ { type: "block/font/size/h1" } ]);
                     block.applyBlockPropertyStyling();
@@ -288,24 +286,24 @@ export class TextProcessor {
     async processReplacements(args: IBindingHandlerArgs) {
         const self = this;
         var replaced = false;
-        const { caret } = args;
+        const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
         const text = block.getText();
         const cells = block.cells;
         this.replacements.forEach(term => {
             if (text.indexOf(term[0]) >= 0) {
                 replaced = true;
-                self.replaceTextWith({ source: term[0], target: term[1], text, cells });
+                self.replaceTextWith({ block, source: term[0], target: term[1], text, cells });
             }
         });
         if (replaced) {
-            this.editor.setCaret(caret.right.index, CARET.LEFT);
+            block.setCaret(caret.right.index, CARET.LEFT);
             return;
         }
     }
     async processRules(args: IBindingHandlerArgs){
         let rulesProcessed = false;
-        const { caret } = args;
+        const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
         const text = block.getText();
         const cells = block.cells;
@@ -357,12 +355,12 @@ export class TextProcessor {
         if (props.length) props.forEach(p => p.block?.removeBlockProperty(p));
     }
     replaceTextWith(args: any) {
-        const { text, cells, source, target } = args;
+        const { text, cells, source, target, block } = args;
         const si = text.indexOf(source);
         const ei = si + source.length - 1;
         const next = cells[ei + 1];
-        this.editor.removeCellsAtIndex(si, source.length);
-        this.editor.insertTextAtIndex(target, next.index);
-        this.editor.setCaret(next.index, CARET.LEFT);
+        block.removeCellsAtIndex(si, source.length);
+        block.insertTextAtIndex(target, next.index);
+        block.setCaret(next.index, CARET.LEFT);
     }
 }
