@@ -1150,7 +1150,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         /**
                          * Move the cursor right one cell ...
                          */
-                        const { caret } = args;
+                        const caret = args.caret as Caret;
                         const block = args.block as StandoffEditorBlock;
                         block.cache.caret.x = null;
                         const sel = block.getSelection() as IRange;
@@ -1162,7 +1162,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                             block.setCaret(ri + 1);
                             return;
                         }
-                        const next = block.relation.next as IndentedListBlock;
+                        const next = block.relation.next;
                         if (next?.type == BlockType.IndentedListBlock) {
                             const first = next.relation.firstChild as StandoffEditorBlock;
                             first.moveCaretStart();
@@ -1215,7 +1215,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return null;
     }
     async moveSelectionOneCharacterRightwards(args: IBindingHandlerArgs) {
-        const { caret } = args;
+        const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
         const range = block.getSelection();
         if (!range) {
@@ -1235,7 +1235,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         };
     }
     async moveSelectionOneCharacterLeftwards(args: IBindingHandlerArgs){
-        const { caret } = args;
         const block = args.block as StandoffEditorBlock;
         const range = block.getSelection();
         if (!range) {
@@ -1272,7 +1271,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         
                     `,
                     handler: async (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
+                        const caret = args.caret as Caret;
                         const block = args.block as StandoffEditorBlock;
                         if (caret.right.isEOL) {
                             return;
@@ -2707,7 +2706,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     name: "",
                     description: "",
                     handler: async (args: IBindingHandlerArgs) => {
-                        console.log("onTextChanged", { args });
                         await textProcessor.process(args);
                     }
                 }
