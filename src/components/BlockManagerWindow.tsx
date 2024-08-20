@@ -9,7 +9,7 @@ type Props = {
 export const BlockManagerWindow : Component<Props> = (props) => {
     const initialise = (el: HTMLDivElement) => {
         const nextDoc: IBlockDto = {
-            type: BlockType.MainListBlock,
+            type: BlockType.DocumentBlock,
             children: [
                 {
                     type: BlockType.StandoffEditorBlock,

@@ -6,6 +6,7 @@ import { AbstractBlock } from "./abstract-block";
 import { Cell, Row } from "./cell";
 import { KEYS } from "./keyboard";
 import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation } from "./types";
+import { DocumentBlock } from "./document-block";
 
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     const map = new Map();
@@ -591,7 +592,9 @@ export class StandoffEditorBlock extends AbstractBlock {
             this.setCaret(match.cell.index, CARET.LEFT);
             return;
         }
-        const index = args.manager.index;
+        const manager = args.manager;
+        const root = manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+        const index = root.index;
         const ci = index.findIndex(x => x.id == self.id);
         if (ci == 0) return;
         this.clearSelection();
@@ -620,12 +623,14 @@ export class StandoffEditorBlock extends AbstractBlock {
             this.setCaret(match.cell.index, CARET.LEFT);
             return;
         }
-        const ci = args.manager.index.findIndex(x => x.id == self.id);
-        if (ci == args.manager.index.length - 1) {
+        const manager = args.manager;
+        const root = manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+        const ci = root.index.findIndex(x => x.id == self.id);
+        if (ci == root.index.length - 1) {
             return;
         }
         this.clearSelection();
-        const next = args.manager.index[ci+1] as StandoffEditorBlock;
+        const next = root.index[ci+1] as StandoffEditorBlock;
         args.manager.setBlockFocus(next);
         next.moveCaretStart();
         // const next = this.relation.next;

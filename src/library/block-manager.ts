@@ -1,8 +1,7 @@
 import axios from 'axios';
 import { createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
-import { LeftMarginBlock, RightMarginBlock } from "./margin-block";
-import { MainListBlock } from "./main-list-block";
+import { DocumentBlock } from "./document-block";
 import { IndentedListBlock } from "./indented-list-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "./grid-block";
@@ -48,7 +47,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     plugins: IPlugin[];
     highestZIndex: number;
     clipboard: Record<string, any>[];
-    index: IBlock[];
+    
     textProcessor: TextProcessor;
     constructor(props?: IBlockManagerConstructor) {
         super({ id: props?.id, container: props?.container });
@@ -70,7 +69,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.highestZIndex = this.getHighestZIndex();
         this.plugins = [];
         this.clipboard = [];
-        this.index = [];
         this.textProcessor = new TextProcessor();
         this.attachEventBindings();
     }
@@ -1052,7 +1050,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         
                     `,
                     handler: async (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.manager as BlockManager;
                         let next = block.relation.next as IndentedListBlock;
@@ -1322,7 +1319,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         /**
                          * NB: not working as expected. Check the removeCellsAtIndex method chain carefully.
                          */
-                        const { caret } = args;
+                        const caret = args.caret as Caret;
                         const block = args.block as StandoffEditorBlock;
                         if (caret.right.isEOL) {
                             return;
@@ -1846,7 +1843,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.commits.push(commit);
         this.pointer++;
     }
-    stageRightMarginBlock(rightMargin: LeftMarginBlock, mainBlock: StandoffEditorBlock) {
+    stageRightMarginBlock(rightMargin: DocumentBlock, mainBlock: StandoffEditorBlock) {
         updateElement(mainBlock.container, {
             style: {
                 position: "relative"
@@ -1873,7 +1870,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         });
         rightMargin.container.appendChild(hand);
     }
-    stageLeftMarginBlock(leftMargin: LeftMarginBlock, mainBlock: StandoffEditorBlock) {
+    stageLeftMarginBlock(leftMargin: DocumentBlock, mainBlock: StandoffEditorBlock) {
         updateElement(mainBlock.container, {
             style: {
                 position: "relative"
@@ -1950,16 +1947,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const textBlock = this.createStandoffEditorBlock(blockDto);
         textBlock.bind(blockDto as IStandoffEditorBlockDto);
         if (blockDto.relation?.leftMargin) {
-            const leftMargin = await this.recursivelyBuildBlock(textBlock.container, blockDto.relation.leftMargin) as LeftMarginBlock;
+            const leftMargin = await this.recursivelyBuildBlock(textBlock.container, blockDto.relation.leftMargin) as DocumentBlock;
             textBlock.relation.leftMargin = leftMargin;
             leftMargin.relation.marginParent = textBlock;
             this.stageLeftMarginBlock(leftMargin, textBlock);
+            leftMargin.indexDocumentTree();
         }
         if (blockDto.relation?.rightMargin) {
-            const rightMargin = await this.recursivelyBuildBlock(textBlock.container, blockDto.relation.rightMargin) as RightMarginBlock;
+            const rightMargin = await this.recursivelyBuildBlock(textBlock.container, blockDto.relation.rightMargin) as DocumentBlock;
             textBlock.relation.rightMargin = rightMargin;
             rightMargin.relation.marginParent = textBlock;
             this.stageRightMarginBlock(rightMargin, textBlock);
+            rightMargin.indexDocumentTree();
         }
         await this.buildChildren(textBlock, blockDto);
         container.appendChild(textBlock.container);
@@ -1967,6 +1966,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     async buildLeftMarginBlock(container: HTMLElement, blockDto: IBlockDto) {
         const leftMargin = this.createLeftMarginBlock(blockDto);
+        leftMargin.addBlockProperties([ { type: "block/marginalia/left" } ]);
+        leftMargin.applyBlockPropertyStyling();
         await this.buildChildren(leftMargin, blockDto);
         container.appendChild(leftMargin.container);
         return leftMargin;
@@ -2244,10 +2245,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     getDocument() {
         const dto= {
             id: this.id,
-            type: BlockType.MainListBlock,
+            type: BlockType.DocumentBlock,
             children: []
         } as IMainListBlockDto;
-        const mainBlock = this.blocks.find(x => x.type == BlockType.MainListBlock);
+        const mainBlock = this.blocks.find(x => x.type == BlockType.DocumentBlock);
         if (!mainBlock) return dto;
         mainBlock.blocks.forEach(b => {
             let block = b.serialize();
@@ -2256,7 +2257,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return dto;
     }
     async loadDocument(dto: IMainListBlockDto) {
-        if (dto.type != BlockType.MainListBlock) {
+        if (dto.type != BlockType.DocumentBlock) {
             console.error("Expected doc.type to be a MainListBlock");
             return;
         }
@@ -2268,26 +2269,26 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         this.id = dto.id || uuidv4();
         const container = document.createElement("DIV") as HTMLElement;
-        const mainBlock = this.createMainListBlock();
-        mainBlock.bind(dto);
+        const documentBlock = this.createDocumentBlock();
+        documentBlock.bind(dto);
         if (dto.children) {
             const len = dto.children.length;
             for (let i = 0; i <= len - 1; i++) {
                 let block = await this.recursivelyBuildBlock(container, dto.children[i]) as IBlock;
-                mainBlock.blocks.push(block);
+                documentBlock.blocks.push(block);
                 if (i == 0) {
-                    mainBlock.relation.firstChild = block;
-                    block.relation.parent = mainBlock;
+                    documentBlock.relation.firstChild = block;
+                    block.relation.parent = documentBlock;
                 }
                 if (i > 0) {
-                    let previous = mainBlock.blocks[i - 1];
+                    let previous = documentBlock.blocks[i - 1];
                     previous.relation.next = block;
                     block.relation.previous = previous;
                 }
             }
         }
-        this.addParentSiblingRelations(mainBlock);
-        container.appendChild(mainBlock.container);
+        this.addParentSiblingRelations(documentBlock);
+        container.appendChild(documentBlock.container);
         this.container.appendChild(container);
 
         const textBlock = this.blocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
@@ -2296,7 +2297,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             textBlock.moveCaretStart();
         }
 
-        this.index = this.indexDocumentTree(this.blocks[0]).filter(x => x.type == BlockType.StandoffEditorBlock);
+        documentBlock.indexDocumentTree();
     }
     insertItem<T>(list: T[], index: number, item: T) {
         list.splice(index, 0, item);
@@ -2401,9 +2402,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         });
     }
-    createMainListBlock(dto?: IBlockDto) {
+    createDocumentBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
-        const block = new MainListBlock({
+        const block = new DocumentBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
@@ -2561,7 +2562,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     createLeftMarginBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
-        const block = new LeftMarginBlock({
+        const block = new DocumentBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
@@ -2624,7 +2625,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     createRightMarginBlock(dto?: IBlockDto) {
         const blockSchemas = this.getBlockSchemas();
-        const block = new RightMarginBlock({
+        const block = new DocumentBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
@@ -2651,7 +2652,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     testLoadDocument(rows: number) {
         const nextDoc: IBlockDto = {
-            type: BlockType.MainListBlock,
+            type: BlockType.DocumentBlock,
             children: []
         };
         for (let i = 0; i < rows; i++) {
@@ -3269,55 +3270,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     async moveCaretDown(args: IBindingHandlerArgs) {
         args.block.handleArrowDown({ manager: this });
     }
-    generateIndexOfStandoffEditorBlocks(ancestor?: IBlock) {
-        let current = ancestor || this;
-        const list: IBlock[] = [];
-        while (current) {
-            if (current.type == BlockType.StandoffEditorBlock) {
-                list.push(current);
-            }
-            if (current.relation.firstChild) {
-                current = current.relation.firstChild;
-                continue;
-            }
-            if (current.relation.next) {
-                current = current.relation.next;
-                continue;
-            }
-            const parent = this.getParent(current);
-            if (parent) {
-                if (parent.relation.next) {
-                    current = parent.relation.next
-                    continue;
-                }
-                current = parent.relation.parent as IBlock;
-                continue;
-            }
-            return list;
-        }
-        return list;
-    }
-    indexDocumentTree(rootBlock: IBlock) {
-        if (!rootBlock) return [];
-      
-        const queue = [rootBlock];
-        const indexedBlocks = [];
-      
-        while (queue.length > 0) {
-          const currentBlock = queue.shift() as IBlock;
-          indexedBlocks.push(currentBlock);
-      
-          if (currentBlock.blocks && Array.isArray(currentBlock.blocks)) {
-            queue.push(...currentBlock.blocks);
-          }
-        }
-        console.log("indexDocumentTree", { rootBlock, indexedBlocks: indexedBlocks
-            .filter(x => x.type == BlockType.StandoffEditorBlock)
-            .map((x,i) => ({
-            i, id: x.id, text: (x as StandoffEditorBlock).serialize().text
-        })) });
-        return indexedBlocks;
-    }
     async embedDocument(sibling: IBlock, filename: string) {
         const parent = this.getParent(sibling) as AbstractBlock;
         const manager = new BlockManager();
@@ -3461,7 +3413,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     async handleDeleteForStandoffEditorBlock(args: IBindingHandlerArgs) {
         const self = this;
-        const { caret } = args;
+        const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
         const cri = caret.right.index;
         if (caret.right.isEOL) {

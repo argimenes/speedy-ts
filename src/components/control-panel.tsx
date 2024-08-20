@@ -100,7 +100,7 @@ export const ControlPanel : Component<Props> = (props) => {
     const createDocument = () => {
         if (!props.manager) return;
         const doc = {
-            type: BlockType.MainListBlock,
+            type: BlockType.DocumentBlock,
             children: [
                 {
                     type: BlockType.StandoffEditorBlock,
