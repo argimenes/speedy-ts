@@ -49,6 +49,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     highestZIndex: number;
     clipboard: Record<string, any>[];
     index: IBlock[];
+    textProcessor: TextProcessor;
     constructor(props?: IBlockManagerConstructor) {
         super({ id: props?.id, container: props?.container });
         this.id = props?.id || uuidv4();
@@ -70,6 +71,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.plugins = [];
         this.clipboard = [];
         this.index = [];
+        this.textProcessor = new TextProcessor();
         this.attachEventBindings();
     }
     deserialize(json: any): IBlock {
@@ -1258,7 +1260,22 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.moveCaretEnd();
     }
     getStandoffPropertyEvents() {
+        const self = this;
         const events: InputEvent[] = [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Custom,
+                    match: "onTextChanged"
+                },
+                action: {
+                    name: "",
+                    description: "",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        await self.textProcessor.process(args);
+                    }
+                }
+            },
             {
                 mode: "default",
                 trigger: {
@@ -2684,6 +2701,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.addNextBlock(sibling, iframe);
     }
     createStandoffEditorBlock(dto?: IBlockDto) {
+        const self = this;
         const standoffSchemas = this.getStandoffSchemas();
         const blockSchemas = this.getBlockSchemas();
         const standoffEvents = this.getStandoffPropertyEvents();
@@ -2694,24 +2712,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         textBlock.setBlockSchemas(blockSchemas);
         textBlock.setEvents(standoffEvents);
         textBlock.setCommitHandler(this.storeCommit.bind(this));
-        const textProcessor = new TextProcessor({ editor: textBlock });
-        const custom = [
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Custom,
-                    match: "onTextChanged"
-                },
-                action: {
-                    name: "",
-                    description: "",
-                    handler: async (args: IBindingHandlerArgs) => {
-                        await textProcessor.process(args);
-                    }
-                }
-            }
-        ];
-        textBlock.setEvents(custom);
         if (dto?.metadata) textBlock.metadata = dto.metadata;
         if (dto?.blockProperties) textBlock.addBlockProperties(dto.blockProperties);
         textBlock.applyBlockPropertyStyling();
