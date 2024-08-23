@@ -2328,7 +2328,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const parent = this.getParent(sibling);
         if (!parent) return;
         const i = parent.blocks.findIndex(x => x.id == sibling.id);
-        parent.blocks.splice(i + 1, 0, newBlock);
+        this.insertBlockAt(parent, newBlock, i + 1);
+        //parent.blocks.splice(i + 1, 0, newBlock);
         const next = sibling.relation.next;
         sibling.relation.next = newBlock;
         newBlock.relation.previous = sibling;
@@ -2984,7 +2985,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return block;
     }
     addImageLeft(block: IBlock, url: string) {
-        const parent = this.getParent(block);
+        const parent = this.getParent(block) as AbstractBlock;
         const previous = block.relation.previous;
         const next = block.relation.next;
         const grid = this.createGridBlock();
@@ -3029,8 +3030,11 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         row.container.append(cell2.container);
         grid.container.append(row.container);
         const i = parent?.blocks.findIndex(x => x.id == block.id) as number;
-        parent?.blocks.splice(i, 1);
-        parent?.blocks.splice(i, 0, grid);
+        this.removeBlockFromArray(block);
+        this.removeBlockAt(parent, i);
+        //parent?.blocks.splice(i, 1);
+        this.insertBlockAt(parent, grid, i);
+        //parent?.blocks.splice(i, 0, grid);
         this.appendSibling(block.container, grid.container);
         cell2.container.append(block.container);
     }
@@ -3338,7 +3342,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     async handleBackspaceForStandoffEditorBlock(args: IBindingHandlerArgs) {
         const self = this;
-        const { caret } = args;
+        const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
         const selection = block.getSelection();
         if (selection) {
@@ -3517,6 +3521,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }, 1);
         }
     }
+    
     convertBlockToTab(blockId: GUID) {
         const block = this.getBlock(blockId) as IBlock;
         if (!block) return;
@@ -3529,10 +3534,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         });
         const parent = this.getParent(block) as IBlock;
         const bi = parent.blocks.findIndex(x=> x.id == block.id);
-        parent.blocks.splice(bi, 1);
+        //parent.blocks.splice(bi, 1);
+        this.removeBlockFromArray(block)
         tab.addBlock(block);
         tabRow.addBlock(tab);
-        parent.blocks.splice(bi, 0, tabRow);
+        this.insertBlockAt(parent, tabRow, bi);
+        //parent.blocks.splice(bi, 0, tabRow);
         tabRow.renderLabels();
         (tabRow.blocks[0] as TabBlock)?.setActive();
         const previous = block.relation.previous;

@@ -158,6 +158,15 @@ export abstract class AbstractBlock implements IBlock {
         };
         return input;
     }
+    insertBlockAt(parent: IBlock, block: IBlock, atIndex: number) {
+        parent.blocks.splice(atIndex, 0, block);
+        if (this.manager) {
+            if (this.manager.id != this.id) {
+                this.manager.blocks.push(block);
+            }
+            this.reindex();
+        }
+    }
     addBlock(block: IBlock) {
         this.blocks.push(block);
         if (this.manager) {
@@ -171,6 +180,28 @@ export abstract class AbstractBlock implements IBlock {
         const root = this.manager?.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
         if (root) {
             root.indexDocumentTree();
+        }
+    }
+    removeBlockAt(parent: AbstractBlock, atIndex: number) {
+        const block = parent.blocks[atIndex];
+        parent.blocks.splice(atIndex, 1);
+        if (this.manager) {
+            if (this.manager.id != this.id) {
+                const i2 = this.manager.blocks.findIndex(x => x.id == block.id);
+                this.manager.blocks.splice(i2, 1);
+            }
+            this.reindex();
+        }
+    }
+    removeBlockFrom(parent: AbstractBlock, block: IBlock) {
+        const i = parent.blocks.findIndex(x => x.id == block.id);
+        this.blocks.splice(i, 1);
+        if (this.manager) {
+            if (this.manager.id != this.id) {
+                const i2 = this.manager.blocks.findIndex(x => x.id == block.id);
+                this.manager.blocks.splice(i2, 1);
+            }
+            this.reindex();
         }
     }
     removeBlock(block: IBlock) {
