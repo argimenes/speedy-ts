@@ -6,6 +6,7 @@ import { KEYS } from './keyboard';
 import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET } from './types';
 import { StandoffEditorBlock } from './standoff-editor-block';
 import { BlockManager } from './block-manager';
+import { DocumentBlock } from './document-block';
 
 export abstract class AbstractBlock implements IBlock {
     id: string;
@@ -156,6 +157,32 @@ export abstract class AbstractBlock implements IBlock {
             keyCode: e.code ? parseInt(e.code) : 0
         };
         return input;
+    }
+    addBlock(block: IBlock) {
+        this.blocks.push(block);
+        if (this.manager) {
+            if (this.manager.id != this.id) {
+                this.manager.blocks.push(block);
+            }
+            const root = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+            if (root) {
+                root.indexDocumentTree();
+            }
+        }
+    }
+    removeBlock(block: IBlock) {
+        const i = this.blocks.findIndex(x => x.id == block.id);
+        this.blocks.splice(i, 1);
+        if (this.manager) {
+            if (this.manager.id != this.id) {
+                const i2 = this.manager.blocks.findIndex(x => x.id == block.id);
+                this.manager.blocks.splice(i2, 1);
+            }
+            const root = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+            if (root) {
+                root.indexDocumentTree();
+            }
+        }
     }
     setBlockSchemas(schemas: IBlockPropertySchema[]) {
         this.blockSchemas.push(...schemas);
