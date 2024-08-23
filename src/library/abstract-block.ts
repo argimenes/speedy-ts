@@ -164,10 +164,13 @@ export abstract class AbstractBlock implements IBlock {
             if (this.manager.id != this.id) {
                 this.manager.blocks.push(block);
             }
-            const root = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
-            if (root) {
-                root.indexDocumentTree();
-            }
+            this.reindex();
+        }
+    }
+    reindex() {
+        const root = this.manager?.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+        if (root) {
+            root.indexDocumentTree();
         }
     }
     removeBlock(block: IBlock) {
@@ -178,10 +181,7 @@ export abstract class AbstractBlock implements IBlock {
                 const i2 = this.manager.blocks.findIndex(x => x.id == block.id);
                 this.manager.blocks.splice(i2, 1);
             }
-            const root = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
-            if (root) {
-                root.indexDocumentTree();
-            }
+            this.reindex();
         }
     }
     setBlockSchemas(schemas: IBlockPropertySchema[]) {

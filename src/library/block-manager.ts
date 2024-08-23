@@ -1804,7 +1804,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         }
         block.destroy();
-        this.blocks.splice(i, 1); // delete
+    }
+    removeBlockFromArray(block: IBlock) {
+        const _parent = this.getParent(block) as AbstractBlock;
+        _parent?.removeBlock(block);
     }
     deleteBlock(blockId: GUID) {
         const block = this.getBlock(blockId) as StandoffEditorBlock;
@@ -1821,8 +1824,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (parent) {
             parent.relation.firstChild = next;
         }
-        const i = this.blocks.findIndex(x => x.id == blockId);
-        this.blocks.splice(i, 1);
+        this.removeBlockFromArray(block);
         block.destroy();
         this.commit({
             redo: {
