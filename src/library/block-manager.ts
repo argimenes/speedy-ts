@@ -3039,7 +3039,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         cell2.container.append(block.container);
     }
     addImageRight(block: IBlock, url: string) {
-        const parent = this.getParent(block);
+        const parent = this.getParent(block) as AbstractBlock;
         const previous = block.relation.previous;
         const next = block.relation.next;
         const grid = this.createGridBlock();
@@ -3084,8 +3084,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         row.container.append(cell2.container);
         grid.container.append(row.container);
         const i = parent?.blocks.findIndex(x => x.id == block.id) as number;
-        parent?.blocks.splice(i, 1);
-        parent?.blocks.splice(i, 0, grid);
+        this.removeBlockAt(parent, i, true);
+        this.insertBlockAt(parent, grid, i);
+        // parent?.blocks.splice(i, 1);
+        // parent?.blocks.splice(i, 0, grid);
         this.appendSibling(block.container, grid.container);
         cell1.container.append(block.container);
     }
@@ -3314,7 +3316,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         block.container.innerHTML = "";
         const i = this.blocks.findIndex(x=> x.id == id);
-        this.blocks.splice(i, 1);
+        const parent = this.getParent(block) as AbstractBlock;
+        this.removeBlockAt(parent, i);
+        // this.blocks.splice(i, 1);
     }
     async handleCopyForStandoffEditorBlock(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
@@ -3532,10 +3536,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 name: "1"
             }
         });
-        const parent = this.getParent(block) as IBlock;
+        const parent = this.getParent(block) as AbstractBlock;
         const bi = parent.blocks.findIndex(x=> x.id == block.id);
         //parent.blocks.splice(bi, 1);
-        this.removeBlockFromArray(block)
+        this.removeBlockAt(parent, bi);
         tab.addBlock(block);
         tabRow.addBlock(tab);
         this.insertBlockAt(parent, tabRow, bi);

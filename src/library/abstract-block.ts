@@ -158,22 +158,22 @@ export abstract class AbstractBlock implements IBlock {
         };
         return input;
     }
-    insertBlockAt(parent: IBlock, block: IBlock, atIndex: number) {
+    insertBlockAt(parent: IBlock, block: IBlock, atIndex: number, skipIndexation?: boolean) {
         parent.blocks.splice(atIndex, 0, block);
         if (this.manager) {
             if (this.manager.id != this.id) {
                 this.manager.blocks.push(block);
             }
-            this.reindex();
+            if (!skipIndexation) this.reindex();
         }
     }
-    addBlock(block: IBlock) {
+    addBlock(block: IBlock, skipIndexation?: boolean) {
         this.blocks.push(block);
         if (this.manager) {
             if (this.manager.id != this.id) {
                 this.manager.blocks.push(block);
             }
-            this.reindex();
+            if (!skipIndexation) this.reindex();
         }
     }
     reindex() {
@@ -182,7 +182,7 @@ export abstract class AbstractBlock implements IBlock {
             root.indexDocumentTree();
         }
     }
-    removeBlockAt(parent: AbstractBlock, atIndex: number) {
+    removeBlockAt(parent: AbstractBlock, atIndex: number, skipIndexation?: boolean) {
         const block = parent.blocks[atIndex];
         parent.blocks.splice(atIndex, 1);
         if (this.manager) {
@@ -190,10 +190,10 @@ export abstract class AbstractBlock implements IBlock {
                 const i2 = this.manager.blocks.findIndex(x => x.id == block.id);
                 this.manager.blocks.splice(i2, 1);
             }
-            this.reindex();
+            if (!skipIndexation) this.reindex();
         }
     }
-    removeBlockFrom(parent: AbstractBlock, block: IBlock) {
+    removeBlockFrom(parent: AbstractBlock, block: IBlock, skipIndexation?: boolean) {
         const i = parent.blocks.findIndex(x => x.id == block.id);
         this.blocks.splice(i, 1);
         if (this.manager) {
@@ -201,10 +201,10 @@ export abstract class AbstractBlock implements IBlock {
                 const i2 = this.manager.blocks.findIndex(x => x.id == block.id);
                 this.manager.blocks.splice(i2, 1);
             }
-            this.reindex();
+            if (!skipIndexation) this.reindex();
         }
     }
-    removeBlock(block: IBlock) {
+    removeBlock(block: IBlock, skipIndexation?: boolean) {
         const i = this.blocks.findIndex(x => x.id == block.id);
         this.blocks.splice(i, 1);
         if (this.manager) {
@@ -212,7 +212,7 @@ export abstract class AbstractBlock implements IBlock {
                 const i2 = this.manager.blocks.findIndex(x => x.id == block.id);
                 this.manager.blocks.splice(i2, 1);
             }
-            this.reindex();
+            if (!skipIndexation) this.reindex();
         }
     }
     setBlockSchemas(schemas: IBlockPropertySchema[]) {
