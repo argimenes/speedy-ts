@@ -29,7 +29,7 @@ export interface IStandoffEditorBlockMonitor {
 }
 
 export enum BlockType {
-    RootBlock = "root-block",
+    AbstractBlock = "root-block",
     DocumentBlock = "main-list-block",
     IndentedListBlock = "indented-list-block",
     TabRowBlock = "tab-row-block",

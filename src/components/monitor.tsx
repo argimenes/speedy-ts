@@ -16,7 +16,7 @@ type Props = {
     onClose: () => void;
 }
 export interface IMonitorBlockConstructor {
-    owner: BlockManager;
+    manager: BlockManager;
 }
 export interface IHandleyKeyboardInput {
     handleKeyDown(e: KeyboardEvent): Promise<void>;
@@ -24,9 +24,12 @@ export interface IHandleyKeyboardInput {
 export class MonitorBlock extends AbstractBlock implements IHandleyKeyboardInput {
     properties: StandoffPropertyState[];
     constructor(args: IMonitorBlockConstructor) {
-        super({ manager: args.owner });
+        super({ manager: args.manager });
         this.canSerialize = false;
         this.properties = [];
+    }
+    handleKeyDown(e: KeyboardEvent): Promise<void> {
+        throw new Error("Method not implemented.");
     }
     setContainer(node: HTMLDivElement) {
         this.container = node;

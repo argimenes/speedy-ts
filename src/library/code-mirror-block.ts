@@ -1,13 +1,18 @@
 import { AbstractBlock } from "./abstract-block";
-import { BlockType, IBlock, ICodeMirrorBlockDto } from "./types";
+import { BlockType, IAbstractBlockConstructor, IBlock, ICodeMirrorBlockDto } from "./types";
 import {basicSetup, EditorView} from "codemirror"
 import {javascript} from "@codemirror/lang-javascript"
+
+export interface ICodeMirrorBlockConstructor extends IAbstractBlockConstructor {
+    text: string;
+    type: BlockType;
+}
 
 export class CodeMirrorBlock extends AbstractBlock {
     text: string;
     wrapper: HTMLDivElement;
     view: EditorView;
-    constructor(args: ICodeMirrorBlockDto) {
+    constructor(args: ICodeMirrorBlockConstructor) {
         super(args);
         this.type = BlockType.CodeMirrorBlock;
         this.text = "";

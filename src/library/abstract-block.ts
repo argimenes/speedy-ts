@@ -39,7 +39,7 @@ export abstract class AbstractBlock implements IBlock {
         this.id = args?.id || uuidv4();
         this.manager = args.manager;
         this.relation = {};
-        this.type = BlockType.RootBlock;
+        this.type = BlockType.AbstractBlock;
         this.container = args?.container || document.createElement("DIV") as HTMLDivElement;
         this.commitHandler = () => { };
         this.metadata = {};

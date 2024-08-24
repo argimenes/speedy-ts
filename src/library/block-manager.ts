@@ -52,7 +52,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     constructor(props?: IBlockManagerConstructor) {
         super({ id: props?.id, container: props?.container });
         this.id = props?.id || uuidv4();
-        this.type = BlockType.IndentedListBlock;
+        this.type = BlockType.DocumentBlock;
         this.container = props?.container || document.createElement("DIV") as HTMLElement;
         this.blocks = [];
         this.metadata = {};
@@ -69,6 +69,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.highestZIndex = this.getHighestZIndex();
         this.plugins = [];
         this.clipboard = [];
+        this.manager = this;
         this.textProcessor = new TextProcessor();
         this.attachEventBindings();
     }
@@ -748,7 +749,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return events;
     }
     async handleContextMenuClicked(args: IBindingHandlerArgs) {
-        const { caret } = args;
+        const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
         const anchor = caret.left || caret.right;
         block.setMarker(anchor, this.container);
@@ -758,7 +759,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         const props = block.getEnclosingProperties(anchor);
         if (!props.length) return;
-        const monitor = new MonitorBlock({ owner: this });
+        const monitor = new MonitorBlock({ manager: this });
         const component = StandoffEditorBlockMonitor({
             monitor,
             properties: props,
@@ -2325,7 +2326,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     addNextBlock(newBlock: IBlock, sibling: IBlock) {
         sibling.container.insertAdjacentElement("afterend", newBlock.container);
-        const parent = this.getParent(sibling);
+        const parent = this.getParent(sibling) as AbstractBlock;
         if (!parent) return;
         const i = parent.blocks.findIndex(x => x.id == sibling.id);
         this.insertBlockAt(parent, newBlock, i + 1);
@@ -2705,7 +2706,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.addNextBlock(sibling, iframe);
     }
     createStandoffEditorBlock(dto?: IBlockDto) {
-        const self = this;
         const standoffSchemas = this.getStandoffSchemas();
         const blockSchemas = this.getBlockSchemas();
         const standoffEvents = this.getStandoffPropertyEvents();
@@ -3303,6 +3303,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     createCodeMirrorBlock(dto?: ICodeMirrorBlockDto) {
         const block = new CodeMirrorBlock({
+            manager: this,
             type: BlockType.CodeMirrorBlock,
             text: dto?.text || ""
         });
@@ -3316,8 +3317,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         block.container.innerHTML = "";
         const i = this.blocks.findIndex(x=> x.id == id);
-        const parent = this.getParent(block) as AbstractBlock;
-        this.removeBlockAt(parent, i);
+        this.removeBlockAt(this, i);
         // this.blocks.splice(i, 1);
     }
     async handleCopyForStandoffEditorBlock(args: IBindingHandlerArgs) {
