@@ -783,7 +783,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             },
             parent: this.container
         });
-        this.addBlock(monitor);
+        this.blocks.push(monitor);
         this.setBlockFocus(monitor);
     }
     getBlockManagerEvents() {
@@ -2076,13 +2076,22 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(video.container);
         return video;
     }
+    addBlockTo(parent: IBlock, block: IBlock, skipIndexation?: boolean) {
+        parent.blocks.push(block);
+        if (parent.manager) {
+            if (parent.manager.id != this.id) {
+                parent.manager.blocks.push(block);
+            }
+            if (!skipIndexation) this.reindex();
+        }
+    }
     async buildChildren(parent: AbstractBlock, blockDto: IBlockDto, update?: (b: IBlock) => void) {
         if (blockDto.children) {
             const len = blockDto.children.length;
             for (let i = 0; i < len; i++) {
                 let childDto = blockDto.children[i];
                 let block = await this.recursivelyBuildBlock(parent.container, childDto) as IBlock;
-                parent.addBlock(block);
+                this.addBlockTo(parent, block);
                 update && update(block);
             }
         }
@@ -2132,8 +2141,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }) as StandoffEditorBlock;
         }
         textBlock.addEOL();
-        newTab.addBlock(textBlock);
-        row.addBlock(newTab);
+        this.addBlockTo(newTab, textBlock);
+        this.addBlockTo(row, newTab);
         this.addParentSiblingRelations(row);
         textBlock.relation.parent = newTab;
         newTab.relation.firstChild = textBlock;
@@ -2273,12 +2282,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.id = dto.id || uuidv4();
         const container = document.createElement("DIV") as HTMLElement;
         const documentBlock = this.createDocumentBlock();
+        this.addBlockTo(this, documentBlock);
         documentBlock.bind(dto);
         if (dto.children) {
             const len = dto.children.length;
             for (let i = 0; i <= len - 1; i++) {
                 let block = await this.recursivelyBuildBlock(container, dto.children[i]) as IBlock;
-                documentBlock.addBlock(block);
+                this.addBlockTo(documentBlock, block);
                 if (i == 0) {
                     documentBlock.relation.firstChild = block;
                     block.relation.parent = documentBlock;
@@ -2353,14 +2363,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 });
                 const textBlock = this.createStandoffEditorBlock();
                 textBlock.addEOL();
-                cell.addBlock(textBlock);
-                row.addBlock(cell);
+                this.addBlockTo(cell, textBlock);
+                this.addBlockTo(row, cell);
                 this.addParentSiblingRelations(cell);
                 cell.container.appendChild(textBlock.container);
                 row.container.appendChild(cell.container);
             }
             this.addParentSiblingRelations(row);
-            table.addBlock(row);
+            this.addBlockTo(table, row);
             table.container.appendChild(row.container);
         }
         this.addParentSiblingRelations(table);
@@ -2380,14 +2390,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 });
                 const textBlock = this.createStandoffEditorBlock();
                 textBlock.addEOL();
-                cellBlock.addBlock(textBlock);
-                rowBlock.addBlock(cellBlock);
+                this.addBlockTo(cellBlock, textBlock);
+                this.addBlockTo(rowBlock, cellBlock);
                 this.addParentSiblingRelations(cellBlock);
                 cellBlock.container.appendChild(textBlock.container);
                 rowBlock.container.appendChild(cellBlock.container);
             }
             this.addParentSiblingRelations(rowBlock);
-            gridBlock.addBlock(rowBlock);
+            this.addBlockTo(gridBlock, rowBlock);
             gridBlock.container.appendChild(rowBlock.container);
         }
         this.addParentSiblingRelations(gridBlock);
@@ -2415,7 +2425,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
         return block;
     }
     createIndentedListBlock(dto?: IBlockDto) {
@@ -2427,7 +2436,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
         return block;
     }
     createTabBlock(dto?: IBlockDto){
@@ -2441,7 +2449,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
         return block;
     }
     createGridCellBlock(dto?: IBlockDto) {
@@ -2467,7 +2474,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
+        this.addBlockTo(this, block);
         return block;
     }
     createGridRowBlock(dto?: IBlockDto) {
@@ -2480,7 +2487,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
+        this.addBlockTo(this, block);
         return block;
     }
     createPlainTextBlock(dto?: IPlainTextBlockDto) {
@@ -2495,7 +2502,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setEvents(events);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
+        this.addBlockTo(this, block);
         return block;
     }
     createTableBlock(dto?: IBlockDto) {
@@ -2508,7 +2515,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
+        this.addBlockTo(this, block);
         return block;
     }
     createTableRowBlock(dto?: IBlockDto) {
@@ -2521,7 +2528,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
+        this.addBlockTo(this, block);
         return block;
     }
     createTableCellBlock(dto?: IBlockDto) {
@@ -2534,7 +2541,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
+        this.addBlockTo(this, block);
         return block;
     }
     createGridBlock(dto?: IBlockDto) {
@@ -2547,7 +2554,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
+        this.addBlockTo(this, block);
         return block;
     }
     createTabRowBlock(dto?: IBlockDto) {
@@ -2561,7 +2568,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
         return block;
     }
     createLeftMarginBlock(dto?: IBlockDto) {
@@ -2574,7 +2580,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.addBlockProperties([ { type: "block/marginalia/left" } ]);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
         return block;
     }
     createEmbedDocumentBlock(dto?: IBlockDto) {
@@ -2586,7 +2591,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
+        this.addBlockTo(this, block);
         return block;
     }
     createIFrameBlock(dto?: IBlockDto) {
@@ -2598,7 +2603,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
+        this.addBlockTo(this, block);
         return block;
     }
     createVideoBlock(dto?: IBlockDto) {
@@ -2610,7 +2615,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
+        this.addBlockTo(this, block);
         return block;
     }
     createImageBlock(dto?: IBlockDto) {
@@ -2624,7 +2629,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
+        this.addBlockTo(this, block);
         return block;
     }
     createRightMarginBlock(dto?: IBlockDto) {
@@ -2637,7 +2642,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.addBlockProperties([ { type: "block/marginalia/right" } ]);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlock(block);
+        this.addBlockTo(this, block);
         return block;
     }
     randomIntFromInterval(min: number, max: number) {
@@ -2719,7 +2724,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (dto?.metadata) textBlock.metadata = dto.metadata;
         if (dto?.blockProperties) textBlock.addBlockProperties(dto.blockProperties);
         textBlock.applyBlockPropertyStyling();
-        this.addBlock(textBlock);
+        this.addBlockTo(this, textBlock);
         return textBlock;
     }
     async handleEnterKey(args: IBindingHandlerArgs) {
@@ -2787,8 +2792,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (next) {
             next.relation.previous = previous;
         }
-        previous.addBlock(list);
-        list.addBlock(block);
+        this.addBlockTo(previous, list);
+        this.addBlockTo(list, block);
+        this.addBlockTo(parent, list);
         const listParent = this.getParentOfType(block, BlockType.IndentedListBlock) as IndentedListBlock;
         const level = listParent?.metadata.indentLevel || 0 as number;
         list.metadata.indentLevel = level + 1;
@@ -3469,9 +3475,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             block.relation.leftMargin = leftMargin;
             leftMargin.relation.firstChild = child;
             child.relation.parent = leftMargin;
-            leftMargin.addBlock(child);
-            manager.addBlock(leftMargin);
-            manager.addBlock(child);
+            this.addBlockTo(leftMargin, child);
+            this.registerBlock(leftMargin);
             leftMargin.container.appendChild(child.container);
             manager.stageLeftMarginBlock(leftMargin, block);
             block.container.appendChild(leftMargin.container);
@@ -3487,6 +3492,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 child.moveCaretStart();
             }, 1);
         }
+    }
+    registerBlock(block: IBlock) {
+        this.blocks.push(block);
     }
     async handleCreateRightMargin(args: IBindingHandlerArgs){
         const block = args.block as StandoffEditorBlock;
@@ -3506,9 +3514,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             block.relation.rightMargin = rightMargin;
             rightMargin.relation.firstChild = child;
             child.relation.parent = rightMargin;
-            rightMargin.addBlock(child);
-            manager.addBlock(rightMargin);
-            manager.addBlock(child);
+            this.addBlockTo(rightMargin, child);
+            this.blocks.push(rightMargin);
             rightMargin.container.appendChild(child.container);
             manager.stageRightMarginBlock(rightMargin, block);
             block.container.appendChild(rightMargin.container);
@@ -3540,8 +3547,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const bi = parent.blocks.findIndex(x=> x.id == block.id);
         //parent.blocks.splice(bi, 1);
         this.removeBlockAt(parent, bi);
-        tab.addBlock(block);
-        tabRow.addBlock(tab);
+        this.addBlockTo(tab, block);
+        this.addBlockTo(tabRow, tab);
         this.insertBlockAt(parent, tabRow, bi);
         //parent.blocks.splice(bi, 0, tabRow);
         tabRow.renderLabels();
