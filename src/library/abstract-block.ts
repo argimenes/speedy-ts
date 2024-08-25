@@ -167,15 +167,7 @@ export abstract class AbstractBlock implements IBlock {
             if (!skipIndexation) this.reindex();
         }
     }
-    addBlock(block: IBlock, skipIndexation?: boolean) {
-        this.blocks.push(block);
-        if (this.manager) {
-            if (this.manager.id != this.id) {
-                this.manager.blocks.push(block);
-            }
-            if (!skipIndexation) this.reindex();
-        }
-    }
+    
     reindex() {
         const root = this.manager?.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
         if (root) {
@@ -186,10 +178,8 @@ export abstract class AbstractBlock implements IBlock {
         const block = parent.blocks[atIndex];
         parent.blocks.splice(atIndex, 1);
         if (this.manager) {
-            if (this.manager.id != this.id) {
-                const i2 = this.manager.blocks.findIndex(x => x.id == block.id);
-                this.manager.blocks.splice(i2, 1);
-            }
+            const i2 = this.manager.registeredBlocks.findIndex(x => x.id == block.id);
+            this.manager.registeredBlocks.splice(i2, 1);
             if (!skipIndexation) this.reindex();
         }
     }
@@ -197,10 +187,8 @@ export abstract class AbstractBlock implements IBlock {
         const i = parent.blocks.findIndex(x => x.id == block.id);
         this.blocks.splice(i, 1);
         if (this.manager) {
-            if (this.manager.id != this.id) {
-                const i2 = this.manager.blocks.findIndex(x => x.id == block.id);
-                this.manager.blocks.splice(i2, 1);
-            }
+            const i2 = this.manager.registeredBlocks.findIndex(x => x.id == block.id);
+            this.manager.registeredBlocks.splice(i2, 1);
             if (!skipIndexation) this.reindex();
         }
     }
@@ -208,10 +196,8 @@ export abstract class AbstractBlock implements IBlock {
         const i = this.blocks.findIndex(x => x.id == block.id);
         this.blocks.splice(i, 1);
         if (this.manager) {
-            if (this.manager.id != this.id) {
-                const i2 = this.manager.blocks.findIndex(x => x.id == block.id);
-                this.manager.blocks.splice(i2, 1);
-            }
+            const i2 = this.manager.registeredBlocks.findIndex(x => x.id == block.id);
+            this.manager.registeredBlocks.splice(i2, 1);
             if (!skipIndexation) this.reindex();
         }
     }

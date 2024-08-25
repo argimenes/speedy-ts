@@ -47,7 +47,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     plugins: IPlugin[];
     highestZIndex: number;
     clipboard: Record<string, any>[];
-    
+    registeredBlocks: IBlock[];
     textProcessor: TextProcessor;
     constructor(props?: IBlockManagerConstructor) {
         super({ id: props?.id, container: props?.container });
@@ -70,6 +70,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.plugins = [];
         this.clipboard = [];
         this.manager = this;
+        this.registeredBlocks = [this];
         this.textProcessor = new TextProcessor();
         this.attachEventBindings();
     }
@@ -2079,8 +2080,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     addBlockTo(parent: IBlock, block: IBlock, skipIndexation?: boolean) {
         parent.blocks.push(block);
         if (parent.manager) {
-            if (parent.manager.id != this.id) {
-                parent.manager.blocks.push(block);
+            if (!parent.manager.registeredBlocks.some(x => x.id == block.id)){
+                parent.manager.registeredBlocks.push(block);
             }
             if (!skipIndexation) this.reindex();
         }
