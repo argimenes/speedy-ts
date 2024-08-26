@@ -420,9 +420,7 @@ const foo = (bar) => {
         const manager = new BlockManager();
         manager.container = el;
         manager.loadDocument(nextDoc);
-        const standoff = manager.blocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
-        manager.setBlockFocus(standoff);
-        standoff.moveCaretStart();
+        
         props.getInstance(manager);
         console.log("== GLOBAL ==", { manager, block: manager.blocks[0] })
     }

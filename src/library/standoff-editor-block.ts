@@ -594,9 +594,10 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         const manager = args.manager;
         const root = manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+        console.log("handleArrowUp", { root, self: this, manager });
         const index = root.index;
         const ci = index.findIndex(x => x.id == self.id);
-        if (ci == 0) return;
+        if (ci <= 0) return;
         this.clearSelection();
         const next = index[ci-1] as StandoffEditorBlock;
         args.manager.setBlockFocus(next);

@@ -52,7 +52,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     constructor(props?: IBlockManagerConstructor) {
         super({ id: props?.id, container: props?.container });
         this.id = props?.id || uuidv4();
-        this.type = BlockType.DocumentBlock;
+        this.type = BlockType.BlockManagerBlock;
         this.container = props?.container || document.createElement("DIV") as HTMLElement;
         this.blocks = [];
         this.metadata = {};
@@ -90,7 +90,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     findParentBlock(el: HTMLElement) {
         let current = el;
         while (current) {
-            let match = this.blocks.find(x=> x.container == current);
+            let match = this.registeredBlocks.find(x=> x.container == current);
             if (match) return match;
             current = current.parentElement as HTMLElement;
         }
@@ -121,8 +121,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const blocks = [parentBlock, this];
         for (let i = 0; i < blocks.length; i++) {
             const b = blocks[i];
-            if (!b.getFirstMatchingInputEvent) continue;
-            const match = b.getFirstMatchingInputEvent(input);
+            if (!(b as any).getFirstMatchingInputEvent) continue;
+            const match = (b as any).getFirstMatchingInputEvent(input);
             if (match) {
                 const args = {
                     block: parentBlock,
@@ -147,8 +147,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const blocks = [focusedBlock, this];
         for (let i = 0; i < blocks.length; i++) {
             const b = blocks[i];
-            if (!b.getFirstMatchingInputEvent) continue;
-            const match = b.getFirstMatchingInputEvent(input);
+            if (!(b as any).getFirstMatchingInputEvent) continue;
+            const match = (b as any).getFirstMatchingInputEvent(input);
             if (match) {
                 let passthrough = false;
                 const caret = isStandoffBlock ? (focusedBlock as StandoffEditorBlock).getCaret() : undefined;
@@ -371,6 +371,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.container.focus();
     }
     setBlockFocus(block: IBlock) {
+        console.log("setBlockFocus", { oldFocus: this.focus, newFocus: block });
         const oldFocus = this.focus;
         oldFocus?.container.classList.remove("focus-highlight");
         this.focus = block;
@@ -784,7 +785,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             },
             parent: this.container
         });
-        this.blocks.push(monitor);
+        this.registerBlock(monitor);
         this.setBlockFocus(monitor);
     }
     getBlockManagerEvents() {
@@ -1118,7 +1119,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         
                     `,
                     handler: async (args: IBindingHandlerArgs) => {
-                        const { caret } = args;
+                        const caret = args.caret as Caret;
                         const block = args.block as StandoffEditorBlock;
                         if (!caret.left) {
                             return;
@@ -1349,7 +1350,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         /**
                          * Not working properly yet.
                          */
-                        const { caret } = args;
+                        const caret = args.caret as Caret;
                         const block = args.block as StandoffEditorBlock;
                         if (!caret.left) {
                             return;
@@ -1780,14 +1781,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return codes.find(x=> x.platform == Platform.Windows);
     }
     getBlock(id: GUID) {
-        return this.blocks.find(x => x.id == id) as IBlock;
+        return this.registeredBlocks.find(x => x.id == id) as IBlock;
     }
     commit(msg: Commit) {
         this.commits.push(msg);
     }
     async handleDeleteBlock(args: IBindingHandlerArgs) {
         const block = args.block;
-        const i = this.blocks.findIndex(x => x.id == block.id);
         const { previous, next, parent, firstChild } = block.relation;
         if (previous) {
             previous.relation.next = next;
@@ -1807,9 +1807,25 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         block.destroy();
     }
-    removeBlockFromArray(block: IBlock) {
-        const _parent = this.getParent(block) as AbstractBlock;
-        _parent?.removeBlock(block);
+    removeBlockFrom(parent: AbstractBlock, block: IBlock, skipIndexation?: boolean) {
+        const i = parent.blocks.findIndex(x => x.id == block.id);
+        parent.blocks.splice(i, 1);
+        this.deregisterBlock(block.id);
+        if (!skipIndexation) this.reindexAncestorDocument(parent);
+    }
+    insertBlockAt(parent: IBlock, block: IBlock, atIndex: number, skipIndexation?: boolean) {
+        console.log("insertBlockAt", { parent, block, atIndex, skipIndexation });
+        if (parent.blocks.length == 0) {
+            parent.blocks.push(block);
+        } else {
+            parent.blocks.splice(atIndex, 0, block);
+        }
+        this.registerBlock(block);
+        if (!skipIndexation) this.reindexAncestorDocument(parent);
+    }
+    deregisterBlock(id: GUID) {
+        const i = this.registeredBlocks.findIndex(x=> x.id == id);
+        if (i >= 0) this.registeredBlocks.splice(i, 1);
     }
     deleteBlock(blockId: GUID) {
         const block = this.getBlock(blockId) as StandoffEditorBlock;
@@ -1826,7 +1842,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (parent) {
             parent.relation.firstChild = next;
         }
-        this.removeBlockFromArray(block);
+        this.deregisterBlock(block.id);
         block.destroy();
         this.commit({
             redo: {
@@ -2079,12 +2095,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     addBlockTo(parent: IBlock, block: IBlock, skipIndexation?: boolean) {
         parent.blocks.push(block);
-        if (parent.manager) {
-            if (!parent.manager.registeredBlocks.some(x => x.id == block.id)){
-                parent.manager.registeredBlocks.push(block);
-            }
-            if (!skipIndexation) this.reindex();
-        }
+        this.registerBlock(block);
+        if (!skipIndexation) this.reindexAncestorDocument(parent);
     }
     async buildChildren(parent: AbstractBlock, blockDto: IBlockDto, update?: (b: IBlock) => void) {
         if (blockDto.children) {
@@ -2261,7 +2273,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             type: BlockType.DocumentBlock,
             children: []
         } as IMainListBlockDto;
-        const mainBlock = this.blocks.find(x => x.type == BlockType.DocumentBlock);
+        const mainBlock = this.registeredBlocks.find(x => x.type == BlockType.DocumentBlock);
         if (!mainBlock) return dto;
         mainBlock.blocks.forEach(b => {
             let block = b.serialize();
@@ -2279,17 +2291,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         if (this.blocks.length) {
             this.blocks = [];
+            this.registeredBlocks = [];
         }
         this.id = dto.id || uuidv4();
         const container = document.createElement("DIV") as HTMLElement;
         const documentBlock = this.createDocumentBlock();
-        this.addBlockTo(this, documentBlock);
+        this.addBlockTo(this, documentBlock, true);
         documentBlock.bind(dto);
         if (dto.children) {
             const len = dto.children.length;
             for (let i = 0; i <= len - 1; i++) {
                 let block = await this.recursivelyBuildBlock(container, dto.children[i]) as IBlock;
-                this.addBlockTo(documentBlock, block);
+                this.addBlockTo(documentBlock, block, true);
                 if (i == 0) {
                     documentBlock.relation.firstChild = block;
                     block.relation.parent = documentBlock;
@@ -2305,7 +2318,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(documentBlock.container);
         this.container.appendChild(container);
 
-        const textBlock = this.blocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
+        const textBlock = this.registeredBlocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
         if (textBlock) {
             this.setBlockFocus(textBlock);
             textBlock.moveCaretStart();
@@ -2317,6 +2330,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         list.splice(index, 0, item);
     }
     addPreviousBlock(newBlock: IBlock, sibling: IBlock) {
+        sibling.container.insertAdjacentElement("beforebegin", newBlock.container);
         const previous = sibling.relation.previous;
         if (previous) {
             previous.relation.next = newBlock;
@@ -2325,23 +2339,23 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         newBlock.relation.next = sibling;
         sibling.relation.previous = newBlock;
         const parent = this.getParent(sibling) as IBlock;
-        const siblingIndex = parent.blocks.findIndex(x => x.id == sibling.id);
-        if (siblingIndex > 0) {
-            this.insertItem(parent.blocks, siblingIndex - 1, newBlock);
+        const si = this.getIndexOfBlock(sibling);
+        if (si > 0) {
+            this.insertBlockAt(parent, newBlock, si - 1);
         } else {
-            this.insertItem(parent.blocks, 0, newBlock);
+            this.insertBlockAt(parent, newBlock, 0);
             parent.relation.firstChild = sibling;
             sibling.relation.parent = parent;
         }
-        sibling.container.insertAdjacentElement("beforebegin", newBlock.container);
     }
     addNextBlock(newBlock: IBlock, sibling: IBlock) {
+        console.log("addNextBlock", { newBlock, sibling });
         sibling.container.insertAdjacentElement("afterend", newBlock.container);
         const parent = this.getParent(sibling) as AbstractBlock;
-        if (!parent) return;
-        const i = parent.blocks.findIndex(x => x.id == sibling.id);
-        this.insertBlockAt(parent, newBlock, i + 1);
-        //parent.blocks.splice(i + 1, 0, newBlock);
+        if (!parent) {
+            console.log("addNextBlock", { message: "Expected to find a parent block of @sibling", sibling, newBlock });
+            return;
+        }
         const next = sibling.relation.next;
         sibling.relation.next = newBlock;
         newBlock.relation.previous = sibling;
@@ -2349,6 +2363,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             newBlock.relation.next = next;
             next.relation.previous = newBlock;
         }
+        const si = this.getIndexOfBlock(sibling);
+        this.insertBlockAt(parent, newBlock, si + 1);
     }
     createTable(rows: number, cells: number) {
         const table = this.createTableBlock();
@@ -2725,7 +2741,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (dto?.metadata) textBlock.metadata = dto.metadata;
         if (dto?.blockProperties) textBlock.addBlockProperties(dto.blockProperties);
         textBlock.applyBlockPropertyStyling();
-        this.addBlockTo(this, textBlock);
         return textBlock;
     }
     async handleEnterKey(args: IBindingHandlerArgs) {
@@ -2903,7 +2918,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         /**
          * Move the cursor back one cell ...
          */
-        const { caret } = args;
+        const caret = args.caret as Caret;
         if (args.block.type != BlockType.StandoffEditorBlock) {
             const predecessor = args.block.relation.previous || args.block.relation.parent;
             if (predecessor) {
@@ -3036,14 +3051,28 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         row.container.append(cell1.container);
         row.container.append(cell2.container);
         grid.container.append(row.container);
-        const i = parent?.blocks.findIndex(x => x.id == block.id) as number;
-        this.removeBlockFromArray(block);
+        const i = this.getIndexOfBlock(block);
         this.removeBlockAt(parent, i);
-        //parent?.blocks.splice(i, 1);
         this.insertBlockAt(parent, grid, i);
-        //parent?.blocks.splice(i, 0, grid);
         this.appendSibling(block.container, grid.container);
         cell2.container.append(block.container);
+    }
+    getIndexOfBlockById(id: GUID) {
+        const block = this.getBlock(id);
+        const parent = this.getParent(block) as IBlock;
+        if (!parent) {
+            console.log("getIndexOfBlockById", { msg: "Expected to find a parent block.", block });
+            return -1;
+        }
+        return parent.blocks.findIndex(x => x.id == block.id) as number;
+    }
+    getIndexOfBlock(block: IBlock) {
+        const parent = this.getParent(block) as IBlock;
+        if (!parent) {
+            console.log("getIndexOfBlock", { msg: "Expected to find a parent block.", block });
+            return -1;
+        }
+        return parent.blocks.findIndex(x => x.id == block.id) as number;
     }
     addImageRight(block: IBlock, url: string) {
         const parent = this.getParent(block) as AbstractBlock;
@@ -3090,11 +3119,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         row.container.append(cell1.container);
         row.container.append(cell2.container);
         grid.container.append(row.container);
-        const i = parent?.blocks.findIndex(x => x.id == block.id) as number;
+        const i = this.getIndexOfBlock(block);
         this.removeBlockAt(parent, i, true);
         this.insertBlockAt(parent, grid, i);
-        // parent?.blocks.splice(i, 1);
-        // parent?.blocks.splice(i, 0, grid);
         this.appendSibling(block.container, grid.container);
         cell1.container.append(block.container);
     }
@@ -3117,6 +3144,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.deleteBlock(sourceId);
     }
     splitBlock(blockId: GUID, ci: number) {
+        console.log("splitBlock", { blockId, ci });
         const block = this.getBlock(blockId) as StandoffEditorBlock;
         let text = block.getText();
         const len = text.length;
@@ -3239,7 +3267,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const block = this.getBlock(targetBlockId) as StandoffEditorBlock;
         const text = item.data.text;
         const props = item.data.standoffProperties
-            .map(x => {
+            .map((x:any) => {
                 return {...x, start: x.start + ci, end: x.end + ci} as StandoffPropertyDto
             });
         block.insertTextAtIndex(text, ci);
@@ -3323,9 +3351,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         }
         block.container.innerHTML = "";
-        const i = this.blocks.findIndex(x=> x.id == id);
+        const i = this.getIndexOfBlock(block);
         this.removeBlockAt(this, i);
-        // this.blocks.splice(i, 1);
     }
     async handleCopyForStandoffEditorBlock(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
@@ -3458,6 +3485,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             block.removeCellAtIndex(caret.right.index, true);
         }
     }
+    removeBlockAt(parent: AbstractBlock, atIndex: number, skipIndexation?: boolean) {
+        const block = parent.blocks[atIndex];
+        parent.blocks.splice(atIndex, 1);
+        this.deregisterBlock(block.id);
+        if (!skipIndexation) this.reindexAncestorDocument(parent);
+    }
+    reindexAncestorDocument(descendant: IBlock) {
+        console.log("reindexAncestorDocument", { descendant });
+        const root = this.getParentOfType(descendant, BlockType.DocumentBlock) as DocumentBlock;
+        if (root) {
+            root.indexDocumentTree();
+        }
+    }
     async handleCreateLeftMargin(args: IBindingHandlerArgs){
         const block = args.block as StandoffEditorBlock;
         const manager = block.manager as BlockManager;
@@ -3495,7 +3535,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     registerBlock(block: IBlock) {
-        this.blocks.push(block);
+        if (this.registeredBlocks.findIndex(x=> x.id == block.id) >= 0) {
+            return;
+        }
+        this.registeredBlocks.push(block);
     }
     async handleCreateRightMargin(args: IBindingHandlerArgs){
         const block = args.block as StandoffEditorBlock;
@@ -3507,6 +3550,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
          */
         if (!rightMargin) {
             rightMargin = manager.createRightMarginBlock();
+            this.registerBlock(rightMargin);
             const child = manager.createStandoffEditorBlock();
             child.addEOL();
             child.addBlockProperties([ { type: "block/alignment/left" }, { type: "block/font/size/three-quarters" } ]);
@@ -3516,7 +3560,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             rightMargin.relation.firstChild = child;
             child.relation.parent = rightMargin;
             this.addBlockTo(rightMargin, child);
-            this.blocks.push(rightMargin);
             rightMargin.container.appendChild(child.container);
             manager.stageRightMarginBlock(rightMargin, block);
             block.container.appendChild(rightMargin.container);

@@ -113,10 +113,11 @@ export const ControlPanel : Component<Props> = (props) => {
             ]
         };
         props.manager.loadDocument(doc);
-        const block = props.manager.blocks[1] as StandoffEditorBlock;
-        block.addEOL();
-        block.setCaret(0, CARET.LEFT);
-        props.manager?.setBlockFocus(block);
+        const textBlock = props.manager.registeredBlocks.find(x=> x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
+        if (!textBlock) return;
+        textBlock.addEOL();
+        textBlock.setCaret(0, CARET.LEFT);
+        props.manager?.setBlockFocus(textBlock);
     }
     const setBackgroundColour = (colour: string) => {
         const prop = {

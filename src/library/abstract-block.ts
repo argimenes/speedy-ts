@@ -6,7 +6,6 @@ import { KEYS } from './keyboard';
 import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET } from './types';
 import { StandoffEditorBlock } from './standoff-editor-block';
 import { BlockManager } from './block-manager';
-import { DocumentBlock } from './document-block';
 
 export abstract class AbstractBlock implements IBlock {
     id: string;
@@ -157,49 +156,6 @@ export abstract class AbstractBlock implements IBlock {
             keyCode: e.code ? parseInt(e.code) : 0
         };
         return input;
-    }
-    insertBlockAt(parent: IBlock, block: IBlock, atIndex: number, skipIndexation?: boolean) {
-        parent.blocks.splice(atIndex, 0, block);
-        if (this.manager) {
-            if (this.manager.id != this.id) {
-                this.manager.blocks.push(block);
-            }
-            if (!skipIndexation) this.reindex();
-        }
-    }
-    
-    reindex() {
-        const root = this.manager?.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
-        if (root) {
-            root.indexDocumentTree();
-        }
-    }
-    removeBlockAt(parent: AbstractBlock, atIndex: number, skipIndexation?: boolean) {
-        const block = parent.blocks[atIndex];
-        parent.blocks.splice(atIndex, 1);
-        if (this.manager) {
-            const i2 = this.manager.registeredBlocks.findIndex(x => x.id == block.id);
-            this.manager.registeredBlocks.splice(i2, 1);
-            if (!skipIndexation) this.reindex();
-        }
-    }
-    removeBlockFrom(parent: AbstractBlock, block: IBlock, skipIndexation?: boolean) {
-        const i = parent.blocks.findIndex(x => x.id == block.id);
-        this.blocks.splice(i, 1);
-        if (this.manager) {
-            const i2 = this.manager.registeredBlocks.findIndex(x => x.id == block.id);
-            this.manager.registeredBlocks.splice(i2, 1);
-            if (!skipIndexation) this.reindex();
-        }
-    }
-    removeBlock(block: IBlock, skipIndexation?: boolean) {
-        const i = this.blocks.findIndex(x => x.id == block.id);
-        this.blocks.splice(i, 1);
-        if (this.manager) {
-            const i2 = this.manager.registeredBlocks.findIndex(x => x.id == block.id);
-            this.manager.registeredBlocks.splice(i2, 1);
-            if (!skipIndexation) this.reindex();
-        }
     }
     setBlockSchemas(schemas: IBlockPropertySchema[]) {
         this.blockSchemas.push(...schemas);
