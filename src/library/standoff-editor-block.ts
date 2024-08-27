@@ -627,6 +627,10 @@ export class StandoffEditorBlock extends AbstractBlock {
         const manager = args.manager;
         const root = manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
         const ci = root.index.findIndex(x => x.id == self.id);
+        if (ci == -1) {
+            alert("Next row not found");
+            console.log("handleArrowDown", { root, block: self })
+        }
         if (ci == root.index.length - 1) {
             return;
         }
@@ -634,18 +638,6 @@ export class StandoffEditorBlock extends AbstractBlock {
         const next = root.index[ci+1] as StandoffEditorBlock;
         args.manager.setBlockFocus(next);
         next.moveCaretStart();
-        // const next = this.relation.next;
-        // if (next) {
-        //     args.manager.setBlockFocus(next);
-        //     if (next.type == BlockType.StandoffEditorBlock) {
-        //         (next as StandoffEditorBlock).moveCaretStart();
-        //     }
-        //     return;
-        // }
-        // const parent = this.relation.parent;
-        // if (parent) {
-        //     args.manager.setBlockFocus(parent);
-        // }
     }
     getCellAbove(cell: Cell) {
         const x = cell.cache.offset.x;

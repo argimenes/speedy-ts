@@ -1186,15 +1186,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         let current = block;
         while (current) {
             let parent = current.relation.parent;
-            if (parent) {
-                if (parent.type == type) {
-                    return current.relation.parent;
-                }
-                current = parent;
-                continue;
-            }
-            current = current.relation.previous;
-            continue;
+            if (!parent) return null;
+            if (parent.type == type) return parent;
+            current = parent;
         }
         return null;
     }
@@ -1820,6 +1814,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         } else {
             parent.blocks.splice(atIndex, 0, block);
         }
+        this.generatePreviousNextRelations(parent);
         this.registerBlock(block);
         if (!skipIndexation) this.reindexAncestorDocument(block);
     }
@@ -1829,30 +1824,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     deleteBlock(blockId: GUID) {
         const block = this.getBlock(blockId) as StandoffEditorBlock;
-        const previous = block.relation.previous;
-        const next = block.relation.next;
-        const parent = block.relation.parent;
-        if (previous) {
-            previous.relation.next = next;
-        }
-        if (next) {
-            next.relation.previous = previous;
-            parent && (next.relation.parent = parent);
-        }
-        if (parent) {
-            parent.relation.firstChild = next;
-        }
-        this.deregisterBlock(block.id);
+        const parent = block.relation.parent as AbstractBlock;
+        const i = this.getIndexOfBlock(block);
+        this.removeBlockAt(parent, i);
         block.destroy();
-        this.commit({
-            redo: {
-                id: this.id,
-                name: "deleteBlock",
-                value: {
-                    blockId
-                }
+    }
+    generatePreviousNextRelations(parent: IBlock) {
+        const len = parent.blocks.length;
+        for(let i = 0; i < len; i++) {
+            let block = parent.blocks[i];
+            if (i > 0) {
+                block.relation.previous = parent.blocks[i-1];
+                block.relation.previous.relation.next = block;
             }
-        });
+        }
     }
     reset() {
         this.container.innerHTML = "";
@@ -2363,7 +2348,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     addNextBlock(newBlock: IBlock, sibling: IBlock) {
         console.log("addNextBlock", { newBlock, sibling });
         sibling.container.insertAdjacentElement("afterend", newBlock.container);
-        //const parent = this.getParent(sibling) as AbstractBlock;
         const parent = sibling.relation.parent;
         if (!parent) {
             console.log("addNextBlock", { message: "Expected to find a parent block of @sibling", sibling, newBlock });
@@ -3505,8 +3489,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     removeBlockAt(parent: AbstractBlock, atIndex: number, skipIndexation?: boolean) {
         const block = parent.blocks[atIndex];
         parent.blocks.splice(atIndex, 1);
+        this.generatePreviousNextRelations(parent);
         this.deregisterBlock(block.id);
-        if (!skipIndexation) this.reindexAncestorDocument(parent);
+        if (!skipIndexation) this.reindexAncestorDocument(block);
     }
     reindexAncestorDocument(descendant: IBlock) {
         console.log("reindexAncestorDocument", { descendant });
