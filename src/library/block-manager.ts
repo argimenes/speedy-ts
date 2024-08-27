@@ -1821,7 +1821,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             parent.blocks.splice(atIndex, 0, block);
         }
         this.registerBlock(block);
-        if (!skipIndexation) this.reindexAncestorDocument(parent);
+        if (!skipIndexation) this.reindexAncestorDocument(block);
     }
     deregisterBlock(id: GUID) {
         const i = this.registeredBlocks.findIndex(x=> x.id == id);
