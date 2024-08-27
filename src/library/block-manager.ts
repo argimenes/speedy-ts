@@ -1863,7 +1863,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.commits.push(commit);
         this.pointer++;
     }
-    stageRightMarginBlock(rightMargin: DocumentBlock, mainBlock: StandoffEditorBlock) {
+    stageRightMarginBlock(rightMargin: DocumentBlock, mainBlock: IBlock) {
         updateElement(mainBlock.container, {
             style: {
                 position: "relative"
@@ -1890,7 +1890,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         });
         rightMargin.container.appendChild(hand);
     }
-    stageLeftMarginBlock(leftMargin: DocumentBlock, mainBlock: StandoffEditorBlock) {
+    stageLeftMarginBlock(leftMargin: DocumentBlock, mainBlock: IBlock) {
         updateElement(mainBlock.container, {
             style: {
                 position: "relative"
@@ -1966,23 +1966,16 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     async buildStandoffEditorBlock(container: HTMLElement, blockDto: IBlockDto) {
         const textBlock = this.createStandoffEditorBlock(blockDto);
         textBlock.bind(blockDto as IStandoffEditorBlockDto);
-        if (blockDto.relation?.leftMargin) {
-            const leftMargin = await this.recursivelyBuildBlock(textBlock.container, blockDto.relation.leftMargin) as DocumentBlock;
-            textBlock.relation.leftMargin = leftMargin;
-            leftMargin.relation.marginParent = textBlock;
-            this.stageLeftMarginBlock(leftMargin, textBlock);
-            leftMargin.indexDocumentTree();
-        }
-        if (blockDto.relation?.rightMargin) {
-            const rightMargin = await this.recursivelyBuildBlock(textBlock.container, blockDto.relation.rightMargin) as DocumentBlock;
-            textBlock.relation.rightMargin = rightMargin;
-            rightMargin.relation.marginParent = textBlock;
-            this.stageRightMarginBlock(rightMargin, textBlock);
-            rightMargin.indexDocumentTree();
-        }
+        
         await this.buildChildren(textBlock, blockDto);
         container.appendChild(textBlock.container);
         return textBlock;
+    }
+    async buildDocumentBlock(container: HTMLElement, blockDto: IBlockDto) {
+        const documentBlock = this.createDocumentBlock(blockDto);
+        await this.buildChildren(documentBlock, blockDto);
+        container.appendChild(documentBlock.container);
+        return documentBlock;
     }
     async buildLeftMarginBlock(container: HTMLElement, blockDto: IBlockDto) {
         const leftMargin = this.createLeftMarginBlock(blockDto);
@@ -2208,9 +2201,28 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         });
         return parent;
     }
+    async handleBuildingMarginBlocks(anchor: IBlock, blockDto: IBlockDto) {
+        if (blockDto.relation?.leftMargin) {
+            const leftMargin = await this.recursivelyBuildBlock(anchor.container, blockDto.relation.leftMargin) as DocumentBlock;
+            anchor.relation.leftMargin = leftMargin;
+            leftMargin.relation.marginParent = anchor;
+            this.stageLeftMarginBlock(leftMargin, anchor);
+            leftMargin.indexDocumentTree();
+        }
+        if (blockDto.relation?.rightMargin) {
+            const rightMargin = await this.recursivelyBuildBlock(anchor.container, blockDto.relation.rightMargin) as DocumentBlock;
+            anchor.relation.rightMargin = rightMargin;
+            rightMargin.relation.marginParent = anchor;
+            this.stageRightMarginBlock(rightMargin, anchor);
+            rightMargin.indexDocumentTree();
+        }
+    }
     async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
         if (blockDto.type == BlockType.StandoffEditorBlock) {
             return await this.buildStandoffEditorBlock(container, blockDto);
+        }
+        if (blockDto.type == BlockType.DocumentBlock) {
+            return await this.buildDocumentBlock(container, blockDto);
         }
         if (blockDto.type == BlockType.LeftMarginBlock) {
             return await this.buildLeftMarginBlock(container, blockDto);
@@ -2303,6 +2315,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             const len = dto.children.length;
             for (let i = 0; i <= len - 1; i++) {
                 let block = await this.recursivelyBuildBlock(container, dto.children[i]) as IBlock;
+                await this.handleBuildingMarginBlocks(block, dto.children[i]);
                 this.addBlockTo(documentBlock, block, true);
                 block.relation.parent = documentBlock;
                 if (i > 0) {
@@ -2336,20 +2349,22 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         newBlock.relation.next = sibling;
         sibling.relation.previous = newBlock;
-        const parent = this.getParent(sibling) as IBlock;
+        //const parent = this.getParent(sibling) as IBlock;
+        const parent = sibling.relation.parent;
         const si = this.getIndexOfBlock(sibling);
         if (si > 0) {
-            this.insertBlockAt(parent, newBlock, si - 1);
+            this.insertBlockAt(parent, newBlock, si);
         } else {
             this.insertBlockAt(parent, newBlock, 0);
             parent.relation.firstChild = sibling;
-            sibling.relation.parent = parent;
+            //sibling.relation.parent = parent;
         }
     }
     addNextBlock(newBlock: IBlock, sibling: IBlock) {
         console.log("addNextBlock", { newBlock, sibling });
         sibling.container.insertAdjacentElement("afterend", newBlock.container);
-        const parent = this.getParent(sibling) as AbstractBlock;
+        //const parent = this.getParent(sibling) as AbstractBlock;
+        const parent = sibling.relation.parent;
         if (!parent) {
             console.log("addNextBlock", { message: "Expected to find a parent block of @sibling", sibling, newBlock });
             return;
@@ -3067,7 +3082,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return parent.blocks.findIndex(x => x.id == block.id) as number;
     }
     getIndexOfBlock(block: IBlock) {
-        const parent = this.getParent(block) as IBlock;
+        //const parent = this.getParent(block) as IBlock;
+        const parent = block.relation.parent;
         if (!parent) {
             console.log("getIndexOfBlock", { msg: "Expected to find a parent block.", block });
             return -1;
