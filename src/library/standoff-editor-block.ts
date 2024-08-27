@@ -596,25 +596,13 @@ export class StandoffEditorBlock extends AbstractBlock {
         const root = manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
         console.log("handleArrowUp", { root, self: this, manager });
         const index = root.index;
-        const ci = index.findIndex(x => x.id == self.id);
+        const ci = index.findIndex(x => x.block.id == self.id);
         if (ci <= 0) return;
         this.clearSelection();
-        const next = index[ci-1] as StandoffEditorBlock;
-        args.manager.setBlockFocus(next);
-        next.moveCaretStart();
-
-        // const previous = this.relation.previous;
-        // if (previous) {
-        //     args.manager.setBlockFocus(previous);
-        //     if (previous.type == BlockType.StandoffEditorBlock) {
-        //         (previous as StandoffEditorBlock).moveCaretStart();
-        //     }
-        //     return;
-        // }
-        // const parent = this.relation.parent;
-        // if (parent) {
-        //     args.manager.setBlockFocus(parent);
-        // }
+        const previousIndex = index[ci-1];
+        const previous = previousIndex.block as StandoffEditorBlock;
+        args.manager.setBlockFocus(previous);
+        previous.moveCaretStart();
     }
     handleArrowDown(args: IArrowNavigation) {
         const self = this;
@@ -626,7 +614,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         const manager = args.manager;
         const root = manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
-        const ci = root.index.findIndex(x => x.id == self.id);
+        const ci = root.index.findIndex(x => x.block.id == self.id);
         if (ci == -1) {
             alert("Next row not found");
             console.log("handleArrowDown", { root, block: self })
@@ -635,7 +623,8 @@ export class StandoffEditorBlock extends AbstractBlock {
             return;
         }
         this.clearSelection();
-        const next = root.index[ci+1] as StandoffEditorBlock;
+        const nextIndex = root.index[ci+1];
+        const next = nextIndex.block as StandoffEditorBlock;
         args.manager.setBlockFocus(next);
         next.moveCaretStart();
     }

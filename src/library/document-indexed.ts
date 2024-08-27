@@ -1,7 +1,8 @@
 import { AbstractBlock } from "./abstract-block";
 import { GUID, IBlock } from "./types";
 
-  interface IndexedBlock extends IBlock {
+  interface IndexedBlock {
+    block: IBlock;
     index: number;
     depth: number;
     path: number[];
@@ -25,7 +26,7 @@ export  class DocumentIndexer {
           const index = this.indexedBlocks.length;
     
           const indexedBlock: IndexedBlock = {
-            ...block,
+            block,
             index,
             depth,
             path: [...path, index],
@@ -38,7 +39,7 @@ export  class DocumentIndexer {
               block: child,
               depth: depth + 1,
               path: [...indexedBlock.path, i],
-            })));
+            } as IndexedBlock)));
           }
         }
     
