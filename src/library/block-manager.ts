@@ -2104,6 +2104,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             for (let i = 0; i < len; i++) {
                 let childDto = blockDto.children[i];
                 let block = await this.recursivelyBuildBlock(parent.container, childDto) as IBlock;
+                block.relation.parent = parent;
                 this.addBlockTo(parent, block);
                 update && update(block);
             }
@@ -2303,10 +2304,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             for (let i = 0; i <= len - 1; i++) {
                 let block = await this.recursivelyBuildBlock(container, dto.children[i]) as IBlock;
                 this.addBlockTo(documentBlock, block, true);
-                if (i == 0) {
-                    documentBlock.relation.firstChild = block;
-                    block.relation.parent = documentBlock;
-                }
+                block.relation.parent = documentBlock;
                 if (i > 0) {
                     let previous = documentBlock.blocks[i - 1];
                     previous.relation.next = block;
@@ -2749,6 +2747,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (block.type != BlockType.StandoffEditorBlock) {
             const blockData = block.serialize();
             const newBlock = this.createStandoffEditorBlock();
+            newBlock.relation.parent = block.relation.parent;
             newBlock.addBlockProperties(blockData.blockProperties || []);
             newBlock.applyBlockPropertyStyling();
             newBlock.addEOL();
@@ -2770,6 +2769,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         const newBlock = this.createStandoffEditorBlock();
         const blockData = textBlock.serialize();
+        newBlock.relation.parent = block.relation.parent;
         newBlock.addBlockProperties(blockData.blockProperties || []);
         newBlock.applyBlockPropertyStyling();
         newBlock.addEOL();
@@ -3158,6 +3158,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 return { ...x, start: x.start < ci ? 0 : x.start - ci, end: x.end - ci} as StandoffPropertyDto;
             });
         const secondBlock = this.createStandoffEditorBlock();
+        secondBlock.relation.parent = block.relation.parent;
         secondBlock.bind({
             type: BlockType.StandoffEditorBlock,
             text: second,
