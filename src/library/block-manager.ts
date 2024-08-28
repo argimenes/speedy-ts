@@ -256,18 +256,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     handler: this.moveCaretDown.bind(this)
                 }
             }
-            // {
-            //     mode: "global",
-            //     trigger: {
-            //         source: InputEventSource.Keyboard,
-            //         match: "ArrowUp"
-            //     },
-            //     action: {
-            //         name: "Set focus to the block above.",
-            //         description: "",
-            //         handler: this.moveCaretUp.bind(this)
-            //     }
-            // }
         ] as InputEvent[];
     }
     
@@ -2192,14 +2180,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             anchor.relation.leftMargin = leftMargin;
             leftMargin.relation.marginParent = anchor;
             this.stageLeftMarginBlock(leftMargin, anchor);
-            leftMargin.indexDocumentTree();
+            leftMargin.generateIndex();
         }
         if (blockDto.relation?.rightMargin) {
             const rightMargin = await this.recursivelyBuildBlock(anchor.container, blockDto.relation.rightMargin) as DocumentBlock;
             anchor.relation.rightMargin = rightMargin;
             rightMargin.relation.marginParent = anchor;
             this.stageRightMarginBlock(rightMargin, anchor);
-            rightMargin.indexDocumentTree();
+            rightMargin.generateIndex();
         }
     }
     async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
@@ -2320,7 +2308,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             textBlock.moveCaretStart();
         }
 
-        documentBlock.indexDocumentTree();
+        documentBlock.generateIndex();
     }
     insertItem<T>(list: T[], index: number, item: T) {
         list.splice(index, 0, item);
@@ -3497,7 +3485,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         console.log("reindexAncestorDocument", { descendant });
         const root = this.getParentOfType(descendant, BlockType.DocumentBlock) as DocumentBlock;
         if (root) {
-            root.indexDocumentTree();
+            root.generateIndex();
         }
     }
     async handleCreateLeftMargin(args: IBindingHandlerArgs){

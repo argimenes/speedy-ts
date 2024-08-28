@@ -7,6 +7,7 @@ import { Cell, Row } from "./cell";
 import { KEYS } from "./keyboard";
 import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation } from "./types";
 import { DocumentBlock } from "./document-block";
+import { TabBlock, TabRowBlock } from "./tabs-block";
 
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     const map = new Map();
@@ -594,13 +595,17 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         const manager = args.manager;
         const root = manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
-        console.log("handleArrowUp", { root, self: this, manager });
         const index = root.index;
         const ci = index.findIndex(x => x.block.id == self.id);
         if (ci <= 0) return;
         this.clearSelection();
         const previousIndex = index[ci-1];
         const previous = previousIndex.block as StandoffEditorBlock;
+        if (previous.relation.parent.type == BlockType.TabBlock) {
+            let tab = previous.relation.parent as TabBlock;
+            let row = tab.relation.parent as TabRowBlock;
+            row.setTabActive(tab);
+        }
         args.manager.setBlockFocus(previous);
         previous.moveCaretStart();
     }
@@ -614,17 +619,23 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         const manager = args.manager;
         const root = manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
-        const ci = root.index.findIndex(x => x.block.id == self.id);
+        const index = root.index;
+        const ci = index.findIndex(x => x.block.id == self.id);
         if (ci == -1) {
-            alert("Next row not found");
-            console.log("handleArrowDown", { root, block: self })
+            console.log("handleArrowDown", { msg: "Next item not found.", root, block: self })
+            return;
         }
-        if (ci == root.index.length - 1) {
+        if (ci == index.length - 1) {
             return;
         }
         this.clearSelection();
-        const nextIndex = root.index[ci+1];
+        const nextIndex = index[ci+1];
         const next = nextIndex.block as StandoffEditorBlock;
+        if (next.relation.parent.type == BlockType.TabBlock) {
+            let tab = next.relation.parent as TabBlock;
+            let row = tab.relation.parent as TabRowBlock;
+            row.setTabActive(tab);
+        }
         args.manager.setBlockFocus(next);
         next.moveCaretStart();
     }
