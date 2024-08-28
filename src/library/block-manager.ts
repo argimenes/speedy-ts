@@ -364,6 +364,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         oldFocus?.container.classList.remove("focus-highlight");
         this.focus = block;
         this.focus.container.classList.add("focus-highlight");
+        //this.focus.container.scrollIntoView();
         block.setFocus();
     }
     getImageBlockSchemas() {

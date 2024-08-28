@@ -608,6 +608,13 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         args.manager.setBlockFocus(previous);
         previous.moveCaretStart();
+        const previousRect = previous.container.getBoundingClientRect();
+        const h = window.innerHeight;
+        console.log("handleArrowUp", { previousRectBottom: previousRect.bottom, h });
+        const diff = previousRect.bottom - args.manager.container.scrollTop;
+        if (diff < 50) {
+            window.scrollBy(0, -1 * (previousRect.bottom + 25));
+        }
     }
     handleArrowDown(args: IArrowNavigation) {
         const self = this;
@@ -638,6 +645,13 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         args.manager.setBlockFocus(next);
         next.moveCaretStart();
+        const nextRect = next.container.getBoundingClientRect();
+        const h = window.innerHeight;
+        console.log("handleArrowDown", { nextRectTop: nextRect.top, h });
+        const diff = h - nextRect.y;
+        if (diff < 50) {
+            window.scrollBy(0, nextRect.top - h + 50);
+        }
     }
     handleArrowRight(args: IArrowNavigation) {
         const caret = this.getCaret() as Caret;

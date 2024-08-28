@@ -205,8 +205,8 @@ export abstract class AbstractBlock implements IBlock {
         }
     }
     handleArrowDown(args: IArrowNavigation) {
-        if (this.relation.firstChild) {
-            args.manager.setBlockFocus(this.relation.firstChild);
+        if (this.blocks.length) {
+            args.manager.setBlockFocus(this.blocks[0]);
             return;
         }
         const next = this.relation.next;
