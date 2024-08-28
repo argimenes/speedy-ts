@@ -639,6 +639,30 @@ export class StandoffEditorBlock extends AbstractBlock {
         args.manager.setBlockFocus(next);
         next.moveCaretStart();
     }
+    handleArrowRight(args: IArrowNavigation) {
+        const caret = this.getCaret() as Caret;
+        this.cache.caret.x = null;
+        const sel = this.getSelection() as IRange;
+        const len = this.cells.length;
+        if (sel) this.clearSelection();
+        const ri = sel ? sel.end.index : caret.right.index;
+        if (ri < len - 1) {
+            this.setCaret(ri + 1);
+            return;
+        }
+        this.handleArrowDown(args);
+    }
+    handleArrowLeft(args: IArrowNavigation) {
+        const caret = this.getCaret() as Caret;
+        this.cache.caret.x = null;
+        const sel = this.getSelection() as IRange;
+        if (sel) this.clearSelection();
+        if (caret.left) {
+            this.setCaret(caret.left.index);
+            return;
+        }
+        this.handleArrowUp(args);
+    }
     getCellAbove(cell: Cell) {
         const x = cell.cache.offset.x;
         const cri = cell.row?.index as number;

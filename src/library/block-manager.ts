@@ -1136,35 +1136,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         ... Or skip to the end of the previous block.
                     `,
-                    handler: async (args: IBindingHandlerArgs) => {
-                        /**
-                         * Move the cursor right one cell ...
-                         */
-                        const caret = args.caret as Caret;
-                        const block = args.block as StandoffEditorBlock;
-                        block.cache.caret.x = null;
-                        const sel = block.getSelection() as IRange;
-                        const manager = block.manager as BlockManager;
-                        const len = block.cells.length;
-                        if (sel) block.clearSelection();
-                        const ri = sel ? sel.end.index : caret.right.index;
-                        if (ri < len - 1) {
-                            block.setCaret(ri + 1);
-                            return;
-                        }
-                        const next = block.relation.next;
-                        if (next?.type == BlockType.IndentedListBlock) {
-                            const first = next.relation.firstChild as StandoffEditorBlock;
-                            first.moveCaretStart();
-                            manager.setBlockFocus(first);
-                            return;
-                        }
-                        if (next?.type == BlockType.StandoffEditorBlock) {
-                            (next as StandoffEditorBlock).moveCaretStart();
-                            manager.setBlockFocus(next);
-                            return;
-                        }
-                    }
+                    handler: this.moveCaretRight.bind(this)
                 }
             }
         ];
@@ -2901,61 +2873,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     getHighestZIndex() {
         return ++this.highestZIndex;
     }
-    async moveCaretLeft(args: IBindingHandlerArgs) {
-        /**
-         * Move the cursor back one cell ...
-         */
-        const caret = args.caret as Caret;
-        if (args.block.type != BlockType.StandoffEditorBlock) {
-            const predecessor = args.block.relation.previous || args.block.relation.parent;
-            if (predecessor) {
-                this.setBlockFocus(predecessor);
-            }
-            return;
-        }
-        const block = args.block as StandoffEditorBlock;
-        block.cache.caret.x = null;
-        if (caret.left) {
-            block.setCaret(caret.left.index);
-            return;
-        }
-        /**
-         * Or skip to the end of the previous block.
-         */
-        if (block.relation.previous?.type == BlockType.StandoffEditorBlock) {
-            const previous = block.relation.previous as StandoffEditorBlock;
-            const last = previous.getLastCell();
-            previous.setCaret(last.index, CARET.LEFT);
-            this.setBlockFocus(previous);
-            return;
-        }
-        if (block.relation.previous?.type == BlockType.IndentedListBlock) {
-            const previous = block.relation.previous as IndentedListBlock;
-            const child = previous.relation.firstChild as StandoffEditorBlock;
-            const last = child.getLastCell();
-            child.setCaret(last.index, CARET.LEFT);
-            this.setBlockFocus(child);
-            return;
-        }
-        if (block.relation.parent?.type == BlockType.IndentedListBlock) {
-            const parent = block.relation.parent as IndentedListBlock;
-            if (parent.relation.previous?.type == BlockType.StandoffEditorBlock) {
-                const sibling = parent.relation.previous as StandoffEditorBlock;
-                const last = sibling.getLastCell();
-                sibling.setCaret(last.index, CARET.LEFT);
-                this.setBlockFocus(sibling);
-                return;
-            }
-            if (parent.relation.parent?.type == BlockType.StandoffEditorBlock) {
-                const grandParent = parent.relation.parent as StandoffEditorBlock;
-                const last = grandParent.getLastCell();
-                grandParent.setCaret(last.index, CARET.LEFT);
-                this.setBlockFocus(grandParent);
-                return;
-            }
-            return;
-        }
-    }
     findNearestNephew(block: IBlock): IBlock {
         /**
          * Unsure about this algorithm ... might get trapped in the first nephew branch rather than the last.
@@ -3301,6 +3218,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     async moveCaretDown(args: IBindingHandlerArgs) {
         args.block.handleArrowDown({ manager: this });
+    }
+    async moveCaretRight(args: IBindingHandlerArgs) {
+        args.block.handleArrowRight({ manager: this });
+    }
+    async moveCaretLeft(args: IBindingHandlerArgs) {
+        args.block.handleArrowLeft({ manager: this });
     }
     async embedDocument(sibling: IBlock, filename: string) {
         const parent = this.getParent(sibling) as AbstractBlock;

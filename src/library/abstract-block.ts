@@ -217,6 +217,29 @@ export abstract class AbstractBlock implements IBlock {
             }
         }
     }
+    handleArrowRight(args: IArrowNavigation) {
+        if (this.blocks.length) {
+            args.manager.setBlockFocus(this.blocks[0]);
+            return;
+        }
+        const next = this.relation.next;
+        if (next) {
+            args.manager.setBlockFocus(next);
+            if (next.type == BlockType.StandoffEditorBlock) {
+                setTimeout(() => (next as StandoffEditorBlock).setCaret(0, CARET.LEFT), 10);
+            }
+        }
+    }
+    handleArrowLeft(args: IArrowNavigation) {
+        if (this.relation.previous) {
+            args.manager.setBlockFocus(this.relation.previous);
+            return;
+        }
+        const parent = this.relation.parent;
+        if (parent) {
+            args.manager.setBlockFocus(parent);
+        }
+    }
     abstract serialize():IBlockDto;
     abstract deserialize(json: any|any[]): IBlock;
     abstract destroy(): void;
