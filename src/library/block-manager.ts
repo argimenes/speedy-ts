@@ -19,7 +19,7 @@ import { CodeMirrorBlock } from "./code-mirror-block";
 import { ClockPlugin } from "./plugins/clock";
 import { TextProcessor } from "./text-processor";
 import { EmbedDocumentBlock } from "./embed-document-block";
-import { SearchEntitiesWindow } from "../components/search-entities";
+import { SearchEntitiesBlock, SearchEntitiesWindow } from "../components/search-entities";
 import { renderToNode } from "./common";
 import { MonitorBlock, StandoffEditorBlockMonitor } from "../components/monitor";
 import { TableBlock, TableCellBlock, TableRowBlock } from './tables-blocks';
@@ -2836,27 +2836,11 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }  
     }
     async applyEntityReferenceToText(args: IBindingHandlerArgs) {
-        const self = this;
         const block = args.block as StandoffEditorBlock;
         const selection = block.getSelection();
         if (!selection) return;
-        const jsx = SearchEntitiesWindow({
-            onSelected: (item: any) => {
-                if (selection) {
-                    const prop = block.createStandoffProperty("codex/entity-reference", selection) as StandoffProperty;
-                    prop.value = item.Value;
-                }
-                node.remove();
-                self.setBlockFocus(block);
-                block.setCaret(block.lastCaret.index, block.lastCaret.offset);
-            },
-            onClose: () => {
-                node.remove();
-                self.setBlockFocus(block);
-                block.setCaret(block.lastCaret.index, block.lastCaret.offset);
-            }
-        });
-        const node = renderToNode(jsx);
+        const searchBlock = new SearchEntitiesBlock({ source: block });
+        const node = searchBlock.render();
         const top = selection ? selection.start.cache.offset.y : block.cache.offset.y;
         const left = selection ? selection.start.cache.offset.x : block.cache.offset.x;
         updateElement(node, {
@@ -2870,6 +2854,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         });
         this.container.appendChild(node);
+        this.setBlockFocus(searchBlock);
     }
     getHighestZIndex() {
         return ++this.highestZIndex;

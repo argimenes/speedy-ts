@@ -1,7 +1,12 @@
 import { createStore } from "solid-js/store";
 import { autofocus } from "@solid-primitives/autofocus";
-import { GUID } from "../library/types";
+import { GUID, IAbstractBlockConstructor, IBlock, IBlockDto } from "../library/types";
 import { For, onMount } from "solid-js";
+import { AbstractBlock } from "../library/abstract-block";
+import { StandoffEditorBlock } from "../library/standoff-editor-block";
+import { StandoffProperty } from "../library/standoff-property";
+import { renderToNode } from "../library/common";
+import { BlockManager } from "../library/block-manager";
 
 type Model = {
     search: string;
@@ -10,6 +15,51 @@ type Model = {
 export type Entity = {
     id: GUID;
     name: string;
+}
+
+export interface ISearchEntitiesBlockConstructor extends IAbstractBlockConstructor {
+    source: StandoffEditorBlock;
+}
+export class SearchEntitiesBlock extends AbstractBlock
+{
+    source: StandoffEditorBlock;
+    node?: HTMLElement;
+    constructor(args: ISearchEntitiesBlockConstructor) {
+        super(args);
+        this.source = args.source;
+    }
+    render() {
+        const source = this.source;
+        const manager = source.manager as BlockManager;
+        const selection = this.source.getSelection();
+        const jsx = SearchEntitiesWindow({
+            onSelected: (item: any) => {
+                if (selection) {
+                    const prop = source.createStandoffProperty("codex/entity-reference", selection) as StandoffProperty;
+                    prop.value = item.Value;
+                }
+                node.remove();
+                manager.setBlockFocus(source);
+                source.setCaret(source.lastCaret.index, source.lastCaret.offset);
+            },
+            onClose: () => {
+                node.remove();
+                manager.setBlockFocus(source);
+                source.setCaret(source.lastCaret.index, source.lastCaret.offset);
+            }
+        });
+        const node = this.node = renderToNode(jsx);
+        return node;
+    }
+    serialize(): IBlockDto {
+        throw new Error("Method not implemented.");
+    }
+    deserialize(json: any | any[]): IBlock {
+        throw new Error("Method not implemented.");
+    }
+    destroy(): void {
+        this.node?.remove();
+    }
 }
 
 export function SearchEntitiesWindow(props: any) {
