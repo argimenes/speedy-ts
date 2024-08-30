@@ -1029,7 +1029,34 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     handler: this.handleDeleteForStandoffEditorBlock.bind(this)
                 }
             },
-            
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-Shift-ArrowUp"
+                },
+                action: {
+                    name: "Move the focus block up one block.",
+                    description: `
+                        
+                    `,
+                    handler: this.handleMoveBlockUp.bind(this)
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-Shift-ArrowDown"
+                },
+                action: {
+                    name: "Move the focus block down one block.",
+                    description: `
+                        
+                    `,
+                    handler: this.handleMoveBlockDown.bind(this)
+                }
+            },
             {
                 mode: "default",
                 trigger: {
@@ -1761,6 +1788,24 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         }
         block.destroy();
+    }
+    async handleMoveBlockDown(args: IBindingHandlerArgs) {
+        const block = args.block;
+        this.moveBlockDown(block);
+        this.setBlockFocus(block);
+        if (block.type == BlockType.StandoffEditorBlock) {
+            const caret = args.caret as Caret;
+            (block as StandoffEditorBlock).setCaret(caret?.right.index, CARET.LEFT);
+        }
+    }
+    async handleMoveBlockUp(args: IBindingHandlerArgs) {
+        const block = args.block;
+        this.moveBlockUp(args.block);
+        this.setBlockFocus(block);
+        if (block.type == BlockType.StandoffEditorBlock) {
+            const caret = args.caret as Caret;
+            (block as StandoffEditorBlock).setCaret(caret?.right.index, CARET.LEFT);
+        }
     }
     moveBlockUp(block: IBlock) {
         const parent = block.relation.parent;
