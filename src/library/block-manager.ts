@@ -1061,23 +1061,67 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Shift-ArrowDown"
+                    match: "Shift-ArrowUp"
                 },
                 action: {
-                    name: "Move the cursor down one nested row. If one isn't found, do nothing.",
+                    name: "Move the cursor up one row. If one isn't found, do nothing.",
                     description: `
                         
                     `,
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as StandoffEditorBlock;
-                        const manager = block.manager as BlockManager;
-                        let next = block.relation.next as IndentedListBlock;
-                        if (next?.type != BlockType.IndentedListBlock) {
+                        const caret = args.caret as Caret;
+                        const selection = block.getSelection() as IRange;
+                        console.log("Shift-ArrowUp", { selection, caret, lastCell: block.getLastCell() });
+                        if (!selection) {
+                            const row = block.getCellInRow(caret.right, RowPosition.Previous);
+                            if (!row) {
+                                block.setSelection({ start: block.cells[0], end: caret.right, direction: DIRECTION.RIGHT } as ISelection);
+                            } else {
+                                block.setSelection({ start: row.cell, end: caret.right, direction: DIRECTION.RIGHT } as ISelection);
+                            }
                             return;
                         }
-                        const first = next.relation.firstChild as StandoffEditorBlock;
-                        first.moveCaretStart();
-                        manager.setBlockFocus(first);
+                        const row = block.getCellInRow(selection.end, RowPosition.Previous);
+                        if (!row) {
+                            block.setSelection({ start: block.cells[0], end: selection.end, direction: DIRECTION.RIGHT } as ISelection);
+                            return;
+                        }
+                        block.setSelection({ start: selection.start, end: row.cell, direction: DIRECTION.RIGHT } as ISelection);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Shift-ArrowDown"
+                },
+                action: {
+                    name: "Move the cursor down one row. If one isn't found, do nothing.",
+                    description: `
+                        
+                    `,
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block as StandoffEditorBlock;
+                        const caret = args.caret as Caret;
+                        const selection = block.getSelection() as IRange;
+                        console.log("Shift-ArrowDown", { selection, caret, lastCell: block.getLastCell() });
+                        if (!selection) {
+                            const row = block.getCellInRow(caret.right, RowPosition.Next);
+                            if (!row) {
+                                block.setSelection({ start: caret.right, end: block.getLastCell(), direction: DIRECTION.RIGHT } as ISelection);
+                            } else {
+                                block.setSelection({ start: caret.right, end: row.cell, direction: DIRECTION.RIGHT } as ISelection);
+                            }
+                            return;
+                        }
+                        const row = block.getCellInRow(selection.end, RowPosition.Next);
+                        if (!row) {
+                            block.setSelection({ start: selection.start, end: block.getLastCell(), direction: DIRECTION.RIGHT } as ISelection);
+                            return;
+                        }
+                        block.setSelection({ start: selection.start, end: row.cell, direction: DIRECTION.RIGHT } as ISelection);
                     }
                 }
             },
@@ -2958,19 +3002,28 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (!selection) return;
         const searchBlock = new SearchEntitiesBlock({ source: block });
         const node = searchBlock.render();
-        const top = selection ? selection.start.cache.offset.y : block.cache.offset.y;
-        const left = selection ? selection.start.cache.offset.x : block.cache.offset.x;
+        const caret = args.caret as Caret;
+        const top = selection
+            ? selection.start.cache.offset.y + selection.start.cache.offset.h + 10
+            : caret.right.cache.offset.y + caret.right.cache.offset.h + 10;
+        const left = selection
+            ? selection.start.cache.offset.x
+            : caret.right.cache.offset.x;
         updateElement(node, {
             style: {
                 position: "absolute",
-                top: (top + 30) + "px",
+                top: top + "px",
                 left: left + "px",
-                "z-index": this.getHighestZIndex(),
-                width: "300px",
-                height: "50px"
+                "z-index": 100,
+                width: "500px",
+                height: "50px",
+                border: "1px solid #ccc",
+                "border-radius": "5px",
+                padding: "10px",
+                "background-color": "#efefef"
             }
         });
-        this.container.appendChild(node);
+        block.container.appendChild(node);
         this.setBlockFocus(searchBlock);
     }
     getHighestZIndex() {

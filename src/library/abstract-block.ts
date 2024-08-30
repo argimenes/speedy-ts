@@ -40,6 +40,11 @@ export abstract class AbstractBlock implements IBlock {
         this.relation = {};
         this.type = BlockType.AbstractBlock;
         this.container = args?.container || document.createElement("DIV") as HTMLDivElement;
+        updateElement(this.container, {
+            style:{
+                position: "relative"
+            }
+        });
         this.commitHandler = () => { };
         this.metadata = {};
         this.blockProperties =[];
