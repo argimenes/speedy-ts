@@ -1793,14 +1793,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const parent = block.relation.parent;
         const hasSameParent = anchorParent.id == parent.id;
         if (hasSameParent) {
-            const index = parent.blocks.findIndex(x => x.id == anchor.id);
-            parent.blocks.splice(index + 1, 0, block);
+            const i = this.getIndexOfBlock(block);
+            parent.blocks.splice(i, 1);
+            const ai = this.getIndexOfBlock(anchor);
+            parent.blocks.splice(ai + 1, 0, block);
             anchor.container.insertAdjacentElement("afterend", block.container);
             this.generatePreviousNextRelations(parent);
             if (!skipIndexation) this.reindexAncestorDocument(anchor);
         } else {
-            const index = anchorParent.blocks.findIndex(x => x.id == anchor.id);
-            anchorParent.blocks.splice(index + 1, 0, block);
+            const i = this.getIndexOfBlock(block);
+            parent.blocks.splice(i, 1);
+            const ai = this.getIndexOfBlock(anchor);
+            anchorParent.blocks.splice(ai + 1, 0, block);
             anchor.container.insertAdjacentElement("afterend", block.container);
             if (!skipIndexation) this.reindexAncestorDocument(block);
             block.relation.parent = anchorParent;
@@ -1816,14 +1820,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const parent = block.relation.parent;
         const hasSameParent = anchorParent.id == parent.id;
         if (hasSameParent) {
-            const index = parent.blocks.findIndex(x => x.id == anchor.id);
-            parent.blocks.splice(index, 0, block);
+            const i = this.getIndexOfBlock(block);
+            parent.blocks.splice(i, 1);
+            const ai = this.getIndexOfBlock(anchor);
+            parent.blocks.splice(ai, 0, block);
             anchor.container.insertAdjacentElement("beforebegin", block.container);
             this.generatePreviousNextRelations(parent);
             if (!skipIndexation) this.reindexAncestorDocument(anchor);
         } else {
-            const anchorIndex = anchorParent.blocks.findIndex(x => x.id == anchor.id);
-            anchorParent.blocks.splice(anchorIndex, 0, block);
+            const i = this.getIndexOfBlock(block);
+            parent.blocks.splice(i, 1);
+            const ai = this.getIndexOfBlock(anchor);
+            anchorParent.blocks.splice(ai, 0, block);
             anchor.container.insertAdjacentElement("beforebegin", block.container);
             if (!skipIndexation) this.reindexAncestorDocument(block);
             block.relation.parent = anchorParent;
