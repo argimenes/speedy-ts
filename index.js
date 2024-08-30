@@ -60,11 +60,27 @@ app.get("/api/listDocuments", function (req, res) {
           res.send({ files: files });
      });
 });
+app.get('/api/addToGraph', function(req, res) {
+     const filename = req.query.filename;
+     const id = req.query.id;
+     const name = req.query.name;
+     const filepath = path.join(__dirname + "/data/" + filename);
+     const data = fs.readFileSync(filepath) || "{ nodes: [], edges: [] }";
+     const json = JSON.parse(data);
+     json.nodes[id] = name;
+     fs.writeFileSync(filepath, JSON.stringify(json));
+     res.send({
+          Success: true,
+          Data: {
+               document: json
+          }
+     });
+});
 app.get('/api/loadGraphJson', function(req, res) {
      const filename = req.query.filename;
      const filepath = path.join(__dirname + "/data/" + filename);
      const data = fs.readFileSync(filepath);
-     const json = JSON.parse(data);
+     const json = JSON.parse(data || "{ nodes: [], edges: [] }");
      res.send({
           Success: true,
           Data: {
