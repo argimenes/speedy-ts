@@ -1762,11 +1762,75 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         block.destroy();
     }
+    moveBlockUp(block: IBlock) {
+        const parent = block.relation.parent;
+        const previous = block.relation.previous;
+        if (!previous) {
+            this.insertBlockBefore(parent, block);
+            return;
+        }
+        this.insertBlockBefore(previous, block);
+    }
+    moveBlockDown(block: IBlock) {
+        const parent = block.relation.parent;
+        const next = block.relation.next;
+        if (!next) {
+            this.insertBlockAfter(parent, block);
+            return;
+        }
+        this.insertBlockAfter(next, block);
+    }
     removeBlockFrom(parent: AbstractBlock, block: IBlock, skipIndexation?: boolean) {
         const i = parent.blocks.findIndex(x => x.id == block.id);
         parent.blocks.splice(i, 1);
         this.deregisterBlock(block.id);
         if (!skipIndexation) this.reindexAncestorDocument(parent);
+    }
+    insertBlockAfter(anchor: IBlock, block: IBlock, skipIndexation?: boolean) {
+        console.log("insertBlockAfter", { anchor, block, skipIndexation });
+        this.registerBlock(block);
+        const anchorParent = anchor.relation.parent;
+        const parent = block.relation.parent;
+        const hasSameParent = anchorParent.id == parent.id;
+        if (hasSameParent) {
+            const index = parent.blocks.findIndex(x => x.id == anchor.id);
+            parent.blocks.splice(index + 1, 0, block);
+            anchor.container.insertAdjacentElement("afterend", block.container);
+            this.generatePreviousNextRelations(parent);
+            if (!skipIndexation) this.reindexAncestorDocument(anchor);
+        } else {
+            const index = anchorParent.blocks.findIndex(x => x.id == anchor.id);
+            anchorParent.blocks.splice(index + 1, 0, block);
+            anchor.container.insertAdjacentElement("afterend", block.container);
+            if (!skipIndexation) this.reindexAncestorDocument(block);
+            block.relation.parent = anchorParent;
+            this.generatePreviousNextRelations(parent);
+            this.generatePreviousNextRelations(anchorParent);
+            if (!skipIndexation) this.reindexAncestorDocument(anchor);
+        }
+    }
+    insertBlockBefore(anchor: IBlock, block: IBlock, skipIndexation?: boolean) {
+        console.log("insertBlockBefore", { anchor, block, skipIndexation });
+        this.registerBlock(block);
+        const anchorParent = anchor.relation.parent;
+        const parent = block.relation.parent;
+        const hasSameParent = anchorParent.id == parent.id;
+        if (hasSameParent) {
+            const index = parent.blocks.findIndex(x => x.id == anchor.id);
+            parent.blocks.splice(index, 0, block);
+            anchor.container.insertAdjacentElement("beforebegin", block.container);
+            this.generatePreviousNextRelations(parent);
+            if (!skipIndexation) this.reindexAncestorDocument(anchor);
+        } else {
+            const anchorIndex = anchorParent.blocks.findIndex(x => x.id == anchor.id);
+            anchorParent.blocks.splice(anchorIndex, 0, block);
+            anchor.container.insertAdjacentElement("beforebegin", block.container);
+            if (!skipIndexation) this.reindexAncestorDocument(block);
+            block.relation.parent = anchorParent;
+            this.generatePreviousNextRelations(parent);
+            this.generatePreviousNextRelations(anchorParent);
+            if (!skipIndexation) this.reindexAncestorDocument(anchor);
+        }
     }
     insertBlockAt(parent: IBlock, block: IBlock, atIndex: number, skipIndexation?: boolean) {
         console.log("insertBlockAt", { parent, block, atIndex, skipIndexation });

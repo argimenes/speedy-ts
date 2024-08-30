@@ -255,6 +255,14 @@ export const ControlPanel : Component<Props> = (props) => {
         const sibling = props.manager?.getBlockInFocus();
         props.manager?.addTabRowAfter(sibling!.id);
     }
+    const moveBlockUp = () => {
+        const block = props.manager?.getBlockInFocus() as IBlock;
+        props.manager?.moveBlockUp(block);
+    }
+    const moveBlockDown = () => {
+        const block = props.manager?.getBlockInFocus() as IBlock;
+        props.manager?.moveBlockDown(block);
+    }
     const toTab = () => {
         const block = props.manager?.getBlockInFocus();
         props.manager?.convertBlockToTab(block!.id);
@@ -268,6 +276,8 @@ export const ControlPanel : Component<Props> = (props) => {
         {
             case "load": await load(parameters); return;
             case "save": await save(parameters); return;
+            case "move-up": await moveBlockUp(); return;
+            case "move-down": await moveBlockDown(); return;
             case "list-docs": await listDocuments(); return;
             case "bgimage": setBackgroundImage(parameters[0]); return;
             case "add-image": addImage(parameters[0]); return;
