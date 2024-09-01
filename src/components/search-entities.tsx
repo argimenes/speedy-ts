@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { createStore } from "solid-js/store";
 import { autofocus } from "@solid-primitives/autofocus";
-import { GUID, IAbstractBlockConstructor, IBlock, IBlockDto } from "../library/types";
+import { GUID, IAbstractBlockConstructor, IBlock, IBlockDto, InputEventSource, ISelection } from "../library/types";
 import { For, onMount } from "solid-js";
 import { AbstractBlock } from "../library/abstract-block";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
@@ -20,34 +20,78 @@ export type Entity = {
 
 export interface ISearchEntitiesBlockConstructor extends IAbstractBlockConstructor {
     source: StandoffEditorBlock;
+    selection: ISelection;
 }
 export class SearchEntitiesBlock extends AbstractBlock
 {
     source: StandoffEditorBlock;
     node?: HTMLElement;
+    searchInstance?: any;
+    selection: ISelection;
     constructor(args: ISearchEntitiesBlockConstructor) {
         super(args);
         this.source = args.source;
+        const self = this;
+        this.selection = args.selection;
+        this.inputEvents= [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Enter"
+                },
+                action: {
+                    name: "Create a new text block. Move text to the right of the caret into the new block.",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        args.allowPassthrough && args.allowPassthrough();
+                        self.searchInstance.search();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Escape"
+                },
+                action: {
+                    name: "Create a new text block. Move text to the right of the caret into the new block.",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        self.close();
+                    }
+                }
+            }
+        ]
+    }
+    close() {
+        this.node?.remove();
+        this.source.manager?.setBlockFocus(this.source);
+        this.source.setCaret(this.source.lastCaret.index, this.source.lastCaret.offset);
+    }
+    onSelected(item: any) {
+        if (this.selection) {
+            const prop = this.source.createStandoffProperty("codex/entity-reference", this.selection) as StandoffProperty;
+            prop.value = item.Value;
+        }
+        this.close();
     }
     render() {
-        const source = this.source;
-        const manager = source.manager as BlockManager;
-        const selection = this.source.getSelection();
+        const self= this;
         const jsx = SearchEntitiesWindow({
-            onSelected: (item: any) => {
-                if (selection) {
-                    const prop = source.createStandoffProperty("codex/entity-reference", selection) as StandoffProperty;
-                    prop.value = item.Value;
-                }
-                node.remove();
-                manager.setBlockFocus(source);
-                source.setCaret(source.lastCaret.index, source.lastCaret.offset);
+            setInstance: function (i: any) {
+                self.searchInstance = i;
             },
-            onClose: () => {
-                node.remove();
-                manager.setBlockFocus(source);
-                source.setCaret(source.lastCaret.index, source.lastCaret.offset);
-            }
+            onSubmit: () =>{
+
+            },
+            onSelected: this.onSelected.bind(this),
+            onClose: this.close.bind(this)
         });
         const node = this.node = renderToNode(jsx);
         return node;
@@ -74,6 +118,7 @@ export function SearchEntitiesWindow(props: any) {
     ]);
     const handleSubmit = async (e: Event) => {
         e.preventDefault();
+        return;
         if (model.search?.length == 0) {
             props.onClose && props.onClose();
             return;
@@ -98,17 +143,30 @@ export function SearchEntitiesWindow(props: any) {
         setResults(matches);
     }
     const addToGraph = async (entity: Entity) => {
-        const res = await fetch(`api/addToGraph?id=${entity.id}&name=${entity.name}&filename=default.graph.json`);
+        const data = {
+            filename: "default.graph.json",
+            id: entity.id,
+            name: entity.name
+        }
+        const res = await fetch(`api/addToGraph`, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+            method: "POST",
+            body: JSON.stringify(data)
+        });
         const json = await res.json();
+        await loadGraph("default.graph.json");
     }
     const loadGraph = async (filename: string) => {
-        const res = await fetch("api/loadGraphJson?filename=" + filename);
+        const res = await fetch("api/loadGraphJson?filename=" + encodeURIComponent(filename));
         const json = await res.json();
         if (!json.Success) {
             return;
         }
-        const _entities = json.Data.nodes;
+        const _entities = json.Data.document.nodes;
         setEntities(_entities);
+        console.log("loadGraph", { json, entities })
     }
     const onSelectFromList = (item: Entity) => {
         if (props.onSelected) {
@@ -120,7 +178,27 @@ export function SearchEntitiesWindow(props: any) {
     }
     onMount(async () => {
         await loadGraph("default.graph.json");
+        if (props.setInstance) {
+            props.setInstance({
+                search: async () => {
+                    await searchGraph(model.search);
+                },
+                getModel: () => {
+                    return {
+                        search: model.search
+                    };
+                },
+                clear: async () => {
+                    setModel("search", "");
+                    searchGraph(model.search);
+                }
+            });
+        }
     })
+    const updateModel = (field: string, value: any) => {
+        console.log("updateModel", { field, value });
+        setModel(field, value);
+    }
     return (
         <>
             <div class="search-entities-window">
@@ -132,7 +210,7 @@ export function SearchEntitiesWindow(props: any) {
                             value={model.search}
                             use:autofocus autofocus
                             class="form-control"
-                            onChange={(e) => { setModel("search", e.currentTarget.value); searchGraph(model.search); }}
+                            onInput={(e) => { updateModel("search", e.currentTarget.value); }}
                         />
                         <button type="submit" class="btn btn-primary">SELECT</button>
                         <button type="button" class="btn btn-default" onClick={handleClose}>Close</button>

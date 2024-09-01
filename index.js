@@ -60,14 +60,15 @@ app.get("/api/listDocuments", function (req, res) {
           res.send({ files: files });
      });
 });
-app.get('/api/addToGraph', function(req, res) {
-     const filename = req.query.filename;
-     const id = req.query.id;
-     const name = req.query.name;
+app.post('/api/addToGraph', async (req, res) => {
+     const filename = req.body.filename;
+     const id = req.body.id;
+     const name = req.body.name;
      const filepath = path.join(__dirname + "/data/" + filename);
      const data = fs.readFileSync(filepath) || "{ nodes: [], edges: [] }";
      const json = JSON.parse(data);
-     json.nodes[id] = name;
+     json.nodes.push('/api/addToGraph', { id, name });
+     console.log({ nodes: json.nodes });
      fs.writeFileSync(filepath, JSON.stringify(json));
      res.send({
           Success: true,

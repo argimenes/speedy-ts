@@ -3000,7 +3000,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const block = args.block as StandoffEditorBlock;
         const selection = block.getSelection();
         if (!selection) return;
-        const searchBlock = new SearchEntitiesBlock({ source: block });
+        const searchBlock = new SearchEntitiesBlock({ source: block, selection });
         const node = searchBlock.render();
         const caret = args.caret as Caret;
         const top = selection
