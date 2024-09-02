@@ -173,18 +173,23 @@ export const ControlPanel : Component<Props> = (props) => {
         props.manager?.addIFrameBlock(block, url);
     }
     const createGrid = (rows: number, cells: number) => {
-        const block = props.manager?.getBlockInFocus();
+        const manager = props.manager as BlockManager;
+        const block = manager.getBlockInFocus();
         if (!block) return;
-        const gridBlock = props.manager?.createGrid(rows, cells) as GridBlock;
-        props.manager?.addNextBlock(gridBlock, block);
+        const grid = manager.createGrid(rows, cells) as GridBlock;
+        manager.addBlockAfter(grid, block);
+        const textBlock = grid.blocks[0].blocks[0].blocks[0] as StandoffEditorBlock;
+        manager.setBlockFocus(textBlock);
+        textBlock.moveCaretStart();
     }
     const createTable = (rows: number, cells: number) => {
-        const block = props.manager?.getBlockInFocus();
+        const manager = props.manager as BlockManager;
+        const block = manager.getBlockInFocus();
         if (!block) return;
-        const tableBlock = props.manager?.createTable(rows, cells) as GridBlock;
-        props.manager?.addNextBlock(tableBlock, block);
-        const textBlock = tableBlock.blocks[0].blocks[0].blocks[0] as StandoffEditorBlock;
-        props.manager?.setBlockFocus(textBlock);
+        const table = manager.createTable(rows, cells) as GridBlock;
+        manager.addBlockAfter(table, block);
+        const textBlock = table.blocks[0].blocks[0].blocks[0] as StandoffEditorBlock;
+        manager.setBlockFocus(textBlock);
         textBlock.moveCaretStart();
     }
     const setTabName = (name: string) => {

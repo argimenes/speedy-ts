@@ -8,7 +8,6 @@ import { GridBlock, GridCellBlock, GridRowBlock } from "./grid-block";
 import { ImageBlock } from "./image-block";
 import { VideoBlock } from "./video-block";
 import { IframeBlock } from "./iframe-block";
-import _ from "underscore";
 import { AbstractBlock } from "./abstract-block";
 import { BlockProperty } from "./block-property";
 import { StandoffEditorBlock } from "./standoff-editor-block";
@@ -19,7 +18,7 @@ import { CodeMirrorBlock } from "./code-mirror-block";
 import { ClockPlugin } from "./plugins/clock";
 import { TextProcessor } from "./text-processor";
 import { EmbedDocumentBlock } from "./embed-document-block";
-import { SearchEntitiesBlock, SearchEntitiesWindow } from "../components/search-entities";
+import { SearchEntitiesBlock } from "../components/search-entities";
 import { renderToNode } from "./common";
 import { MonitorBlock, StandoffEditorBlockMonitor } from "../components/monitor";
 import { TableBlock, TableCellBlock, TableRowBlock } from './tables-blocks';
@@ -133,9 +132,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     async handleKeyboardInputEvents(e: KeyboardEvent) {
-        if (!this.container.contains(e.target as HTMLElement)) {
-            return;
-        }
         const ALLOW = true, FORBID = false;
         const input = this.toKeyboardInput(e);
         const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
@@ -143,6 +139,15 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return ALLOW;
         }
         const focusedBlock = this.getBlockInFocus() as IBlock;
+        if (!focusedBlock) {
+            return;
+        }
+        if (!focusedBlock.container.contains(e.target as HTMLElement)) {
+            console.log("handleKeyboardInputEvents", { message: "Input received from outside of @focusedBlock", focusedBlock, target: e.target });
+            if (e.target instanceof HTMLInputElement){
+                return ALLOW;
+            }
+        }
         const isStandoffBlock = focusedBlock.type == BlockType.StandoffEditorBlock;
         const blocks = [focusedBlock, this];
         for (let i = 0; i < blocks.length; i++) {
@@ -728,11 +733,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         const imageBlock = args.block as ImageBlock;
                         const manager = imageBlock.manager as BlockManager;
                         const newBlock = manager.createStandoffEditorBlock();
-                        manager.addNextBlock(newBlock, imageBlock);
+                        newBlock.addEOL();
+                        manager.addBlockAfter(newBlock, imageBlock);
                         setTimeout(() => {
                             manager.setBlockFocus(newBlock);
                             newBlock.setCaret(0, CARET.LEFT);
-                        })
+                        });
                     }
                 }
             }
@@ -1589,7 +1595,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         if (!tabRow) return;
                         const newBlock = manager.createStandoffEditorBlock();
                         newBlock.addEOL();
-                        manager.addNextBlock(newBlock, tabRow);
+                        manager.addBlockAfter(newBlock, tabRow);
                         setTimeout(() => {
                             manager.setBlockFocus(newBlock);
                             newBlock.setCaret(0, CARET.LEFT);
@@ -2467,23 +2473,27 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             //sibling.relation.parent = parent;
         }
     }
-    addNextBlock(newBlock: IBlock, sibling: IBlock) {
-        console.log("addNextBlock", { newBlock, sibling });
-        sibling.container.insertAdjacentElement("afterend", newBlock.container);
-        const parent = sibling.relation.parent;
+    addBlockBefore(newBlock: IBlock, anchor: IBlock) {
+        console.log("addBlockBefore", { newBlock, anchor });
+        anchor.container.insertAdjacentElement('beforebegin', newBlock.container);
+        const parent = anchor.relation.parent;
         if (!parent) {
-            console.log("addNextBlock", { message: "Expected to find a parent block of @sibling", sibling, newBlock });
+            console.log("addBlockBefore", { message: "Expected to find a parent block of @anchor", anchor, newBlock });
             return;
         }
-        const next = sibling.relation.next;
-        sibling.relation.next = newBlock;
-        newBlock.relation.previous = sibling;
-        if (next) {
-            newBlock.relation.next = next;
-            next.relation.previous = newBlock;
+        const ai = this.getIndexOfBlock(anchor);
+        this.insertBlockAt(parent, newBlock, ai);
+    }
+    addBlockAfter(newBlock: IBlock, anchor: IBlock) {
+        console.log("addBlockAfter", { newBlock, anchor });
+        anchor.container.insertAdjacentElement("afterend", newBlock.container);
+        const parent = anchor.relation.parent;
+        if (!parent) {
+            console.log("addBlockAfter", { message: "Expected to find a parent block of @anchor", anchor, newBlock });
+            return;
         }
-        const si = this.getIndexOfBlock(sibling);
-        this.insertBlockAt(parent, newBlock, si + 1);
+        const ai = this.getIndexOfBlock(anchor);
+        this.insertBlockAt(parent, newBlock, ai + 1);
     }
     createTable(rows: number, cells: number) {
         const table = this.createTableBlock();
@@ -2501,15 +2511,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 textBlock.addEOL();
                 this.addBlockTo(cell, textBlock);
                 this.addBlockTo(row, cell);
-                this.addParentSiblingRelations(cell);
                 cell.container.appendChild(textBlock.container);
                 row.container.appendChild(cell.container);
             }
-            this.addParentSiblingRelations(row);
             this.addBlockTo(table, row);
             table.container.appendChild(row.container);
         }
-        this.addParentSiblingRelations(table);
+        this.generatePreviousNextRelations(table);
         return table;
     }
     createGrid(rows: number, cells: number) {
@@ -2528,15 +2536,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 textBlock.addEOL();
                 this.addBlockTo(cellBlock, textBlock);
                 this.addBlockTo(rowBlock, cellBlock);
-                this.addParentSiblingRelations(cellBlock);
                 cellBlock.container.appendChild(textBlock.container);
                 rowBlock.container.appendChild(cellBlock.container);
             }
-            this.addParentSiblingRelations(rowBlock);
             this.addBlockTo(gridBlock, rowBlock);
             gridBlock.container.appendChild(rowBlock.container);
         }
-        this.addParentSiblingRelations(gridBlock);
+        this.generatePreviousNextRelations(gridBlock);
         return gridBlock;
     }
     renderIndent(block: IBlock) {
@@ -2815,7 +2821,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         this.loadDocument(nextDoc);
     }
-    addImageBlock(sibling: IBlock, url: string) {        
+    addImageBlock(anchor: IBlock, url: string) {        
         const image = this.createImageBlock({
             type: BlockType.ImageBlock,
             metadata: {
@@ -2823,10 +2829,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         }) as ImageBlock;
         image.build();
-        this.addNextBlock(image, sibling);
+        this.addBlockAfter(image, anchor);
         return image;
     }
-    addVideoBlock(sibling: IBlock, url: string) {
+    addVideoBlock(anchor: IBlock, url: string) {
         const video = this.createVideoBlock({
             type: BlockType.VideoBlock,
             metadata: {
@@ -2834,9 +2840,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         }) as VideoBlock;
         video.build();
-        this.addNextBlock(sibling, video);
+        this.addBlockAfter(video, anchor);
     }
-    addIFrameBlock(sibling: IBlock, url: string) {
+    addIFrameBlock(anchor: IBlock, url: string) {
         const iframe = this.createIFrameBlock({
             type: BlockType.IFrameBlock,
             metadata: {
@@ -2844,7 +2850,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         }) as IframeBlock;
         iframe.build();
-        this.addNextBlock(sibling, iframe);
+        this.addBlockAfter(iframe, anchor);
     }
     createStandoffEditorBlock(dto?: IBlockDto) {
         const standoffSchemas = this.getStandoffSchemas();
@@ -2872,7 +2878,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             newBlock.addBlockProperties(blockData.blockProperties || []);
             newBlock.applyBlockPropertyStyling();
             newBlock.addEOL();
-            this.addNextBlock(newBlock, block);
+            this.addBlockAfter(newBlock, block);
             this.setBlockFocus(newBlock);
             newBlock.moveCaretStart();
             return;
@@ -2899,7 +2905,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             this.setBlockFocus(textBlock);
             block.moveCaretStart();
         } else if (atEnd) {
-            this.addNextBlock(newBlock, textBlock);
+            this.addBlockAfter(newBlock, textBlock);
             this.setBlockFocus(newBlock);
             newBlock.moveCaretStart();
         }
@@ -2998,7 +3004,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     async applyEntityReferenceToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
-        const selection = block.getSelection();
+        const selection = block.getSelection() as ISelection;
         if (!selection) return;
         const searchBlock = new SearchEntitiesBlock({ source: block, selection });
         const node = searchBlock.render();
@@ -3226,7 +3232,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             blockProperties: block.blockProperties.map(x=> x.serialize()),
             standoffProperties: secondProps
         });
-        this.addNextBlock(secondBlock, block);
+        this.addBlockAfter(secondBlock, block);
         secondBlock.applyStandoffPropertyStyling();
 
         const lastCell = block.cells[ci];
@@ -3273,7 +3279,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return dimensions;
     }
     async handlePasteForStandoffEditorBlock(args: IBindingHandlerArgs) {
-        document.body.focus();
+        //document.body.focus();
         const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
         const e = args.e as ClipboardEvent;
@@ -3357,7 +3363,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             if (lines[i].length == 0) {
                 newBlock.addEOL();
             }
-            this.addNextBlock(newBlock, currentBlock);
+            this.addBlockAfter(newBlock, currentBlock);
             temp.push(newBlock);
         }
         if (len == 1) {
@@ -3392,7 +3398,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 "overflow-y": "scroll"
             }
         });
-        this.addNextBlock(manager, sibling);
+        this.addBlockAfter(manager, sibling);
         this.addParentSiblingRelations(parent);
         this.setBlockFocus(manager.blocks[0]);
     }
@@ -3400,7 +3406,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const parent = this.getParent(sibling) as AbstractBlock;
         const cm = this.createCodeMirrorBlock();
         this.addParentSiblingRelations(parent);
-        this.addNextBlock(cm, sibling);
+        this.addBlockAfter(cm, sibling);
         this.setBlockFocus(cm);
         return cm;
     }
