@@ -1942,6 +1942,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         } else {
             parent.blocks.splice(atIndex, 0, block);
         }
+        block.relation.parent = parent;
         this.generatePreviousNextRelations(parent);
         this.registerBlock(block);
         if (!skipIndexation) this.reindexAncestorDocument(block);
@@ -2289,10 +2290,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const indentedListBlock = this.createIndentedListBlock();
         await this.buildChildren(indentedListBlock, blockDto, (b) =>
             updateElement(b.container, {
-            style: {
-                display: "list-item",
-                "list-style": "square"
-            }
+                classList: ["list-item-numbered"]
         }));
         const level = indentedListBlock.metadata.indentLevel || 0 as number;
         indentedListBlock.metadata.indentLevel = level + 1;
@@ -2908,6 +2906,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             this.addBlockAfter(newBlock, textBlock);
             this.setBlockFocus(newBlock);
             newBlock.moveCaretStart();
+        }
+        const list = this.getParentOfType(block, BlockType.IndentedListBlock);
+        if (list) {
+            updateElement(newBlock.container, {
+                classList: ["list-item-numbered"]
+            });
         }
     }
     async handleTabKey(args: IBindingHandlerArgs) {

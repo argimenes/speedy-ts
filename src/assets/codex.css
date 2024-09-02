@@ -131,6 +131,10 @@
   .table-block {
     display: table;
   }
+  .list-item-numbered {
+    display: list-item;
+    list-style: decimal;
+  }
   .table-row-block {
     display: table-row;
   }
