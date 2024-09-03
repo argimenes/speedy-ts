@@ -1589,13 +1589,15 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.manager as BlockManager;
-                        const tab = manager.getParentOfType(block, BlockType.TabBlock) as TabBlock;
-                        if (!tab) return;
-                        const tabRow = manager.getParent(tab) as TabRowBlock;
-                        if (!tabRow) return;
+                        const structure = manager.getParentOfType(block, BlockType.TabRowBlock)
+                            || manager.getParentOfType(block, BlockType.GridBlock)
+                            || manager.getParentOfType(block, BlockType.TableBlock)
+                            || manager.getParentOfType(block, BlockType.IndentedListBlock)
+                        ;
+                        if (!structure) return;
                         const newBlock = manager.createStandoffEditorBlock();
                         newBlock.addEOL();
-                        manager.addBlockAfter(newBlock, tabRow);
+                        manager.addBlockAfter(newBlock, structure);
                         setTimeout(() => {
                             manager.setBlockFocus(newBlock);
                             newBlock.setCaret(0, CARET.LEFT);
