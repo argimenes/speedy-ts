@@ -2203,6 +2203,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     addBlockTo(parent: IBlock, block: IBlock, skipIndexation?: boolean) {
         parent.blocks.push(block);
         this.registerBlock(block);
+        this.generatePreviousNextRelations(parent);
         if (!skipIndexation) this.reindexAncestorDocument(parent);
     }
     async buildChildren(parent: AbstractBlock, blockDto: IBlockDto, update?: (b: IBlock) => void) {
@@ -2917,7 +2918,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     async handleTabKey(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
         const parent = block.relation.parent;
-        if (parent) {
+        if (parent.blocks[0].id == block.id && parent.type == BlockType.IndentedListBlock) {
             /**
              * Quit if this is the first child of another block.
              */
@@ -2925,31 +2926,17 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         const list = this.createIndentedListBlock();
         const previous = block.relation.previous;
-        const next = block.relation.next;
-        /**
-         * Convert the previous block into a parent of the indented list block.
-         */
-        previous.relation.firstChild = list;
-        list.relation.parent = previous;
-        list.relation.firstChild = block;
-        block.relation.parent = list;
-        delete block.relation.previous;
-        previous.relation.next = next;
-        delete block.relation.next;
-        if (next) {
-            next.relation.previous = previous;
-        }
-        this.addBlockTo(previous, list);
         this.addBlockTo(list, block);
         this.addBlockTo(parent, list);
         const listParent = this.getParentOfType(block, BlockType.IndentedListBlock) as IndentedListBlock;
         const level = listParent?.metadata.indentLevel || 0 as number;
         list.metadata.indentLevel = level + 1;
         list.container.appendChild(block.container);
+        updateElement(list.container, {
+            classList: ["list-item-numbered"]
+        });
         previous.container.appendChild(list.container);
         this.renderIndent(list);
-        // block.setCaret(0, CARET.LEFT);
-        // this.setBlockFocus(block);
     }
     async applyImageBackgroundToBlock(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
