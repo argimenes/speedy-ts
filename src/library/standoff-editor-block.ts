@@ -199,6 +199,17 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.cells.forEach(c => frag.append(c.element as HTMLElement));
         this.wrapper.appendChild(frag);
     }
+    getAllTextMatches(search: string) {
+        const len = search.length;
+        const text = this.getText();
+        const matches: { match: string, start: number, end: number }[] = [];
+        let match;
+        const regex = new RegExp(search, 'g');
+        while ((match = regex.exec(text)) !== null) {
+            matches.push({ match: match[0], start: match.index, end: match.index + len - 1 });
+        }
+        return matches;
+    }
     createLineBreakCell() {
         const code = this.getKeyCode("ENTER");
         const EOL = String.fromCharCode(code);

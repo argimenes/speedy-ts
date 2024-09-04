@@ -1616,6 +1616,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: "Links to an entity in the graph database.",
                     handler: this.applyEntityReferenceToText.bind(this)
                 }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-F"
+                },
+                action: {
+                    name: "Find",
+                    description: "Highlights all text matches.",
+                    handler: this.handleFind.bind(this)
+                }
             }
         ];
         return events;
@@ -2994,6 +3006,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         } else {
             // TBC
         }  
+    }
+    handleFind(args: IBindingHandlerArgs) {
+        const textblocks = this.registeredBlocks.filter(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock[];
+        const len = textblocks.length;
+        const search = prompt("Text: ");
+        if (!search) return;
+        for (let i = 0; i < len; i++) {
+            let block = textblocks[i];
+            const matches = block.getAllTextMatches(search);
+            this.highlight(block, matches);
+        }
+    }
+    highlight(block: StandoffEditorBlock, matches: any[]) {
+
     }
     async applyEntityReferenceToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
