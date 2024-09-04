@@ -16,16 +16,25 @@ In the project directory, you can run:
 
 ### To deploy
 
-Delete any files under "/dist"
-```npm run build```
-copy files under "/dist" to "/public"
-```node index.js```
-browse to localhost:30000
+#### On MacOS
+You will need to run ```./build.sh```. To do this first you will need to enure it has the right permissions:
+```bash
+$ chmod +x build.sh
+```
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+And then you can run:
+```bash
+$ ./build.sh
+```
 
-The page will reload if you make edits.<br>
+#### On Windows
+You will need to have Powershell installed. Then you can run
+
+```bash
+$ .\publish.ps1
+```
+
+Open [http://localhost:3002](http://localhost:3002) to view it in the browser.<br>
 
 ### `npm run build`
 

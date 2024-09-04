@@ -1,4 +1,4 @@
-$Root = ".\"  # Change this to the location of your own local repository
+$Root = ".\"
 $Source = $Root + "\dist\"
 $Target = $Root + "\public\"
 if (![System.IO.Directory]::Exists($Target)) {   
