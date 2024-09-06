@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { createStore } from "solid-js/store";
 import { autofocus } from "@solid-primitives/autofocus";
-import { GUID, IAbstractBlockConstructor, IBlock, IBlockDto, InputEventSource, ISelection } from "../library/types";
+import { GUID, IAbstractBlockConstructor, IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource, ISelection } from "../library/types";
 import { For, onMount } from "solid-js";
 import { AbstractBlock } from "../library/abstract-block";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
@@ -41,7 +41,7 @@ export class SearchEntitiesBlock extends AbstractBlock
                     match: "Enter"
                 },
                 action: {
-                    name: "Create a new text block. Move text to the right of the caret into the new block.",
+                    name: "Search.",
                     description: `
                         
                     `,
@@ -58,7 +58,7 @@ export class SearchEntitiesBlock extends AbstractBlock
                     match: "Escape"
                 },
                 action: {
-                    name: "Create a new text block. Move text to the right of the caret into the new block.",
+                    name: "Close the search modal.",
                     description: `
                         
                     `,
@@ -67,7 +67,37 @@ export class SearchEntitiesBlock extends AbstractBlock
                     }
                 }
             }
-        ]
+        ];
+        // this.addEventListeners();
+    }
+    addEventListeners() {
+        this.node?.addEventListener("keydown", this.handleKeydown.bind(this));
+    }
+    async handleKeydown(e: KeyboardEvent) {
+        const ALLOW = true, FORBID = false;
+        const target = e.target as HTMLElement;
+        const input = this.toKeyboardInput(e);
+        const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
+        if (modifiers.some(x => x == input.key)) {
+            return ALLOW;
+        }
+        const match = this.getFirstMatchingInputEvent(input);
+        if (match) {
+            let passthrough = false;
+            const args = {
+                block: this,
+                allowPassthrough: () => passthrough = true,
+                e
+            } as IBindingHandlerArgs;
+            await match.action.handler(args);
+            if (passthrough) {
+                return ALLOW;
+            } else {
+                e.preventDefault();
+                return FORBID;
+            }
+        }
+        return ALLOW;
     }
     close() {
         this.node?.remove();
@@ -116,14 +146,7 @@ export function SearchEntitiesWindow(props: any) {
     const [files, setFiles] = createStore<string[]>([
         "default.graph.json"
     ]);
-    const handleSubmit = async (e: Event) => {
-        e.preventDefault();
-        return;
-        if (model.search?.length == 0) {
-            props.onClose && props.onClose();
-            return;
-        }
-        const entity = { id: uuidv4(), name: model.search } as Entity;
+    const addEntity = async (entity: Entity) => {
         setEntities([...entities, entity]);
         await addToGraph(entity);
         if (props.onSelected) {
@@ -131,6 +154,15 @@ export function SearchEntitiesWindow(props: any) {
                 Text: entity.name, Value: entity.id
             });
         }
+    }
+    const handleSubmit = async (e: Event) => {
+        e.preventDefault();
+        if (model.search?.length == 0) {
+            props.onClose && props.onClose();
+            return;
+        }
+        const entity = { id: uuidv4(), name: model.search } as Entity;
+        await addEntity(entity);
     }
     const handleClose = (e:Event) => {
         e.preventDefault();
@@ -195,10 +227,11 @@ export function SearchEntitiesWindow(props: any) {
             });
         }
     })
-    const updateModel = (field: string, value: any) => {
-        console.log("updateModel", { field, value });
-        setModel(field, value);
-    }
+    const onSearchChanged = async (e: Event) => {
+        e.preventDefault();
+        setModel("search", ((e.currentTarget as HTMLInputElement).value as string));
+        await searchGraph(model.search);
+    } 
     return (
         <>
             <div class="search-entities-window">
@@ -208,18 +241,19 @@ export function SearchEntitiesWindow(props: any) {
                             type="text"
                             tabIndex={1}
                             value={model.search}
-                            use:autofocus autofocus
+                            use:autofocus
+                            autofocus
                             class="form-control"
-                            onInput={(e) => { updateModel("search", e.currentTarget.value); }}
+                            onInput={onSearchChanged}
                         />
-                        <button type="submit" class="btn btn-primary">SELECT</button>
+                        <button type="submit" class="btn btn-primary">Add</button>
                         <button type="button" class="btn btn-default" onClick={handleClose}>Close</button>
                     </div>
                     <div>
                         <For each={results}>{(item) =>
                             <>
                                 <div>
-                                    <button onClick={(e) => { e.preventDefault(); onSelectFromList(item); }}>SELECT</button>{item.name}
+                                    <button onClick={(e) => { e.preventDefault(); onSelectFromList(item); }}>Select</button>{item.name}
                                 </div>
                             </>
                         }</For>

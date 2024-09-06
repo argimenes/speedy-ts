@@ -22,9 +22,12 @@ import { SearchEntitiesBlock } from "../components/search-entities";
 import { renderToNode } from "./common";
 import { MonitorBlock, StandoffEditorBlockMonitor } from "../components/monitor";
 import { TableBlock, TableCellBlock, TableRowBlock } from './tables-blocks';
+import { classList } from 'solid-js/web';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
+
+const passoverClass = "block-modal";
  
 export class BlockManager extends AbstractBlock implements IBlockManager {
     id: string;
@@ -131,22 +134,43 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         }
     }
+    isPassoverBlock(element: HTMLElement) {
+        let current = element;
+        while (current) {
+            if (current.classList.contains(passoverClass)) return true;
+            current = current.parentElement as HTMLElement;
+        }
+        return false;
+    }
+    getBlockFromElement(el: HTMLElement) {
+        let current = el;
+        while (current) {
+            let match = this.registeredBlocks.find(x=> x.container == current);
+            if (match) return match;
+            current = current.parentElement as HTMLElement;
+        }
+        return null;
+    }
     async handleKeyboardInputEvents(e: KeyboardEvent) {
         const ALLOW = true, FORBID = false;
+        const target = e.target as HTMLElement;
         const input = this.toKeyboardInput(e);
         const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
         if (modifiers.some(x => x == input.key)) {
             return ALLOW;
         }
-        const focusedBlock = this.getBlockInFocus() as IBlock;
+        let focusedBlock = this.getBlockInFocus() as IBlock;
         if (!focusedBlock) {
-            return;
+            console.log("handleKeyboardInputEvents", { message: "Focus block not found.", e });
+            if (this.isPassoverBlock(target)) {
+                focusedBlock = this.getBlockFromElement(target) as IBlock;
+                if (!focusedBlock) return ALLOW;
+            } else {
+                return ALLOW;
+            }
         }
         if (!focusedBlock.container.contains(e.target as HTMLElement)) {
             console.log("handleKeyboardInputEvents", { message: "Input received from outside of @focusedBlock", focusedBlock, target: e.target });
-            if (e.target instanceof HTMLInputElement){
-                return ALLOW;
-            }
         }
         const isStandoffBlock = focusedBlock.type == BlockType.StandoffEditorBlock;
         const blocks = [focusedBlock, this];
@@ -3036,17 +3060,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             : caret.right.cache.offset.x;
         updateElement(node, {
             style: {
-                position: "absolute",
                 top: top + "px",
-                left: left + "px",
-                "z-index": 100,
-                width: "500px",
-                height: "50px",
-                border: "1px solid #ccc",
-                "border-radius": "5px",
-                padding: "10px",
-                "background-color": "#efefef"
-            }
+                left: left + "px"
+            },
+            classList: [passoverClass]
         });
         block.container.appendChild(node);
         this.setBlockFocus(searchBlock);

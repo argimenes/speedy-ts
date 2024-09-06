@@ -225,3 +225,15 @@
     -ms-transform: scale(1, -1);
     transform: scale(1, -1);
   }
+  .block-modal {
+    position: absolute;
+    font-size: 1em;
+    z-index: 100;
+    width: 500px;
+    min-height: 50px;
+    height: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #efefef;
+  }
