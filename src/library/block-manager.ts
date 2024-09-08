@@ -3050,7 +3050,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const selection = block.getSelection() as ISelection;
         if (!selection) return;
         const searchBlock = new SearchEntitiesBlock({ source: block, selection });
-        const node = searchBlock.render();
+        const node = await searchBlock.render();
         const caret = args.caret as Caret;
         const top = selection
             ? selection.start.cache.offset.y + selection.start.cache.offset.h + 10

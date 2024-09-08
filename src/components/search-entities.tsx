@@ -7,7 +7,6 @@ import { AbstractBlock } from "../library/abstract-block";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
 import { StandoffProperty } from "../library/standoff-property";
 import { renderToNode } from "../library/common";
-import { BlockManager } from "../library/block-manager";
 
 type Model = {
     search: string;
@@ -68,36 +67,6 @@ export class SearchEntitiesBlock extends AbstractBlock
                 }
             }
         ];
-        // this.addEventListeners();
-    }
-    addEventListeners() {
-        this.node?.addEventListener("keydown", this.handleKeydown.bind(this));
-    }
-    async handleKeydown(e: KeyboardEvent) {
-        const ALLOW = true, FORBID = false;
-        const target = e.target as HTMLElement;
-        const input = this.toKeyboardInput(e);
-        const modifiers = ["Shift", "Alt", "Meta", "Control", "Option"];
-        if (modifiers.some(x => x == input.key)) {
-            return ALLOW;
-        }
-        const match = this.getFirstMatchingInputEvent(input);
-        if (match) {
-            let passthrough = false;
-            const args = {
-                block: this,
-                allowPassthrough: () => passthrough = true,
-                e
-            } as IBindingHandlerArgs;
-            await match.action.handler(args);
-            if (passthrough) {
-                return ALLOW;
-            } else {
-                e.preventDefault();
-                return FORBID;
-            }
-        }
-        return ALLOW;
     }
     close() {
         this.node?.remove();
@@ -111,8 +80,8 @@ export class SearchEntitiesBlock extends AbstractBlock
         }
         this.close();
     }
-    render() {
-        const self= this;
+    async render() {
+        const self = this;
         const [model, setModel] = createStore<Model>({
             search: ""
         });
@@ -155,60 +124,33 @@ export class SearchEntitiesBlock extends AbstractBlock
             e.preventDefault();
             setModel("search", ((e.currentTarget as HTMLInputElement).value as string));
             await searchGraph(model.search);
-        } 
-        const SearchEntitiesWindow = (props: any) =>{
-            const onSelectFromList = (item: Entity) => {
-                if (props.onSelected) {
-                    props.onSelected({
-                        Text: item.name, Value: item.id
-                    });
-                }
+        }
+        const addEntity = async (entity: Entity) => {
+            setEntities([...entities, entity]);
+            await addToGraph(entity);
+            self.onSelected({
+                Text: entity.name, Value: entity.id
+            });
+        }
+        const onSelectFromList = (item: Entity) => {
+            self.onSelected({
+                Text: item.name, Value: item.id
+            });
+        }
+        const handleClose = (e:Event) => {
+            e.preventDefault();
+            self.close();
+        }
+        const handleSubmit = async (e: Event) => {
+            e.preventDefault();
+            if (model.search?.length == 0) {
+                self.close();
+                return;
             }
-            const addEntity = async (entity: Entity) => {
-                setEntities([...entities, entity]);
-                await addToGraph(entity);
-                if (props.onSelected) {
-                    props.onSelected({
-                        Text: entity.name, Value: entity.id
-                    });
-                }
-            }
-            const handleSubmit = async (e: Event) => {
-                e.preventDefault();
-                if (model.search?.length == 0) {
-                    props.onClose && props.onClose();
-                    return;
-                }
-                const entity = { id: uuidv4(), name: model.search } as Entity;
-                await addEntity(entity);
-            }
-            const handleClose = (e:Event) => {
-                e.preventDefault();
-                if (props.onClose) {
-                    props.onClose();
-                }
-            }
-            
-            onMount(async () => {
-                await loadGraph("default.graph.json");
-                if (props.setInstance) {
-                    props.setInstance({
-                        search: async () => {
-                            await searchGraph(model.search);
-                        },
-                        getModel: () => {
-                            return {
-                                search: model.search
-                            };
-                        },
-                        clear: async () => {
-                            setModel("search", "");
-                            searchGraph(model.search);
-                        }
-                    });
-                }
-            })
-            
+            const entity = { id: uuidv4(), name: model.search } as Entity;
+            await addEntity(entity);
+        }
+        const SearchEntitiesWindow = () =>{
             return (
                 <>
                     <div class="search-entities-window">
@@ -240,16 +182,8 @@ export class SearchEntitiesBlock extends AbstractBlock
                 </>
             )
         }
-        const jsx = SearchEntitiesWindow({
-            setInstance: function (i: any) {
-                self.searchInstance = i;
-            },
-            onSubmit: () =>{
-
-            },
-            onSelected: this.onSelected.bind(this),
-            onClose: this.close.bind(this)
-        });
+        await loadGraph("default.graph.json");
+        const jsx = SearchEntitiesWindow();
         const node = this.node = renderToNode(jsx);
         return node;
     }
