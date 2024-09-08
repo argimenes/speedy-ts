@@ -113,6 +113,133 @@ export class SearchEntitiesBlock extends AbstractBlock
     }
     render() {
         const self= this;
+        const [model, setModel] = createStore<Model>({
+            search: ""
+        });
+        const [entities, setEntities] = createStore<Entity[]>([]);
+        const [results, setResults] = createStore<Entity[]>([]);
+        const [files, setFiles] = createStore<string[]>([
+            "default.graph.json"
+        ]);
+        const searchGraph = (text: string) => {
+            const matches = entities.filter(x => x.name.indexOf(text) >= 0);
+            setResults(matches);
+        }
+        const addToGraph = async (entity: Entity) => {
+            const data = {
+                filename: "default.graph.json",
+                id: entity.id,
+                name: entity.name
+            }
+            const res = await fetch(`api/addToGraph`, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                method: "POST",
+                body: JSON.stringify(data)
+            });
+            const json = await res.json();
+            await loadGraph("default.graph.json");
+        }
+        const loadGraph = async (filename: string) => {
+            const res = await fetch("api/loadGraphJson?filename=" + encodeURIComponent(filename));
+            const json = await res.json();
+            if (!json.Success) {
+                return;
+            }
+            const _entities = json.Data.document.nodes;
+            setEntities(_entities);
+            console.log("loadGraph", { json, entities })
+        }
+        const onSearchChanged = async (e: Event) => {
+            e.preventDefault();
+            setModel("search", ((e.currentTarget as HTMLInputElement).value as string));
+            await searchGraph(model.search);
+        } 
+        const SearchEntitiesWindow = (props: any) =>{
+            const onSelectFromList = (item: Entity) => {
+                if (props.onSelected) {
+                    props.onSelected({
+                        Text: item.name, Value: item.id
+                    });
+                }
+            }
+            const addEntity = async (entity: Entity) => {
+                setEntities([...entities, entity]);
+                await addToGraph(entity);
+                if (props.onSelected) {
+                    props.onSelected({
+                        Text: entity.name, Value: entity.id
+                    });
+                }
+            }
+            const handleSubmit = async (e: Event) => {
+                e.preventDefault();
+                if (model.search?.length == 0) {
+                    props.onClose && props.onClose();
+                    return;
+                }
+                const entity = { id: uuidv4(), name: model.search } as Entity;
+                await addEntity(entity);
+            }
+            const handleClose = (e:Event) => {
+                e.preventDefault();
+                if (props.onClose) {
+                    props.onClose();
+                }
+            }
+            
+            onMount(async () => {
+                await loadGraph("default.graph.json");
+                if (props.setInstance) {
+                    props.setInstance({
+                        search: async () => {
+                            await searchGraph(model.search);
+                        },
+                        getModel: () => {
+                            return {
+                                search: model.search
+                            };
+                        },
+                        clear: async () => {
+                            setModel("search", "");
+                            searchGraph(model.search);
+                        }
+                    });
+                }
+            })
+            
+            return (
+                <>
+                    <div class="search-entities-window">
+                        <form onSubmit={handleSubmit}>
+                            <div>
+                                <input
+                                    type="text"
+                                    tabIndex={1}
+                                    value={model.search}
+                                    use:autofocus
+                                    autofocus
+                                    class="form-control"
+                                    onInput={onSearchChanged}
+                                />
+                                <button type="submit" class="btn btn-primary">Add</button>
+                                <button type="button" class="btn btn-default" onClick={handleClose}>Close</button>
+                            </div>
+                            <div>
+                                <For each={results}>{(item) =>
+                                    <>
+                                        <div>
+                                            <button onClick={(e) => { e.preventDefault(); onSelectFromList(item); }}>Select</button>{item.name}
+                                        </div>
+                                    </>
+                                }</For>
+                            </div>
+                        </form>
+                    </div>
+                </>
+            )
+        }
         const jsx = SearchEntitiesWindow({
             setInstance: function (i: any) {
                 self.searchInstance = i;
@@ -137,129 +264,3 @@ export class SearchEntitiesBlock extends AbstractBlock
     }
 }
 
-export function SearchEntitiesWindow(props: any) {
-    const [model, setModel] = createStore<Model>({
-        search: ""
-    });
-    const [entities, setEntities] = createStore<Entity[]>([]);
-    const [results, setResults] = createStore<Entity[]>([]);
-    const [files, setFiles] = createStore<string[]>([
-        "default.graph.json"
-    ]);
-    const addEntity = async (entity: Entity) => {
-        setEntities([...entities, entity]);
-        await addToGraph(entity);
-        if (props.onSelected) {
-            props.onSelected({
-                Text: entity.name, Value: entity.id
-            });
-        }
-    }
-    const handleSubmit = async (e: Event) => {
-        e.preventDefault();
-        if (model.search?.length == 0) {
-            props.onClose && props.onClose();
-            return;
-        }
-        const entity = { id: uuidv4(), name: model.search } as Entity;
-        await addEntity(entity);
-    }
-    const handleClose = (e:Event) => {
-        e.preventDefault();
-        if (props.onClose) {
-            props.onClose();
-        }
-    }
-    const searchGraph = (text: string) => {
-        const matches = entities.filter(x => x.name.indexOf(text) >= 0);
-        setResults(matches);
-    }
-    const addToGraph = async (entity: Entity) => {
-        const data = {
-            filename: "default.graph.json",
-            id: entity.id,
-            name: entity.name
-        }
-        const res = await fetch(`api/addToGraph`, {
-            headers: {
-                "Content-Type": "application/json",
-            },
-            method: "POST",
-            body: JSON.stringify(data)
-        });
-        const json = await res.json();
-        await loadGraph("default.graph.json");
-    }
-    const loadGraph = async (filename: string) => {
-        const res = await fetch("api/loadGraphJson?filename=" + encodeURIComponent(filename));
-        const json = await res.json();
-        if (!json.Success) {
-            return;
-        }
-        const _entities = json.Data.document.nodes;
-        setEntities(_entities);
-        console.log("loadGraph", { json, entities })
-    }
-    const onSelectFromList = (item: Entity) => {
-        if (props.onSelected) {
-            props.onSelected({
-                Text: item.name, Value: item.id
-            });
-        }
-
-    }
-    onMount(async () => {
-        await loadGraph("default.graph.json");
-        if (props.setInstance) {
-            props.setInstance({
-                search: async () => {
-                    await searchGraph(model.search);
-                },
-                getModel: () => {
-                    return {
-                        search: model.search
-                    };
-                },
-                clear: async () => {
-                    setModel("search", "");
-                    searchGraph(model.search);
-                }
-            });
-        }
-    })
-    const onSearchChanged = async (e: Event) => {
-        e.preventDefault();
-        setModel("search", ((e.currentTarget as HTMLInputElement).value as string));
-        await searchGraph(model.search);
-    } 
-    return (
-        <>
-            <div class="search-entities-window">
-                <form onSubmit={handleSubmit}>
-                    <div>
-                        <input
-                            type="text"
-                            tabIndex={1}
-                            value={model.search}
-                            use:autofocus
-                            autofocus
-                            class="form-control"
-                            onInput={onSearchChanged}
-                        />
-                        <button type="submit" class="btn btn-primary">Add</button>
-                        <button type="button" class="btn btn-default" onClick={handleClose}>Close</button>
-                    </div>
-                    <div>
-                        <For each={results}>{(item) =>
-                            <>
-                                <div>
-                                    <button onClick={(e) => { e.preventDefault(); onSelectFromList(item); }}>Select</button>{item.name}
-                                </div>
-                            </>
-                        }</For>
-                    </div>
-                </form>
-            </div>
-        </>
-    )
-}
