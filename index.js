@@ -67,7 +67,7 @@ app.post('/api/addToGraph', async (req, res) => {
      const filepath = path.join(__dirname + "/data/" + filename);
      const data = fs.readFileSync(filepath) || "{ nodes: [], edges: [] }";
      const json = JSON.parse(data);
-     json.nodes.push('/api/addToGraph', { id, name });
+     json.nodes.push({ id, name, type: "Entity" });
      console.log({ nodes: json.nodes });
      fs.writeFileSync(filepath, JSON.stringify(json));
      res.send({
