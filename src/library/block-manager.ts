@@ -1477,18 +1477,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     handler: this.applyClockToText.bind(this)
                 }
             },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: "Control-F"
-                },
-                action: {
-                    name: "Flip",
-                    description: "Flips the selected text upside down",
-                    handler: this.applyFlipToText.bind(this)
-                }
-            },
+            // {
+            //     mode: "default",
+            //     trigger: {
+            //         source: InputEventSource.Keyboard,
+            //         match: "Control-F"
+            //     },
+            //     action: {
+            //         name: "Flip",
+            //         description: "Flips the selected text upside down",
+            //         handler: this.applyFlipToText.bind(this)
+            //     }
+            // },
             {
                 mode: "default",
                 trigger: {
@@ -1759,6 +1759,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         const url = args.property.metadata.url;
                         window.open(url, '_blank')?.focus();
                     }
+                }
+            },
+            {
+                type: "codex/search/highlight",
+                name: "Find text highlight",
+                decorate: {
+                    cssClass: "codex-search-highlight"
                 }
             },
             {
@@ -3031,7 +3038,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             // TBC
         }  
     }
-    handleFind(args: IBindingHandlerArgs) {
+    async handleFind(args: IBindingHandlerArgs) {
         const textblocks = this.registeredBlocks.filter(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock[];
         const len = textblocks.length;
         const search = prompt("Text: ");
@@ -3043,7 +3050,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     highlight(block: StandoffEditorBlock, matches: any[]) {
-
+        const props = [];
+        for (let i = 0; i < matches.length; i++) {
+            let match = matches[i];
+            let prop = {
+                type: "codex/search/highlight",
+                start: match.start,
+                end: match.end
+            }
+            props.push(prop);
+        }
+        if (props.length) {
+            block.addStandoffPropertiesDto(props);
+            block.applyStandoffPropertyStyling();
+        }
     }
     async applyEntityReferenceToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;

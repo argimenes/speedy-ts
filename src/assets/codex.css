@@ -237,3 +237,6 @@
     padding: 10px;
     background-color: #efefef;
   }
+  .codex-search-highlight {
+    background-color: pink;
+  }
