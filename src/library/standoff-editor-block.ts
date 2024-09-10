@@ -5,7 +5,7 @@ import { StandoffProperty } from "./standoff-property";
 import { AbstractBlock } from "./abstract-block";
 import { Cell, Row } from "./cell";
 import { KEYS } from "./keyboard";
-import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation } from "./types";
+import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation, FindMatch } from "./types";
 import { DocumentBlock } from "./document-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 
@@ -202,11 +202,11 @@ export class StandoffEditorBlock extends AbstractBlock {
     getAllTextMatches(search: string) {
         const len = search.length;
         const text = this.getText();
-        const matches: { match: string, start: number, end: number }[] = [];
+        const matches: FindMatch[] = [];
         let match;
-        const regex = new RegExp(search, 'g');
+        const regex = new RegExp(search, 'gi');
         while ((match = regex.exec(text)) !== null) {
-            matches.push({ match: match[0], start: match.index, end: match.index + len - 1 });
+            matches.push({ block: this, match: match[0], start: match.index, end: match.index + len - 1 });
         }
         return matches;
     }

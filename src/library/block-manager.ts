@@ -23,6 +23,7 @@ import { renderToNode } from "./common";
 import { MonitorBlock, StandoffEditorBlockMonitor } from "../components/monitor";
 import { TableBlock, TableCellBlock, TableRowBlock } from './tables-blocks';
 import { classList } from 'solid-js/web';
+import { FindReplaceBlock } from '../components/find-replace';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
@@ -3039,36 +3040,28 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }  
     }
     async handleFind(args: IBindingHandlerArgs) {
-        const textblocks = this.registeredBlocks.filter(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock[];
-        const len = textblocks.length;
-        const search = prompt("Text: ");
-        if (!search) return;
-        for (let i = 0; i < len; i++) {
-            let block = textblocks[i];
-            const matches = block.getAllTextMatches(search);
-            this.applyHighlights(block, matches);
-        }
-    }
-    removeHighlights(block: StandoffEditorBlock) {
-        const props = block.standoffProperties.filter(x => x.type == "codex/search/highlight");
-        props.forEach(x => x.destroy());
-    }
-    applyHighlights(block: StandoffEditorBlock, matches: any[]) {
-        const props = [];
-        for (let i = 0; i < matches.length; i++) {
-            let match = matches[i];
-            let prop = {
-                type: "codex/search/highlight",
-                start: match.start,
-                end: match.end,
-                clientOnly: true
-            }
-            props.push(prop);
-        }
-        if (props.length) {
-            block.addStandoffPropertiesDto(props);
-            block.applyStandoffPropertyStyling();
-        }
+        const source = args.block as StandoffEditorBlock;
+        const findReplace = new FindReplaceBlock({ manager: this, source });
+        const node = await findReplace.render();
+        const selection = source.getSelection() as ISelection;
+        const caret = args.caret as Caret;
+        const top = selection
+            ? selection.start.cache.offset.y + selection.start.cache.offset.h + 10
+            : caret.right.cache.offset.y + caret.right.cache.offset.h + 10;
+        const left = selection
+            ? selection.start.cache.offset.x
+            : caret.right.cache.offset.x;
+        updateElement(node, {
+            style: {
+                top: top + "px",
+                left: left + "px"
+            },
+            classList: [passoverClass]
+        });
+        findReplace.container.appendChild(node);
+        source.container.appendChild(findReplace.container);
+        this.registerBlock(findReplace);
+        this.setBlockFocus(findReplace);
     }
     async applyEntityReferenceToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
@@ -3090,7 +3083,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             },
             classList: [passoverClass]
         });
-        block.container.appendChild(node);
+        searchBlock.container.appendChild(node);
+        block.container.appendChild(searchBlock.container);
+        this.registerBlock(searchBlock);
         this.setBlockFocus(searchBlock);
     }
     getHighestZIndex() {

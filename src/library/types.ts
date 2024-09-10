@@ -83,6 +83,13 @@ export interface IBlock {
     removeBlockProperty(bp: BlockProperty): void;
 }
 
+export type FindMatch = {
+    block: StandoffEditorBlock;
+    match: string;
+    start: number;
+    end: number;
+}
+
 export interface IBlockRelation {
     name: string;
     sourceId: GUID;
