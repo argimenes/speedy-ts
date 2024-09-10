@@ -3046,17 +3046,22 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         for (let i = 0; i < len; i++) {
             let block = textblocks[i];
             const matches = block.getAllTextMatches(search);
-            this.highlight(block, matches);
+            this.applyHighlights(block, matches);
         }
     }
-    highlight(block: StandoffEditorBlock, matches: any[]) {
+    removeHighlights(block: StandoffEditorBlock) {
+        const props = block.standoffProperties.filter(x => x.type == "codex/search/highlight");
+        props.forEach(x => x.destroy());
+    }
+    applyHighlights(block: StandoffEditorBlock, matches: any[]) {
         const props = [];
         for (let i = 0; i < matches.length; i++) {
             let match = matches[i];
             let prop = {
                 type: "codex/search/highlight",
                 start: match.start,
-                end: match.end
+                end: match.end,
+                clientOnly: true
             }
             props.push(prop);
         }

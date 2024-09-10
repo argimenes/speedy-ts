@@ -18,8 +18,9 @@ export class StandoffProperty {
     block: StandoffEditorBlock; 
     bracket: { left?: HTMLElement; right?: HTMLElement };
     styled: boolean;
+    clientOnly?: boolean;
     wrapper?: CellHtmlElement;
-    constructor({ type, start, end, block, id, schema, value, metadata }: IStandoffPropertyConstructor) {
+    constructor({ type, start, end, block, id, schema, value, metadata, clientOnly }: IStandoffPropertyConstructor) {
         this.id = id || uuidv4();
         this.isDeleted = false;
         this.type = type;
@@ -30,6 +31,7 @@ export class StandoffProperty {
         this.value = value || "";
         this.block = block;
         this.cache = {};
+        this.clientOnly = clientOnly;
         this.styled = false;
         this.bracket = {
             left: undefined,
