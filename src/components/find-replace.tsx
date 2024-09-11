@@ -112,7 +112,58 @@ export class FindReplaceBlock extends AbstractBlock
                     }
                 }
             }
+        },
+        {
+            mode: "default",
+            trigger: {
+                source: InputEventSource.Keyboard,
+                match: "Enter"
+            },
+            action: {
+                name: "Replace current item.",
+                description: `
+                    
+                `,
+                handler: async (args) => {
+                    if (!model.replaceText) return;
+                    if (mode() == Mode.Find) {
+                        moveDown();
+                    } else {
+                        replaceCurrent();
+                        moveDown();
+                    }
+                }
+            }
+        },
+        {
+            mode: "default",
+            trigger: {
+                source: InputEventSource.Keyboard,
+                match: "Meta-Enter"
+            },
+            action: {
+                name: "Replace all.",
+                description: `
+                    
+                `,
+                handler: async (args) => {
+                    replaceAll();
+                }
+            }
         });
+        const replaceAll = () => {
+            for (var i = 0; i < matches.length; i++) {
+                let match = matches[i];
+                self.removeHighlights(match.block);
+                self.replace(match, model.replaceText);
+            }
+        }
+        const replaceCurrent = () => {
+            const match = matches[currentIndex()];
+            const prop = match.block.standoffProperties.find(x => x.type == "codex/search/highlight" && x.start.index == match.start && x.end.index == match.end);
+            if (prop) prop.destroy();
+            self.replace(match, model.replaceText);
+        }
         const [mode, setMode] = createSignal<Mode>(Mode.Find);
         const [model, setModel] = createStore<Model>({
             findText: "",
@@ -131,6 +182,9 @@ export class FindReplaceBlock extends AbstractBlock
         }
         const upClicked = (e: Event) => {
             e.preventDefault();
+            moveUp();
+        }
+        const moveUp = () => {
             if (currentIndex() > 0) {
                 setCurrentIndex(currentIndex()-1);
             } else {
@@ -138,14 +192,17 @@ export class FindReplaceBlock extends AbstractBlock
             }
             setMatchFocus();
         }
-        const downClicked = (e: Event) => {
-            e.preventDefault();
+        const moveDown = () => {
             if (currentIndex() < matches.length - 1) {
                 setCurrentIndex(currentIndex() + 1);
             } else {
                 setCurrentIndex(0);
             }
             setMatchFocus();
+        }
+        const downClicked = (e: Event) => {
+            e.preventDefault();
+            moveDown();
         }
         const onFind = async (e: Event) => {
             e.preventDefault();
@@ -212,7 +269,7 @@ export class FindReplaceBlock extends AbstractBlock
                                         placeholder='Replace'
                                         value={model.replaceText}
                                         class="form-control"
-                                        onInput={onFind}
+                                        onInput={(e) => setModel("replaceText", e.currentTarget.value)}
                                     />
                                     <button onClick={replaceNextClicked}>Next</button>
                                     <button onClick={replaceAllClicked}>All</button>
