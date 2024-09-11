@@ -157,6 +157,7 @@ export class SearchEntitiesBlock extends AbstractBlock
                         <form onSubmit={handleSubmit}>
                             <div>
                                 <input
+                                    id={self.id + "-input"}
                                     type="text"
                                     tabIndex={1}
                                     value={model.search}
@@ -171,7 +172,7 @@ export class SearchEntitiesBlock extends AbstractBlock
                             <div>
                                 <For each={results}>{(item) =>
                                     <>
-                                        <div>
+                                        <div class="search-entities-list-item">
                                             <button onClick={(e) => { e.preventDefault(); onSelectFromList(item); }}>Select</button>{item.name}
                                         </div>
                                     </>
@@ -186,6 +187,11 @@ export class SearchEntitiesBlock extends AbstractBlock
         const jsx = SearchEntitiesWindow();
         const node = this.node = renderToNode(jsx);
         return node;
+    }
+    setFocus(){
+        const input = document.getElementById(this.id + "-input");
+        if (!input) return;
+        input.focus();
     }
     serialize(): IBlockDto {
         throw new Error("Method not implemented.");

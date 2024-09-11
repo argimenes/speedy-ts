@@ -1634,7 +1634,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Control-E"
+                    match: "Control-Shift-E"
                 },
                 action: {
                     name: "Entity reference",
@@ -3087,6 +3087,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.container.appendChild(searchBlock.container);
         this.registerBlock(searchBlock);
         this.setBlockFocus(searchBlock);
+        searchBlock.setFocus();
     }
     getHighestZIndex() {
         return ++this.highestZIndex;
