@@ -1,6 +1,6 @@
 import { createStore } from "solid-js/store";
 import { autofocus } from "@solid-primitives/autofocus";
-import { BlockType, FindMatch, GUID, IAbstractBlockConstructor, IBlock, IBlockDto, InputEventSource } from "../library/types";
+import { BlockType, CARET, FindMatch, GUID, IAbstractBlockConstructor, IBlock, IBlockDto, InputEventSource } from "../library/types";
 import { createSignal, Show } from "solid-js";
 import { AbstractBlock } from "../library/abstract-block";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
@@ -68,6 +68,12 @@ export class FindReplaceBlock extends AbstractBlock
             block.applyStandoffPropertyStyling();
         }
     }
+    replace(match: FindMatch, replaceText: string) {
+        const block = match.block;
+        block.removeCellsAtIndex(match.start, match.end - match.start + 1);
+        block.insertTextAtIndex(replaceText, match.start);
+        block.setCaret(match.start + replaceText.length - 1, CARET.LEFT);
+    }
     async render() {
         const self = this;
         this.inputEvents.push({
@@ -84,6 +90,26 @@ export class FindReplaceBlock extends AbstractBlock
                 handler: async (args) => {
                     clearHighlights();
                     self.close();
+                }
+            }
+        },
+        {
+            mode: "default",
+            trigger: {
+                source: InputEventSource.Keyboard,
+                match: "Control-H"
+            },
+            action: {
+                name: "Replace mode.",
+                description: `
+                    
+                `,
+                handler: async (args) => {
+                    if (mode() == Mode.Find) {
+                        setMode(Mode.Replace);
+                    } else {
+                        setMode(Mode.Find);
+                    }
                 }
             }
         });
