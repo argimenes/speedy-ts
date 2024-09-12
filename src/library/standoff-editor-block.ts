@@ -96,6 +96,20 @@ export class StandoffEditorBlock extends AbstractBlock {
     addMode(mode: string) {
         this.modes.push(mode);
     }
+    replace(match: FindMatch, replaceText: string) {
+        const sLen = match.end - match.start + 1;
+        const rLen = replaceText.length;
+        for (let i = 1; i <= rLen; i++) {
+            let c = replaceText[i-1];
+            if (i <= sLen) {
+                let cell = this.cells[match.start + i - 1];
+                cell.setText(c);
+            } else {
+                this.insertTextAtIndex(c, match.start + i - 1);
+            }
+        }
+        this.setCaret(match.start + replaceText.length - 1, CARET.LEFT);
+    }
     getMapOfActiveInputEvents() {
         /**
          * Events should be grouped by modes. The modes at the top of the modes array are higher in priority.

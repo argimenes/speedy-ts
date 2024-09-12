@@ -1,7 +1,7 @@
 import { classList } from "solid-js/web";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { updateElement } from "./svg";
-import { ICellCoordOffsets, CellHtmlElement, ICellConstructor, ELEMENT_ROLE, DIRECTION } from "./types";
+import { ICellCoordOffsets, CellHtmlElement, ICellConstructor, ELEMENT_ROLE, DIRECTION, CellElement } from "./types";
 
 export class Cell {
     index: number;
@@ -38,6 +38,20 @@ export class Cell {
          * of elements, such as SVGs.
          */
         return this.createSpan();
+    }
+    setText(c: string) {
+        this.text = c;
+        const span = this.element as CellHtmlElement;
+        span.innerHTML = c;
+        if (c === " ") {
+            updateElement(span, {
+                classList: ["cell-space"]
+            });
+            span.speedy.isSpace = true;
+        } else {
+            span.classList.remove("cell-space");
+            span.speedy.isSpace = false;
+        }
     }
     createSpan() {
         const span = document.createElement("SPAN") as CellHtmlElement;

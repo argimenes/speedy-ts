@@ -69,10 +69,7 @@ export class FindReplaceBlock extends AbstractBlock
         }
     }
     replace(match: FindMatch, replaceText: string) {
-        const block = match.block;
-        block.removeCellsAtIndex(match.start, match.end - match.start + 1);
-        block.insertTextAtIndex(replaceText, match.start);
-        block.setCaret(match.start + replaceText.length - 1, CARET.LEFT);
+        match.block.replace(match, replaceText);
     }
     async render() {
         const self = this;
