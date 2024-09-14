@@ -458,7 +458,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             id: this.id,
             type: this.type,
             text: this.getText(),
-            standoffProperties: this.standoffProperties?.map(x => x.serialize()) || [],
+            standoffProperties: this.standoffProperties?.filter(x => !x.clientOnly).map(x => x.serialize()) || [],
             blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
             children: this.blocks?.map(x => x.serialize()) || [],
             metadata: this.metadata,

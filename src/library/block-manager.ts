@@ -24,6 +24,7 @@ import { MonitorBlock, StandoffEditorBlockMonitor } from "../components/monitor"
 import { TableBlock, TableCellBlock, TableRowBlock } from './tables-blocks';
 import { classList } from 'solid-js/web';
 import { FindReplaceBlock } from '../components/find-replace';
+import { ControlPanelBlock } from '../components/control-panel';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
@@ -76,6 +77,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.registeredBlocks = [this];
         this.textProcessor = new TextProcessor();
         this.attachEventBindings();
+        this.setupControlPanel();
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
@@ -2494,6 +2496,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
 
         documentBlock.generateIndex();
+
+        await this.setupControlPanel();
     }
     insertItem<T>(list: T[], index: number, item: T) {
         list.splice(index, 0, item);
@@ -3062,6 +3066,15 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         source.container.appendChild(findReplace.container);
         this.registerBlock(findReplace);
         this.setBlockFocus(findReplace);
+    }
+    async setupControlPanel() {
+        const panel = new ControlPanelBlock({ manager: this });
+        const node = await panel.render() as HTMLElement;
+        panel.container.appendChild(node);
+        this.container.appendChild(panel.container);
+        this.registerBlock(panel);
+        this.setBlockFocus(panel);
+        panel.setFocus();
     }
     async applyEntityReferenceToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
