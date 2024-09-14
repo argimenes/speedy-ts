@@ -233,7 +233,7 @@ export class FindReplaceBlock extends AbstractBlock
         const selection = this.source.getSelection();
         if (selection) {
             const text = this.source.getText();
-            const find = text.slice(selection.start.index, selection.end.index);
+            const find = text.slice(selection.start.index, selection.end.index + 1);
             setModel("findText", find);
         }
         const SearchEntitiesWindow = () =>{

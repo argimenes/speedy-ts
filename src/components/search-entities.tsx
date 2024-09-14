@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createStore } from "solid-js/store";
 import { autofocus } from "@solid-primitives/autofocus";
 import { GUID, IAbstractBlockConstructor, IBlock, IBlockDto, InputEventSource, ISelection } from "../library/types";
-import { For } from "solid-js";
+import { createSignal, For } from "solid-js";
 import { AbstractBlock } from "../library/abstract-block";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
 import { StandoffProperty } from "../library/standoff-property";
@@ -30,43 +30,7 @@ export class SearchEntitiesBlock extends AbstractBlock
     constructor(args: ISearchEntitiesBlockConstructor) {
         super(args);
         this.source = args.source;
-        const self = this;
         this.selection = args.selection;
-        this.inputEvents= [
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: "Enter"
-                },
-                action: {
-                    name: "Search.",
-                    description: `
-                        
-                    `,
-                    handler: async (args) => {
-                        args.allowPassthrough && args.allowPassthrough();
-                        self.searchInstance.search();
-                    }
-                }
-            },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: "Escape"
-                },
-                action: {
-                    name: "Close the search modal.",
-                    description: `
-                        
-                    `,
-                    handler: async (args) => {
-                        self.close();
-                    }
-                }
-            }
-        ];
     }
     close() {
         this.node?.remove();
@@ -82,11 +46,92 @@ export class SearchEntitiesBlock extends AbstractBlock
     }
     async render() {
         const self = this;
+        this.inputEvents.push(
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Enter"
+                },
+                action: {
+                    name: "Select the current entity.",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        const item = results[currentResultIndex()];
+                        self.onSelected({
+                            Text: item.name, Value: item.id
+                        });
+                        self.close();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Escape"
+                },
+                action: {
+                    name: "Quit the entity search.",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        self.close();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "ArrowDown"
+                },
+                action: {
+                    name: "Go down one item in the search results",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        const len = results.length;
+                        if (currentResultIndex() == len -1) {
+                            setCurrentResultIndex(0);
+                            return;
+                        }
+                        setCurrentResultIndex(currentResultIndex()+1);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "ArrowUp"
+                },
+                action: {
+                    name: "Go up one item in the search results",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        const len = results.length;
+                        if (currentResultIndex() == 0) {
+                            setCurrentResultIndex(len-1);
+                            return;
+                        }
+                        setCurrentResultIndex(currentResultIndex()-1);
+                    }
+                }
+            }
+        );
         const [model, setModel] = createStore<Model>({
             search: ""
         });
         const [entities, setEntities] = createStore<Entity[]>([]);
         const [results, setResults] = createStore<Entity[]>([]);
+        const [currentResultIndex, setCurrentResultIndex] = createSignal<number>(0);
         const [files, setFiles] = createStore<string[]>([
             "default.graph.json"
         ]);
@@ -150,6 +195,12 @@ export class SearchEntitiesBlock extends AbstractBlock
             const entity = { id: uuidv4(), name: model.search } as Entity;
             await addEntity(entity);
         }
+        const selection = this.source.getSelection();
+        if (selection) {
+            const text = this.source.getText();
+            const find = text.slice(selection.start.index, selection.end.index + 1);
+            setModel("search", find);
+        }
         const SearchEntitiesWindow = () =>{
             return (
                 <>
@@ -170,10 +221,12 @@ export class SearchEntitiesBlock extends AbstractBlock
                                 <button type="button" class="btn btn-default" onClick={handleClose}>Close</button>
                             </div>
                             <div>
-                                <For each={results}>{(item) =>
+                                <For each={results}>{(item, i) =>
                                     <>
                                         <div class="search-entities-list-item">
-                                            <button onClick={(e) => { e.preventDefault(); onSelectFromList(item); }}>Select</button>{item.name}
+                                            <div classList={{ "highlight": i() == currentResultIndex() }}>
+                                                <button onClick={(e) => { e.preventDefault(); onSelectFromList(item); }}>Select</button>{item.name}
+                                            </div>
                                         </div>
                                     </>
                                 }</For>
