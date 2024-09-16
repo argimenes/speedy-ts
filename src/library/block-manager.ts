@@ -1636,7 +1636,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Control-Shift-E"
+                    match: "Control-E"
                 },
                 action: {
                     name: "Entity reference",
@@ -3078,11 +3078,28 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     async applyEntityReferenceToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
-        const selection = block.getSelection() as ISelection;
-        if (!selection) return;
-        const searchBlock = new SearchEntitiesBlock({ source: block, selection });
-        const node = await searchBlock.render();
         const caret = args.caret as Caret;
+        let selection = block.getSelection() as ISelection;
+        if (!selection) {
+            const word = block.getWordAtIndex(caret.right.index);
+            if (!word) return;
+            selection = { start: block.cells[word.start], end: block.cells[word.end], direction: DIRECTION.RIGHT } as ISelection;
+            block.addStandoffPropertiesDto([{
+                type: "codex/search/highlight", start: selection.start.index, end: selection.end.index, clientOnly: true
+            }]);
+            block.applyStandoffPropertyStyling();
+        }
+        const searchBlock = new SearchEntitiesBlock({
+            source: block,
+            selection,
+            onClose: (search: SearchEntitiesBlock) => {
+                let block = search.source;
+                block.removeStandoffPropertiesByType("codex/search/highlight");
+                block.manager?.setBlockFocus(block);
+                block.setCaret(block.lastCaret.index, block.lastCaret.offset);
+            }
+        });
+        const node = await searchBlock.render();
         const top = selection
             ? selection.start.cache.offset.y + selection.start.cache.offset.h + 10
             : caret.right.cache.offset.y + caret.right.cache.offset.h + 10;

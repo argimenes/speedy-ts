@@ -162,6 +162,12 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
         return words;
     }
+    getWordAtIndex(i: number) {
+        const text = this.getText();
+        const words = this.getWordsFromText(text);
+        const word = words.find(x => x.start <= i && i <= x.end);
+        return word;
+    }
     getSentencesFromText(text: string) {
         const re = new RegExp(/[^.?!\r]+[.!?\r]+[\])'"`’”]*|.+/, "g");
         const results = [];
@@ -875,6 +881,10 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.blockSchemas = [];
         this.overlays = [];
         if (this.container) this.container.remove();
+    }
+    removeStandoffPropertiesByType(type: string) {
+        const props = this.standoffProperties.filter(x => x.type == type);
+        props.forEach(p => p.destroy());
     }
     removeCellsAtIndex(index: number, length: number, updateCaret?: boolean) {
         for (let i = 1; i <= length; i++) {

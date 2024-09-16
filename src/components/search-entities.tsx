@@ -20,6 +20,7 @@ export type Entity = {
 export interface ISearchEntitiesBlockConstructor extends IAbstractBlockConstructor {
     source: StandoffEditorBlock;
     selection: ISelection;
+    onClose?: (search: SearchEntitiesBlock) => void;
 }
 export class SearchEntitiesBlock extends AbstractBlock
 {
@@ -27,15 +28,18 @@ export class SearchEntitiesBlock extends AbstractBlock
     node?: HTMLElement;
     searchInstance?: any;
     selection: ISelection;
+    onClose?: (search: SearchEntitiesBlock) => void
     constructor(args: ISearchEntitiesBlockConstructor) {
         super(args);
         this.source = args.source;
         this.selection = args.selection;
+        this.onClose = args.onClose;
     }
     close() {
         this.node?.remove();
-        this.source.manager?.setBlockFocus(this.source);
-        this.source.setCaret(this.source.lastCaret.index, this.source.lastCaret.offset);
+        if (this.onClose) {
+            this.onClose(this);
+        }
     }
     onSelected(item: any) {
         if (this.selection) {
@@ -47,6 +51,23 @@ export class SearchEntitiesBlock extends AbstractBlock
     async render() {
         const self = this;
         this.inputEvents.push(
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-Backspace"
+                },
+                action: {
+                    name: "Clear the search field.",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        setModel("search", "");
+                        await searchGraph(model.search);
+                    }
+                }
+            },
             {
                 mode: "default",
                 trigger: {
@@ -136,7 +157,7 @@ export class SearchEntitiesBlock extends AbstractBlock
             "default.graph.json"
         ]);
         const searchGraph = (text: string) => {
-            const matches = entities.filter(x => x.name.indexOf(text) >= 0);
+            const matches = entities.filter(x => x.name?.toLowerCase().indexOf(text.toLowerCase()) >= 0);
             setResults(matches);
         }
         const addToGraph = async (entity: Entity) => {
@@ -242,7 +263,7 @@ export class SearchEntitiesBlock extends AbstractBlock
         return node;
     }
     setFocus(){
-        const input = document.getElementById(this.id + "-input");
+        const input = this.container.querySelector("input");
         if (!input) return;
         input.focus();
     }
