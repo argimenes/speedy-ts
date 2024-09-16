@@ -1,12 +1,14 @@
 import { v4 as uuidv4 } from 'uuid';
 import { createStore } from "solid-js/store";
 import { autofocus } from "@solid-primitives/autofocus";
-import { GUID, IAbstractBlockConstructor, IBlock, IBlockDto, InputEventSource, ISelection } from "../library/types";
+import { FindMatch, GUID, IAbstractBlockConstructor, IBlock, IBlockDto, InputEventSource, ISelection } from "../library/types";
 import { createSignal, For } from "solid-js";
 import { AbstractBlock } from "../library/abstract-block";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
 import { StandoffProperty } from "../library/standoff-property";
 import { renderToNode } from "../library/common";
+import { FindReplaceBlock } from './find-replace';
+import { BlockManager } from '../library/block-manager';
 
 type Model = {
     search: string;
@@ -20,7 +22,8 @@ export type Entity = {
 export interface ISearchEntitiesBlockConstructor extends IAbstractBlockConstructor {
     source: StandoffEditorBlock;
     selection: ISelection;
-    onClose?: (search: SearchEntitiesBlock) => void;
+    onClose?: (search: SearchEntitiesBlock) => Promise<void>;
+    onBulkSubmit?: (item: { Text: string, Value: string; }, matches: FindMatch[]) => Promise<void>;
 }
 export class SearchEntitiesBlock extends AbstractBlock
 {
@@ -28,12 +31,16 @@ export class SearchEntitiesBlock extends AbstractBlock
     node?: HTMLElement;
     searchInstance?: any;
     selection: ISelection;
-    onClose?: (search: SearchEntitiesBlock) => void
+    onClose?: (search: SearchEntitiesBlock) => Promise<void>;
+    onBulkSubmit?: (item: { Text: string, Value: string; }, matches: FindMatch[]) => Promise<void>;
+    matches: FindMatch[];
     constructor(args: ISearchEntitiesBlockConstructor) {
         super(args);
         this.source = args.source;
         this.selection = args.selection;
         this.onClose = args.onClose;
+        this.onBulkSubmit = args.onBulkSubmit;
+        this.matches = [];
     }
     close() {
         this.node?.remove();
@@ -51,6 +58,27 @@ export class SearchEntitiesBlock extends AbstractBlock
     async render() {
         const self = this;
         this.inputEvents.push(
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-A"
+                },
+                action: {
+                    name: "Select all matches of the text in all text blocks.",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        const _text = self.source.getText();
+                        const text = _text.substring(self.selection.start.index, self.selection.end.index + 1);
+                        const find = new FindReplaceBlock({ source: self.source, manager: self.source!.manager as BlockManager });
+                        const matches = self.matches = find.findMatches(text) as FindMatch[];
+                        matches.forEach(m => m.block.removeStandoffPropertiesByType("codex/search/highlight"));
+                        matches.forEach(m => find.applyHighlights(m.block, [m]));
+                    }
+                }
+            },
             {
                 mode: "default",
                 trigger: {
@@ -81,6 +109,13 @@ export class SearchEntitiesBlock extends AbstractBlock
                     `,
                     handler: async (args) => {
                         const item = results[currentResultIndex()];
+                        if (self.onBulkSubmit) {
+                            self.onBulkSubmit({
+                                Text: item.name, Value: item.id
+                            }, self.matches);
+                            self.close();
+                            return;
+                        }
                         self.onSelected({
                             Text: item.name, Value: item.id
                         });

@@ -12,7 +12,7 @@ import { AbstractBlock } from "./abstract-block";
 import { BlockProperty } from "./block-property";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { StandoffProperty } from "./standoff-property";
-import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto, BlockPropertyDto } from "./types";
+import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto, BlockPropertyDto, FindMatch } from "./types";
 import { PlainTextBlock } from "./plain-text-block";
 import { CodeMirrorBlock } from "./code-mirror-block";
 import { ClockPlugin } from "./plugins/clock";
@@ -3092,11 +3092,24 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const searchBlock = new SearchEntitiesBlock({
             source: block,
             selection,
-            onClose: (search: SearchEntitiesBlock) => {
+            onClose: async (search: SearchEntitiesBlock) => {
                 let block = search.source;
                 block.removeStandoffPropertiesByType("codex/search/highlight");
                 block.manager?.setBlockFocus(block);
                 block.setCaret(block.lastCaret.index, block.lastCaret.offset);
+            },
+            onBulkSubmit: async (item: any, matches: FindMatch[]) => {
+                matches.forEach(m => {
+                    let prop = {
+                        type: "codex/entity-reference",
+                        value: item.Value,
+                        start: m.start,
+                        end: m.end,
+                    };
+                    m.block.addStandoffPropertiesDto([prop]);
+                    m.block.removeStandoffPropertiesByType("codex/search/highlight");
+                    m.block.applyStandoffPropertyStyling();
+                })
             }
         });
         const node = await searchBlock.render();
