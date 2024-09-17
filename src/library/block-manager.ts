@@ -1636,7 +1636,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Control-E"
+                    match: "Control-Shift-E"
                 },
                 action: {
                     name: "Entity reference",
