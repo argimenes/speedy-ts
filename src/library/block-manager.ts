@@ -12,7 +12,7 @@ import { AbstractBlock } from "./abstract-block";
 import { BlockProperty } from "./block-property";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { StandoffProperty } from "./standoff-property";
-import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto, BlockPropertyDto, FindMatch } from "./types";
+import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto, BlockPropertyDto, FindMatch, StandoffEditorBlockDto } from "./types";
 import { PlainTextBlock } from "./plain-text-block";
 import { CodeMirrorBlock } from "./code-mirror-block";
 import { ClockPlugin } from "./plugins/clock";
@@ -3131,6 +3131,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.registerBlock(searchBlock);
         this.setBlockFocus(searchBlock);
         searchBlock.setFocus();
+    }
+    async updateEntityReferencesGraph(filename: string) {
+        const textBlocks = this.registeredBlocks
+            .filter(x => x.type == BlockType.StandoffEditorBlock)
+            .map(x => x.serialize() as unknown as StandoffEditorBlockDto);
+        const props = textBlocks.map(x => ({ blockId: x.id, props: x.standoffProperties.filter(p => p.type == "codex/entity-reference" ) }));
+
+        const res = await fetch("api/graph/update-entity-references", {
+            headers: { "Content-Type": "application/json" },
+            method: "POST",
+            body: JSON.stringify({})
+        })
     }
     getHighestZIndex() {
         return ++this.highestZIndex;

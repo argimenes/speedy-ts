@@ -60,6 +60,19 @@ app.get("/api/listDocuments", function (req, res) {
           res.send({ files: files });
      });
 });
+app.post('/api/graph/update-entity-references', async (req, res) => {
+     const filename = req.body.filename;
+     const nodes = req.body.nodes;
+     const edges = req.body.edges;
+     const filepath = path.join(__dirname + "/data/" + filename);
+     const data = fs.readFileSync(filepath) || "{ nodes: [], edges: [] }";
+     const json = JSON.parse(data);
+     json.edges.push(...edges);
+     json.nodes.push(...nodes);
+     console.log({ filename, nodes: json.nodes, edges: json.edges });
+     fs.writeFileSync(filepath, JSON.stringify(json));
+     res.send({ Success: true });
+});
 app.post('/api/addToGraph', async (req, res) => {
      const filename = req.body.filename;
      const id = req.body.id;
