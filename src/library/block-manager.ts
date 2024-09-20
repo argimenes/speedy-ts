@@ -3133,16 +3133,38 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         searchBlock.setFocus();
     }
     async updateEntityReferencesGraph(filename: string) {
+        const self = this;
         const textBlocks = this.registeredBlocks
             .filter(x => x.type == BlockType.StandoffEditorBlock)
             .map(x => x.serialize() as unknown as StandoffEditorBlockDto);
-        const props = textBlocks.map(x => ({ blockId: x.id, props: x.standoffProperties.filter(p => p.type == "codex/entity-reference" ) }));
+        const data = textBlocks.map(x => ({
+            document: {
+                id: self.id,
+                filename: filename
+            },
+            standoffProperties: x.standoffProperties
+                .filter(p => p.type == "codex/entity-reference" )
+                .map(p => ({
+                    id: uuidv4(),
+                    documentId: self.id,
+                    blockId: x.id,
+                    type: "StandoffProperty",
+                    name: "codex/entity-reference",
+                    start: p.start,
+                    end: p.end,
+                    value: p.value,
+                    text: p.text
+                }))
+        }));
+        console.log({ data });
 
         const res = await fetch("api/graph/update-entity-references", {
             headers: { "Content-Type": "application/json" },
             method: "POST",
-            body: JSON.stringify({})
-        })
+            body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        if (!json.Success) return;
     }
     getHighestZIndex() {
         return ++this.highestZIndex;

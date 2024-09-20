@@ -212,12 +212,14 @@ export class StandoffProperty {
         return cells;
     }
     serialize() {
+        const text = this.block.getText();
         return {
             id: this.id,
             type: this.type,
             start: this.start.index,
             end: this.end.index,
             value: this.value,
+            text: text.substring(this.start.index, this.end.index),
             metadata: this.metadata,
             plugin: this.plugin ? this.plugin.serialise() : null,
             isDeleted: this.isDeleted

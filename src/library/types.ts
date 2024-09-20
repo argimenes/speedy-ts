@@ -329,6 +329,7 @@ export type StandoffPropertyDto = {
     start: number,
     end: number,
     type: string,
+    text?: string,
     value?: string
     metadata?: Record<string, any>;
     clientOnly?: boolean;
