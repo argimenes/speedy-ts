@@ -4,6 +4,23 @@ import multer from 'multer'
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
 import fs from "fs";
+import { Surreal } from 'surrealdb';
+//import { surrealdbNodeEngines } from '@surrealdb/node';
+
+// Enable the WebAssembly engines
+const db = new Surreal();
+// Persisted to the SurrealKV database
+await db.connect("http://127.0.0.1:8000/rpc");
+// Select a specific namespace / database
+await db.use({
+     namespace: "codex-ns",
+     database: "codex"
+ });
+ // Signin as a namespace, database, or root user
+await db.signin({
+     username: "root",
+     password: "root",
+ });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,45 +77,17 @@ app.get("/api/listDocuments", function (req, res) {
           res.send({ files: files });
      });
 });
-app.post('/api/graph/update-entity-references', async (req, res) => {
-     const filename = req.body.filename;
-     const nodes = req.body.nodes;
-     const edges = req.body.edges;
-     const filepath = path.join(__dirname + "/data/" + filename);
-     const data = fs.readFileSync(filepath) || "{ nodes: [], edges: [] }";
-     const json = JSON.parse(data);
-     json.edges.push(...edges);
-     json.nodes.push(...nodes);
-     console.log({ filename, nodes: json.nodes, edges: json.edges });
-     fs.writeFileSync(filepath, JSON.stringify(json));
-     res.send({ Success: true });
-});
-app.post('/api/addToGraph', async (req, res) => {
-     const filename = req.body.filename;
-     const id = req.body.id;
-     const name = req.body.name;
-     const filepath = path.join(__dirname + "/data/" + filename);
-     const data = fs.readFileSync(filepath) || "{ nodes: [], edges: [] }";
-     const json = JSON.parse(data);
-     json.nodes.push({ id, name, type: "Entity" });
-     console.log({ nodes: json.nodes });
-     fs.writeFileSync(filepath, JSON.stringify(json));
-     res.send({
-          Success: true,
-          Data: {
-               document: json
-          }
+app.get('/api/getMentions', async function(req, res) {
+     const text = req.query.text;
+     const blocks = await db.query("SELECT id, start, end FROM StandoffProperties WHERE type = $type && text = $text",
+     {
+          type: "codex/entity-ref",
+          text
      });
-});
-app.get('/api/loadGraphJson', function(req, res) {
-     const filename = req.query.filename;
-     const filepath = path.join(__dirname + "/data/" + filename);
-     const data = fs.readFileSync(filepath);
-     const json = JSON.parse(data || "{ nodes: [], edges: [] }");
      res.send({
           Success: true,
           Data: {
-               document: json
+               blocks
           }
      });
 });
