@@ -1,6 +1,7 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
+    "allowJs": true,
     "strict": false,
     "target": "ESNext",
     "module": "ESNext",

@@ -424,17 +424,9 @@ const foo = (bar) => {
         props.getInstance(manager);
         console.log("== GLOBAL ==", { manager, block: manager.blocks[0] })
     }
-    const initControlPanel = async (el: HTMLDivElement) => {
-        const panel = new ControlPanelBlock({
-
-        });
-        panel.container = el;
-        const node = await panel.render();
-        panel.container.appendChild(node);
-    }
+    
     return (
         <>
-            <div ref={initControlPanel} class="control-panel" />
             <div ref={initialise} class="block-window" style="margin: 0 auto;" />
         </>
     )
