@@ -42,6 +42,7 @@
     "node-static": "^0.7.11",
     "path": "^0.12.7",
     "solid-js": "^1.7.6",
+    "surrealdb": "^1.0.6",
     "underscore": "^1.13.6",
     "url": "^0.11.3",
     "uuid": "^9.0.1",

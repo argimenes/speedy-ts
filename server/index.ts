@@ -5,6 +5,47 @@ import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
 import fs from "fs";
 
+import { Surreal } from "surrealdb";
+
+let db: Surreal | undefined;
+
+type Document ={
+  id: string;
+  name: string;
+  filename: string;
+  metadata: {};
+}
+
+export async function initDb(): Promise<Surreal | undefined> {
+    if (db) return db;
+    db = new Surreal();
+    try {
+        await db.connect("http://127.0.0.1:8000/rpc", {
+          namespace: "codex-ns", database: "codex-db",
+          auth: {
+            username: "root",
+            password: "root"
+          }
+        });
+        return db;
+    } catch (err) {
+        console.error("Failed to connect to SurrealDB:", err);
+        throw err;
+    }
+}
+
+export async function closeDb(): Promise<void> {
+  if (!db) return;
+  await db.close();
+  db = undefined;
+}
+
+export function getDb(): Surreal | undefined {
+  return db;
+}
+
+await initDb();
+
 type MulterRequest = Request & { files: Express.Multer.File[] };
 
 interface GraphData {
@@ -139,6 +180,16 @@ app.post('/api/saveDocumentJson', function(req: Request, res: Response) {
 
 app.get('/', function(req: Request, res: Response) {
   res.sendFile(path.join(__dirname, 'public/index.html'));
+});
+
+app.get('/graph/get-documents', async function(req: Request, res: Response) {
+  const _db = await getDb();
+  const results = await _db.query<Document[]>("SELECT * FROM Document");
+  const json = JSON.stringify(results);
+  res.send({
+    Success: true,
+    Data: json
+  });
 });
 
 const port = process.env.PORT || 3002;
