@@ -17,4 +17,4 @@ npm run build
 cp -R "${Source}"* "$Target"
 
 # Run node index.js
-node index.js
+node ./dist/server/index.js

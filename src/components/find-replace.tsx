@@ -1,6 +1,6 @@
 import { createStore } from "solid-js/store";
 import { autofocus } from "@solid-primitives/autofocus";
-import { BlockType, CARET, FindMatch, GUID, IAbstractBlockConstructor, IBlock, IBlockDto, InputEventSource } from "../library/types";
+import { BlockType, FindMatch, IAbstractBlockConstructor, IBlock, IBlockDto, InputEventSource } from "../library/types";
 import { createSignal, Show } from "solid-js";
 import { AbstractBlock } from "../library/abstract-block";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
@@ -23,12 +23,12 @@ export interface IFindReplaceBlockConstructor extends IAbstractBlockConstructor 
 export class FindReplaceBlock extends AbstractBlock
 {
     source: StandoffEditorBlock;
-    manager: BlockManager;
+    //manager: BlockManager;
     node?: HTMLElement;
     constructor(args: IFindReplaceBlockConstructor) {
         super(args);
         this.source = args.source;
-        this.manager = args.manager;
+        //this.manager = args.manager;
     }
     close() {
         this.node?.remove();
@@ -203,7 +203,7 @@ export class FindReplaceBlock extends AbstractBlock
         }
         const onFind = async (e: Event) => {
             e.preventDefault();
-            setModel("findText", e.currentTarget?.value);
+            setModel("findText", (e.currentTarget as HTMLInputElement)?.value);
             clearHighlights();
             const _matches = self.findMatches(model.findText) || [];
             setMatches(_matches);

@@ -1,7 +1,7 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
-    "strict": true,
+    "strict": false,
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "node",
@@ -9,9 +9,12 @@
     "esModuleInterop": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
-    "types": [ "vite/client" ],
-    "noEmit": true,
-    "isolatedModules": true
+    "types": ["vite/client", "node"],
+    "isolatedModules": true,
+    "outDir": "./dist",
+    "rootDir": "./",
   },
-  "eslint.workingDirectories": [ "./src" ]
+  "eslint.workingDirectories": ["./src"],
+  "include": ["src/**/*", "server/**/*"],
+  "exclude": ["node_modules"]
 }

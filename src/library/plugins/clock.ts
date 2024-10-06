@@ -9,7 +9,7 @@ export class ClockPlugin implements IAnimationPlugin {
     property: StandoffProperty;
     wrapper: CellHtmlElement;
     direction: ClockDirection;
-    timer: number;
+    timer: any;
     steps: number;
     constructor(args: IClockPluginConstructor) {
         this.type = "animation/clock";

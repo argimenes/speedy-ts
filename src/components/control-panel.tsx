@@ -1,6 +1,5 @@
 import { For } from "solid-js"
 import { createStore } from "solid-js/store";
-import { BlockManager } from "../library/block-manager";
 import { GridBlock, GridCellBlock } from "../library/grid-block";
 import { TabBlock, TabRowBlock } from "../library/tabs-block";
 import { IndentedListBlock } from "../library/indented-list-block";
@@ -190,7 +189,6 @@ export class ControlPanelBlock extends AbstractBlock {
             textBlock.moveCaretStart();
         }
         const createTable = (rows: number, cells: number) => {
-            const manager = manager as BlockManager;
             const block = manager.getBlockInFocus();
             if (!block) return;
             const table = manager.createTable(rows, cells) as GridBlock;

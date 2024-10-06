@@ -28,7 +28,7 @@ export class CheckboxBlock extends AbstractBlock {
         });
         const wrapper = document.createElement("DIV") as HTMLDivElement;
         this.textbox = new StandoffEditorBlock({
-            manager: this
+            manager: this.manager
         });
         wrapper.append(this.checkbox);
         wrapper.append(this.textbox.container);

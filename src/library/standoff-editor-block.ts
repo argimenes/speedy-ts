@@ -24,7 +24,7 @@ function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
 };
 
 export class StandoffEditorBlock extends AbstractBlock {
-    type: BlockType;
+    //type: BlockType;
     cells: Cell[];
     rows: Row[];
     cache: {

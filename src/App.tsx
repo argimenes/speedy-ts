@@ -2,6 +2,7 @@ import { Component } from 'solid-js';
 import { BlockManagerWindow } from './components/BlockManagerWindow';
 import { BlockManager } from './library/block-manager';
 import { createStore } from 'solid-js/store';
+import { ControlPanelBlock } from './components/control-panel';
 type Model = {
   manager: BlockManager;
 }

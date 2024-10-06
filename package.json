@@ -3,13 +3,18 @@
   "version": "0.0.0",
   "description": "",
   "scripts": {
-    "start": "vite",
-    "dev": "vite",
-    "build": "vite build",
-    "serve": "vite preview"
+    "build:client": "vite build",
+    "build:server": "tsc --project tsconfig.json",
+    "build": "npm run build:client && npm run build:server",
+    "start": "node dist/server/index.js",
+    "dev:server": "nodemon dist/server/index.js"
   },
   "license": "MIT",
   "devDependencies": {
+    "@types/body-parser": "^1.19.5",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.7.4",
     "@types/underscore": "^1.11.15",
     "@types/uuid": "^9.0.8",
     "@types/youtube-player": "^5.5.11",

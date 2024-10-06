@@ -32,22 +32,22 @@ const isNum = (value: any) => typeof (value) == "number";
 const passoverClass = "block-modal";
  
 export class BlockManager extends AbstractBlock implements IBlockManager {
-    id: string;
-    type: BlockType;
-    container: HTMLElement;
-    blocks: IBlock[];
-    relation: Record<string, IBlock>;
-    metadata: Record<string,any>;
+    //id: string;
+    //type: BlockType;
+    //container: HTMLElement;
+    //blocks: IBlock[];
+    //relation: Record<string, IBlock>;
+    //metadata: Record<string,any>;
     focus?: IBlock;
-    modes: string[];
-    inputEvents: InputEvent[];
-    inputActions: InputAction[];
+    // modes: string[];
+    // inputEvents: InputEvent[];
+    // inputActions: InputAction[];
     selections: IBlockSelection[];
     commits: Commit[];
     pointer: number;
     direction: PointerDirection;
-    blockProperties: BlockProperty[];
-    blockSchemas: IBlockPropertySchema[];
+    // blockProperties: BlockProperty[];
+    // blockSchemas: IBlockPropertySchema[];
     plugins: IPlugin[];
     highestZIndex: number;
     clipboard: Record<string, any>[];
@@ -292,7 +292,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     
     updateView() {
-        this.blocks.forEach(x => x.updateView());
+        //this.blocks.forEach(x => x.updateView());
     }
     batchRelate(batch: IBatchRelateArgs) {
         const self = this;

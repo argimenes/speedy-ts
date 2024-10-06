@@ -40,7 +40,8 @@ export const wrapRange = (property: StandoffProperty, wrapper?: CellHtmlElement)
     wrapper = wrapper || document.createElement("DIV") as CellHtmlElement;
     wrapper.speedy = {
         role: ELEMENT_ROLE.INNER_STYLE_BLOCK,
-        cell: property.start
+        cell: property.start,
+        isSpace: false
     };
     const blocks = property.getCells();
     blocks.forEach(b => wrapper.appendChild(b.element as HTMLSpanElement));
@@ -148,7 +149,7 @@ function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
 };
 
 export const drawFilledRectangle = (p: StandoffProperty, options: DrawUnderlineOptions) => {
-    options = options || {};
+    options = options || {} as DrawUnderlineOptions;
     if (p.cache.svg) {
         p.cache.svg.remove();
     }
