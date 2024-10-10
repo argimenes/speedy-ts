@@ -110,14 +110,15 @@ app.get('/api/textJson', function(req: Request, res: Response) {
 
 app.get("/api/listDocuments", function (req: Request, res: Response) {
   const folder = (req.query?.folder as string) || "data";
-  fs.readdir(path.join(__dirname, folder), (err, files) => {
+  console.log("/api/listDocuments", { __dirname, folder });
+  fs.readdir(path.join(__dirname, "../../" + folder), (err, files) => {
     res.send({ files: files });
   });
 });
 
 app.post('/api/graph/update-entity-references', async (req: Request, res: Response) => {
   const { filename, nodes, edges } = req.body;
-  const filepath = path.join(__dirname, "data", filename);
+  const filepath = path.join(__dirname, "../../data", filename);
   const data = fs.readFileSync(filepath, 'utf8') || "{ \"nodes\": [], \"edges\": [] }";
   const json: GraphData = JSON.parse(data);
   json.edges.push(...edges);
@@ -128,7 +129,7 @@ app.post('/api/graph/update-entity-references', async (req: Request, res: Respon
 
 app.post('/api/addToGraph', async (req: Request, res: Response) => {
   const { filename, id, name } = req.body;
-  const filepath = path.join(__dirname, "data", filename);
+  const filepath = path.join(__dirname, "../../data", filename);
   const data = fs.readFileSync(filepath, 'utf8') || "{ \"nodes\": [], \"edges\": [] }";
   const json: GraphData = JSON.parse(data);
   json.nodes.push({ id, name, type: "Entity" });
@@ -143,7 +144,7 @@ app.post('/api/addToGraph', async (req: Request, res: Response) => {
 
 app.get('/api/loadGraphJson', function(req: Request, res: Response) {
   const filename = req.query.filename as string;
-  const filepath = path.join(__dirname, "data", filename);
+  const filepath = path.join(__dirname, "../../data", filename);
   const data = fs.readFileSync(filepath, 'utf8');
   const json: GraphData = JSON.parse(data || "{ \"nodes\": [], \"edges\": [] }");
   res.send({
@@ -157,7 +158,7 @@ app.get('/api/loadGraphJson', function(req: Request, res: Response) {
 app.get('/api/loadDocumentJson', function(req: Request, res: Response) {
   const filename = req.query.filename as string;
   const folder = (req.query?.folder as string) || "data";
-  const filepath = path.join(__dirname, folder, filename);
+  const filepath = path.join(__dirname, "../../", folder, filename);
   const data = fs.readFileSync(filepath, 'utf8');
   const json = JSON.parse(data);
   res.send({
@@ -170,7 +171,7 @@ app.get('/api/loadDocumentJson', function(req: Request, res: Response) {
 
 app.post('/api/saveDocumentJson', function(req: Request, res: Response) {
   const json = req.body;
-  const filepath = path.join(__dirname, "data", json.filename);
+  const filepath = path.join(__dirname, "../../data", json.filename);
   const document = JSON.stringify(json.document);
   fs.writeFileSync(filepath, document);
   res.send({
