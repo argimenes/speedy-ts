@@ -4,8 +4,8 @@ import multer, { FileFilterCallback } from 'multer';
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
 import fs from "fs";
-
 import { Surreal } from "surrealdb";
+import { BlockType, IBlockDto, IndexedBlock } from "./types";
 
 let db: Surreal | undefined;
 
@@ -169,15 +169,39 @@ app.get('/api/loadDocumentJson', function(req: Request, res: Response) {
   });
 });
 
-app.post('/api/saveDocumentJson', function(req: Request, res: Response) {
+app.post('/api/saveDocumentJson', async function(req: Request, res: Response) {
   const json = req.body;
   const filepath = path.join(__dirname, "../../data", json.filename);
   const document = JSON.stringify(json.document);
   fs.writeFileSync(filepath, document);
+  const doc = json.document as IBlockDto;
+  await saveDocumentToGraph(doc);
   res.send({
     Success: true
   });
 });
+
+const generateIndex = (doc: IBlockDto): IndexedBlock[] => {
+  const result: IndexedBlock[] = [];
+  function traverse(block: IBlockDto, depth: number = 0, path: string = '0'): void {
+      // Visit the current node
+      result.push({ block, index: result.length, depth, path });
+      // Recursively traverse all children
+      block.children.forEach((child, index) => {
+          traverse(child, depth + 1, `${path}.${index + 1}`);
+      });
+  }
+  traverse(doc);
+  return result;
+}
+
+const saveDocumentToGraph = async (doc: IBlockDto) => {
+  /**
+   * 
+   * 
+   */
+  const blocks = generateIndex(doc);
+}
 
 app.get('/', function(req: Request, res: Response) {
   res.sendFile(path.join(__dirname, 'public/index.html'));
