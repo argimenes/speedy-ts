@@ -62,7 +62,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 app.use(bodyParser.json());
-app.use(express.static('public'));
+app.use(express.static('dist'));
 app.use("/templates", express.static('templates'));
 app.use('/uploads', express.static('uploads'));
 
@@ -204,7 +204,7 @@ const saveDocumentToGraph = async (doc: IBlockDto) => {
 }
 
 app.get('/', function(req: Request, res: Response) {
-  res.sendFile(path.join(__dirname, 'public/index.html'));
+  res.sendFile(path.join(__dirname, '../index.html'));
 });
 
 app.get('/graph/get-documents', async function(req: Request, res: Response) {
