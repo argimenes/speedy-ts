@@ -1432,6 +1432,22 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Meta-M"
+                },
+                action: {
+                    name: "Show the annotation menu.",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        alert("Show annotation menu")
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "Home"
                 },
                 action: {
@@ -1636,7 +1652,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Control-Shift-E"
+                    match: "Meta-E"
                 },
                 action: {
                     name: "Entity reference",
@@ -3084,11 +3100,11 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             const word = block.getWordAtIndex(caret.right.index);
             if (!word) return;
             selection = { start: block.cells[word.start], end: block.cells[word.end], direction: DIRECTION.RIGHT } as ISelection;
-            block.addStandoffPropertiesDto([{
-                type: "codex/search/highlight", start: selection.start.index, end: selection.end.index, clientOnly: true
-            }]);
-            block.applyStandoffPropertyStyling();
         }
+        block.addStandoffPropertiesDto([{
+            type: "codex/search/highlight", start: selection.start.index, end: selection.end.index, clientOnly: true
+        }]);
+        block.applyStandoffPropertyStyling();
         const searchBlock = new SearchEntitiesBlock({
             source: block,
             selection,
@@ -3099,6 +3115,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 block.setCaret(block.lastCaret.index, block.lastCaret.offset);
             },
             onBulkSubmit: async (item: any, matches: FindMatch[]) => {
+                if (matches.length == 0) {
+                    matches.push({ start: selection.start.index, block, end: selection.end.index, match: "" });
+                }
                 matches.forEach(m => {
                     let prop = {
                         type: "codex/entity-reference",
@@ -3113,12 +3132,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         });
         const node = await searchBlock.render();
-        const top = selection
-            ? selection.start.cache.offset.y + selection.start.cache.offset.h + 10
-            : caret.right.cache.offset.y + caret.right.cache.offset.h + 10;
-        const left = selection
-            ? selection.start.cache.offset.x
-            : caret.right.cache.offset.x;
+        const top = 0;
+        const left = caret.right.cache.offset.x - 10;
         updateElement(node, {
             style: {
                 top: top + "px",

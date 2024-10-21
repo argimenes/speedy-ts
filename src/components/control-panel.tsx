@@ -318,6 +318,11 @@ export class ControlPanelBlock extends AbstractBlock {
                 default: break;
             }
         }
+        const fileChanged = async (e: Event) => {
+            if (!e.currentTarget) return;
+            setModel("file", e.currentTarget.value);
+            await loadSelectedFileClicked(e);
+        }
         const ControlPanel = () => {
             return (
                 <div class="control-panel" style="text-align: left;">
@@ -337,7 +342,7 @@ export class ControlPanelBlock extends AbstractBlock {
                     </div>
                     <hr/>
                     <div>
-                        <select value={model.file} onInput={(e) => setModel("file", e.currentTarget.value)}>
+                        <select value={model.file} onChange={fileChanged}>
                             <For each={resources.files}>{(file) =>
                                 <option value={file}>
                                     {file}

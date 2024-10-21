@@ -54,6 +54,8 @@
     /* border-radius: 10px; */
     padding: 20px 15px;
     margin: 0 300px;
+    line-height: 1.5rem;
+    
   }
 
   .block-window .block_marginalia_left { 
@@ -111,7 +113,7 @@
     padding: 5px;
     font-size: 0.75rem; 
     background-color: #fff;
-    
+
   }
   .text-highlight {
     background-color: lightyellow;
