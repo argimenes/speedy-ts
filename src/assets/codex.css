@@ -213,6 +213,9 @@
   .style_blur {
     filter: blur(4px);
   }
+  .style_underline {
+    text-decoration: underline;
+  }
   .style_flipX {
     -moz-transform: scale(-1, 1);
     -webkit-transform: scale(-1, 1);

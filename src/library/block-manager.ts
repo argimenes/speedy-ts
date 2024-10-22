@@ -1768,6 +1768,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 }
             },
             {
+                type: "style/underline",
+                name: "Underline",
+                decorate: {
+                    cssClass: "style_underline"
+                }
+            },
+            {
                 type: "reference/url",
                 name: "URL",
                 decorate: {
