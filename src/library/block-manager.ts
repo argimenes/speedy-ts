@@ -1475,7 +1475,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Control-Shift-M"
+                    match: "Meta-/"
                 },
                 action: {
                     name: "Monitor panel",
