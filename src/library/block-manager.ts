@@ -25,6 +25,7 @@ import { TableBlock, TableCellBlock, TableRowBlock } from './tables-blocks';
 import { classList } from 'solid-js/web';
 import { FindReplaceBlock } from '../components/find-replace';
 import { ControlPanelBlock } from '../components/control-panel';
+import { AnnotationPanelBlock } from '../components/annotation-panel';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
@@ -1432,16 +1433,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Meta-M"
+                    match: "Meta-U"
                 },
                 action: {
                     name: "Show the annotation menu.",
                     description: `
                         
                     `,
-                    handler: async (args) => {
-                        alert("Show annotation menu")
-                    }
+                    handler: this.loadAnnotationPanel.bind(this)
                 }
             },
             {
@@ -3095,6 +3094,46 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const node = await panel.render() as HTMLElement;
         panel.container.appendChild(node);
         this.container.appendChild(panel.container);
+        this.registerBlock(panel);
+        this.setBlockFocus(panel);
+        panel.setFocus();
+    }
+    async loadAnnotationPanel(args: IBindingHandlerArgs) {
+        const block = args.block as StandoffEditorBlock;
+        const caret = args.caret as Caret;
+        let selection = block.getSelection() as ISelection;
+        if (!selection) {
+            const word = block.getWordAtIndex(caret.right.index);
+            if (!word) return;
+            selection = { start: block.cells[word.start], end: block.cells[word.end], direction: DIRECTION.RIGHT } as ISelection;
+        }
+        block.addStandoffPropertiesDto([{
+            type: "codex/search/highlight", start: selection.start.index, end: selection.end.index, clientOnly: true
+        }]);
+        block.applyStandoffPropertyStyling();
+        const panel = new AnnotationPanelBlock({
+            source: block,
+            selection,
+            events: {
+                onClose: () => {
+                    block.removeStandoffPropertiesByType("codex/search/highlight");
+                    block.manager?.setBlockFocus(block);
+                    block.setCaret(block.lastCaret.index, block.lastCaret.offset);
+                }
+            }
+        });
+        const node = await panel.render();
+        const top = 0;
+        const left = caret.right.cache.offset.x - 10;
+        updateElement(node, {
+            style: {
+                top: top + "px",
+                left: left + "px"
+            },
+            classList: [passoverClass]
+        });
+        panel.container.appendChild(node);
+        block.container.appendChild(panel.container);
         this.registerBlock(panel);
         this.setBlockFocus(panel);
         panel.setFocus();

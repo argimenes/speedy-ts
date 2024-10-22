@@ -5,7 +5,7 @@ import { IBlockDto, IBlock, IAbstractBlockConstructor, ISelection, InputEventSou
 
 
 export interface IAnnotationPanelBlockConstructor extends IAbstractBlockConstructor {
-    block: AbstractBlock;
+    source: AbstractBlock;
     selection?: ISelection;
     events: {
         onClose: () => void;
@@ -13,7 +13,7 @@ export interface IAnnotationPanelBlockConstructor extends IAbstractBlockConstruc
 }
 
 export class AnnotationPanelBlock extends AbstractBlock {
-    block: AbstractBlock;
+    source: AbstractBlock;
     selection?: ISelection;
     node: HTMLElement;
     events: {
@@ -21,15 +21,35 @@ export class AnnotationPanelBlock extends AbstractBlock {
     }
     constructor(props: IAnnotationPanelBlockConstructor) {
         super(props);
-        this.block = props.block;
+        this.source = props.source;
         this.selection = props.selection;
         this.node = document.createElement("DIV") as HTMLDivElement;
         this.events = props.events;
     }
     render() {
         const self = this;
-        const block = this.block as StandoffEditorBlock;
+        const block = this.source as StandoffEditorBlock;
         this.setEvents([
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Mouse,
+                    match: "click"
+                },
+                action: {
+                    name: "Close the panel.",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        const target = args.e.target as HTMLElement;
+                        if (!self.node.contains(target)) {
+                            self.destroy();
+                            self.events.onClose();
+                        }
+                    }
+                }
+            },
             {
                 mode: "default",
                 trigger: {
