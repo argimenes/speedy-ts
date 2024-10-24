@@ -1433,7 +1433,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Meta-U"
+                    match: ["Mac:Meta-U","Windows:Control-U"]
                 },
                 action: {
                     name: "Show the annotation menu.",

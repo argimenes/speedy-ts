@@ -7,6 +7,10 @@ import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySche
 import { StandoffEditorBlock } from './standoff-editor-block';
 import { BlockManager } from './block-manager';
 
+const isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
+const isWindows = navigator.platform.toUpperCase().indexOf('WINDOWS')>=0;
+const platform = isMac ? Platform.Mac : isWindows ? Platform.Windows : Platform.Linux;
+
 export abstract class AbstractBlock implements IBlock {
     id: string;
     type: BlockType;
@@ -108,6 +112,11 @@ export abstract class AbstractBlock implements IBlock {
     protected toChord(match: string) {
         let chord: IKeyboardInput = {} as any;
         const _match = match.toUpperCase();
+        if ((_match.indexOf(":") >= 0)) {
+            chord.platform = (_match.indexOf("MAC") >= 0) ? Platform.Mac : Platform.Windows;
+        } else {
+            chord.platform = platform;
+        }
         chord.control = (_match.indexOf("CONTROL") >= 0);
         chord.option = (_match.indexOf("ALT") >= 0);
         chord.command = (_match.indexOf("META") >= 0);
@@ -117,6 +126,7 @@ export abstract class AbstractBlock implements IBlock {
         return chord;
     }
     protected compareChords(input: IKeyboardInput, trigger: IKeyboardInput) {
+        if (input.platform != trigger.platform) return false;
         if (input.command != trigger.command) return false;
         if (input.option != trigger.option) return false;
         if (input.shift != trigger.shift) return false;
@@ -133,8 +143,14 @@ export abstract class AbstractBlock implements IBlock {
             let events = modeEvents[mode];
             if (!events) continue;
             let match = events.find(x => {
-                let trigger = self.toChord(x.trigger.match as string);
-                return self.compareChords(input, trigger);
+                if (Array.isArray(x.trigger.match)) {
+                    const triggers = (x.trigger.match as string[]).map(m => self.toChord(m));
+                    const found = triggers.some(t => self.compareChords(input, t));
+                    return found;
+                } else {
+                    let trigger = self.toChord(x.trigger.match as string);
+                    return self.compareChords(input, trigger);
+                }
             });
             if (match) return match;
         }
@@ -142,6 +158,7 @@ export abstract class AbstractBlock implements IBlock {
     }
     protected toMouseInput(e: MouseEvent): IMouseInput {
         const input: IMouseInput = {
+            platform: platform,
             shift: e.shiftKey,
             control: e.ctrlKey,
             command: e.metaKey,
@@ -153,6 +170,7 @@ export abstract class AbstractBlock implements IBlock {
     }
     protected toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
         const input: IKeyboardInput = {
+            platform,
             shift: e.shiftKey,
             control: e.ctrlKey,
             command: e.metaKey,

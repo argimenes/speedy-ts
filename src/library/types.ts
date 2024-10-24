@@ -148,6 +148,7 @@ export type BlockPropertyDto = {
     metadata?: Record<string, any>;
 }
 export interface IKeyboardInput {
+    platform: Platform;
     control: boolean;
     shift: boolean;
     option: boolean;
@@ -157,6 +158,7 @@ export interface IKeyboardInput {
     keyCode: number;
 }
 export interface IMouseInput {
+    platform: Platform;
     control: boolean;
     shift: boolean;
     option: boolean;
