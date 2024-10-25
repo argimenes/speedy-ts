@@ -1031,7 +1031,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Control-S"
+                    match: ["Windows:Control-S","Mac:Meta-S"]
                 },
                 action: {
                     name: "Save document",
@@ -1475,7 +1475,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Meta-/"
+                    match: ["Mac:Meta-/","Windows:Control-/"]
                 },
                 action: {
                     name: "Monitor panel",

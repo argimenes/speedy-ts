@@ -66,12 +66,63 @@ export class AnnotationPanelBlock extends AbstractBlock {
                         self.events.onClose();
                     }
                 }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "i"
+                },
+                action: {
+                    name: "Apply italics.",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        applyAnnotation("style/italics");
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "b"
+                },
+                action: {
+                    name: "Apply bold.",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        applyAnnotation("style/bold");
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "u"
+                },
+                action: {
+                    name: "Apply underline.",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        applyAnnotation("style/underline");
+                    }
+                }
             }
         ]);
         const annotate = (e: MouseEvent) => {
             e.preventDefault();
             const button = e.currentTarget as HTMLButtonElement;
             const type = button.dataset.type;
+            applyAnnotation(type);
+        };
+        const applyAnnotation = (type: string) => {
             const start = self.selection?.start.index;
             const end = self.selection?.end.index;
             const dto = {
@@ -82,7 +133,7 @@ export class AnnotationPanelBlock extends AbstractBlock {
             block.clearSelection();
             block.addStandoffPropertiesDto([dto]);
             block.applyStandoffPropertyStyling();
-        };
+        }
         function Panel (props: any) {
             return (
                 <>

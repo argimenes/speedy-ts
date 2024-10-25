@@ -151,12 +151,19 @@
   }
   .block_font-size_h1 {
     font-size: 4rem;
+    line-height: 4.25rem;
+  }
+  .block_font-size_normal {
+    font-size: 1rem;
+    line-height: 1.25rem;
   }
   .block_font-size_h2 {
     font-size: 3rem;
+    line-height: 3.25rem;
   }
   .block_font-size_h3 {
     font-size: 2rem;
+    line-height: 2.25rem;
   }
   .block_font-size_h4 {
     font-size: 1rem;
