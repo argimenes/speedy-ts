@@ -8,7 +8,7 @@ import { StandoffEditorBlock } from './standoff-editor-block';
 import { BlockManager } from './block-manager';
 
 const isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
-const isWindows = navigator.platform.toUpperCase().indexOf('WINDOWS')>=0;
+const isWindows = navigator.platform.toUpperCase().indexOf('WIN')>=0;
 const platform = isMac ? Platform.Mac : isWindows ? Platform.Windows : Platform.Linux;
 
 export abstract class AbstractBlock implements IBlock {
@@ -158,7 +158,7 @@ export abstract class AbstractBlock implements IBlock {
     }
     protected toMouseInput(e: MouseEvent): IMouseInput {
         const input: IMouseInput = {
-            platform: platform,
+            platform,
             shift: e.shiftKey,
             control: e.ctrlKey,
             command: e.metaKey,
