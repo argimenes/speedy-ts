@@ -1,7 +1,6 @@
 import { Component } from "solid-js"
 import { BlockManager } from "../library/block-manager"
 import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto } from "../library/types";
-import { ControlPanelBlock } from "./control-panel";
 
 type Props = {
     getInstance: (inst: BlockManager) => void;
@@ -36,7 +35,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                 {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Left margin note 1.",
-                                    blockProperties: [ { type: "block/alignment/left" }, { type: "block/font-size/three-quarters" }]
+                                    blockProperties: [ { type: "block/alignment/left" }, { type: "block/font/size/three-quarters" }]
                                 } as IStandoffEditorBlockDto
                             ]
                         }
@@ -59,12 +58,12 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                 {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Right margin note 2a.",
-                                    blockProperties: [ { type: "block/alignment/left" }, { type: "block/font-size/three-quarters" }]
+                                    blockProperties: [ { type: "block/alignment/right" }, { type: "block/font/size/three-quarters" }]
                                 } as IStandoffEditorBlockDto,
                                 {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Right margin note 2b.",
-                                    blockProperties: [ { type: "block/alignment/left" }, { type: "block/font-size/three-quarters" }]
+                                    blockProperties: [ { type: "block/alignment/right" }, { type: "block/font/size/three-quarters" }]
                                 } as IStandoffEditorBlockDto
                             ]
                         }

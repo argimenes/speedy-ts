@@ -1911,6 +1911,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     async handleMoveBlockDown(args: IBindingHandlerArgs) {
         const block = args.block;
+        
         this.moveBlockDown(block);
         this.setBlockFocus(block);
         if (block.type == BlockType.StandoffEditorBlock) {
@@ -1928,21 +1929,22 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     moveBlockUp(block: IBlock) {
-        const parent = block.relation.parent;
-        const previous = block.relation.previous;
-        if (!previous) {
-            this.insertBlockBefore(parent, block);
+        const root = this.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+        const i = root.index.findIndex(x => x.block.id == block.id);
+        if (i <= 0) {
             return;
         }
+        const previous = root.index[i-1].block;
         this.insertBlockBefore(previous, block);
     }
     moveBlockDown(block: IBlock) {
-        const parent = block.relation.parent;
-        const next = block.relation.next;
-        if (!next) {
-            this.insertBlockAfter(parent, block);
+        const root = this.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+        const i = root.index.findIndex(x => x.block.id == block.id);
+        const maxIndex = root.index.length - 1;
+        if (i >= maxIndex) {
             return;
         }
+        const next = root.index[i+1].block;
         this.insertBlockAfter(next, block);
     }
     removeBlockFrom(parent: AbstractBlock, block: IBlock, skipIndexation?: boolean) {
