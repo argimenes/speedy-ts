@@ -163,7 +163,7 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "char:+"
+                    match: "'+'"
                 },
                 action: {
                     name: "Increase the length of the annotation.",
@@ -178,7 +178,7 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "char:-"
+                    match: "'-'"
                 },
                 action: {
                     name: "Decrease the length of the annotation.",
