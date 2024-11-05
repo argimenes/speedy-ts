@@ -95,11 +95,14 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                     handler: async (args: any) => {
                         properties.forEach((__,i) => setProperties(i, "visible", false));
                         const len = monitor.properties.length;
-                        if (state.activeItem == 1) {
-                            setState("activeItem", len)
+                        if (state.activeItem == 0) {
+                            setState("activeItem", len - 1);
+                            setProperties(len - 1, "visible", true);
                             return;
                         }
-                        setState("activeItem", state.activeItem - 1);
+                        const i = state.activeItem - 1;
+                        setState("activeItem", i);
+                        setProperties(i, "visible", true);
                     }
                 }
             },
@@ -115,11 +118,14 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                     handler: async (args: any) => {
                         properties.forEach((__,i) => setProperties(i, "visible", false));
                         const len = monitor.properties.length;
-                        if (state.activeItem >= len) {
-                            setState("activeItem", 1)
+                        if (state.activeItem == len - 1) {
+                            setState("activeItem", 0);
+                            setProperties(0, "visible", true);
                             return;
                         }
-                        setState("activeItem", state.activeItem + 1);
+                        const i = state.activeItem + 1;
+                        setState("activeItem", i);
+                        setProperties(i, "visible", true);
                     }
                 }
             },
@@ -133,12 +139,11 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                     name: "Set property at current index visible.",
                     description: "",
                     handler: async (args: any) => {
-                        properties.forEach((__,i) => setProperties(i, "visible", false));
-                        setProperties(state.activeItem - 1, "visible", true);
+                        const item = properties[state.activeItem];
+                        item.property.shiftRight();
                     }
                 }
-            }
-            ,
+            },
             {
                 mode: "default",
                 trigger: {
@@ -149,7 +154,38 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                     name: "Set property at current index invisible.",
                     description: "",
                     handler: async (args: any) => {
-                        setProperties(state.activeItem - 1, "visible", false);
+                        const item = properties[state.activeItem];
+                        item.property.shiftLeft();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "char:+"
+                },
+                action: {
+                    name: "Increase the length of the annotation.",
+                    description: "",
+                    handler: async (args: any) => {
+                        const item = properties[state.activeItem];
+                        item.property.expand();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "char:-"
+                },
+                action: {
+                    name: "Decrease the length of the annotation.",
+                    description: "",
+                    handler: async (args: any) => {
+                        const item = properties[state.activeItem];
+                        item.property.contract();
                     }
                 }
             }
@@ -168,7 +204,7 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                             <tbody>
                                 <tr>
                                     <td style="width: 25px;">
-                                        <Show when={index() + 1 == state.activeItem}>
+                                        <Show when={index() == state.activeItem}>
                                             <button>&rsaquo;</button>
                                         </Show>
                                     </td>

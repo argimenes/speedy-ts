@@ -121,8 +121,13 @@ export abstract class AbstractBlock implements IBlock {
         chord.option = (_match.indexOf("ALT") >= 0);
         chord.command = (_match.indexOf("META") >= 0);
         chord.shift = (_match.indexOf("SHIFT") >= 0);
-        const parts = _match.split("-"), len = parts.length;
-        chord.key = parts[len-1];
+        if (_match.indexOf("char:") >= 0) {
+            const parts = _match.split("char:"), len = parts.length;
+            chord.key = parts[0];
+        } else {
+            const parts = _match.split("-"), len = parts.length;
+            chord.key = parts[len-1];
+        }
         return chord;
     }
     protected compareChords(input: IKeyboardInput, trigger: IKeyboardInput) {

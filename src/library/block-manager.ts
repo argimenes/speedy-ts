@@ -216,7 +216,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         document.body.addEventListener("keydown", this.handleKeyboardInputEvents.bind(this));
         document.body.addEventListener("click", this.handleMouseInputEvents.bind(this));
         document.body.addEventListener("dblclick", this.handleMouseInputEvents.bind(this));
-        document.body.addEventListener("contextmenu", this.handleMouseInputEvents.bind(this));
+        document.body.addEventListener("contextmenu", this.handleOnContextMenuEvent.bind(this));
         document.body.addEventListener("copy", this.handleOnCopyEvent.bind(this));
         document.body.addEventListener("paste", this.handleOnPasteEvent.bind(this));
         document.body.addEventListener("beforeinput", (e) => {
@@ -233,6 +233,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 return false;
             }
         });
+    }
+    async handleOnContextMenuEvent(e: ClipboardEvent) {
+        await this.handleCustomEvent(e, InputEventSource.Custom, "contextmenu");
     }
     async handleOnCopyEvent(e: ClipboardEvent) {
         await this.handleCustomEvent(e, InputEventSource.Custom, "copy");
@@ -773,7 +776,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         ]
         return events;
     }
-    async handleContextMenuClicked(args: IBindingHandlerArgs) {
+    async handleAnnotationMonitorClicked(args: IBindingHandlerArgs) {
+        const self = this;
         const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
         const anchor = caret.left || caret.right;
@@ -793,6 +797,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             },
             onClose: () => {
                 block.cache.monitor?.remove();
+                self.deregisterBlock(monitor.id);
             }
         });
         const node = block.cache.monitor = renderToNode(component) as HTMLDivElement;
@@ -813,6 +818,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     getBlockManagerEvents() {
         const events: InputEvent[] = [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Custom,
+                    match: "contextmenu"
+                },
+                action: {
+                    name: "Monitor panel",
+                    description: "",
+                    handler: this.loadAnnotationMenu.bind(this)
+                }
+            },
             {
                 mode: "default",
                 trigger: {
@@ -984,26 +1001,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: "Copies standoff text",
                     handler: this.handleCopyForStandoffEditorBlock.bind(this)
                 }
-            },
+            },            
             {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Control-V"
-                },
-                action: {
-                    name: "Paste",
-                    description: "Pastes plain text",
-                    handler: async (args) => {
-                        args.allowPassthrough && args.allowPassthrough();
-                    }
-                }
-            },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: "Meta-C"
+                    match: ["Mac:Meta-C","Windows:Control-C"]
                 },
                 action: {
                     name: "Copy passthrough",
@@ -1017,7 +1020,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Meta-V"
+                    match: ["Mac:Meta-V","Windows:Control-V"]
                 },
                 action: {
                     name: "Paste",
@@ -1440,7 +1443,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: `
                         
                     `,
-                    handler: this.loadAnnotationPanel.bind(this)
+                    handler: this.loadAnnotationMenu.bind(this)
                 }
             },
             {
@@ -1471,6 +1474,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     handler: this.moveCaretToEndOfTextBlock
                 }
             },
+            
             {
                 mode: "default",
                 trigger: {
@@ -1480,7 +1484,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 action: {
                     name: "Monitor panel",
                     description: "",
-                    handler: this.handleContextMenuClicked.bind(this)
+                    handler: this.handleAnnotationMonitorClicked.bind(this)
                 }
             },
             {
@@ -3100,7 +3104,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.setBlockFocus(panel);
         panel.setFocus();
     }
-    async loadAnnotationPanel(args: IBindingHandlerArgs) {
+    async loadAnnotationMenu(args: IBindingHandlerArgs) {
+        const self = this;
         const block = args.block as StandoffEditorBlock;
         const caret = args.caret as Caret;
         let selection = block.getSelection() as ISelection;
@@ -3118,6 +3123,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             selection,
             events: {
                 onClose: () => {
+                    self.deregisterBlock(panel.id);
                     block.removeStandoffPropertiesByType("codex/search/highlight");
                     block.manager?.setBlockFocus(block);
                     block.setCaret(block.lastCaret.index, block.lastCaret.offset);
