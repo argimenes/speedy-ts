@@ -52,7 +52,7 @@ type State = {
 export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
     let node: HTMLDivElement;
     const [state, setState] = createStore<State>({
-        activeItem: 1,
+        activeItem: 0,
         isOpen: false
     });
     const toStandoffPropertyState = (props: StandoffProperty[]) => props.map(x => ({ visible: false, property: x } as StandoffPropertyState));
@@ -65,6 +65,7 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
         p.destroy();
         setProperties(properties.filter(x=> x.property != p));
     };
+    setItemVisible(properties[0], true);
     let monitor = props.monitor;
     const onInit = (node: HTMLDivElement) => {
         monitor.properties = properties;
@@ -186,6 +187,21 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                     handler: async (args: any) => {
                         const item = properties[state.activeItem];
                         item.property.contract();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "'d'"
+                },
+                action: {
+                    name: "Delete the annotation.",
+                    description: "",
+                    handler: async (args: any) => {
+                        const item = properties[state.activeItem];
+                        item.property.destroy();
                     }
                 }
             }
