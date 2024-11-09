@@ -879,11 +879,25 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     match: "Tab"
                 },
                 action: {
-                    name: "Indent the current text block if it hasn't already been indented.",
+                    name: "Indent the current block.",
                     description: `
                         
                     `,
-                    handler: this.handleTabKey.bind(this)
+                    handler: this.indentBlock.bind(this)
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Shift-Tab"
+                },
+                action: {
+                    name: "De-indent the current block.",
+                    description: `
+                        
+                    `,
+                    handler: this.deindentBlock.bind(this)
                 }
             },
             {
@@ -2993,21 +3007,52 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             });
         }
     }
-    async handleTabKey(args: IBindingHandlerArgs) {
+    async deindentBlock(args: IBindingHandlerArgs) {
+        /**
+         * Rules:
+         * - If the parent of the block is not a IndentedListBlock, ignore.
+         * - If block is not the first item, ignore.
+         * 
+         * Outcome:
+         * - Move the current block from 'first child' to 'next' of the parent block.
+         * - Update the links between the children of the new parent
+         */
+        const block = args.block as StandoffEditorBlock;
+        const listParent = block.relation.parent;
+        if (listParent.type != BlockType.IndentedListBlock) {
+            return;
+        }
+        if (block.id != listParent.blocks[0].id) {
+            return;
+        }
+        const parent = listParent.relation.parent;
+        this.insertBlockAfter(parent, block);
+        if (block.metadata.indentLevel) {
+            block.metadata.indentLevel--;
+        }
+        this.renderIndent(block);
+        this.reindexAncestorDocument(parent);
+    }
+    async indentBlock(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
         const parent = block.relation.parent;
         if (parent.blocks[0].id == block.id && parent.type == BlockType.IndentedListBlock) {
             /**
              * Quit if this is the first child of another block.
              */
+            console.log("handleTabKey", { error: "Cannot indent the first item in a list.", block, parent });
             return;
         }
         const list = this.createIndentedListBlock();
         const previous = block.relation.previous;
+        if (!previous) {
+            console.log("handleTabKey", { error: "Expected to find a previous block." })
+            return;
+        }
         this.addBlockTo(list, block);
         this.addBlockTo(parent, list);
-        const listParent = this.getParentOfType(block, BlockType.IndentedListBlock) as IndentedListBlock;
-        const level = listParent?.metadata.indentLevel || 0 as number;
+        const firstListParent = this.getParentOfType(block, BlockType.IndentedListBlock) as IndentedListBlock;
+        const level = firstListParent?.metadata.indentLevel || 0 as number;
         list.metadata.indentLevel = level + 1;
         list.container.appendChild(block.container);
         updateElement(list.container, {
