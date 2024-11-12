@@ -265,6 +265,10 @@ export class ControlPanelBlock extends AbstractBlock {
             const sibling = manager?.getBlockInFocus();
             manager?.addTabRowAfter(sibling!.id);
         }
+        const makeCheckbox = () => {
+            const block = manager?.getBlockInFocus() as IBlock;
+            manager?.makeCheckbox(block);
+        }
         const moveBlockUp = () => {
             const block = manager?.getBlockInFocus() as IBlock;
             manager?.moveBlockUp(block);
@@ -286,6 +290,7 @@ export class ControlPanelBlock extends AbstractBlock {
             {
                 case "load": await load(parameters); return;
                 case "save": await save(parameters); return;
+                case "make-checkbox": await makeCheckbox(); return;
                 case "move-up": await moveBlockUp(); return;
                 case "move-down": await moveBlockDown(); return;
                 case "list-docs": await listDocuments(); return;

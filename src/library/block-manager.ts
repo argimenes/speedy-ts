@@ -1938,6 +1938,24 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             (block as StandoffEditorBlock).setCaret(caret?.right.index, CARET.LEFT);
         }
     }
+    makeCheckbox(block: IBlock) {
+        const root = this.getParentOfType(block, BlockType.DocumentBlock);
+        const parent = block.relation.parent as AbstractBlock;
+        const checkbox = this.createCheckboxBlock();
+        this.addBlockBefore(checkbox, block);
+        checkbox.blocks.push(block);
+        const i = parent.blocks.findIndex(x => x.id == block.id);
+        parent.blocks.splice(i, 1);
+        checkbox.wrapper.appendChild(block.container);
+        updateElement(block.container, {
+            style: {
+                display: "inline-block"
+            }
+        });
+        this.reindexAncestorDocument(root);
+        this.addParentSiblingRelations(checkbox);
+        this.addParentSiblingRelations(parent);
+    }
     async handleMoveBlockUp(args: IBindingHandlerArgs) {
         const block = args.block;
         this.moveBlockUp(args.block);
@@ -1953,8 +1971,11 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (i <= 0) {
             return;
         }
-        const previous = root.index[i-1].block;
+        let previous = root.index[i-1].block;
         if (block.relation.parent?.type == BlockType.CheckboxBlock) {
+            if (previous.relation?.parent.type == BlockType.CheckboxBlock) {
+                previous = root.index[i-2].block;
+            }
             this.insertBlockBefore(previous, block.relation.parent);
             return;            
         }
@@ -1967,8 +1988,11 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (i >= maxIndex) {
             return;
         }
-        const next = root.index[i+1].block;
+        let next = root.index[i+1].block;
         if (block.relation.parent?.type == BlockType.CheckboxBlock) {
+            if (next.relation?.parent.type == BlockType.CheckboxBlock) {
+                next = root.index[i+2].block;
+            }
             this.insertBlockAfter(next, block.relation.parent);
             return;            
         }

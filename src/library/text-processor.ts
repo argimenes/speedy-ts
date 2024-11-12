@@ -173,6 +173,14 @@ export class TextProcessor {
                 }
             },
             {
+                pattern: "/check/", wrapper: { start: "/check/", end: "" },
+                process: async (args: ITextPatternRecogniserHandler) => {
+                    const { block } = args;
+                    const manager = block.manager;
+                    manager.makeCheckbox(block);
+                }
+            },
+            {
                 pattern: "/c/", type: "block/alignment/center", wrapper: { start: "/c/", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
