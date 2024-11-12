@@ -138,6 +138,33 @@ export class AnnotationPanelBlock extends AbstractBlock {
             return (
                 <>
                     <div>
+                        {/* Add entity link
+                        Add web link
+                        -------------
+                        Format
+                            - Bold
+                            - Italic
+                            - Strikethrough
+                            - Highlight
+                            ----------------
+                            - Code
+                            - Math (Tex?)
+                            ----------------
+                            - Clear formatting
+                        Paragraph
+                            - Bullet list
+                            - Numbered list
+                            - Task list
+                        Insert
+                        -------------
+                        Cut
+                        Copy
+                        <greyed-out>
+                        Paste
+                        Paste as plain text
+                        </greyed-out>
+                        Select all
+                        Search for "<selected-text/>" */}
                         <button type="button" data-type="style/bold" onClick={annotate}><b>B</b></button>
                         <button type="button" data-type="style/italics" onClick={annotate}><em>I</em></button>
                         <button type="button" data-type="style/underline" onClick={annotate}><span class="text-decoration: underline;">U</span></button>

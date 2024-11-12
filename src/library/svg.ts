@@ -55,7 +55,7 @@ export const wrapRange = (property: StandoffProperty, wrapper?: CellHtmlElement)
     return wrapper;
 }
 
-function newElement<T extends HTMLElement> (type: string, config: any) {
+export function createElement<T extends HTMLElement> (type: string, config?: any) {
     var el = document.createElement(type);
      updateElement(el, config);
      return el as T;

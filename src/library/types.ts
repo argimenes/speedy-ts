@@ -416,11 +416,18 @@ export interface IStandoffEditorBlockDto extends IBlockDto {
     standoffProperties?: StandoffPropertyDto[];
 }
 
+export interface ICheckBlockDto extends IStandoffEditorBlockDto {
+    checked: boolean;
+}
+
 export interface ISelection extends IRange {
     direction: DIRECTION;
 }
 
 export interface IStandoffEditorBlockConstructor extends IAbstractBlockConstructor {
+    text?: string;
+    standoffProperties?: StandoffPropertyDto[];
+    blockProperties?: BlockPropertyDto[];
 }
 export interface IPlugin {
     type: string;

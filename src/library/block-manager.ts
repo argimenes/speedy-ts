@@ -26,6 +26,7 @@ import { classList } from 'solid-js/web';
 import { FindReplaceBlock } from '../components/find-replace';
 import { ControlPanelBlock } from '../components/control-panel';
 import { AnnotationPanelBlock } from '../components/annotation-panel';
+import { CheckboxBlock } from './checkbox-block';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
@@ -2167,6 +2168,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         }
     }
+    async buildCheckboxBlock(container: HTMLElement, blockDto: IBlockDto) {
+        const checkboxBlock = this.createCheckboxBlock(blockDto);
+        await this.buildChildren(checkboxBlock, blockDto);
+        container.appendChild(checkboxBlock.container);
+        return checkboxBlock;
+    }
     async buildStandoffEditorBlock(container: HTMLElement, blockDto: IBlockDto) {
         const textBlock = this.createStandoffEditorBlock(blockDto);
         textBlock.bind(blockDto as IStandoffEditorBlockDto);
@@ -2420,6 +2427,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
+        if (blockDto.type == BlockType.CheckboxBlock) {
+            return await this.buildCheckboxBlock(container, blockDto);
+        }
         if (blockDto.type == BlockType.StandoffEditorBlock) {
             return await this.buildStandoffEditorBlock(container, blockDto);
         }
@@ -2942,6 +2952,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }) as IframeBlock;
         iframe.build();
         this.addBlockAfter(iframe, anchor);
+    }
+    createCheckboxBlock(dto?: IBlockDto) {
+        const block = new CheckboxBlock(dto);
+        return block;
     }
     createStandoffEditorBlock(dto?: IBlockDto) {
         const standoffSchemas = this.getStandoffSchemas();

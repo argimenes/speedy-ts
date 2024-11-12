@@ -1,6 +1,7 @@
 import { Component } from "solid-js"
 import { BlockManager } from "../library/block-manager"
-import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto } from "../library/types";
+import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto, ICheckBlockDto } from "../library/types";
+import { ICheckBlockConstructor } from "../library/checkbox-block";
 
 type Props = {
     getInstance: (inst: BlockManager) => void;
@@ -146,7 +147,14 @@ const foo = (bar) => {
                             type: BlockType.StandoffEditorBlock,
                             text: "List item 2",
                             blockProperties: [ { type: "block/alignment/left" }]
-                        } as IStandoffEditorBlockDto
+                        } as IStandoffEditorBlockDto,
+                        {
+                            type: BlockType.CheckboxBlock,
+                            checked: true,
+                            text: "Checkbox list item 3",
+                            standoffProperties: [],
+                            blockProperties: []
+                        } as ICheckBlockDto
                     ]
                 },
                 {
