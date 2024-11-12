@@ -57,7 +57,9 @@ export const wrapRange = (property: StandoffProperty, wrapper?: CellHtmlElement)
 
 export function createElement<T extends HTMLElement> (type: string, config?: any) {
     var el = document.createElement(type);
-     updateElement(el, config);
+    if (config) {
+        updateElement(el, config);
+    }
      return el as T;
 };
 
@@ -82,7 +84,13 @@ export function updateElement<T extends HTMLElement>(el: T, config: any) {
     }
     if (config.attribute) {
         for (var key in config.attribute) {
-            el.setAttribute(key, config.attribute[key]);
+            if (key.startsWith("!")) {
+                if (config.attribute[key] === true) {
+                    el.setAttribute(key.substring(1), config.attribute[key]);
+                }
+            } else {
+                el.setAttribute(key, config.attribute[key]);
+            }
         }
     }
     if (config.dataset) {

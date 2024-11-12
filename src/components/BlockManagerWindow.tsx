@@ -147,16 +147,17 @@ const foo = (bar) => {
                             type: BlockType.StandoffEditorBlock,
                             text: "List item 2",
                             blockProperties: [ { type: "block/alignment/left" }]
-                        } as IStandoffEditorBlockDto,
-                        {
-                            type: BlockType.CheckboxBlock,
-                            checked: true,
-                            text: "Checkbox list item 3",
-                            standoffProperties: [],
-                            blockProperties: []
-                        } as ICheckBlockDto
+                        } as IStandoffEditorBlockDto
+                        
                     ]
                 },
+                {
+                    type: BlockType.CheckboxBlock,
+                    checked: true,
+                    text: "Checkbox list item",
+                    standoffProperties: [],
+                    blockProperties: []
+                } as ICheckBlockDto,
                 {
                     type: BlockType.StandoffEditorBlock,
                     text: "... and back to a regular text block [centre aligned]",

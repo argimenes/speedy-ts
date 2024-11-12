@@ -17,16 +17,20 @@ export class CheckboxBlock extends AbstractBlock {
         this.id = args?.id || uuidv4();
         this.type = BlockType.CheckboxBlock;
         this.checked = args.checked || false;
-        const wrapper = createElement<HTMLDivElement>("DIV");
+        const wrapper = createElement<HTMLDivElement>("DIV", {
+            style: {
+                clear: "both"
+            }
+        });
         this.checkbox = createElement<HTMLInputElement>("INPUT", {
             attribute: {
                 type: "checkbox",
-                checked: args.checked
+                "!checked": args.checked
             },
             style: {
-                float: "left",
-                height: "50px",
-                width: "50px"
+                display: "inline-block",
+                height: "25px",
+                width: "25px"
             }
         });
         const standoffSchemas = this.manager.getStandoffSchemas();
@@ -38,7 +42,7 @@ export class CheckboxBlock extends AbstractBlock {
         this.textbox.setSchemas(standoffSchemas);
         this.textbox.setBlockSchemas(blockSchemas);
         this.textbox.setEvents(standoffEvents);
-        this.textbox.setCommitHandler(this.manager.storeCommit.bind(this));
+        this.textbox.setCommitHandler(this.manager.storeCommit.bind(this.manager));
         if (args?.metadata) this.textbox.metadata = args.metadata;
         if (args?.blockProperties) this.textbox.addBlockProperties(args.blockProperties);
         this.textbox.applyBlockPropertyStyling();
@@ -53,13 +57,19 @@ export class CheckboxBlock extends AbstractBlock {
             this.textbox.addEOL();
         }
         wrapper.append(this.checkbox);
+        updateElement(this.textbox.container, {
+            style: {
+                display: "inline-block"
+            }
+        });
         wrapper.append(this.textbox.container);
         this.container.append(wrapper);
+        this.setupEventHandlers();
     }
     setupEventHandlers() {
         const self = this;
         this.checkbox.addEventListener("change", () => {
-            self.checked = this.checked;
+            self.checked = !self.checked;
         });
     }
     convertFromStandoffEditorBlock(block: StandoffEditorBlock) {
@@ -92,12 +102,15 @@ export class CheckboxBlock extends AbstractBlock {
         });
     }
     serialize() {
+        const tb = this.textbox.serialize();
         return {
             id: this.id,
             type: BlockType.CheckboxBlock,
             checked: this.checked,
-            metadata: this.metadata,
-            blockProperties: this.blockProperties.map(x => x.serialize()),
+            text: tb.text,
+            metadata: { ...tb.metadata },
+            blockProperties: tb.blockProperties,
+            standoffProperties: tb.standoffProperties,
             children: this.blocks.map(x => x.serialize())
         } as IBlockDto;
     }

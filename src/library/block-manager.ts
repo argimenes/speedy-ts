@@ -2954,7 +2954,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.addBlockAfter(iframe, anchor);
     }
     createCheckboxBlock(dto?: IBlockDto) {
-        const block = new CheckboxBlock(dto);
+        const block = new CheckboxBlock({ manager: this, ...dto });
         return block;
     }
     createStandoffEditorBlock(dto?: IBlockDto) {
