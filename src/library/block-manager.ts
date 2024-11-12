@@ -1954,6 +1954,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         }
         const previous = root.index[i-1].block;
+        if (block.relation.parent?.type == BlockType.CheckboxBlock) {
+            this.insertBlockBefore(previous, block.relation.parent);
+            return;            
+        }
         this.insertBlockBefore(previous, block);
     }
     moveBlockDown(block: IBlock) {
@@ -1964,6 +1968,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         }
         const next = root.index[i+1].block;
+        if (block.relation.parent?.type == BlockType.CheckboxBlock) {
+            this.insertBlockAfter(next, block.relation.parent);
+            return;            
+        }
         this.insertBlockAfter(next, block);
     }
     removeBlockFrom(parent: AbstractBlock, block: IBlock, skipIndexation?: boolean) {
@@ -2169,6 +2177,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     async buildCheckboxBlock(container: HTMLElement, blockDto: IBlockDto) {
+        const todo = this.createCheckboxBlock(blockDto);
+        await this.buildChildren(todo, blockDto, (child) => {
+            updateElement(child.container, {
+                style: {
+                    display: "inline-block"
+                }
+            });
+            todo.wrapper.appendChild(child.container);
+        });
+        container.appendChild(todo.container);
+        return todo;
+    }
+    async buildCheckboxBlock_OLD(container: HTMLElement, blockDto: IBlockDto) {
         const checkboxBlock = this.createCheckboxBlock(blockDto);
         await this.buildChildren(checkboxBlock, blockDto);
         container.appendChild(checkboxBlock.container);

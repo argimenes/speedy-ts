@@ -416,7 +416,7 @@ export interface IStandoffEditorBlockDto extends IBlockDto {
     standoffProperties?: StandoffPropertyDto[];
 }
 
-export interface ICheckBlockDto extends IStandoffEditorBlockDto {
+export interface ICheckBlockDto extends IBlockDto {
     checked: boolean;
 }
 

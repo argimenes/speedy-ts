@@ -147,16 +147,28 @@ const foo = (bar) => {
                             type: BlockType.StandoffEditorBlock,
                             text: "List item 2",
                             blockProperties: [ { type: "block/alignment/left" }]
-                        } as IStandoffEditorBlockDto
-                        
+                        } as IStandoffEditorBlockDto,
+                        {
+                            type: BlockType.CheckboxBlock,
+                            checked: true,
+                            children: [
+                                {
+                                    type: BlockType.StandoffEditorBlock,
+                                    text: "Checkbox list item 1"
+                                } as IStandoffEditorBlockDto
+                            ]
+                        } as ICheckBlockDto,
                     ]
                 },
                 {
                     type: BlockType.CheckboxBlock,
-                    checked: true,
-                    text: "Checkbox list item",
-                    standoffProperties: [],
-                    blockProperties: []
+                    checked: false,
+                    children: [
+                        {
+                            type: BlockType.StandoffEditorBlock,
+                            text: "Checkbox list item 2"
+                        } as IStandoffEditorBlockDto
+                    ]
                 } as ICheckBlockDto,
                 {
                     type: BlockType.StandoffEditorBlock,
