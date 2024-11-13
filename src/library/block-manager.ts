@@ -40,6 +40,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     //blocks: IBlock[];
     //relation: Record<string, IBlock>;
     //metadata: Record<string,any>;
+    lastFocus?: IBlock;
     focus?: IBlock;
     // modes: string[];
     // inputEvents: InputEvent[];
@@ -401,7 +402,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         oldFocus?.container.classList.remove("focus-highlight");
         this.focus = block;
         this.focus.container.classList.add("focus-highlight");
-        //this.focus.container.scrollIntoView();
+        this.lastFocus = oldFocus;
         block.setFocus();
     }
     getImageBlockSchemas() {

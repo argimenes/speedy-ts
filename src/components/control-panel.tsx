@@ -266,7 +266,7 @@ export class ControlPanelBlock extends AbstractBlock {
             manager?.addTabRowAfter(sibling!.id);
         }
         const makeCheckbox = () => {
-            const block = manager?.getBlockInFocus() as IBlock;
+            const block = manager?.lastFocus;
             manager?.makeCheckbox(block);
         }
         const moveBlockUp = () => {
