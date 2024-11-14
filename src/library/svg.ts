@@ -36,7 +36,9 @@ export const wrapRange = (property: StandoffProperty, wrapper?: CellHtmlElement)
     const dummy = document.createElement("SPAN");
     const snp = property.start.element as HTMLSpanElement;
     const parent = snp?.parentElement as HTMLDivElement;
+    if (!parent) return null;
     parent.insertBefore(dummy, snp);
+    //snp.insertAdjacentElement("beforebegin", dummy);
     wrapper = wrapper || document.createElement("DIV") as CellHtmlElement;
     wrapper.speedy = {
         role: ELEMENT_ROLE.INNER_STYLE_BLOCK,

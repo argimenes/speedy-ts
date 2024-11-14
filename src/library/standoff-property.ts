@@ -158,6 +158,7 @@ export class StandoffProperty {
         }
         if (this.schema?.wrap?.cssClass) {
             const wrapper = this.wrapper = wrapRange(this);
+            if (!wrapper) return;
             wrapper.classList.add(this.schema?.wrap?.cssClass);
             this.styled = true;
         }
