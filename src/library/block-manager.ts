@@ -3602,15 +3602,15 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             console.log("handlePasteForStandoffEditorBlock", { save, file });
             const fileData = save[0];
             const image = this.addImageBlock(block, fileData.path);
-            image.addBlockProperties([
-                {
-                    type: "block/size",
-                    metadata: {
-                        height: dimensions.height,
-                        width: dimensions.width
-                    }
-                } as BlockPropertyDto
-            ]);
+            // image.addBlockProperties([
+            //     {
+            //         type: "block/size",
+            //         metadata: {
+            //             height: dimensions.height,
+            //             width: dimensions.width
+            //         }
+            //     } as BlockPropertyDto
+            // ]);
             image.applyBlockPropertyStyling();
             return;
         }
