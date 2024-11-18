@@ -297,6 +297,9 @@ export class SearchEntitiesBlock extends AbstractBlock
         const node = this.node = renderToNode(jsx);
         return node;
     }
+    removeFocus() {
+        this.container.blur();
+    }
     setFocus(){
         const input = this.container.querySelector("input");
         if (!input) return;

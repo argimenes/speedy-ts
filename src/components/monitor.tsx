@@ -4,6 +4,7 @@ import { createStore } from "solid-js/store";
 import { AbstractBlock } from "../library/abstract-block";
 import { IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
 import { BlockManager } from "../library/block-manager";
+import { updateElement } from "../library/svg";
 
 type StandoffPropertyState = {
     visible: boolean;
@@ -27,6 +28,14 @@ export class MonitorBlock extends AbstractBlock implements IHandleyKeyboardInput
         super({ manager: args.manager });
         this.canSerialize = false;
         this.properties = [];
+    }
+    setFocus(){
+        updateElement(this.container, {
+            attribute: {
+                "tabIndex": -1
+            }
+        });
+        this.container.focus();
     }
     handleKeyDown(e: KeyboardEvent): Promise<void> {
         throw new Error("Method not implemented.");

@@ -138,6 +138,9 @@ export class StandoffEditorBlock extends AbstractBlock {
     setSchemas(schemas: IStandoffPropertySchema[]) {
         this.schemas.push(...schemas);
     }
+    removeFocus() {
+        this.container.blur();
+    }
     getWordsFromText(text: string) {
         const re = new RegExp(/\b[^\s]+\b/, "g");
         const words: Word[] = [];

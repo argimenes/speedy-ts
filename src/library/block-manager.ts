@@ -783,7 +783,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
         const anchor = caret.left || caret.right;
-        block.setMarker(anchor, this.container);
+        // block.setMarker(anchor, this.container);
         if (block.cache.monitor) {
             block.cache.monitor.remove();
             block.cache.monitor = undefined;
@@ -800,6 +800,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             onClose: () => {
                 block.cache.monitor?.remove();
                 self.deregisterBlock(monitor.id);
+                block.setCaret(anchor.index, CARET.LEFT);
+                self.setBlockFocus(block);
             }
         });
         const node = block.cache.monitor = renderToNode(component) as HTMLDivElement;
@@ -815,6 +817,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             },
             parent: this.container
         });
+        block.removeFocus();
+        monitor.setFocus();
         this.registerBlock(monitor);
         this.setBlockFocus(monitor);
     }
@@ -3223,6 +3227,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             type: "codex/search/highlight", start: selection.start.index, end: selection.end.index, clientOnly: true
         }]);
         block.applyStandoffPropertyStyling();
+        block.clearSelection();
         const panel = new AnnotationPanelBlock({
             source: block,
             selection,
@@ -3249,7 +3254,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.container.appendChild(panel.container);
         this.registerBlock(panel);
         this.setBlockFocus(panel);
-        panel.setFocus();
     }
     async applyEntityReferenceToText(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
@@ -3304,6 +3308,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         block.container.appendChild(searchBlock.container);
         this.registerBlock(searchBlock);
         this.setBlockFocus(searchBlock);
+        block.removeFocus();
         searchBlock.setFocus();
     }
     async updateEntityReferencesGraph(filename: string) {
