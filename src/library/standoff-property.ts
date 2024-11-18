@@ -79,6 +79,22 @@ export class StandoffProperty {
             this.schema.render?.update({ block: this.block, properties: [this] });
         }
     }
+    shiftLeftOneWord() {
+        const word = this.block.getWordAtIndex(this.start.index);
+        if (!word) return;
+        if (!word.previous) return;
+        const cells = this.block.cells;
+        const previousWordStartCell = cells[word.previous.start];
+        const previousWordEndCell = cells[word.previous.end];
+        if (!previousWordStartCell || !previousWordEndCell) {
+            return;
+        }
+        this.unhighlight();
+        this.removeStyling();
+        this.start = previousWordStartCell;
+        this.end = previousWordEndCell;
+        this.applyStyling();
+    }
     shiftLeft(suppressFlash?: boolean) {
         var previousStartCell = this.start.previous;
         var previousEndCell = this.end.previous;
@@ -98,6 +114,22 @@ export class StandoffProperty {
         var self = this;
         this.highlight();
         setTimeout(() => self.unhighlight(), 125);
+    }
+    shiftRightOneWord() {
+        const word = this.block.getWordAtIndex(this.start.index);
+        if (!word) return;
+        if (!word.next) return;
+        const cells = this.block.cells;
+        var nextWordStartCell = cells[word.next.start];
+        var nextWordEndCell = cells[word.next.end];
+        if (!nextWordStartCell || !nextWordEndCell) {
+            return;
+        }
+        this.unhighlight();
+        this.removeStyling();
+        this.start = nextWordStartCell;
+        this.end = nextWordEndCell;
+        this.applyStyling();
     }
     shiftRight(suppressFlash?: boolean) {
         var nextStartCell = this.start.next;

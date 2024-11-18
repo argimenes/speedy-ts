@@ -150,6 +150,21 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                     description: "",
                     handler: async (args: any) => {
                         const item = properties[state.activeItem];
+                        item.property.shiftRightOneWord();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Shift-ArrowRight"
+                },
+                action: {
+                    name: "Set property at current index visible.",
+                    description: "",
+                    handler: async (args: any) => {
+                        const item = properties[state.activeItem];
                         item.property.shiftRight();
                     }
                 }
@@ -159,6 +174,21 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                 trigger: {
                     source: InputEventSource.Keyboard,
                     match: "ArrowLeft"
+                },
+                action: {
+                    name: "Set property at current index invisible.",
+                    description: "",
+                    handler: async (args: any) => {
+                        const item = properties[state.activeItem];
+                        item.property.shiftLeftOneWord();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Shift-ArrowLeft"
                 },
                 action: {
                     name: "Set property at current index invisible.",
