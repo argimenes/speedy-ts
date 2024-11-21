@@ -234,6 +234,13 @@ export class SearchEntitiesBlock extends AbstractBlock
             });
         }
         const onSelectFromList = (item: Entity) => {
+            if (self.onBulkSubmit) {
+                self.onBulkSubmit({
+                    Text: item.name, Value: item.id
+                }, self.matches);
+                self.close();
+                return;
+            }
             self.onSelected({
                 Text: item.name, Value: item.id
             });

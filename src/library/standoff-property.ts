@@ -63,7 +63,7 @@ export class StandoffProperty {
     }
     contract(suppressFlash?: boolean) {
         var previousEndCell = this.end.previous;
-        if (!previousEndCell || previousEndCell == this.start) {
+        if (!previousEndCell) {
             return;
         }
         this.unhighlight();

@@ -27,6 +27,7 @@ import { FindReplaceBlock } from '../components/find-replace';
 import { ControlPanelBlock } from '../components/control-panel';
 import { AnnotationPanelBlock } from '../components/annotation-panel';
 import { CheckboxBlock } from './checkbox-block';
+import _ from 'underscore';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
@@ -3256,6 +3257,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.setBlockFocus(panel);
     }
     async applyEntityReferenceToText(args: IBindingHandlerArgs) {
+        const self = this;
         const block = args.block as StandoffEditorBlock;
         const caret = args.caret as Caret;
         let selection = block.getSelection() as ISelection;
@@ -3281,17 +3283,30 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 if (matches.length == 0) {
                     matches.push({ start: selection.start.index, block, end: selection.end.index, match: "" });
                 }
-                matches.forEach(m => {
-                    let prop = {
+                const rows = _.groupBy(matches, m => m.block.id);
+                _.each(rows, (items) => {
+                    let block = items[0].block;
+                    let props = items.map(m => ({
                         type: "codex/entity-reference",
                         value: item.Value,
                         start: m.start,
                         end: m.end,
-                    };
-                    m.block.addStandoffPropertiesDto([prop]);
-                    m.block.removeStandoffPropertiesByType("codex/search/highlight");
-                    m.block.applyStandoffPropertyStyling();
-                })
+                    }));
+                    block.addStandoffPropertiesDto(props);
+                    block.removeStandoffPropertiesByType("codex/search/highlight");
+                    block.applyStandoffPropertyStyling();
+                });
+                // matches.forEach(m => {
+                //     let prop = {
+                //         type: "codex/entity-reference",
+                //         value: item.Value,
+                //         start: m.start,
+                //         end: m.end,
+                //     };
+                //     m.block.addStandoffPropertiesDto([prop]);
+                //     m.block.removeStandoffPropertiesByType("codex/search/highlight");
+                //     m.block.applyStandoffPropertyStyling();
+                // })
             }
         });
         const node = await searchBlock.render();

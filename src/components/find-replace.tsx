@@ -226,9 +226,11 @@ export class FindReplaceBlock extends AbstractBlock
         }
         const replaceNextClicked = (e: Event) => {
             e.preventDefault();
+            replaceCurrent();
         }
         const replaceAllClicked = (e: Event) => {
             e.preventDefault();
+            replaceAll();
         }
         const selection = this.source.getSelection();
         if (selection) {
