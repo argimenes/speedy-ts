@@ -34,26 +34,23 @@ export const unwrapRange = (wrapper: CellHtmlElement) => {
 
 export const wrapRange = (property: StandoffProperty, wrapper?: CellHtmlElement) => {
     const dummy = document.createElement("SPAN");
-    const snp = property.start.element as HTMLSpanElement;
-    const parent = snp?.parentElement as HTMLDivElement;
-    if (!parent) return null;
-    parent.insertBefore(dummy, snp);
-    //snp.insertAdjacentElement("beforebegin", dummy);
+    const startSpan = property.start.element as HTMLSpanElement;
+    startSpan.insertAdjacentElement("beforebegin", dummy);
     wrapper = wrapper || document.createElement("DIV") as CellHtmlElement;
     wrapper.speedy = {
         role: ELEMENT_ROLE.INNER_STYLE_BLOCK,
         cell: property.start,
         isSpace: false
     };
-    const blocks = property.getCells();
-    blocks.forEach(b => wrapper.appendChild(b.element as HTMLSpanElement));
+    const cells = property.getCells();
+    cells.forEach(cell => wrapper.appendChild(cell.element as HTMLSpanElement));
     updateElement(wrapper, {
         style: {
             display: "inline-block"
         }
     });
-    parent.insertBefore(wrapper, dummy);
-    parent.removeChild(dummy);
+    dummy.insertAdjacentElement("beforebegin", wrapper);
+    dummy.remove();
     return wrapper;
 }
 

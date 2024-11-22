@@ -556,14 +556,14 @@ export class StandoffEditorBlock extends AbstractBlock {
             return prop;
         }) as BlockProperty[];
         this.applyBlockPropertyStyling();
-        this.applyStandoffPropertyStyling();
         const frag = document.createDocumentFragment();
         cells.forEach(c => frag.append(c.element as HTMLElement));
+        this.cells = cells;
+        this.reindexCells();
+        this.applyStandoffPropertyStyling();
         /**
          * May want to check for a line-break character here?
          */
-        this.cells = cells;
-        this.reindexCells();
         this.wrapper.innerHTML = "";
         this.wrapper.appendChild(frag);
         this.updateView();

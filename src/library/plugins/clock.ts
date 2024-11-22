@@ -105,7 +105,8 @@ export class ClockPlugin implements IAnimationPlugin {
     start() {
         const self = this;
         const selection = this.property.block.getSelection();
-        const index = selection?.start.index as number;
+        // const index = selection?.start.index as number;
+        const index = this.property?.start.index as number;
         this.wrap();
         this.property.block.setCaret(index, CARET.LEFT);
         this.property.block.setFocus();
