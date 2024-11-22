@@ -54,7 +54,7 @@ export class TextProcessor {
             ["<3", "❤️"],
             [">-", "⤚"],
             ["--", "—"],
-            ["[ ]", "☐"],
+            //["[ ]", "☐"],
             ["[X]", "✅"],
             [":x:", "❌"],
             [":P", "😛"],
@@ -173,11 +173,19 @@ export class TextProcessor {
                 }
             },
             {
-                pattern: "/check/", wrapper: { start: "/check/", end: "" },
+                pattern: "\\[ \\]", wrapper: {  start: "[ ]", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
                     const manager = block.manager;
                     manager.makeCheckbox(block);
+                }
+            },
+            {
+                pattern: "^- ", wrapper: {  start: "- ", end: "" },
+                process: async (args: ITextPatternRecogniserHandler) => {
+                    const { block } = args;
+                    const manager = block.manager;
+                    manager.indentBlock({ block });
                 }
             },
             {

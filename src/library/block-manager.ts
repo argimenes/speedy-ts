@@ -2600,7 +2600,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
 
         documentBlock.generateIndex();
 
-        await this.setupControlPanel();
+        // await this.setupControlPanel();
     }
     insertItem<T>(list: T[], index: number, item: T) {
         list.splice(index, 0, item);
