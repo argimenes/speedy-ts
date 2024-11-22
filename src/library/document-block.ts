@@ -27,7 +27,7 @@ export class DocumentBlock extends AbstractBlock {
           });
       }
       traverse(this);
-      this.index = result.filter(x => x.block.type == BlockType.StandoffEditorBlock);
+      this.index = result.filter(x => x.block.type == BlockType.StandoffEditorBlock || x.block.type == BlockType.CheckboxBlock);
       console.log("generateIndex", { index: this.index, result, root: this });
       return result;
     }
