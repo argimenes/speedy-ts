@@ -518,7 +518,7 @@ export class StandoffEditorBlock extends AbstractBlock {
     bind(block: IStandoffEditorBlockDto) {
         const self = this;
         if (this.wrapper) this.wrapper.innerHTML = "";
-        const cells = this.toCells(block.text);
+        const cells = this.cells = this.toCells(block.text);
         const len = cells.length;
         if (len == 0 || cells[len-1].text != String.fromCharCode(KEYS.ENTER[0].code)) {
             const eol = new Cell({ text: String.fromCharCode(KEYS.ENTER[0].code), block: this });
@@ -558,7 +558,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.applyBlockPropertyStyling();
         const frag = document.createDocumentFragment();
         cells.forEach(c => frag.append(c.element as HTMLElement));
-        this.cells = cells;
+        //this.cells = cells;
         this.reindexCells();
         this.applyStandoffPropertyStyling();
         /**
