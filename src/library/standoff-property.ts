@@ -202,6 +202,10 @@ export class StandoffProperty {
         }
     }
     removeStyling() {
+        if (this.schema?.event?.onDestroy) {
+            this.schema.event.onDestroy(this);
+            this.styled = false;
+        }
         if (this.schema?.decorate?.cssClass) {
             this.detachCssClass(this.schema.decorate.cssClass);
             this.styled = false;
