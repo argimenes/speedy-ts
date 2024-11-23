@@ -40,9 +40,9 @@ export class StandoffProperty {
         this.onInit();
     }
     async onInit() {
-        if (this.schema?.event?.onInit) {
-            await this.schema?.event?.onInit(this);
-        }
+        // if (this.schema?.event?.onInit) {
+        //     await this.schema?.event?.onInit(this);
+        // }
     }
     async onDestroy() {
         if (this.schema?.event?.onDestroy) {
@@ -183,7 +183,7 @@ export class StandoffProperty {
     scrollTo() {
         this.start.element?.scrollIntoView();
     }
-    applyStyling() {
+    async applyStyling() {
         if (this.schema?.decorate?.cssClass) {
             this.applyCssClass(this.schema.decorate.cssClass);
             this.styled = true;
@@ -196,6 +196,9 @@ export class StandoffProperty {
         }
         if (this.schema?.render) {
             this.render();
+        }
+        if (this.schema?.event?.onInit) {
+            await this.schema?.event?.onInit(this);
         }
     }
     removeStyling() {

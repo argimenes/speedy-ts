@@ -7,7 +7,6 @@ export class ClockPlugin implements IAnimationPlugin {
     degrees: number;
     active: boolean;
     property: StandoffProperty;
-    wrapper: CellHtmlElement;
     direction: ClockDirection;
     timer: any;
     steps: number;
@@ -16,15 +15,9 @@ export class ClockPlugin implements IAnimationPlugin {
         this.degrees = 0;
         this.active = false;
         this.property = args.property;
-        this.wrapper = document.createElement("DIV") as CellHtmlElement;
         this.timer = 0;
         this.steps = 2;
         this.direction = ClockDirection.Clockwise;
-        updateElement(this.wrapper, {
-            style: {
-                display: "inline-block"
-            }
-        });
     }
     serialise() {
         return {
@@ -52,16 +45,15 @@ export class ClockPlugin implements IAnimationPlugin {
         return svg;
     }
     wrap() {
-        this.wrapper = this.wrapper || document.createElement("DIV") as CellHtmlElement;
-        wrapRange(this.property, this.wrapper);
+        this.property.wrapper = wrapRange(this.property, document.createElement("DIV") as CellHtmlElement);
     }
     unwrap() {
-        const wrapper = this.wrapper;
+        const wrapper = this.property.wrapper;
         const frag = document.createDocumentFragment();
-        const spans = Array.from(this.wrapper.children);
+        const spans = Array.from(this.property.wrapper.children);
         frag.append(...spans);
         spans.forEach(s => wrapper.insertAdjacentElement("beforebegin", s));
-        this.wrapper.remove();
+        this.property.wrapper.remove();
     }
     setSteps(steps: number) {
         this.steps = steps;
@@ -87,7 +79,7 @@ export class ClockPlugin implements IAnimationPlugin {
         this.draw();
     }
     draw() {
-        updateElement(this.wrapper, {
+        updateElement(this.property.wrapper, {
             style: {
                 transform: `rotate(${this.degrees}deg)`
             }
@@ -104,18 +96,13 @@ export class ClockPlugin implements IAnimationPlugin {
     }
     start() {
         const self = this;
-        const selection = this.property.block.getSelection();
-        // const index = selection?.start.index as number;
         const index = this.property?.start.index as number;
         this.wrap();
-        this.property.block.setCaret(index, CARET.LEFT);
-        this.property.block.setFocus();
-        // const circle = this.createCircle();
-        // this.wrapper.insertAdjacentElement("beforebegin", circle);
+        // this.property.block.setCaret(index, CARET.LEFT);
+        // this.property.block.setFocus();
         this.active = true;
         this.timer = setInterval(function () {
             if (!self.active) {
-                // clearInterval(p.animation.timer);
                 return;
             }
             self.update();

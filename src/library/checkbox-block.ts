@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { AbstractBlock } from "./abstract-block";
 import { createElement, updateElement } from "./svg";
-import { BlockType, IBlockDto, IBlock, IAbstractBlockConstructor, InputEventSource, IArrowNavigation, Caret, CARET } from "./types";
+import { BlockType, IBlockDto, IBlock, IAbstractBlockConstructor, InputEventSource, IArrowNavigation, Caret, CARET, IRange } from "./types";
 import { DocumentBlock } from './document-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
 import { TabBlock, TabRowBlock } from './tabs-block';
@@ -77,6 +77,12 @@ export class CheckboxBlock extends AbstractBlock {
     uncheck() {
         this.checked = false;
         this.checkbox.removeAttribute("checked");
+    }
+    handleArrowRight(args: IArrowNavigation) {
+        this.handleArrowDown(args);
+    }
+    handleArrowLeft(args: IArrowNavigation) {
+        this.handleArrowUp(args);
     }
     handleArrowUp(args: IArrowNavigation): void {
         const self = this;

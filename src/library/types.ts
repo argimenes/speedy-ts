@@ -438,7 +438,6 @@ export interface IPlugin {
 export interface IAnimationPlugin extends IPlugin {
     active: boolean;
     timer: number;
-    wrapper: CellHtmlElement;
     start(): void;
     stop(): void;
     update(): void;
