@@ -202,32 +202,57 @@ const saveDocumentToGraph = async (doc: IBlockDto) => {
    */
   const blocks = generateIndex(doc);
   await saveDocumentBlock(doc);
+  // await updateDocument();
+  await selectDocuments();
+}
+
+const selectDocuments = async () => {
+  const result = await db.query(`
+      SELECT * FROM Document;
+    `)
+  console.log("selectDocuments", { result: result[0][0] });
+}
+
+const updateDocument = async () => {
+  const result = await db.query(`
+UPDATE Document:\`Document:abc\` CONTENT {
+    type: "main-list-item-3"
+};`);
+    console.log("updateDocument", { result: result[0][0] });
 }
 
 const saveDocumentBlock = async (doc: IBlockDto) => {
   const id = await db.query(
-    `let $id = (SELECT id FROM Document WHERE blockId = $blockId)[0].id; RETURN $id;`
+    `SELECT id FROM type::thing("Document",$blockId);`
   , { blockId: doc.id })[0];
   console.log("saveDocumentBlock", { id, doc });
 
   if (id) {
     const update = await db.query(
-      `UPDATE Document SET type = $type, metadata = $metadata, blockProperties = $blockProperties WHERE blockId = $blockId; SELECT * FROM Document;`, {
+      `UPDATE type::thing("Document",$blockId) CONTENT {
+          type: $type,
+          metadata: $metadata,
+          blockProperties: $blockProperties
+       };`, {
         blockId: doc.id,
         type: doc.type,
         metadata: doc.metadata,
         blockProperties: doc.blockProperties
       });
-      console.log("saveDocumentBlock", { update, doc });
+      console.log("saveDocumentBlock", { update: update[0][0], doc });
   } else {
     const create = await db.query(
-      `CREATE Document SET id = 'Document:$blockId', blockId = $blockId, type = $type, metadata = $metadata, blockProperties = $blockProperties; SELECT * FROM Document;`, {
+      `CREATE type::thing("Document",$blockId) CONTENT {
+        type: $type,
+        metadata: $metadata,
+        blockProperties: $blockProperties
+    }`, {
         blockId: doc.id,
         type: doc.type,
         metadata: doc.metadata,
         blockProperties: doc.blockProperties
       });
-      console.log("saveDocumentBlock", { create, doc });
+      console.log("saveDocumentBlock", { create: create[0][0], doc });
   }
 }
 
