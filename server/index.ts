@@ -201,6 +201,34 @@ const saveDocumentToGraph = async (doc: IBlockDto) => {
    * 
    */
   const blocks = generateIndex(doc);
+  await saveDocumentBlock(doc);
+}
+
+const saveDocumentBlock = async (doc: IBlockDto) => {
+  const id = await db.query(
+    `let $id = (SELECT id FROM Document WHERE blockId = $blockId)[0].id; RETURN $id;`
+  , { blockId: doc.id })[0];
+  console.log("saveDocumentBlock", { id, doc });
+
+  if (id) {
+    const update = await db.query(
+      `UPDATE Document SET type = $type, metadata = $metadata, blockProperties = $blockProperties WHERE blockId = $blockId; SELECT * FROM Document;`, {
+        blockId: doc.id,
+        type: doc.type,
+        metadata: doc.metadata,
+        blockProperties: doc.blockProperties
+      });
+      console.log("saveDocumentBlock", { update, doc });
+  } else {
+    const create = await db.query(
+      `CREATE Document SET id = 'Document:$blockId', blockId = $blockId, type = $type, metadata = $metadata, blockProperties = $blockProperties; SELECT * FROM Document;`, {
+        blockId: doc.id,
+        type: doc.type,
+        metadata: doc.metadata,
+        blockProperties: doc.blockProperties
+      });
+      console.log("saveDocumentBlock", { create, doc });
+  }
 }
 
 app.get('/', function(req: Request, res: Response) {
