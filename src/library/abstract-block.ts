@@ -127,13 +127,13 @@ export abstract class AbstractBlock implements IBlock {
             const parts = _match.split("-"), len = parts.length;
             chord.key = parts[len-1];
         }
-        console.log("toChord", { match, chord, platform });
+        // console.log("toChord", { match, chord, platform });
         return chord;
     }
     protected compareChords(input: IKeyboardInput, trigger: IKeyboardInput) {
         if (trigger.key.startsWith("'")) {
             const key = trigger.key.substring(1,2);
-            console.log("compareChords", { input, trigger, key })
+            // console.log("compareChords", { input, trigger, key })
             if (input.key?.toUpperCase() == key.toUpperCase()) return true;
         }
         if (input.platform != trigger.platform) return false;
@@ -145,7 +145,7 @@ export abstract class AbstractBlock implements IBlock {
         return true;
     }
     protected getFirstMatchingInputEvent(input: IKeyboardInput) {
-        console.log("getFirstMatchingInputEvent", { input });
+        // console.log("getFirstMatchingInputEvent", { input });
         const self = this;
         const modeEvents = _.groupBy(this.inputEvents.filter(x => x.trigger.source == InputEventSource.Keyboard), x => x.mode);
         const maxIndex = this.modes.length -1;
@@ -153,7 +153,7 @@ export abstract class AbstractBlock implements IBlock {
             let mode = this.modes[i];
             let events = modeEvents[mode];
             if (!events) continue;
-            console.log("getFirstMatchingInputEvent", { events });
+            // console.log("getFirstMatchingInputEvent", { events });
             let match = events.find(x => {
                 if (Array.isArray(x.trigger.match)) {
                     const triggers = (x.trigger.match as string[]).map(m => self.toChord(m));
