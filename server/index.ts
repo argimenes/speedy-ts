@@ -229,7 +229,7 @@ const saveDocumentBlock = async (doc: IBlockDto) => {
   , { blockId: doc.id })[0];
   console.log("saveDocumentBlock", { id: find, doc });
 
-  if (find.id) {
+  if (find) {
     const update = await db.query(
       `UPDATE type::thing("Document",$blockId) CONTENT {
           type: $type,
