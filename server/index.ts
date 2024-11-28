@@ -175,6 +175,8 @@ app.post('/api/saveDocumentJson', async function(req: Request, res: Response) {
   const document = JSON.stringify(json.document);
   fs.writeFileSync(filepath, document);
   const doc = json.document as IBlockDto;
+  doc.metadata = { filepath };
+  doc.lastUpdated = new Date();
   await saveDocumentToGraph(doc);
   res.send({
     Success: true
@@ -222,12 +224,12 @@ UPDATE Document:\`Document:abc\` CONTENT {
 }
 
 const saveDocumentBlock = async (doc: IBlockDto) => {
-  const id = await db.query(
+  const find = await db.query(
     `SELECT id FROM type::thing("Document",$blockId);`
   , { blockId: doc.id })[0];
-  console.log("saveDocumentBlock", { id, doc });
+  console.log("saveDocumentBlock", { id: find, doc });
 
-  if (id) {
+  if (find.id) {
     const update = await db.query(
       `UPDATE type::thing("Document",$blockId) CONTENT {
           type: $type,

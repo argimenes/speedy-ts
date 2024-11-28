@@ -6,6 +6,7 @@ export interface IBlockDto {
     children?: IBlockDto[];
     metadata?: Record<string, any>;
     blockProperties?: BlockPropertyDto[];
+    lastUpdated?: Date;
 }
 export interface IndexedBlock {
     block: IBlockDto;

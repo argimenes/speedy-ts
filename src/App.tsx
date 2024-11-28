@@ -9,12 +9,13 @@ type Model = {
 const App: Component = () => {
   const [model, setModel] = createStore<Model>({} as Model);
   const initControlPanel = async (el: HTMLDivElement) => {
-    const panel = new ControlPanelBlock({
-      manager: model.manager
-    });
-    panel.container = el;
-    const node = await panel.render();
-    el.appendChild(node);
+    await model.manager.setupControlPanel();
+    // const panel = new ControlPanelBlock({
+    //   manager: model.manager
+    // });
+    // panel.container = el;
+    // const node = await panel.render();
+    // el.appendChild(node);
 }
   return (
     <div class="App">
