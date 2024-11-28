@@ -3209,7 +3209,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const panel = new ControlPanelBlock({ manager: this });
         const node = await panel.render() as HTMLElement;
         panel.container.appendChild(node);
-        this.container.appendChild(panel.container);
+        document.body.appendChild(panel.container);
         this.registerBlock(panel);
         this.setBlockFocus(panel);
         panel.setFocus();

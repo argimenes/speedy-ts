@@ -440,7 +440,7 @@ const foo = (bar) => {
         const manager = new BlockManager();
         manager.container = el;
         manager.loadDocument(nextDoc);
-        (manager.setupControlPanel()).then(() => {});
+        //(manager.setupControlPanel()).then(() => {});
         
         props.getInstance(manager);
         console.log("== GLOBAL ==", { manager, block: manager.blocks[0] })
