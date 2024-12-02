@@ -212,7 +212,7 @@ const selectDocuments = async () => {
   const result = await db.query(`
       SELECT * FROM Document;
     `)
-  console.log("selectDocuments", { result: result[0][0] });
+  console.log("selectDocuments", { result: result[0] });
 }
 
 const updateDocument = async () => {
@@ -224,12 +224,11 @@ UPDATE Document:\`Document:abc\` CONTENT {
 }
 
 const saveDocumentBlock = async (doc: IBlockDto) => {
-  const find = await db.query(
-    `SELECT id FROM type::thing("Document",$blockId);`
-  , { blockId: doc.id })[0];
-  console.log("saveDocumentBlock", { id: find, doc });
-
-  if (find.id) {
+  const exists = await db.query(
+    `RETURN count(SELECT * FROM type::thing("Document", $blockId)) > 0;`
+  , { blockId: doc.id }) as any[];
+  console.log("saveDocumentBlock", { exists, doc });
+  if (exists[0]) {
     const update = await db.query(
       `UPDATE type::thing("Document",$blockId) CONTENT {
           type: $type,
