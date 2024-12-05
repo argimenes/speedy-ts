@@ -1783,7 +1783,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     cssClass: "style_italics"
                 }
             },
-            
+            {
+                type: "style/strikethrough",
+                name: "Strikethrough",
+                decorate: {
+                    cssClass: "style_strikethrough"
+                }
+            },
+            {
+                type: "style/highlight",
+                name: "Highlight",
+                decorate: {
+                    cssClass: "style_highlight"
+                }
+            },
             {
                 type: "style/bold",
                 name: "Bold",

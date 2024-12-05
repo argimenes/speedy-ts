@@ -1,3 +1,4 @@
+import { createSignal } from "solid-js";
 import { AbstractBlock } from "../library/abstract-block";
 import { renderToNode } from "../library/common";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
@@ -134,6 +135,46 @@ export class AnnotationPanelBlock extends AbstractBlock {
             block.addStandoffPropertiesDto([dto]);
             block.applyStandoffPropertyStyling();
         }
+        const boldClicked = () => {
+            applyAnnotation("style/bold");
+        };
+        const italicClicked = () => {
+            applyAnnotation("style/italics")
+        };
+        const strikethroughClicked = () => {
+            applyAnnotation("style/strikethrough")
+        }
+        const highlightClicked = () => {
+            applyAnnotation("style/highlight")
+        }
+        const clearFormattingClicked = () => {
+            // 
+        };
+        interface IMenuItem {
+            name: string;
+            onClick?: () => void;
+            children?: IMenuItem[];
+        }
+        const menu: IMenuItem[] = [
+            {
+                name: "Format",
+                children: [
+                    { name: "Bold", onClick: () => boldClicked },
+                    { name: "Italic", onClick: () => italicClicked },
+                    { name: "Strikethrough", onClick: () => strikethroughClicked },
+                    { name: "Highlight", onClick: () => highlightClicked },
+                    { name: "Clear formatting", onClick: () => clearFormattingClicked }
+                ]
+            },
+            {
+                name: "Paragraph",
+                children: [
+                    { name: "Bullet list" },
+                    { name: "Numbered list" },
+                    { name: "Task list" }
+                ]
+            }
+        ];
         function Panel (props: any) {
             return (
                 <>

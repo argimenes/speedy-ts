@@ -36,7 +36,12 @@
 .style_italics {
     font-style: italic;
 }
-
+.style_strikethrough {
+  text-decoration: line-through;
+}
+.style_highlight {
+  background-color: pink;
+}
 .style_bold {
     font-weight: 600;
 }
