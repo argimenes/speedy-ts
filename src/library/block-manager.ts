@@ -33,7 +33,10 @@ const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
 
 const passoverClass = "block-modal";
- 
+
+type BlockManagerEventType = "onBlockChange";
+type BlockManagerEvent = Record<string, ((data?: {}) => void)[]>
+
 export class BlockManager extends AbstractBlock implements IBlockManager {
     //id: string;
     //type: BlockType;
@@ -57,6 +60,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     clipboard: Record<string, any>[];
     registeredBlocks: IBlock[];
     textProcessor: TextProcessor;
+    events: BlockManagerEvent;
+    undoStack: IBlockDto[];
+    redoStack: IBlockDto[];
     constructor(props?: IBlockManagerConstructor) {
         super({ id: props?.id, container: props?.container });
         this.id = props?.id || uuidv4();
@@ -82,6 +88,49 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.textProcessor = new TextProcessor();
         this.attachEventBindings();
         this.setupControlPanel();
+        this.events = {};
+        this.undoStack = [];
+        this.redoStack = [];
+    }
+    subscribeTo(eventName: string, handler: () => void) {
+        const evt = this.events[eventName];
+        if (!evt) return;
+        evt.push(handler);
+    }
+    publish(eventName: string, data?: {}) {
+        const evt = this.events[eventName];
+        if (!evt) return;
+        evt.forEach((e,i) => {
+            try {
+                e(data);
+            } catch (ex) {
+                console.log("publish", { eventName, handler: e, i })
+            }
+        });
+    }
+    onBlockChange() {
+        const len = this.undoStack.length;
+        if (len == 10) {
+            this.undoStack.shift();
+        }
+        const dto = this.serialize();
+        this.undoStack.push(dto);
+    }
+    redoHistory() {
+        const last = this.redoStack.pop();
+        if (this.undoStack.length == 10) {
+            this.undoStack.shift();
+        }
+        this.undoStack.push(last);
+        this.loadDocument(last);
+    }
+    undoHistory() {
+        const last = this.undoStack.pop();
+        if (this.redoStack.length == 10) {
+            this.redoStack.shift();
+        }
+        this.redoStack.push(last);
+        this.loadDocument(last);
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");

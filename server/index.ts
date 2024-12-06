@@ -4,10 +4,7 @@ import multer, { FileFilterCallback } from 'multer';
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
 import fs from "fs";
-import { Surreal } from "surrealdb";
 import { BlockType, IBlockDto, IndexedBlock } from "./types";
-
-let db: Surreal | undefined;
 
 type Document ={
   id: string;
@@ -15,36 +12,6 @@ type Document ={
   filename: string;
   metadata: {};
 }
-
-export async function initDb(): Promise<Surreal | undefined> {
-    if (db) return db;
-    db = new Surreal();
-    try {
-        await db.connect("http://127.0.0.1:8000/rpc", {
-          namespace: "codex-ns", database: "codex-db",
-          auth: {
-            username: "root",
-            password: "root"
-          }
-        });
-        return db;
-    } catch (err) {
-        console.error("Failed to connect to SurrealDB:", err);
-        throw err;
-    }
-}
-
-export async function closeDb(): Promise<void> {
-  if (!db) return;
-  await db.close();
-  db = undefined;
-}
-
-export function getDb(): Surreal | undefined {
-  return db;
-}
-
-await initDb();
 
 type MulterRequest = Request & { files: Express.Multer.File[] };
 
@@ -177,7 +144,6 @@ app.post('/api/saveDocumentJson', async function(req: Request, res: Response) {
   const doc = json.document as IBlockDto;
   doc.metadata = { filepath };
   doc.lastUpdated = new Date();
-  await saveDocumentToGraph(doc);
   res.send({
     Success: true
   });
@@ -197,78 +163,8 @@ const generateIndex = (doc: IBlockDto): IndexedBlock[] => {
   return result;
 }
 
-const saveDocumentToGraph = async (doc: IBlockDto) => {
-  /**
-   * 
-   * 
-   */
-  const blocks = generateIndex(doc);
-  await saveDocumentBlock(doc);
-  // await updateDocument();
-  await selectDocuments();
-}
-
-const selectDocuments = async () => {
-  const result = await db.query(`
-      SELECT * FROM Document;
-    `)
-  console.log("selectDocuments", { result: result[0] });
-}
-
-const updateDocument = async () => {
-  const result = await db.query(`
-UPDATE Document:\`Document:abc\` CONTENT {
-    type: "main-list-item-3"
-};`);
-    console.log("updateDocument", { result: result[0][0] });
-}
-
-const saveDocumentBlock = async (doc: IBlockDto) => {
-  const exists = await db.query(
-    `RETURN count(SELECT * FROM type::thing("Document", $blockId)) > 0;`
-  , { blockId: doc.id }) as any[];
-  console.log("saveDocumentBlock", { exists, doc });
-  if (exists[0]) {
-    const update = await db.query(
-      `UPDATE type::thing("Document",$blockId) CONTENT {
-          type: $type,
-          metadata: $metadata,
-          blockProperties: $blockProperties
-       };`, {
-        blockId: doc.id,
-        type: doc.type,
-        metadata: doc.metadata,
-        blockProperties: doc.blockProperties
-      });
-      console.log("saveDocumentBlock", { update: update[0][0], doc });
-  } else {
-    const create = await db.query(
-      `CREATE type::thing("Document",$blockId) CONTENT {
-        type: $type,
-        metadata: $metadata,
-        blockProperties: $blockProperties
-    }`, {
-        blockId: doc.id,
-        type: doc.type,
-        metadata: doc.metadata,
-        blockProperties: doc.blockProperties
-      });
-      console.log("saveDocumentBlock", { create: create[0][0], doc });
-  }
-}
-
 app.get('/', function(req: Request, res: Response) {
   res.sendFile(path.join(__dirname, '../index.html'));
-});
-
-app.get('/graph/get-documents', async function(req: Request, res: Response) {
-  const _db = await getDb();
-  const results = await _db.query<Document[]>("SELECT * FROM Document");
-  const json = JSON.stringify(results);
-  res.send({
-    Success: true,
-    Data: json
-  });
 });
 
 const port = process.env.PORT || 3002;
