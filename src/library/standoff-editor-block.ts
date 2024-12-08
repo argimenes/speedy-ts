@@ -403,7 +403,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.updateView();
         if (index == len-1) {
             let caret = this.getCaret();
-            console.log("insertTextAtIndex", { text, index, cells: this.cells, caret });
+            //console.log("insertTextAtIndex", { text, index, cells: this.cells, caret });
         }
         this.setCaret(index + 1);
         this.publishOnTextChanged();
@@ -651,7 +651,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         previous.moveCaretStart();
         const previousRect = previous.container.getBoundingClientRect();
         const h = window.innerHeight;
-        console.log("handleArrowUp", { previousRectBottom: previousRect.bottom, h });
+        //console.log("handleArrowUp", { previousRectBottom: previousRect.bottom, h });
         const diff = previousRect.bottom - args.manager.container.scrollTop;
         if (diff < 50) {
             window.scrollBy(0, -1 * (previousRect.bottom + 25));
@@ -688,7 +688,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         next.moveCaretStart();
         const nextRect = next.container.getBoundingClientRect();
         const h = window.innerHeight;
-        console.log("handleArrowDown", { nextRectTop: nextRect.top, h });
+        //console.log("handleArrowDown", { nextRectTop: nextRect.top, h });
         const diff = h - nextRect.y;
         if (diff < 50) {
             window.scrollBy(0, nextRect.top - h + 50);
@@ -748,7 +748,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         /**
          * Might want to investigate setting the caret by absolutely positioning an SVG ...
          */
-        console.log("setCaret", { index, offset });
+        //console.log("setCaret", { index, offset });
         offset = offset || CARET.LEFT;
         this.lastCaret = { index, offset: offset };
         const cell = this.cells[index];
@@ -1082,6 +1082,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         }
     }
     createStandoffProperty(type: string, range: IRange) {
+        this.triggerBeforeChange();
         const schema = this.schemas.find(x => x.type == type) as IStandoffPropertySchema;
         if (!schema) {
             return log(`StandoffProperty schema '${type}' was not found.`, { block: this, type, range });
@@ -1096,6 +1097,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         return prop;
     }
     createBlockProperty(type: string) {
+        this.triggerBeforeChange();
         const schema = this.blockSchemas.find(x => x.type == type) as IBlockPropertySchema;
         if (!schema) {
             log(`BlockProperty schema '${type}' was not found.`, { block: this, type });

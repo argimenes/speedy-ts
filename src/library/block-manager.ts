@@ -132,7 +132,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     addToHistory() {
         if (!this.minimalTimeElapsedSinceLastChange()) {
-            console.log("bounced: addToHistory");
+            //console.log("bounced: addToHistory");
             return;
         }
         this.takeSnapshot();
@@ -161,7 +161,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (this.redoStack.length == 10) {
             this.redoStack.shift();
         }
+        const dto = this.getDocument();
         this.redoStack.push(last);
+        this.redoStack.push(dto);
         this.loadDocument(last);
         console.log("undoHistory", { undoStack: this.undoStack, redoStack: this.redoStack });
     }
@@ -1595,7 +1597,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: ["Mac:Meta-Control-Z","Windows:Control-Option-Z"]
+                    match: ["Mac:Meta-D","Windows:Control-D"]
                 },
                 action: {
                     name: "Redo",
@@ -2318,6 +2320,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         }
         const dto = json.Data.document as IBlockDto;
+        this.undoStack = [];
+        this.redoStack = [];
         this.loadDocument(dto);
         this.takeSnapshot(dto);
     }
@@ -2696,8 +2700,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         }
         this.state = DocumentState.loading;
-        this.undoStack = [];
-        this.redoStack = [];
+        
         if (this.container.childNodes.length) {
             this.container.innerHTML = "";
         }
