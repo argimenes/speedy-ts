@@ -40,6 +40,12 @@ const EventType = {
     "addToHistory":"addToHistory"
 };
 type BlockManagerEvent = Record<string, ((data?: {}) => void)[]>
+const DocumentState = {
+    "initalising": "initialising",
+    "initalised": "initialised",
+    "loading": "loading",
+    "loaded": "loaded"
+};
 
 export class BlockManager extends AbstractBlock implements IBlockManager {
     //id: string;
@@ -68,8 +74,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     undoStack: IBlockDto[];
     redoStack: IBlockDto[];
     lastChange: number;
+    state: string;
     constructor(props?: IBlockManagerConstructor) {
         super({ id: props?.id, container: props?.container });
+        this.state = DocumentState.initalising;
         this.id = props?.id || uuidv4();
         this.type = BlockType.BlockManagerBlock;
         this.container = props?.container || document.createElement("DIV") as HTMLElement;
@@ -98,6 +106,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.redoStack = [];
         this.setupSubscriptions();
         this.lastChange = Date.now();
+        this.state = DocumentState.initalised;
     }
     setupSubscriptions() {
         this.subscribeTo(EventType.beforeChange, this.addToHistory.bind(this));
@@ -123,6 +132,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     addToHistory() {
         if (!this.minimalTimeElapsedSinceLastChange()) {
+            console.log("bounced: addToHistory");
             return;
         }
         this.takeSnapshot();
@@ -2057,6 +2067,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     makeCheckbox(block: IBlock) {
+        this.triggerBeforeChange();
         const root = this.getParentOfType(block, BlockType.DocumentBlock);
         const parent = block.relation.parent as AbstractBlock;
         const checkbox = this.createCheckboxBlock();
@@ -2084,7 +2095,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     moveBlockUp(block: IBlock) {
-        this.publish(EventType.beforeChange);
+        this.triggerBeforeChange();
         const root = this.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
         const i = root.index.findIndex(x => x.block.id == block.id);
         if (i <= 0) {
@@ -2100,8 +2111,11 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         this.insertBlockBefore(previous, block);
     }
-    moveBlockDown(block: IBlock) {
+    triggerBeforeChange() {
         this.publish(EventType.beforeChange);
+    }
+    moveBlockDown(block: IBlock) {
+        this.triggerBeforeChange();
         const root = this.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
         const i = root.index.findIndex(x => x.block.id == block.id);
         const maxIndex = root.index.length - 1;
@@ -2179,6 +2193,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     insertBlockAt(parent: IBlock, block: IBlock, atIndex: number, skipIndexation?: boolean) {
+        this.triggerBeforeChange();
         console.log("insertBlockAt", { parent, block, atIndex, skipIndexation });
         if (parent.blocks.length == 0) {
             parent.blocks.push(block);
@@ -2195,6 +2210,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (i >= 0) this.registeredBlocks.splice(i, 1);
     }
     deleteBlock(blockId: GUID) {
+        this.triggerBeforeChange();
         const block = this.getBlock(blockId) as StandoffEditorBlock;
         const parent = block.relation.parent as AbstractBlock;
         const i = this.getIndexOfBlock(block);
@@ -2301,7 +2317,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (!json.Success) {
             return;
         }
-        this.loadDocument(json.Data.document);
+        const dto = json.Data.document as IBlockDto;
+        this.loadDocument(dto);
+        this.takeSnapshot(dto);
     }
     async saveServerDocument(filename: string) {
         const data = this.getDocument();
@@ -2463,6 +2481,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return video;
     }
     addBlockTo(parent: IBlock, block: IBlock, skipIndexation?: boolean) {
+        this.triggerBeforeChange();
         parent.blocks.push(block);
         this.registerBlock(block);
         this.generatePreviousNextRelations(parent);
@@ -2676,6 +2695,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             console.error("Expected doc.type to be a MainListBlock");
             return;
         }
+        this.state = DocumentState.loading;
+        this.undoStack = [];
+        this.redoStack = [];
         if (this.container.childNodes.length) {
             this.container.innerHTML = "";
         }
@@ -2713,8 +2735,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
 
         documentBlock.generateIndex();
+        this.state = DocumentState.loaded;
     }
     minimalTimeElapsedSinceLastChange() {
+        if (this.state == DocumentState.loading) {
+            return false;
+        }
         const now = Date.now();
         const ms = now - this.lastChange;
         if (ms < 1000) {
@@ -2750,6 +2776,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     addBlockBefore(newBlock: IBlock, anchor: IBlock) {
+        this.triggerBeforeChange();
         console.log("addBlockBefore", { newBlock, anchor });
         anchor.container.insertAdjacentElement('beforebegin', newBlock.container);
         const parent = anchor.relation.parent;
@@ -2761,6 +2788,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.insertBlockAt(parent, newBlock, ai);
     }
     addBlockAfter(newBlock: IBlock, anchor: IBlock) {
+        this.triggerBeforeChange();
         console.log("addBlockAfter", { newBlock, anchor });
         anchor.container.insertAdjacentElement("afterend", newBlock.container);
         const parent = anchor.relation.parent;
@@ -3645,6 +3673,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         cell1.container.append(block.container);
     }
     mergeBlocks(sourceId: GUID, targetId: GUID) {
+        this.triggerBeforeChange();
         const source = this.getBlock(sourceId) as StandoffEditorBlock;
         const target = this.getBlock(targetId) as StandoffEditorBlock;
         let text = source.getText();
@@ -4012,6 +4041,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     removeBlockAt(parent: AbstractBlock, atIndex: number, skipIndexation?: boolean) {
+        this.triggerBeforeChange();
         const block = parent.blocks[atIndex];
         parent.blocks.splice(atIndex, 1);
         this.generatePreviousNextRelations(parent);

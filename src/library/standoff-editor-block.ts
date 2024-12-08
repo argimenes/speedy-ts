@@ -335,6 +335,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         if (!caret) return;
         const selection = this.getSelection();
         if (selection) {
+            this.triggerBeforeChange();
             this.clearSelection();
             const len = (selection.end.index - selection.start.index) + 1;
             this.removeCellsAtIndex(selection.start.index, len);
@@ -897,6 +898,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         props.forEach(p => p.destroy());
     }
     removeCellsAtIndex(index: number, length: number, updateCaret?: boolean) {
+        this.triggerBeforeChange();
         for (let i = 1; i <= length; i++) {
             this.removeCellAtIndex(index, updateCaret);
         }
