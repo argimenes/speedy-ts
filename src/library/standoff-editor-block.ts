@@ -380,7 +380,11 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.updateView();
         this.setCaret(0, CARET.LEFT);
     }
+    triggerBeforeChange() {
+        this.manager?.publish("beforeChange");
+    }
     insertTextAtIndex(text: string, index: number): Cell[] {
+        this.triggerBeforeChange();
         const len = this.cells.length;
         if (len == 0) {
             this.addEOL();
@@ -500,6 +504,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.monitors.forEach(m => m.update({ caret, block, properties }));
     }
     addStandoffPropertiesDto(props: StandoffPropertyDto[], cells?: Cell[]) {
+        this.triggerBeforeChange();
         cells = cells || this.cells;
         const self = this;
         const properties = props.map(p => {
@@ -887,6 +892,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         if (this.container) this.container.remove();
     }
     removeStandoffPropertiesByType(type: string) {
+        this.triggerBeforeChange();
         const props = this.standoffProperties.filter(x => x.type == type);
         props.forEach(p => p.destroy());
     }
@@ -994,6 +1000,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         
     }
     removeCellAtIndex(index: number, updateCaret?: boolean) {
+        this.triggerBeforeChange();
         const cell = this.cells[index];
         if (!cell) {
             console.log("Cell not found at the index.", { index, updateCaret });

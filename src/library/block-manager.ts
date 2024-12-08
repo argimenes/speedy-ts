@@ -34,7 +34,11 @@ const isNum = (value: any) => typeof (value) == "number";
 
 const passoverClass = "block-modal";
 
-type BlockManagerEventType = "onBlockChange";
+const EventType = {
+    "beforeChange": "beforeChange",
+    "afterChange": "afterChange",
+    "addToHistory":"addToHistory"
+};
 type BlockManagerEvent = Record<string, ((data?: {}) => void)[]>
 
 export class BlockManager extends AbstractBlock implements IBlockManager {
@@ -63,6 +67,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     events: BlockManagerEvent;
     undoStack: IBlockDto[];
     redoStack: IBlockDto[];
+    lastChange: number;
     constructor(props?: IBlockManagerConstructor) {
         super({ id: props?.id, container: props?.container });
         this.id = props?.id || uuidv4();
@@ -91,10 +96,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.events = {};
         this.undoStack = [];
         this.redoStack = [];
+        this.setupSubscriptions();
+        this.lastChange = Date.now();
+    }
+    setupSubscriptions() {
+        this.subscribeTo(EventType.beforeChange, this.addToHistory.bind(this));
     }
     subscribeTo(eventName: string, handler: () => void) {
         const evt = this.events[eventName];
-        if (!evt) return;
+        if (!evt) {
+            this.events[eventName] = [handler];
+            return;
+        }
         evt.push(handler);
     }
     publish(eventName: string, data?: {}) {
@@ -108,29 +121,36 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             }
         });
     }
-    onBlockChange() {
+    addToHistory() {
+        if (!this.minimalTimeElapsedSinceLastChange()) {
+            return;
+        }
         const len = this.undoStack.length;
         if (len == 10) {
             this.undoStack.shift();
         }
-        const dto = this.serialize();
+        const dto = this.getDocument();
         this.undoStack.push(dto);
     }
     redoHistory() {
         const last = this.redoStack.pop();
+        if (!last) return;
         if (this.undoStack.length == 10) {
             this.undoStack.shift();
         }
         this.undoStack.push(last);
         this.loadDocument(last);
+        console.log("redoHistory", { undoStack: this.undoStack, redoStack: this.redoStack });
     }
     undoHistory() {
         const last = this.undoStack.pop();
+        if (!last) return;
         if (this.redoStack.length == 10) {
             this.redoStack.shift();
         }
         this.redoStack.push(last);
         this.loadDocument(last);
+        console.log("undoHistory", { undoStack: this.undoStack, redoStack: this.redoStack });
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
@@ -1544,7 +1564,34 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     handler: this.moveCaretToEndOfTextBlock
                 }
             },
-            
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: ["Mac:Meta-Z","Windows:Control-Z"]
+                },
+                action: {
+                    name: "Undo",
+                    description: "",
+                    handler: async (args) => {
+                        self.undoHistory();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: ["Mac:Meta-Control-Z","Windows:Control-Option-Z"]
+                },
+                action: {
+                    name: "Redo",
+                    description: "",
+                    handler: async (args) => {
+                        self.redoHistory();
+                    }
+                }
+            },
             {
                 mode: "default",
                 trigger: {
@@ -2034,6 +2081,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     moveBlockUp(block: IBlock) {
+        this.publish(EventType.beforeChange);
         const root = this.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
         const i = root.index.findIndex(x => x.block.id == block.id);
         if (i <= 0) {
@@ -2050,6 +2098,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.insertBlockBefore(previous, block);
     }
     moveBlockDown(block: IBlock) {
+        this.publish(EventType.beforeChange);
         const root = this.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
         const i = root.index.findIndex(x => x.block.id == block.id);
         const maxIndex = root.index.length - 1;
@@ -2620,7 +2669,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         return dto;
     }
     async loadDocument(dto: IMainListBlockDto) {
-        if (dto.type != BlockType.DocumentBlock) {
+        if (dto.type != BlockType.DocumentBlock && dto.type != BlockType.BlockManagerBlock) {
             console.error("Expected doc.type to be a MainListBlock");
             return;
         }
@@ -2661,8 +2710,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
 
         documentBlock.generateIndex();
-
-        // await this.setupControlPanel();
+    }
+    minimalTimeElapsedSinceLastChange() {
+        const now = Date.now();
+        const ms = now - this.lastChange;
+        if (ms < 1000) {
+            return false;
+        }
+        this.updateLastChange();
+        return true;
+    }
+    updateLastChange() {
+        this.lastChange = Date.now();
     }
     insertItem<T>(list: T[], index: number, item: T) {
         list.splice(index, 0, item);
@@ -3957,7 +4016,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (!skipIndexation) this.reindexAncestorDocument(block);
     }
     reindexAncestorDocument(descendant: IBlock) {
-        console.log("reindexAncestorDocument", { descendant });
         const root = this.getParentOfType(descendant, BlockType.DocumentBlock) as DocumentBlock;
         if (root) {
             root.generateIndex();
