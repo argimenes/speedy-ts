@@ -151,7 +151,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (this.undoStack.length == 10) {
             this.undoStack.shift();
         }
-        this.undoStack.push(last);
+        const dto = this.getDocument();
+        this.undoStack.push(dto);
         this.loadDocument(last);
         console.log("redoHistory", { undoStack: this.undoStack, redoStack: this.redoStack });
     }
