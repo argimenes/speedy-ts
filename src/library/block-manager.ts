@@ -125,11 +125,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         if (!this.minimalTimeElapsedSinceLastChange()) {
             return;
         }
+        this.takeSnapshot();
+    }
+    takeSnapshot(dto?: IBlockDto) {
         const len = this.undoStack.length;
         if (len == 10) {
             this.undoStack.shift();
         }
-        const dto = this.getDocument();
+        dto = dto || this.getDocument();
         this.undoStack.push(dto);
     }
     redoHistory() {

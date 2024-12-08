@@ -8,7 +8,7 @@ type Props = {
 }
 export const BlockManagerWindow : Component<Props> = (props) => {
     const initialise = (el: HTMLDivElement) => {
-        const nextDoc: IBlockDto = {
+        const doc: IBlockDto = {
             type: BlockType.DocumentBlock,
             children: [
                 {
@@ -439,7 +439,8 @@ const foo = (bar) => {
         } as IMainListBlockDto;
         const manager = new BlockManager();
         manager.container = el;
-        manager.loadDocument(nextDoc);
+        manager.loadDocument(doc);
+        manager.takeSnapshot(doc);
         //(manager.setupControlPanel()).then(() => {});
         
         props.getInstance(manager);
