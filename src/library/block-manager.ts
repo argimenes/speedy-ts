@@ -2693,6 +2693,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             let block = b.serialize();
             dto.children?.push(block);
         });
+        const block = this.getBlockInFocus();
+        dto.metadata = dto.metadata || {};
+        dto.metadata.focus = {
+            blockId: block.id
+        };
+        if (block.type == BlockType.StandoffEditorBlock) {
+            dto.metadata.focus.caret = (block as StandoffEditorBlock).getCaret().right.index;
+        }
         return dto;
     }
     async loadDocument(dto: IMainListBlockDto) {
@@ -2739,6 +2747,17 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
 
         documentBlock.generateIndex();
+
+        if (dto.metadata) {
+            if (dto.metadata.focus) {
+                const block = this.getBlock(dto.metadata.focus.blockId);
+                this.setBlockFocus(block);
+                if (dto.metadata.focus.caret) {
+                    (block as StandoffEditorBlock).setCaret(dto.metadata.focus.caret, CARET.LEFT);
+                }
+            }
+        }
+
         this.state = DocumentState.loaded;
     }
     minimalTimeElapsedSinceLastChange() {
@@ -3169,6 +3188,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const blockSchemas = this.getBlockSchemas();
         const standoffEvents = this.getStandoffPropertyEvents();
         const textBlock = new StandoffEditorBlock({
+            id: dto?.id,
             manager: this
         });
         textBlock.setSchemas(standoffSchemas);
