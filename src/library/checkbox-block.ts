@@ -63,10 +63,12 @@ export class CheckboxBlock extends AbstractBlock {
     setupEventHandlers() {
         const self = this;
         this.checkbox.addEventListener("change", () => {
+            self.manager?.triggerBeforeChange();
             self.checked = !self.checked;
         });
     }
     check() {
+        this.manager?.triggerBeforeChange();
         this.checked = true;
         updateElement(this.checkbox, {
             attribute: {
@@ -75,6 +77,7 @@ export class CheckboxBlock extends AbstractBlock {
         });
     }
     uncheck() {
+        this.manager?.triggerBeforeChange();
         this.checked = false;
         this.checkbox.removeAttribute("checked");
     }
