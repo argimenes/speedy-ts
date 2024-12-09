@@ -2694,12 +2694,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             dto.children?.push(block);
         });
         const block = this.getBlockInFocus();
-        dto.metadata = dto.metadata || {};
-        dto.metadata.focus = {
-            blockId: block.id
-        };
-        if (block.type == BlockType.StandoffEditorBlock) {
-            dto.metadata.focus.caret = (block as StandoffEditorBlock).getCaret().right.index;
+        if (block) {
+            dto.metadata = dto.metadata || {};
+            dto.metadata.focus = {
+                blockId: block.id
+            };
+            if (block.type == BlockType.StandoffEditorBlock) {
+                dto.metadata.focus.caret = (block as StandoffEditorBlock).getCaret()?.right?.index;
+            }
         }
         return dto;
     }
