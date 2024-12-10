@@ -37,6 +37,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         marker?: HTMLSpanElement;
         monitor?: HTMLDivElement;
     };
+    text: string;
     standoffProperties: StandoffProperty[];
     schemas: IStandoffPropertySchema[];
     /**
@@ -71,7 +72,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             },
             classList: ["standoff-editor-block"]
         });
-        
+        this.text = "";
         this.container.appendChild(this.wrapper);
         this.lastCaret = { index: 0, offset: CARET.LEFT };
         this.cache = {
@@ -401,11 +402,8 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.reindexCells();
         this.insertElementsBefore(right.element as HTMLElement, cells.map(c => c.element as HTMLElement));
         this.updateView();
-        if (index == len-1) {
-            let caret = this.getCaret();
-            //console.log("insertTextAtIndex", { text, index, cells: this.cells, caret });
-        }
         this.setCaret(index + 1);
+        this.updateText();
         this.publishOnTextChanged();
         this.commit({
             redo: {
@@ -473,13 +471,16 @@ export class StandoffEditorBlock extends AbstractBlock {
         return {
             id: this.id,
             type: this.type,
-            text: this.getText(),
+            text: this.text,
             standoffProperties: this.standoffProperties?.filter(x => !x.clientOnly).map(x => x.serialize()) || [],
             blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
             children: this.blocks?.map(x => x.serialize()) || [],
             metadata: this.metadata,
             relation: relation
         } as IStandoffEditorBlockDto;
+    }
+    updateText() {
+        this.text = this.getText();
     }
     getText() {
         return this.cells.map(c => c.text).join("");
@@ -545,14 +546,6 @@ export class StandoffEditorBlock extends AbstractBlock {
                 return sproc;
             });
         }
-        // const types = _.uniq(this.standoffProperties.filter(x => x.schema.animation));
-        // types.forEach(t => {
-        //     const schema = t.schema;
-        //     const props = self.standoffProperties.filter(x => x.type == t.type);
-        //     if (schema.animation && schema.animation.init) {
-        //         schema.animation.init({ block: self, properties: props });
-        //     }
-        // });
         this.blockProperties = block.blockProperties?.map(p => {
             const schema = this.blockSchemas.find(x => x.type == p.type) as IBlockPropertySchema;
             if (!schema) {
@@ -572,6 +565,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.wrapper.innerHTML = "";
         this.wrapper.appendChild(frag);
         this.updateView();
+        this.updateText();
         this.commit({
             redo: {
                 id: this.id,
@@ -903,6 +897,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             this.removeCellAtIndex(index, false);
         }
         this.updateView();
+        this.updateText();
     }
     calculateRows() {
         const rows = this.getRows();
@@ -1025,6 +1020,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         if (updateCaret) {
             this.updateView();
             this.setCaret(index);
+            this.updateText();
         }
         this.publishOnTextChanged();
         this.commit({
