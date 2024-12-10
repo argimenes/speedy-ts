@@ -900,8 +900,9 @@ export class StandoffEditorBlock extends AbstractBlock {
     removeCellsAtIndex(index: number, length: number, updateCaret?: boolean) {
         this.triggerBeforeChange();
         for (let i = 1; i <= length; i++) {
-            this.removeCellAtIndex(index, updateCaret);
+            this.removeCellAtIndex(index, false);
         }
+        this.updateView();
     }
     calculateRows() {
         const rows = this.getRows();
@@ -1021,10 +1022,8 @@ export class StandoffEditorBlock extends AbstractBlock {
         cell.removeElement();
         this.cells.splice(index, 1);
         this.reindexCells();
-        // const enclosing = this.getEnclosingProperties(cell);
-        // this.renderProperties(enclosing);
-        this.updateView();
         if (updateCaret) {
+            this.updateView();
             this.setCaret(index);
         }
         this.publishOnTextChanged();
