@@ -2742,21 +2742,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         container.appendChild(documentBlock.container);
         this.container.appendChild(container);
 
-        const textBlock = this.registeredBlocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
-        if (textBlock) {
-            this.setBlockFocus(textBlock);
-            textBlock.moveCaretStart();
-        }
-
         documentBlock.generateIndex();
 
-        if (dto.metadata) {
-            if (dto.metadata.focus) {
-                const block = this.getBlock(dto.metadata.focus.blockId);
-                this.setBlockFocus(block);
-                if (dto.metadata.focus.caret) {
-                    (block as StandoffEditorBlock).setCaret(dto.metadata.focus.caret, CARET.LEFT);
-                }
+        if (dto?.metadata?.focus?.blockId) {
+            const block = this.getBlock(dto.metadata.focus.blockId);
+            this.setBlockFocus(block);
+            if (dto.metadata.focus.caret) {
+                (block as StandoffEditorBlock)?.setCaret(dto.metadata.focus.caret, CARET.LEFT);
+            }
+        } else {
+            const textBlock = this.registeredBlocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
+            if (textBlock) {
+                this.setBlockFocus(textBlock);
+                textBlock.moveCaretStart();
             }
         }
 
