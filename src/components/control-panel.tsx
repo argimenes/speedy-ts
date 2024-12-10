@@ -106,6 +106,7 @@ export class ControlPanelBlock extends AbstractBlock {
         }
         const createDocument = () => {
             if (!manager) return;
+            manager.clearHistory();
             const doc = {
                 type: BlockType.DocumentBlock,
                 children: [
@@ -120,11 +121,6 @@ export class ControlPanelBlock extends AbstractBlock {
                 ]
             };
             manager.loadDocument(doc);
-            // const textBlock = manager.registeredBlocks.find(x=> x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
-            // if (!textBlock) return;
-            // textBlock.addEOL();
-            // textBlock.setCaret(0, CARET.LEFT);
-            // manager?.setBlockFocus(textBlock);
         }
         const setBackgroundColour = (colour: string) => {
             const prop = {

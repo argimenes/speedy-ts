@@ -2321,10 +2321,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         }
         const dto = json.Data.document as IBlockDto;
-        this.undoStack = [];
-        this.redoStack = [];
+        this.clearHistory();
         this.loadDocument(dto);
         this.takeSnapshot(dto);
+    }
+    clearHistory() {
+        this.undoStack = [];
+        this.redoStack = [];
     }
     async saveServerDocument(filename: string) {
         const data = this.getDocument();
