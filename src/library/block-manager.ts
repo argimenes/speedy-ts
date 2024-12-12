@@ -578,6 +578,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 }
             },
             {
+                type: "block/font/size",
+                name: "Specified size",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        updateElement(p.block.container, {
+                            style: {
+                                "font-size": p.value
+                            }
+                        });
+                    }
+                }
+            },
+            {
                 type: "block/font/size/half",
                 name: "Half-sized font",
                 decorate: {
@@ -1146,11 +1159,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     name: "Save document",
                     description: "",
                     handler: async (args: IBindingHandlerArgs) => {
+                        args.e?.preventDefault();
                         const manager = args.block.manager as BlockManager;
-                        let filename = manager.metadata.filename;
+                        const document = manager.blocks[0];
+                        let filename = document.metadata.filename;
                         if (!filename) {
                             filename = prompt("Filename?");
-                            manager.metadata.filename = filename;
+                            document.metadata.filename = filename;
                         }
                         await manager.saveServerDocument(filename);
                     }
@@ -1957,7 +1972,83 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     },
                     update: (args) => {
                         const owner = args.block.manager as BlockManager;
-                        owner.renderUnderlines("codex/block-reference", args.properties, args.block, "orange", 3);
+                        owner.renderUnderlines("codex/block-reference", args.properties, args.block, "green", 3);
+                    }
+                }
+            },
+            {
+                type: "codex/trait-reference",
+                name: "Trait reference",
+                event: {
+                    onDoubleClick: async (args: any) => {
+                        const prop = args.property;
+                        alert(prop.value);
+                    }
+                },
+                render: {
+                    destroy: ({ properties }) => {
+                        properties.forEach(p => p.cache.underline?.remove())
+                    },
+                    update: (args) => {
+                        const owner = args.block.manager as BlockManager;
+                        owner.renderUnderlines("codex/trait-reference", args.properties, args.block, "blue", 3);
+                    }
+                }
+            },
+            {
+                type: "codex/claim-reference",
+                name: "Claim reference",
+                event: {
+                    onDoubleClick: async (args: any) => {
+                        const prop = args.property;
+                        alert(prop.value);
+                    }
+                },
+                render: {
+                    destroy: ({ properties }) => {
+                        properties.forEach(p => p.cache.underline?.remove())
+                    },
+                    update: (args) => {
+                        const owner = args.block.manager as BlockManager;
+                        owner.renderUnderlines("codex/claim-reference", args.properties, args.block, "red", 1);
+                    }
+                }
+            },
+            {
+                type: "codex/meta-relation-reference",
+                name: "Meta-Relation reference",
+                event: {
+                    onDoubleClick: async (args: any) => {
+                        const prop = args.property;
+                        alert(prop.value);
+                    }
+                },
+                render: {
+                    destroy: ({ properties }) => {
+                        properties.forEach(p => p.cache.underline?.remove())
+                    },
+                    update: (args) => {
+                        const owner = args.block.manager as BlockManager;
+                        owner.renderUnderlines("codex/meta-relation-reference", args.properties, args.block, "orange", 3);
+                    }
+                }
+            },
+            {
+                type: "codex/time-reference",
+                name: "Time reference",
+                event: {
+                    onDoubleClick: async (args: any) => {
+                        const prop = args.property;
+                        alert(prop.value);
+                    }
+                },
+                render: {
+                    destroy: ({ properties }) => {
+                        properties.forEach(p => p.cache.underline?.remove())
+                    },
+                    update: (args) => {
+                        const owner = args.block.manager as BlockManager;
+                        owner.renderUnderlines("codex/time-reference", args.properties, args.block, "cyan", 3);
                     }
                 }
             },

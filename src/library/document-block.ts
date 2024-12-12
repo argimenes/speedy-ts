@@ -36,6 +36,7 @@ export class DocumentBlock extends AbstractBlock {
             this.addBlockProperties(data.blockProperties);
             this.applyBlockPropertyStyling();
         }
+        this.metadata = data.metadata || {};
     }
     serialize() {
         return {

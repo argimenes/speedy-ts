@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
 import fs from "fs";
 import { BlockType, IBlockDto, IndexedBlock } from "./types";
+import { IBlock } from "../src/library/types";
 
 type Document ={
   id: string;
@@ -127,11 +128,13 @@ app.get('/api/loadDocumentJson', function(req: Request, res: Response) {
   const folder = (req.query?.folder as string) || "data";
   const filepath = path.join(__dirname, "../../", folder, filename);
   const data = fs.readFileSync(filepath, 'utf8');
-  const json = JSON.parse(data);
+  const dto = JSON.parse(data) as IBlockDto;
+  dto.metadata = dto.metadata || {};
+  dto.metadata.filename = filename;
   res.send({
     Success: true,
     Data: {
-      document: json
+      document: dto
     }
   });
 });
