@@ -290,12 +290,23 @@ export class StandoffEditorBlock extends AbstractBlock {
          * Rename to: getEnclosingProperties
          */
         if (!cell) return [];
-        const i = cell.index;
+        return this.getEnclosingPropertiesByIndex(cell.index);
+    }
+    getEnclosingPropertiesByIndex(i: number) {
         const props = this.standoffProperties.filter(prop => {
             if (prop.isDeleted) return false;
             const si = prop.start.index;
             const ei = prop.end.index;
             return si <= i && i <= ei;
+        });
+        return props;
+    }
+    getEnclosingPropertiesBetweenIndexes(start: number, end: number) {
+        const props = this.standoffProperties.filter(prop => {
+            if (prop.isDeleted) return false;
+            const si = prop.start.index;
+            const ei = prop.end.index;
+            return start <= ei && end >= si;
         });
         return props;
     }

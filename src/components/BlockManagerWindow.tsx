@@ -24,7 +24,8 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         { type: "style/bold", start: 7, end: 14 },
                         { type: "animation/spinner", start: 10, end: 12 },
                         { type: "codex/entity-reference", start: 10, end: 18, value: "abd-def-ghi-123" },
-                        { type: "codex/block-reference", start: 5, end: 14, value: "abd-def-ghi-321" }
+                        { type: "codex/block-reference", start: 5, end: 14, value: "abd-def-ghi-321" },
+                        { type: "codex/time-reference", start: 15, end: 22, value: "abd-def-ghi-432" },
                     ],
                     blockProperties: [
                         { type: "block/alignment/left" }
