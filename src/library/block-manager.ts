@@ -2102,14 +2102,16 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         
         const underlines = properties.map(p => {
             const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
-            const existingLines = overlaps.filter(x => x.metadata.offsetY);
+            const existingLines = overlaps.filter(x => typeof x.metadata?.offsetY != "undefined");
             const highestY = _.max(existingLines, x => x.metadata.offsetY) as number;
-            console.log("renderUnderlines", { overlaps, highestY, existingLines })
-            p.metadata.offsetY = highestY ? highestY +2 : offsetY;
+            if (highestY > 0) {
+                console.log("renderUnderlines", { overlaps, highestY, existingLines })
+            }
+            p.metadata.offsetY = highestY >= 0 ? highestY + 2 : 0;
             return createUnderline(p, {
                 stroke: colour,
                 containerWidth: cw,
-                offsetY: offsetY
+                offsetY: p.metadata.offsetY
             });
         }) as SVGElement[];
         const frag = document.createDocumentFragment();
