@@ -2108,10 +2108,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             if (highestY > 0) {
                 console.log("renderUnderlines", { overlaps, highestY, existingLines })
             }
-            if (existingLines.length == 0) {
-                p.metadata.offsetY = 0;
-            } else {
-                p.metadata.offsetY = highestY >= 0 ? highestY + 2 : 0;
+            if ( p.metadata.offsetY == -1) {
+                if (existingLines.length == 0) {
+                    p.metadata.offsetY = 0;
+                } else {
+                    p.metadata.offsetY = highestY >= 0 ? highestY + 2 : 0;
+                }
             }
             return createUnderline(p, {
                 stroke: colour,
