@@ -2099,15 +2099,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     renderUnderlines(type: string, properties: StandoffProperty[], block: StandoffEditorBlock, colour: string, offsetY: number) {
         const overlay = block.getOrSetOverlay(type);
         const cw = block.cache?.offset?.w || block.container.offsetWidth;
-        
         const underlines = properties.map(p => {
             const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
+            console.log("renderUnderlines", { type, p, overlaps })
             const existingLines = overlaps.filter(x => typeof x.metadata?.offsetY != "undefined");
-            const highestY = _.max(existingLines, x => x.metadata.offsetY) as number;
+            const highestY = _.max(existingLines, x => x.metadata.offsetY)?.metadata?.offsetY;
             if (highestY > 0) {
                 console.log("renderUnderlines", { overlaps, highestY, existingLines })
             }
-            p.metadata.offsetY = highestY >= 0 ? highestY + 2 : 0;
+            if (existingLines.length == 0) {
+                p.metadata.offsetY = 0;
+            } else {
+                p.metadata.offsetY = highestY >= 0 ? highestY + 2 : 0;
+            }
             return createUnderline(p, {
                 stroke: colour,
                 containerWidth: cw,
