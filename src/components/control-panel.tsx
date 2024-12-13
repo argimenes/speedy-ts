@@ -343,7 +343,7 @@ export class ControlPanelBlock extends AbstractBlock {
                     </div>
                     <hr/>
                     <div>
-                        <select value={model.file} onChange={fileChanged}>
+                        <select value={model.file} onChange={fileChanged} style="width: 100%;">
                             <For each={resources.files}>{(file) =>
                                 <option value={file}>
                                     {file}

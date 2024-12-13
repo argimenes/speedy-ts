@@ -29,10 +29,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('dist'));
 app.use("/templates", express.static('templates'));
 app.use('/uploads', express.static('uploads'));
+app.use(express.json({limit: '50mb'}));
+app.use(express.urlencoded({limit: '50mb'}));
+
 
 const storage = multer.diskStorage({
   destination: function (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) {
@@ -79,14 +83,17 @@ app.get('/api/textJson', function(req: Request, res: Response) {
 app.get("/api/listDocuments", function (req: Request, res: Response) {
   const folder = (req.query?.folder as string) || "data";
   console.log("/api/listDocuments", { __dirname, folder });
-  fs.readdir(path.join(__dirname, "../../" + folder), (err, files) => {
+  fs.readdir(path.join(__dirname, baseDocumentPath, folder), (err, files) => {
     res.send({ files: files });
   });
 });
 
+const baseGraphPath = "../../../codex-data";
+const baseDocumentPath = "../../../codex-data";
+
 app.post('/api/graph/update-entity-references', async (req: Request, res: Response) => {
   const { filename, nodes, edges } = req.body;
-  const filepath = path.join(__dirname, "../../data", filename);
+  const filepath = path.join(__dirname, baseGraphPath, filename);
   const data = fs.readFileSync(filepath, 'utf8') || "{ \"nodes\": [], \"edges\": [] }";
   const json: GraphData = JSON.parse(data);
   json.edges.push(...edges);
@@ -97,7 +104,7 @@ app.post('/api/graph/update-entity-references', async (req: Request, res: Respon
 
 app.post('/api/addToGraph', async (req: Request, res: Response) => {
   const { filename, id, name } = req.body;
-  const filepath = path.join(__dirname, "../../data", filename);
+  const filepath = path.join(__dirname, baseGraphPath, filename);
   const data = fs.readFileSync(filepath, 'utf8') || "{ \"nodes\": [], \"edges\": [] }";
   const json: GraphData = JSON.parse(data);
   json.nodes.push({ id, name, type: "Entity" });
@@ -112,7 +119,7 @@ app.post('/api/addToGraph', async (req: Request, res: Response) => {
 
 app.get('/api/loadGraphJson', function(req: Request, res: Response) {
   const filename = req.query.filename as string;
-  const filepath = path.join(__dirname, "../../data", filename);
+  const filepath = path.join(__dirname, baseGraphPath, filename);
   const data = fs.readFileSync(filepath, 'utf8');
   const json: GraphData = JSON.parse(data || "{ \"nodes\": [], \"edges\": [] }");
   res.send({
@@ -126,7 +133,7 @@ app.get('/api/loadGraphJson', function(req: Request, res: Response) {
 app.get('/api/loadDocumentJson', function(req: Request, res: Response) {
   const filename = req.query.filename as string;
   const folder = (req.query?.folder as string) || "data";
-  const filepath = path.join(__dirname, "../../", folder, filename);
+  const filepath = path.join(__dirname, baseDocumentPath, folder, filename);
   const data = fs.readFileSync(filepath, 'utf8');
   const dto = JSON.parse(data) as IBlockDto;
   dto.metadata = dto.metadata || {};
@@ -141,7 +148,8 @@ app.get('/api/loadDocumentJson', function(req: Request, res: Response) {
 
 app.post('/api/saveDocumentJson', async function(req: Request, res: Response) {
   const json = req.body;
-  const filepath = path.join(__dirname, "../../data", json.filename);
+  const folder = (req.query?.folder as string) || "data";
+  const filepath = path.join(__dirname, baseDocumentPath, folder, json.filename);
   const document = JSON.stringify(json.document);
   fs.writeFileSync(filepath, document);
   const doc = json.document as IBlockDto;
