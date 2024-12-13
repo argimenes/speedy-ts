@@ -2102,7 +2102,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const underlines = properties.map(p => {
             const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
             console.log("renderUnderlines", { type, p, overlaps })
-            const existingLines = overlaps.filter(x => typeof x.metadata?.offsetY != "undefined");
+            const existingLines = overlaps
+                .filter(x => x.id != p.id && typeof x.metadata?.offsetY != "undefined");
             const highestY = _.max(existingLines, x => x.metadata.offsetY)?.metadata?.offsetY;
             if (highestY > 0) {
                 console.log("renderUnderlines", { overlaps, highestY, existingLines })
