@@ -1,8 +1,9 @@
-import { createSignal } from "solid-js";
+import { createSignal, For, Match, Show, Switch } from "solid-js";
 import { AbstractBlock } from "../library/abstract-block";
 import { renderToNode } from "../library/common";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
 import { IBlockDto, IBlock, IAbstractBlockConstructor, ISelection, InputEventSource } from "../library/types";
+import { AnyARecord } from "dns";
 
 
 export interface IAnnotationPanelBlockConstructor extends IAbstractBlockConstructor {
@@ -134,6 +135,8 @@ export class AnnotationPanelBlock extends AbstractBlock {
             block.clearSelection();
             block.addStandoffPropertiesDto([dto]);
             block.applyStandoffPropertyStyling();
+            self.destroy();
+            self.events.onClose();
         }
         const boldClicked = () => {
             applyAnnotation("style/bold");
@@ -155,61 +158,77 @@ export class AnnotationPanelBlock extends AbstractBlock {
             onClick?: () => void;
             children?: IMenuItem[];
         }
-        const menu: IMenuItem[] = [
-            {
-                name: "Format",
-                children: [
-                    { name: "Bold", onClick: () => boldClicked },
-                    { name: "Italic", onClick: () => italicClicked },
-                    { name: "Strikethrough", onClick: () => strikethroughClicked },
-                    { name: "Highlight", onClick: () => highlightClicked },
-                    { name: "Clear formatting", onClick: () => clearFormattingClicked }
-                ]
-            },
-            {
-                name: "Paragraph",
-                children: [
-                    { name: "Bullet list" },
-                    { name: "Numbered list" },
-                    { name: "Task list" }
-                ]
-            }
-        ];
+        interface IMenuComponent { menu: IMenuItem[]; level: number; }
+        function MenuComponent (props: IMenuComponent) {
+            const [selectedItem, setSelectedItem] = createSignal<IMenuItem>();
+            const handleItemClick = (item: IMenuItem) => {
+                console.log("handleItemClick", { item });
+                if (item.onClick) {
+                    item.onClick();
+                    return;
+                }
+                if (!item.children?.length) {
+                    return;
+                }
+                if (selectedItem() == item) {
+                    setSelectedItem(undefined);
+                } else {
+                    setSelectedItem(item);
+                }
+            };
+            return (
+                <div style={{
+                    "position": "absolute",
+                    "width": "100%",
+                    "top": (20 * props.level - 1) + "px",
+                    "margin-left": (20 * props.level) + "px",
+                    "z-index": 10 * props.level,
+                    "background-color": "#ccc",
+                    "border": "1px solid #aaa",
+                    "padding": "5px",
+                    "font-size": "1rem"
+                }}>
+                    <For each={props.menu}>{(item) =>
+                        <div onClick={(e) => { e.preventDefault(); handleItemClick(item); }}>
+                            {item.name}
+                            <Show when={item.children}>
+                                <Switch>
+                                    <Match when={selectedItem() != item}>&gt;&gt;</Match>
+                                    <Match when={selectedItem() == item}>&lt;&lt;</Match>
+                                </Switch>
+                                <Show when={selectedItem() == item}>
+                                    <MenuComponent menu={item.children} level={props.level + 1} />
+                                </Show>
+                            </Show>
+                        </div>
+                    }</For>
+                </div>
+            );
+        }
         function Panel (props: any) {
+            const menu: IMenuItem[] = [
+                {
+                    name: "Format",
+                    children: [
+                        { name: "Bold", onClick: () => boldClicked() },
+                        { name: "Italic", onClick: () => italicClicked() },
+                        { name: "Strikethrough", onClick: () => strikethroughClicked() },
+                        { name: "Highlight", onClick: () => highlightClicked() },
+                        { name: "Clear formatting", onClick: () => clearFormattingClicked() }
+                    ]
+                },
+                {
+                    name: "Paragraph",
+                    children: [
+                        { name: "Bullet list" },
+                        { name: "Numbered list" },
+                        { name: "Task list" }
+                    ]
+                }
+            ];
             return (
                 <>
-                    <div>
-                        {/* Add entity link
-                        Add web link
-                        -------------
-                        Format
-                            - Bold
-                            - Italic
-                            - Strikethrough
-                            - Highlight
-                            ----------------
-                            - Code
-                            - Math (Tex?)
-                            ----------------
-                            - Clear formatting
-                        Paragraph
-                            - Bullet list
-                            - Numbered list
-                            - Task list
-                        Insert
-                        -------------
-                        Cut
-                        Copy
-                        <greyed-out>
-                        Paste
-                        Paste as plain text
-                        </greyed-out>
-                        Select all
-                        Search for "<selected-text/>" */}
-                        <button type="button" data-type="style/bold" onClick={annotate}><b>B</b></button>
-                        <button type="button" data-type="style/italics" onClick={annotate}><em>I</em></button>
-                        <button type="button" data-type="style/underline" onClick={annotate}><span class="text-decoration: underline;">U</span></button>
-                    </div>
+                    <MenuComponent menu={menu} level={1} />
                 </>
             )
         }
