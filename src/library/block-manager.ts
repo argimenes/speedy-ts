@@ -939,6 +939,18 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
+                    match: "Meta-,"
+                },
+                action: {
+                    name: "Monitor panel",
+                    description: "",
+                    handler: this.loadAnnotationMenu.bind(this)
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
                     match: "Shift-Control-ArrowLeft"
                 },
                 action: {

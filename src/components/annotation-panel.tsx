@@ -138,6 +138,11 @@ export class AnnotationPanelBlock extends AbstractBlock {
             self.destroy();
             self.events.onClose();
         }
+        const bulletListClicked = () => {
+            self.source.manager?.indentBlock({ block: self.source });
+            self.destroy();
+            self.events.onClose();
+        }
         const boldClicked = () => {
             applyAnnotation("style/bold");
         };
@@ -220,7 +225,7 @@ export class AnnotationPanelBlock extends AbstractBlock {
                 {
                     name: "Paragraph",
                     children: [
-                        { name: "Bullet list" },
+                        { name: "Bullet list", onClick: () => bulletListClicked() },
                         { name: "Numbered list" },
                         { name: "Task list" }
                     ]
