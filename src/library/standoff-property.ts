@@ -68,6 +68,7 @@ export class StandoffProperty {
         if (!previousEndCell) {
             return;
         }
+        this.resetOffset();
         this.unhighlight();
         this.removeStyling();
         this.end = previousEndCell;
@@ -91,11 +92,15 @@ export class StandoffProperty {
         if (!previousWordStartCell || !previousWordEndCell) {
             return;
         }
+        this.resetOffset();
         this.unhighlight();
         this.removeStyling();
         this.start = previousWordStartCell;
         this.end = previousWordEndCell;
         this.applyStyling();
+    }
+    resetOffset() {
+        this.metadata.offsetY = -1;
     }
     shiftLeft(suppressFlash?: boolean) {
         var previousStartCell = this.start.previous;
@@ -103,6 +108,7 @@ export class StandoffProperty {
         if (!previousStartCell || !previousEndCell) {
             return;
         }
+        this.resetOffset();
         this.unhighlight();
         this.removeStyling();
         this.start = previousStartCell;
@@ -127,6 +133,7 @@ export class StandoffProperty {
         if (!nextWordStartCell || !nextWordEndCell) {
             return;
         }
+        this.resetOffset();
         this.unhighlight();
         this.removeStyling();
         this.start = nextWordStartCell;
@@ -139,6 +146,7 @@ export class StandoffProperty {
         if (!nextStartCell || !nextEndCell) {
             return;
         }
+        this.resetOffset();
         this.unhighlight();
         this.removeStyling();
         this.start = nextStartCell;
@@ -153,6 +161,7 @@ export class StandoffProperty {
         if (!nextEndCell) {
             return;
         }
+        this.resetOffset();
         this.unhighlight();
         this.removeStyling();
         this.end = nextEndCell;
