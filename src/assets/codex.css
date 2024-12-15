@@ -1,3 +1,7 @@
+body {
+  background-color: #333;
+}
+
 [contenteditable] {
   outline: 0px solid transparent;
 }
@@ -53,34 +57,47 @@
     
   }
   
+  .abstract-block {
+    position: relative;
+    background-color: #efefef;
+  }
+
   .block-window {
+    position: relative;
+    margin-top: 20px;
+    margin-bottom: 40px;
     width: 800px;
-    /* border: 1px solid #ccc; */
-    /* border-radius: 10px; */
+    border-radius: 10px;
     padding: 20px 15px;
     margin: 0 300px;
     line-height: 1.5rem;
-    
+    background-color: #efefef;
   }
 
-  .block-window .block_marginalia_left { 
+  .block_marginalia_left { 
     position: absolute;
-    left: 63px;
+    top: 0px;
     height: 30px;
-    width: 200px;
-  }
+    background-color:#efefef;
+    left: -250px;
+    width: 240px;
+    max-width: 240px;
+}
 .block-window .focus-highlight {
   -webkit-box-shadow:inset 0px 0px 0px 2px yellow;
   -moz-box-shadow:inset 0px 0px 0px 2px yellow;
   box-shadow:inset 0px 0px 0px 2px yellow;
 }
-  .block-window .block_marginalia_right { 
-    position: absolute;
-    right: 552px;
-    height: 30px;
-    width: 200px;
-  }
 
+  .block_marginalia_right { 
+    position: absolute;
+    top: 0;
+    right: -250px;
+    background-color:#efefef;
+    height: 30px;
+    width: 240px;
+    max-width: 240px;
+  }
   .standoff_editor_block {
     width: 100%;
   }
@@ -208,19 +225,20 @@
     margin: 3px;
   }
   .workspace {
-    position: absolute;
-    left: 400px;
+    background-color: #333;
   }
   .control-panel {
-    width: 175px;
-    top: 0;
+    width: 100%;
+    bottom: 0;
     left: 0;
     padding: 5px;
     background-color: #666;
     color: white;
-    height: auto;
     position: fixed;
-    height: 900px;
+
+    .partition {
+      display: inline-block; margin-right: 10px;
+    }
   }
   .style_blur {
     filter: blur(4px);

@@ -2357,26 +2357,26 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     stageRightMarginBlock(rightMargin: DocumentBlock, mainBlock: IBlock) {
         updateElement(mainBlock.container, {
             style: {
-                position: "relative"
+                //position: "relative"
             }
         });
-        updateElement(rightMargin.container, {
-            style: {
-                position: "absolute",
-                top: 0,
-                width: "200px",
-                "max-width": "200px",
-                right: "-250px"
-            }
-        });
+        // updateElement(rightMargin.container, {
+        //     style: {
+        //         position: "absolute",
+        //         top: 0,
+        //         width: "200px",
+        //         "max-width": "200px",
+        //         right: "-250px"
+        //     }
+        // });
         const hand = document.createElement("SPAN") as HTMLSpanElement;
         hand.innerHTML = "☜";
         updateElement(hand, {
             style: {
                 "font-size": "2rem",
                 position: "absolute",
-                top: "-3px",
-                left: "-15px"
+                top: "0",
+                left: "0"
             }
         });
         rightMargin.container.appendChild(hand);
@@ -2384,26 +2384,26 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     stageLeftMarginBlock(leftMargin: DocumentBlock, mainBlock: IBlock) {
         updateElement(mainBlock.container, {
             style: {
-                position: "relative"
+                //position: "relative"
             }
         });
-        updateElement(leftMargin.container, {
-            style: {
-                position: "absolute",
-                top: 0,
-                width: "200px",
-                "max-width": "200px",
-                left: "-250px",
-            }
-        });
+        // updateElement(leftMargin.container, {
+        //     style: {
+        //         position: "absolute",
+        //         top: 0,
+        //         width: "200px",
+        //         "max-width": "200px",
+        //         left: "-250px",
+        //     }
+        // });
         const hand = document.createElement("SPAN") as HTMLSpanElement;
         hand.innerHTML = "☞";
         updateElement(hand, {
             style: {
                 "font-size": "2rem",
                 position: "absolute",
-                top: "-3px",
-                right: "-15px"
+                top: "0px",
+                right: "0px"
             }
         });
         leftMargin.container.appendChild(hand);

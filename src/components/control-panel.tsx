@@ -327,10 +327,10 @@ export class ControlPanelBlock extends AbstractBlock {
         const ControlPanel = () => {
             return (
                 <div class="control-panel" style="text-align: left;">
-                    <div>
+                    <div class="partition">
                         <button type="button" onClick={createNewDocumentClicked}>Create new document</button>
                     </div>
-                    <div>
+                    <div class="partition">
                         <form onSubmit={onSubmit}>
                             <input
                                 type="text"
@@ -341,9 +341,8 @@ export class ControlPanelBlock extends AbstractBlock {
                             <button type="submit" class="btn btn-default">Run</button>
                         </form>
                     </div>
-                    <hr/>
-                    <div>
-                        <select value={model.file} onChange={fileChanged} style="width: 100%;">
+                    <div class="partition">
+                        <select value={model.file} onChange={fileChanged}>
                             <For each={resources.files}>{(file) =>
                                 <option value={file}>
                                     {file}
@@ -352,8 +351,7 @@ export class ControlPanelBlock extends AbstractBlock {
                         </select>
                         <button class="form-control" onClick={loadSelectedFileClicked}>Load</button>
                     </div>
-                    <hr/>
-                    <div>
+                    <div class="partition">
                         <select value={model.template} onInput={(e) => setModel("template", e.currentTarget.value)}>
                             <For each={resources.templates}>{(template) =>
                                 <option value={template}>

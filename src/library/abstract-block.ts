@@ -6,6 +6,7 @@ import { KEYS } from './keyboard';
 import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET } from './types';
 import { StandoffEditorBlock } from './standoff-editor-block';
 import { BlockManager } from './block-manager';
+import { classList } from 'solid-js/web';
 
 const isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
 const isWindows = navigator.platform.toUpperCase().indexOf('WIN')>=0;
@@ -45,9 +46,10 @@ export abstract class AbstractBlock implements IBlock {
         this.type = BlockType.AbstractBlock;
         this.container = args?.container || document.createElement("DIV") as HTMLDivElement;
         updateElement(this.container, {
-            style:{
-                position: "relative"
-            }
+            // style:{
+            //     position: "relative"
+            // },
+            classList: ["abstract-block"]
         });
         this.commitHandler = () => { };
         this.metadata = {};
