@@ -1916,6 +1916,27 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 }
             },
             {
+                type: "style/superscript",
+                name: "Superscript",
+                decorate: {
+                    cssClass: "style_superscript"
+                }
+            },
+            {
+                type: "style/subscript",
+                name: "Subscript",
+                decorate: {
+                    cssClass: "style_subscript"
+                }
+            },
+            {
+                type: "style/uppercase",
+                name: "Uppercase",
+                decorate: {
+                    cssClass: "style_uppercase"
+                }
+            },
+            {
                 type: "style/italics",
                 name: "Italics",
                 decorate: {
@@ -3226,7 +3247,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.setBlockSchemas(blockSchemas);
-        block.addBlockProperties([ { type: "block/marginalia/right" } ]);
+        block.addBlockProperties([ { type: "block/marginalia/right" }, { type: "block/alignment/right" } ]);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.addBlockTo(this, block);
