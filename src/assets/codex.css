@@ -225,6 +225,15 @@ body {
     border: 1px dotted #efefef;
     margin: 3px;
   }
+  .menu-panel {
+    position: absolute;
+    width: 100%;
+    background-color: #ccc;
+    text-align: left;
+    border: 1px solid #aaa;
+    padding: 5px;
+    font-size: 1rem;
+  }
   .workspace {
     background-color: #333;
   }

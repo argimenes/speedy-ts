@@ -138,6 +138,12 @@ export class AnnotationPanelBlock extends AbstractBlock {
             self.destroy();
             self.events.onClose();
         }
+        const addTableClicked = (rows: number, cells: number) => {
+            const table = self.source.manager.createTable(rows, cells);
+            self.source.manager.addBlockAfter(table, self.source);
+            self.destroy();
+            self.events.onClose();
+        }
         const bulletListClicked = () => {
             self.source.manager?.indentBlock({ block: self.source });
             self.destroy();
@@ -182,16 +188,10 @@ export class AnnotationPanelBlock extends AbstractBlock {
                 }
             };
             return (
-                <div style={{
-                    "position": "absolute",
-                    "width": "100%",
+                <div class="menu-panel" style={{
                     "top": (20 * props.level - 1) + "px",
                     "margin-left": (20 * props.level) + "px",
-                    "z-index": 10 * props.level,
-                    "background-color": "#ccc",
-                    "border": "1px solid #aaa",
-                    "padding": "5px",
-                    "font-size": "1rem"
+                    "z-index": 10 * props.level
                 }}>
                     <For each={props.menu}>{(item) =>
                         <div onClick={(e) => { e.preventDefault(); handleItemClick(item); }}>
@@ -228,6 +228,27 @@ export class AnnotationPanelBlock extends AbstractBlock {
                         { name: "Bullet list", onClick: () => bulletListClicked() },
                         { name: "Numbered list" },
                         { name: "Task list" }
+                    ]
+                },
+                {
+                    name: "Structure",
+                    children: [
+                        {
+                            name: "Table",
+                            children: [
+                                { name: "1 x 1", onClick: () => addTableClicked(1,1) },
+                                { name: "1 x 2", onClick: () => addTableClicked(1,2) },
+                                { name: "1 x 3", onClick: () => addTableClicked(1,3)  },
+                                { name: "1 x 4", onClick: () => addTableClicked(1,4) },
+                                { name: "-----" },
+                                { name: "2 x 1", onClick: () => addTableClicked(2,1) },
+                                { name: "2 x 2", onClick: () => addTableClicked(2,2) },
+                                { name: "2 x 3", onClick: () => addTableClicked(2,3) },
+                                { name: "2 x 4", onClick: () => addTableClicked(2,4) },
+                            ]
+                        },
+                        { name: "Grid" },
+                        { name: "Tabs" }
                     ]
                 }
             ];
