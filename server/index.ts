@@ -130,7 +130,7 @@ app.get('/api/loadGraphJson', function(req: Request, res: Response) {
   });
 });
 
-app.get('/api/loadDocumentJson', function(req: Request, res: Response) {
+app.get('/api/loadDocumentJson', async function(req: Request, res: Response) {
   const filename = req.query.filename as string;
   const folder = (req.query?.folder as string) || "data";
   const filepath = path.join(__dirname, baseDocumentPath, folder, filename);
@@ -151,7 +151,9 @@ app.post('/api/saveDocumentJson', async function(req: Request, res: Response) {
   const folder = (req.query?.folder as string) || "data";
   const filepath = path.join(__dirname, baseDocumentPath, folder, json.filename);
   const document = JSON.stringify(json.document);
-  fs.writeFileSync(filepath, document);
+  await fs.writeFile(filepath, document, (err) => {
+    console.log('writeFile', { err });
+  });
   const doc = json.document as IBlockDto;
   doc.metadata = { filepath };
   doc.lastUpdated = new Date();
