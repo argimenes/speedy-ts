@@ -189,8 +189,8 @@ export class AnnotationPanelBlock extends AbstractBlock {
             };
             return (
                 <div class="menu-panel" style={{
-                    "top": (20 * props.level - 1) + "px",
-                    "margin-left": (20 * props.level) + "px",
+                    "top": (40 * props.level - 1) + "px",
+                    "margin-left": (40 * props.level) + "px",
                     "z-index": 10 * props.level
                 }}>
                     <For each={props.menu}>{(item) =>
@@ -244,7 +244,7 @@ export class AnnotationPanelBlock extends AbstractBlock {
                                 { name: "2 x 1", onClick: () => addTableClicked(2,1) },
                                 { name: "2 x 2", onClick: () => addTableClicked(2,2) },
                                 { name: "2 x 3", onClick: () => addTableClicked(2,3) },
-                                { name: "2 x 4", onClick: () => addTableClicked(2,4) },
+                                { name: "2 x 4", onClick: () => addTableClicked(2,4) }
                             ]
                         },
                         { name: "Grid" },
