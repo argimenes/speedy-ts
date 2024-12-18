@@ -87,6 +87,11 @@ app.get("/api/listDocuments", function (req: Request, res: Response) {
   });
 });
 
+app.get("/api/listFolders", function (req: Request, res: Response) {
+  const folders = listFolders();
+  res.send({ folders });
+});
+
 const baseGraphPath = "../../../codex-data";
 const baseDocumentPath = "../../../codex-data/data";
 
@@ -178,6 +183,31 @@ const generateIndex = (doc: IBlockDto): IndexedBlock[] => {
 app.get('/', function(req: Request, res: Response) {
   res.sendFile(path.join(__dirname, '../index.html'));
 });
+
+function listFolders(): string[] {
+  try {
+    // Get the current directory path
+    // const currentDir = process.cwd();
+    const currentDir = path.join(__dirname, baseDocumentPath);
+
+    // Read all entries in the current directory
+    const entries = fs.readdirSync(currentDir);
+
+    // Filter out folders (directories)
+    const folders = entries.filter(entry => {
+      // Get the full path of the entry
+      const fullPath = path.join(currentDir, entry);
+      
+      // Check if it's a directory using fs.statSync
+      return fs.statSync(fullPath).isDirectory();
+    });
+
+    return folders;
+  } catch (error) {
+    console.error('Error reading directory:', error);
+    return [];
+  }
+}
 
 const port = process.env.PORT || 3002;
 app.listen(port);
