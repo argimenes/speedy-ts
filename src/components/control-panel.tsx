@@ -68,7 +68,7 @@ export class ControlPanelBlock extends AbstractBlock {
         const load = async (parameters: string[]) => {
             if (!manager) return;
             const filename = parameters && parameters[0] || model.file;
-            await manager.loadServerDocument(filename);
+            await manager.loadServerDocument(filename, model.folder);
         }
         const loadTemplate = async (parameters: string[]) => {
             if (!manager) return;
