@@ -6,3 +6,18 @@ export const renderToNode = (jsx: JSX.Element) => {
     render(() => jsx, node);
     return node;
 };
+export const fetchGet = async (url: string, params: any) => {
+    return await fetch(url + "?" + toQueryString(params));
+};
+export const toQueryString = (data: {}): string =>{
+    let _data = {};
+    for (let key in data) {
+        let value = data[key];
+        if (value === null || value === "null") {
+            continue;
+        }
+        _data[key] = value;
+    }
+    const queryString = new URLSearchParams(_data);
+    return queryString.toString();
+}

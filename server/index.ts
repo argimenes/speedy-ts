@@ -81,7 +81,7 @@ app.get('/api/textJson', function(req: Request, res: Response) {
 });
 
 app.get("/api/listDocuments", function (req: Request, res: Response) {
-  const folder = (req.query?.folder as string) || "";
+  const folder = (req.query?.folder as string) || ".";
   fs.readdir(path.join(__dirname, baseDocumentPath, folder), (err, files) => {
     res.send({ files: files });
   });

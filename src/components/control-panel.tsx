@@ -11,9 +11,11 @@ import { renderToNode } from "../library/common";
 type Model = {
     command: string;
     file: string;
+    folder: string;
     template: string;
 }
 type Resources = {
+    folders: string[];
     files: string[];
     templates: string[];
 }
@@ -33,7 +35,9 @@ export class ControlPanelBlock extends AbstractBlock {
             template: ""
         });
         const [resources, setResources] = createStore<Resources>({
-            files: [], templates: []
+            folders: [],
+            files: [],
+            templates: []
         });
         const onSubmit = (e:Event) => {
             e.preventDefault();
@@ -74,7 +78,7 @@ export class ControlPanelBlock extends AbstractBlock {
         const save = async (parameters: string[]) => {
             if (!manager) return;
             const filename = parameters && parameters[0] || model.file;
-            await manager.saveServerDocument(filename);
+            await manager.saveServerDocument(filename, model.folder);
             await listDocuments();
         }
         const listDocuments = async () => {
@@ -86,6 +90,11 @@ export class ControlPanelBlock extends AbstractBlock {
             if (!self?.manager) return;
             const files = await manager!.listTemplates();
             setResources("templates", files);
+        }
+        const loadFolderClicked = async (e: Event) => {
+            e.preventDefault();
+            const files = await manager.listDocuments(model.folder);
+            setResources("files", files);
         }
         const loadSelectedFileClicked = async (e: Event) => {
             e.preventDefault();
@@ -319,6 +328,11 @@ export class ControlPanelBlock extends AbstractBlock {
                 default: break;
             }
         }
+        const folderChanged = async (e: Event) => {
+            if (!e.currentTarget) return;
+            setModel("folder", e.currentTarget.value);
+            await loadFolderClicked(e);
+        }
         const fileChanged = async (e: Event) => {
             if (!e.currentTarget) return;
             setModel("file", e.currentTarget.value);
@@ -340,6 +354,16 @@ export class ControlPanelBlock extends AbstractBlock {
                             />
                             <button type="submit" class="btn btn-default">Run</button>
                         </form>
+                    </div>
+                    <div class="partition">
+                        <select value={model.folder} onChange={folderChanged}>
+                            <For each={resources.folders}>{(folder) =>
+                                <option value={folder}>
+                                    {folder}
+                                </option>
+                            }</For>
+                        </select>
+                        <button class="form-control" onClick={loadFolderClicked}>Load</button>
                     </div>
                     <div class="partition">
                         <select value={model.file} onChange={fileChanged}>
@@ -364,8 +388,10 @@ export class ControlPanelBlock extends AbstractBlock {
                 </div>
             )
         }
+        const folders = await manager?.listFolders();
         const files = await manager?.listDocuments() as string[];
         const templates = await manager?.listTemplates() as string[];
+        setResources("folders", folders);
         setResources("files", files);
         setResources("templates", templates);
         setModel("file", files[0]);

@@ -19,7 +19,7 @@ import { ClockPlugin } from "./plugins/clock";
 import { TextProcessor } from "./text-processor";
 import { EmbedDocumentBlock } from "./embed-document-block";
 import { SearchEntitiesBlock } from "../components/search-entities";
-import { renderToNode } from "./common";
+import { fetchGet, renderToNode } from "./common";
 import { MonitorBlock, StandoffEditorBlockMonitor } from "../components/monitor";
 import { TableBlock, TableCellBlock, TableRowBlock } from './tables-blocks';
 import { classList } from 'solid-js/web';
@@ -2429,19 +2429,23 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         });
         leftMargin.container.appendChild(hand);
     }
-    async listDocuments() {
-        const folder = "michelangelo-letters";
-        const res = await fetch("/api/listDocuments?folder=" + folder);
+    async listFolders() {
+        const res = await fetch("/api/listFolders");
+        const json = await res.json();
+        return json.folders as string[];
+    }
+    async listDocuments(folder: string = ".") {
+        const res = await fetchGet("/api/listDocuments", { folder });
         const json = await res.json();
         return json.files as string[];
     }
     async listTemplates() {
-        const res = await fetch("/api/listDocuments?folder=templates");
+        const res = await fetchGet("/api/listDocuments", { folder: "templates" });
         const json = await res.json();
         return json.files as string[];
     }
-    async loadServerTemplate(filename: string) {
-        const res = await fetch("/api/loadDocumentJson?folder=templates&filename=" + filename, { method: "GET" });
+    async loadServerTemplate(filename: string, folder: string = "templates") {
+        const res = await fetchGet("/api/loadDocumentJson", { folder, filename });
         const json = await res.json();
         console.log("loadServerTemplate", { filename, json });
         if (!json.Success) {
@@ -2450,11 +2454,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.loadDocument(json.Data.document);
         
     }
-    async loadServerDocument(filename: string) {
-        const folder = "michelangelo-letters";
-        const res = await fetch("/api/loadDocumentJson?filename=" + filename + "&folder=" + folder, { method: "GET" });
+    async loadServerDocument(filename: string, folder: string = ".") {
+        const res = await fetchGet("/api/loadDocumentJson", { filename, folder });
         const json = await res.json();
-        console.log("loadServerDocument", { filename, json });
+        console.log("loadServerDocument", { filename, folder, json });
         if (!json.Success) {
             return;
         }
@@ -2467,10 +2470,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.undoStack = [];
         this.redoStack = [];
     }
-    async saveServerDocument(filename: string) {
+    async saveServerDocument(filename: string, folder: string = ".") {
         const data = this.getDocument();
         if (!filename) return;
-        const folder = "michelangelo-letters";
         const res = await fetch("/api/saveDocumentJson", {
             headers: { "Content-Type": "application/json" },
             method: "POST",
