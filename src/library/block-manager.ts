@@ -1173,13 +1173,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     handler: async (args: IBindingHandlerArgs) => {
                         args.e?.preventDefault();
                         const manager = args.block.manager as BlockManager;
-                        const document = manager.blocks[0];
-                        let filename = document.metadata.filename;
+                        let filename = manager.metadata.filename;
                         if (!filename) {
                             filename = prompt("Filename?");
-                            document.metadata.filename = filename;
+                            manager.metadata.filename = filename;
                         }
-                        await manager.saveServerDocument(filename);
+                        const folder = manager.metadata.folder || ".";
+                        await manager.saveServerDocument(filename, folder);
                     }
                 }
             },
@@ -2462,6 +2462,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         }
         const dto = json.Data.document as IBlockDto;
+        dto.metadata = { ...this.metadata, filename, folder };
         this.clearHistory();
         this.loadDocument(dto);
         this.takeSnapshot(dto);
@@ -2902,6 +2903,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 textBlock.moveCaretStart();
             }
         }
+
+        this.metadata = dto.metadata;
 
         this.state = DocumentState.loaded;
     }

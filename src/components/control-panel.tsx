@@ -95,6 +95,7 @@ export class ControlPanelBlock extends AbstractBlock {
             e.preventDefault();
             const files = await manager.listDocuments(model.folder);
             setResources("files", files);
+            setModel("file", files[0]);
         }
         const loadSelectedFileClicked = async (e: Event) => {
             e.preventDefault();
