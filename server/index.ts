@@ -81,15 +81,14 @@ app.get('/api/textJson', function(req: Request, res: Response) {
 });
 
 app.get("/api/listDocuments", function (req: Request, res: Response) {
-  const folder = (req.query?.folder as string) || "data";
-  console.log("/api/listDocuments", { __dirname, folder });
+  const folder = (req.query?.folder as string) || "";
   fs.readdir(path.join(__dirname, baseDocumentPath, folder), (err, files) => {
     res.send({ files: files });
   });
 });
 
 const baseGraphPath = "../../../codex-data";
-const baseDocumentPath = "../../../codex-data";
+const baseDocumentPath = "../../../codex-data/data";
 
 app.post('/api/graph/update-entity-references', async (req: Request, res: Response) => {
   const { filename, nodes, edges } = req.body;
@@ -148,7 +147,7 @@ app.get('/api/loadDocumentJson', async function(req: Request, res: Response) {
 
 app.post('/api/saveDocumentJson', async function(req: Request, res: Response) {
   const json = req.body;
-  const folder = (req.query?.folder as string) || "data";
+  const folder = (json?.folder as string) || "data";
   const filepath = path.join(__dirname, baseDocumentPath, folder, json.filename);
   const document = JSON.stringify(json.document);
   await fs.writeFile(filepath, document, (err) => {

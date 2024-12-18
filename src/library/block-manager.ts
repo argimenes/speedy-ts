@@ -2430,7 +2430,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         leftMargin.container.appendChild(hand);
     }
     async listDocuments() {
-        const res = await fetch("/api/listDocuments");
+        const folder = "michelangelo-letters";
+        const res = await fetch("/api/listDocuments?folder=" + folder);
         const json = await res.json();
         return json.files as string[];
     }
@@ -2450,7 +2451,8 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         
     }
     async loadServerDocument(filename: string) {
-        const res = await fetch("/api/loadDocumentJson?filename=" + filename, { method: "GET" });
+        const folder = "michelangelo-letters";
+        const res = await fetch("/api/loadDocumentJson?filename=" + filename + "&folder=" + folder, { method: "GET" });
         const json = await res.json();
         console.log("loadServerDocument", { filename, json });
         if (!json.Success) {
@@ -2468,10 +2470,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     async saveServerDocument(filename: string) {
         const data = this.getDocument();
         if (!filename) return;
+        const folder = "michelangelo-letters";
         const res = await fetch("/api/saveDocumentJson", {
             headers: { "Content-Type": "application/json" },
             method: "POST",
             body: JSON.stringify({
+                folder: folder,
                 filename: filename,
                 document: data
             })
