@@ -19,7 +19,7 @@ import { ClockPlugin } from "./plugins/clock";
 import { TextProcessor } from "./text-processor";
 import { EmbedDocumentBlock } from "./embed-document-block";
 import { SearchEntitiesBlock } from "../components/search-entities";
-import { fetchGet, renderToNode } from "./common";
+import { fetchGet, fetchPost, renderToNode } from "./common";
 import { MonitorBlock, StandoffEditorBlockMonitor } from "../components/monitor";
 import { TableBlock, TableCellBlock, TableRowBlock } from './tables-blocks';
 import { classList } from 'solid-js/web';
@@ -1418,11 +1418,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     }
     async getEntities() {
         const props = this.getAllStandoffPropertiesByType("codex/entity-reference");
-        const ids = props.map(x => x.value);
-        const res = await fetchGet("/api/getEntities", { ids });
+        const ids = _.unique(props.map(x => x.value)).join(",");
+        const res = await fetchPost("/api/getEntitiesJson", { ids });
         const json = await res.json();
         if (!json.Success) return [];
-        console.log("getEntities", { json })
         return json.Data.entities;
     }
     findNearestWord(index: number, words: Word[]) {
@@ -1829,6 +1828,23 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                             manager.setBlockFocus(newBlock);
                             newBlock.setCaret(0, CARET.LEFT);
                         }, 1);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: ["Meta-Q", "Control-Q"]
+                },
+                action: {
+                    name: "Match entities to the graph",
+                    description: "Links to an entity in the graph database.",
+                    handler: async (args) => {
+                        const block = args.block as StandoffEditorBlock;
+                        const manager = block.manager as BlockManager;
+                        const entities = await manager.getEntities();
+                        console.log("list of matching graph entities", { entities });
                     }
                 }
             },
