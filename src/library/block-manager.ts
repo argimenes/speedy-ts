@@ -1404,6 +1404,27 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         return null;
     }
+    getAllStandoffPropertiesByType(type: string) {
+        const blocks = this.registeredBlocks
+            .filter(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock[];
+        const props: StandoffProperty[] = [];
+        blocks.forEach(b => {
+            if (!b.standoffProperties.length) return;
+            const entities = b.standoffProperties.filter(x => x.type == type);
+            if (!entities) return;
+            props.push(...entities);
+        });
+        return props;
+    }
+    async getEntities() {
+        const props = this.getAllStandoffPropertiesByType("codex/entity-reference");
+        const ids = props.map(x => x.value);
+        const res = await fetchGet("/api/getEntities", { ids });
+        const json = await res.json();
+        if (!json.Success) return [];
+        console.log("getEntities", { json })
+        return json.Data.entities;
+    }
     findNearestWord(index: number, words: Word[]) {
         const lastIndex = words.length - 1;
         for (let i = lastIndex; i >= 0; i--) {

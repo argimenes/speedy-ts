@@ -134,6 +134,14 @@ app.get('/api/loadGraphJson', function(req: Request, res: Response) {
   });
 });
 
+let agents: any[] = [];
+
+const loadAgents = () =>{
+  const filepath = path.join(__dirname, baseGraphPath, "graph", "agents.json");
+  const data = fs.readFileSync(filepath, 'utf8');
+  agents = JSON.parse(data);
+}
+
 app.get('/api/loadDocumentJson', async function(req: Request, res: Response) {
   const filename = req.query.filename as string;
   const folder = (req.query?.folder as string) || "data";
@@ -146,6 +154,18 @@ app.get('/api/loadDocumentJson', async function(req: Request, res: Response) {
     Success: true,
     Data: {
       document: dto
+    }
+  });
+});
+
+app.post('/api/getEntitiesJson', async function(req: Request, res: Response) {
+  const json = req.body;
+  const ids: string[] = json.ids;
+  const data = agents.filter(x => ids.some(id => id == x.Guid));
+  res.send({
+    Success: true,
+    Data: {
+      entities: data
     }
   });
 });
@@ -208,6 +228,8 @@ function listFolders(): string[] {
     return [];
   }
 }
+
+loadAgents();
 
 const port = process.env.PORT || 3002;
 app.listen(port);
