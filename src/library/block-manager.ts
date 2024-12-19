@@ -1419,7 +1419,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     async getEntities() {
         const props = this.getAllStandoffPropertiesByType("codex/entity-reference");
         const ids = _.unique(props.map(x => x.value)).join(",");
-        const res = await fetchPost("/api/getEntitiesJson", { ids });
+        const res = await fetchGet("/api/getEntitiesJson", { ids });
         const json = await res.json();
         if (!json.Success) return [];
         return json.Data.entities;

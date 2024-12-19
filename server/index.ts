@@ -158,9 +158,8 @@ app.get('/api/loadDocumentJson', async function(req: Request, res: Response) {
   });
 });
 
-app.post('/api/getEntitiesJson', async function(req: Request, res: Response) {
-  const json = req.body;
-  const _ids: string = json.ids;
+app.get('/api/getEntitiesJson', async function(req: Request, res: Response) {
+  const _ids: string = req.query.ids as string;
   const ids = _ids.split(",");
   const data = agents.filter(x => ids.some(id => id == x.Guid));
   res.send({
