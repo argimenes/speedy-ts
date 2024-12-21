@@ -145,26 +145,36 @@ export const EntitiesListComponent : Component<EntitiesListComponentProps> = (pr
         setPreviousProperties(props);
         setState("activeItem", index);
     }
+    const onMouseLeave = (e: Event) => {
+        previousProperties.forEach(x => x.unhighlight());
+        setPreviousProperties([]);
+        setState("activeItem",-1);
+    }
     return (
         <div class="entities-list-block">
             <div class="abstract-block">
-                <table>
+                <table style="width: 100;">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">
+                                Entity
+                            </th>
+                            <th style="text-align: right;">
+                                Links
+                            </th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <For each={entities}>{(row, index) =>
-                            <tr>
-                                <td style="width: 25px;height: 20px; vertical-align: middle;">
-                                    <Show when={index() == state.activeItem}>
-                                        <button>&rsaquo;</button>
-                                    </Show>
-                                </td>
-                                <td style="height: 20px; vertical-align: middle;">
+                            <tr style={"border-bottom: 1px solid #eee; background-color: " + (state.activeItem == index() ? "yellow" : "inherit") }>
+                                <td style="height: 20px; vertical-align: middle; text-align: left;">
                                     <div
-
-                                        onMouseOver={(e) => onMouseOver(e, row.item, index())}>
+                                        onMouseEnter={(e) => onMouseOver(e, row.item, index())}
+                                        onMouseLeave={(e) => onMouseLeave(e)}>
                                         {row.item.Name}
                                     </div>
                                 </td>
-                                <td style="height: 20px; vertical-align: middle;">
+                                <td style="height: 20px; vertical-align: middle; text-align: right;">
                                     {row.count}
                                 </td>
                             </tr>
