@@ -139,7 +139,7 @@ body {
 
   }
   .text-highlight {
-    background-color: lightyellow;
+    background-color: yellow;
   }
   .cell-space {
     margin:0;
@@ -305,4 +305,12 @@ body {
     .highlight {
       border: 1px solid blue;
     }    
+  }
+
+  .entities-list-block {
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow:#666 3px 3px 3px;
+    font-size: 0.7rem;
   }

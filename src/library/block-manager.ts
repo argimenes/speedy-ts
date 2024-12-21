@@ -28,6 +28,7 @@ import { ControlPanelBlock } from '../components/control-panel';
 import { AnnotationPanelBlock } from '../components/annotation-panel';
 import { CheckboxBlock } from './checkbox-block';
 import _ from 'underscore';
+import { EntitiesListBlock } from '../components/entities-list';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
@@ -1843,8 +1844,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     handler: async (args) => {
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.manager as BlockManager;
-                        const entities = await manager.getEntities();
-                        console.log("list of matching graph entities", { entities });
+                        await manager.loadEntitiesList(args);
                     }
                 }
             },
@@ -2269,6 +2269,37 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             const caret = args.caret as Caret;
             (block as StandoffEditorBlock).setCaret(caret?.right.index, CARET.LEFT);
         }
+    }
+    async loadEntitiesList(args: IBindingHandlerArgs) {
+        const self = this;
+        const block = args.block as StandoffEditorBlock;
+        const caret = block.getCaret();
+        const component = new EntitiesListBlock({
+            manager: this,
+            onClose: () => {
+                self.deregisterBlock(component.id);
+                self.setBlockFocus(block);
+                block.setCaret(caret.right.index, CARET.LEFT);
+            }
+        });
+        const node = await component.render();
+        updateElement(node, {
+            style: {
+                position: "absolute",
+                top: "20px",
+                left: "20px",
+                width: "250px",
+                height: "600px",
+                "overflow-y": "auto",
+                "overflow-x": "hidden",
+                "z-index": this.getHighestZIndex()
+            },
+            parent: document.body
+        });
+        block.removeFocus();
+        this.registerBlock(component);
+        this.setBlockFocus(component);
+        component.setFocus();
     }
     moveBlockUp(block: IBlock) {
         this.triggerBeforeChange();
