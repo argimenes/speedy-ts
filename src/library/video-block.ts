@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import YouTubePlayer from 'youtube-player';
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from './types';
+import { Options } from 'youtube-player/dist/types';
 
 export class VideoBlock extends AbstractBlock {
     iframe: HTMLDivElement;
@@ -10,11 +11,16 @@ export class VideoBlock extends AbstractBlock {
         super(args);
         this.type = BlockType.VideoBlock;
         this.iframe = document.createElement("DIV") as HTMLDivElement;
-        this.player = YouTubePlayer(this.iframe);
+        this.player = YouTubePlayer(this.iframe, {
+            playerVars: {
+                origin: "http://localhost:3002"
+            }
+        } as Options);
     }
     build() {
         const id = this.metadata.url.split("=")[1].split("&")[0];
         this.player.loadVideoById(id);
+        this.player.stopVideo();
         this.container.appendChild(this.iframe);
     }
     bind(data: IBlockDto) {
@@ -36,8 +42,13 @@ export class VideoBlock extends AbstractBlock {
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
     }
-    destroy(): void {
-        if (this.container) this.container.remove();
+    destroy() {
+        
+    }
+    async destroyAsync(): Promise<void> {
+        await this.player?.destroy();
+        await this.player?.player?.destroy();
+        this.container?.remove();
     }
 
 }
