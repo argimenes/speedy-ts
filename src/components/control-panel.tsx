@@ -23,6 +23,7 @@ export class ControlPanelBlock extends AbstractBlock {
     node: HTMLElement;
     constructor(args: IAbstractBlockConstructor){
         super(args);
+        this.type = BlockType.ControlPanelBlock;
         this.node = document.createElement("DIV") as HTMLElement;
     }
     async render() {
@@ -33,7 +34,7 @@ export class ControlPanelBlock extends AbstractBlock {
             command: "",
             file: "",
             template: ""
-        });
+        } as any);
         const [resources, setResources] = createStore<Resources>({
             folders: [],
             files: [],

@@ -232,5 +232,7 @@ function listFolders(): string[] {
 loadAgents();
 
 const port = process.env.PORT || 3002;
-app.listen(port);
+app.listen(port, () => {
+  console.log('Server running at localhost:' + port);
+});
 console.log('Running at Port ' + port);
