@@ -463,7 +463,7 @@ const foo = (bar) => {
         <>
             <div ref={initialise}
                 class="block-window"
-                style="top: 10px; margin: 0 auto; height: auto; max-height: 730px; overflow-y: auto; overflow-x: hidden;" />
+                style="top: 10px; margin: 0 auto;" />
         </>
     )
 }
