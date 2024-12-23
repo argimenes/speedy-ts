@@ -42,9 +42,13 @@ export class VideoBlock extends AbstractBlock {
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
     }
-    destroy(): void {
-        this.player?.destroy();
-        if (this.container) this.container.remove();
+    destroy() {
+        
+    }
+    async destroyAsync(): Promise<void> {
+        await this.player?.destroy();
+        await this.player?.player?.destroy();
+        this.container?.remove();
     }
 
 }

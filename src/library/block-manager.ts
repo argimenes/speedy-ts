@@ -166,8 +166,13 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const dto = this.getDocument();
         this.redoStack.push(last);
         this.redoStack.push(dto);
+        this.destroyVideos();
         this.loadDocument(last);
         console.log("undoHistory", { undoStack: this.undoStack, redoStack: this.redoStack });
+    }
+    destroyVideos() {
+        const videos = this.registeredBlocks.filter(x=> x.type == BlockType.VideoBlock);
+        videos?.forEach(async x => await x?.destroyAsync());
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
