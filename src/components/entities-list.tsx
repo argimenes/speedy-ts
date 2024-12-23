@@ -1,12 +1,13 @@
-import { Component, For, Show } from "solid-js";
+import { Component, For, onMount } from "solid-js";
 import { StandoffProperty } from "../library/standoff-property";
 import { createStore } from "solid-js/store";
 import { AbstractBlock } from "../library/abstract-block";
-import { GUID, IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
+import { CARET, Caret, GUID, IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource, IRange } from "../library/types";
 import { BlockManager } from "../library/block-manager";
 import { updateElement } from "../library/svg";
 import { render } from "solid-js/web";
 import _ from "underscore";
+import { StandoffEditorBlock } from "../library/standoff-editor-block";
 
 type StandoffPropertyGroup = {
     item: StandoffProperty;
@@ -18,15 +19,17 @@ type EntityGroup = {
 }
 export interface IEntitiesListBlockConstructor {
     manager: BlockManager;
-    onClose: () => void;
+    source: StandoffEditorBlock;
 }
 export class EntitiesListBlock extends AbstractBlock {
     properties: StandoffProperty[];
     node: HTMLDivElement;
-    onClose: () => void;
+    source: StandoffEditorBlock;
+    caret: Caret;
     constructor(args: IEntitiesListBlockConstructor) {
         super({ manager: args.manager });
-        this.onClose = args.onClose;
+        this.source = args.source;
+        this.caret = this.source.getCaret();
         this.properties = [];
         this.setupBindings();
     }
@@ -45,8 +48,7 @@ export class EntitiesListBlock extends AbstractBlock {
                         
                     `,
                     handler: async (args: IBindingHandlerArgs) => {
-                        self.destroy();
-                        self.onClose();
+                        self.close();
                     }
                 }
             },
@@ -76,35 +78,19 @@ export class EntitiesListBlock extends AbstractBlock {
         });
         this.container.focus();
     }
-    countItems(items: StandoffProperty[]): StandoffPropertyGroup[] {
-        const grouped = _.groupBy(items, 'value');
-        return _.map(grouped, (group) => ({
-            item: group[0],  // Take the first occurrence of the object
-            count: group.length
-        }));
-    }
     async render() {
-        const properties = this.manager.getAllStandoffPropertiesByType("codex/entity-reference");
-        const entities = await this.manager.getEntities() as Entity[];
-        const group = this.countItems(properties);
-        const countMap = _.indexBy(group, (result) => result.item.value);
-        const entitiesGroup = _.chain(entities)
-            .map((entity) => {
-            const match = countMap[entity.Guid];
-            return {
-                item: entity,
-                count: match ? match.count : 0
-            } as EntityGroup;
-            })
-            .sortBy('count')
-            .reverse()
-            .value();
         const node = document.createElement("DIV") as HTMLDivElement;
         render(() =>
-            <EntitiesListComponent entities={entitiesGroup} manager={this.manager} properties={properties} />,
+            <EntitiesListComponent wrapper={this} />,
             node);
         this.node = node;
         return node;
+    }
+    close() {
+        this.manager.deregisterBlock(this.id);
+        this.manager.setBlockFocus(this.source);
+        this.source.setCaret(this.caret.right.index, CARET.LEFT);
+        this.destroy();
     }
     destroy() {
         this.node.remove();
@@ -122,22 +108,21 @@ type Entity = {
     Name: string;
 }
 type EntitiesListComponentProps = {
-    manager: BlockManager;
-    properties: StandoffProperty[];
-    entities: EntityGroup[];
+    wrapper: EntitiesListBlock;
 }
 type State = {
     activeItem: number;
     isOpen: boolean;
 }
-export const EntitiesListComponent : Component<EntitiesListComponentProps> = (props) => {
+export const EntitiesListComponent : Component<EntitiesListComponentProps> = ({ wrapper }) => {
+    const manager = wrapper.manager;
     const [state, setState] = createStore<State>({
         activeItem: 0,
         isOpen: false
     });
-    const [entities, setEntities] = createStore<EntityGroup[]>(props.entities);
+    const [entities, setEntities] = createStore<EntityGroup[]>([]);
     const [previousProperties, setPreviousProperties] =createStore<StandoffProperty[]>([]);
-    const [properties, setProperties] =createStore<StandoffProperty[]>(props.properties);
+    const [properties, setProperties] =createStore<StandoffProperty[]>([]);
     const onMouseOver = (e: Event, item: Entity, index: number) => {
         const props = properties.filter(x => x.value == item.Guid);
         previousProperties.forEach(x => x.unhighlight());
@@ -150,6 +135,32 @@ export const EntitiesListComponent : Component<EntitiesListComponentProps> = (pr
         setPreviousProperties([]);
         setState("activeItem",-1);
     }
+    const countItems = (items: StandoffProperty[]): StandoffPropertyGroup[] => {
+        const grouped = _.groupBy(items, 'value');
+        return _.map(grouped, (group) => ({
+            item: group[0],  // Take the first occurrence of the object
+            count: group.length
+        }));
+    }
+    onMount(async () => {
+        const properties = manager.getAllStandoffPropertiesByType("codex/entity-reference");
+        const entities = await manager.getEntities() as Entity[];
+        const group = countItems(properties);
+        const countMap = _.indexBy(group, (result) => result.item.value);
+        const entitiesGroup = _.chain(entities)
+            .map((entity) => {
+            const match = countMap[entity.Guid];
+            return {
+                item: entity,
+                count: match ? match.count : 0
+            } as EntityGroup;
+            })
+            .sortBy('count')
+            .reverse()
+            .value();
+        setProperties(properties);
+        setEntities(entitiesGroup);
+    });
     return (
         <div class="entities-list-block">
             <div class="abstract-block">

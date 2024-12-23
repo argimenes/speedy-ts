@@ -2271,16 +2271,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     async loadEntitiesList(args: IBindingHandlerArgs) {
-        const self = this;
         const block = args.block as StandoffEditorBlock;
-        const caret = block.getCaret();
         const component = new EntitiesListBlock({
             manager: this,
-            onClose: () => {
-                self.deregisterBlock(component.id);
-                self.setBlockFocus(block);
-                block.setCaret(caret.right.index, CARET.LEFT);
-            }
+            source: block
         });
         const node = await component.render();
         updateElement(node, {
