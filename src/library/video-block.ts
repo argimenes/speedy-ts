@@ -43,6 +43,7 @@ export class VideoBlock extends AbstractBlock {
         throw new Error("Method not implemented.");
     }
     destroy(): void {
+        this.player?.destroy();
         if (this.container) this.container.remove();
     }
 
