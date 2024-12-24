@@ -243,6 +243,9 @@ export class TextProcessor {
                 }
             },
             {
+                pattern: "/high/(.*?)/", type: "style/highlighter", wrapper: { start: "/high/", end: "/" }
+            },
+            {
                 pattern: "/rain/(.*?)/", type: "style/rainbow", wrapper: { start: "/rain/", end: "/" }
             },
             {

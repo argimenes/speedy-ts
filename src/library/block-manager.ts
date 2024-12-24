@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { createRainbow, createUnderline, updateElement } from "./svg";
+import { createRainbow, createUnderline, drawClippedRectangle, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 import { DocumentBlock } from "./document-block";
 import { IndentedListBlock } from "./indented-list-block";
@@ -2178,6 +2178,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 }
             },
             {
+                type: "style/highlighter",
+                name: "Highlighter",
+                render: {
+                    destroy: ({ properties }) => {
+                        properties.forEach(p => p.cache.highlight?.remove())
+                    },
+                    update: (args) => {
+                        const manager = args.block.manager as BlockManager;
+                        manager.renderHighlight(args.properties, args.block, "yellow");
+                    }
+                }
+            },
+            {
                 type: "style/rainbow",
                 name: "Rainbow",
                 render: {
@@ -2211,6 +2224,16 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             blockProperties: this.blockProperties.map(x => x.serialize()),
             blocks: this.blocks.map(x => x.serialize())
         }                                                                                  
+    }
+    renderHighlight(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
+        const highlights = properties.map(p => {
+            return drawClippedRectangle(p, {
+                fill: colour || "yellow"
+            });
+        }) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...highlights);
+        block.wrapper.appendChild(frag);
     }
     renderRainbow(type: string, properties: StandoffProperty[], block: StandoffEditorBlock) {
         const cw = block.cache?.offset?.w || block.container.offsetWidth;

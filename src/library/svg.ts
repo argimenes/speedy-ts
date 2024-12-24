@@ -2,6 +2,7 @@ import _ from "underscore";
 import { Cell } from "./cell";
 import { StandoffProperty } from "./standoff-property";
 import { CellHtmlElement, ELEMENT_ROLE } from "./types";
+import { StandoffEditorBlock } from "./standoff-editor-block";
 
 export const createSvg = (config: any) => {
     var el = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -227,6 +228,173 @@ export const drawFilledRectangle = (p: StandoffProperty, options: DrawUnderlineO
     const parent = p.start.element?.parentNode as ParentNode;
     parent.insertBefore(svg, p.start?.element as Node);
     return svg;
+};
+
+interface IDrawRectangle {
+    property: StandoffProperty,
+    options: {
+        fill?: string;
+        stroke?: string;
+        strokeWidth?: string;
+    }
+}
+
+interface IDrawRectangleOptions {
+    fill?: string;
+    stroke?: string;
+    strokeWidth?: string;
+}
+export const drawClippedRectangle = (p: StandoffProperty, options: IDrawRectangleOptions) => {
+    const { block } = p;
+    options = options || {};
+    if (p.cache.highlight) {
+        p.cache.highlight.remove();
+    }
+    const mx = 60;
+    const mx2 = 3;
+    const my2 = 4;
+    const blockOffset = block.cache.offset;
+    const startOffset = p.start.cache.offset;
+    const endOffset = p.end.cache.offset;
+    const buffer = startOffset.y;
+    const topLeftX = startOffset.x;
+    const topLeftY = startOffset.y;
+    const bottomRightX = endOffset.x + endOffset.w;
+    const bottomRightY = endOffset.y + endOffset.h;
+    const svg = p.cache.highlight = createSvg({
+        style: {
+            position: "absolute",
+            left: 0,
+            top: topLeftY - 2,
+            width: blockOffset.w,
+            height: bottomRightY - topLeftY + my2,
+            "pointer-events": "none"
+        }
+    });
+    var pairs = [];
+    var onSameLine = (startOffset.y == endOffset.y);
+    if (onSameLine) {
+        pairs = [
+            [topLeftX - mx2, topLeftY - buffer],
+            [topLeftX - mx2, bottomRightY - buffer + my2],
+            [bottomRightX + mx2, bottomRightY - buffer + my2],
+            [bottomRightX + mx2, topLeftY - buffer],
+            [topLeftX - mx2, topLeftY - buffer]
+        ];
+    } else {
+        pairs = [
+            [topLeftX - mx2, topLeftY - buffer],
+            [topLeftX - mx2, topLeftY + startOffset.h - buffer + my2],
+            [mx, topLeftY + startOffset.h - buffer + my2],
+            [mx, bottomRightY - buffer + my2],
+            [bottomRightX + mx2, bottomRightY - buffer + my2],
+            [bottomRightX + mx2, endOffset.y - buffer],
+            [blockOffset.w - mx, endOffset.y - buffer],
+            [blockOffset.w - mx, topLeftY - buffer],
+            [topLeftX - mx2, topLeftY - buffer]
+        ];
+    }
+    var path = pairs.map(x => { return x[0] + " " + x[1]; }).join(", ");
+    var polygon = svgElement(svg, "polygon", {
+        attribute: {
+            points: path,
+            fill: "transparent"
+        }
+    });
+    if (options.fill) {
+        polygon.style.fill = options.fill;
+        //polygon.style.fillOpacity = "0.4";
+        polygon.style.strokeOpacity = "0";
+        polygon.style["mix-blend-mode"] = "multiply";
+    }
+    if (options.stroke) {
+        polygon.style.stroke = options.stroke;
+        polygon.style.strokeWidth = options.strokeWidth || "1";
+    }
+    svg.speedy = {
+        stream: 1
+    };
+    svg.appendChild(polygon);
+    //const parent = p.start.element.parentElement;
+    p.start.element.insertAdjacentElement("beforebegin", svg);
+    //parent.insertBefore(svg, p.start.element);
+    return svg;
+};
+
+export const drawRectangleAroundNodes = (args: IDrawRectangle) => {
+    const { property } = args;
+    const { start, end, block } = property;
+    const options = args.options || {};
+    if (property.cache.rectangleSvg) {
+        property.cache.rectangleSvg.rectangleSvg.remove();
+    }
+    var mx = 60;
+    var mx2 = 3;
+    var my2 = 4;
+    const containerOffset = block.cache.offset;
+    const startOffset = start.cache.offset;
+    const endOffset = end.cache.offset;
+    var buffer = startOffset.y;
+    var topLeftX = startOffset.x;
+    var topLeftY = startOffset.y;
+    var bottomRightX = endOffset.x + endOffset.w;
+    var bottomRightY = endOffset.y + endOffset.h;
+    var rectangleSvg = property.cache.rectangleSvg.rectangleSvg = createSvg({
+        style: {
+            position: "absolute",
+            left: 0,
+            top: topLeftY - 2,
+            width: containerOffset.w,
+            height: bottomRightY - topLeftY + my2,
+            "pointer-events": "none"
+        }
+    });
+    var pairs = [];
+    var onSameLine = (startOffset.y == endOffset.y);
+    if (onSameLine) {
+        pairs = [
+            [topLeftX - mx2, topLeftY - buffer],
+            [topLeftX - mx2, bottomRightY - buffer + my2],
+            [bottomRightX + mx2, bottomRightY - buffer + my2],
+            [bottomRightX + mx2, topLeftY - buffer],
+            [topLeftX - mx2, topLeftY - buffer]
+        ];
+    } else {
+        pairs = [
+            [topLeftX - mx2, topLeftY - buffer],
+            [topLeftX - mx2, topLeftY + startOffset.h - buffer + my2],
+            [mx, topLeftY + startOffset.h - buffer + my2],
+            [mx, bottomRightY - buffer + my2],
+            [bottomRightX + mx2, bottomRightY - buffer + my2],
+            [bottomRightX + mx2, endOffset.y - buffer],
+            [containerOffset.w - mx, endOffset.y - buffer],
+            [containerOffset.w - mx, topLeftY - buffer],
+            [topLeftX - mx2, topLeftY - buffer]
+        ];
+    }
+    var path = pairs.map(x => { return x[0] + " " + x[1]; }).join(", ");
+    var polygon = svgElement(rectangleSvg, "polygon", {
+        attribute: {
+            points: path,
+            fill: "transparent"
+        }
+    });
+    if (options.fill) {
+        polygon.style.fill = options.fill;
+        polygon.style.strokeOpacity = "0";
+        polygon.style["mix-blend-mode"] = "multiply";
+    }
+    if (options.stroke) {
+        polygon.style.stroke = options.stroke;
+        polygon.style.strokeWidth = options.strokeWidth || "1";
+    }
+    rectangleSvg.speedy = {
+        stream: 1
+    };
+    rectangleSvg.appendChild(polygon);
+    const parent = start.element.parentNode;
+    parent.insertBefore(rectangleSvg, start.element);
+    return rectangleSvg;
 };
 
 export const createUnderline = (p: StandoffProperty, options: DrawUnderlineOptions) => {
