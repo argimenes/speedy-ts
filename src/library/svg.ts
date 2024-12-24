@@ -354,6 +354,7 @@ export const createRainbow = (p: StandoffProperty, options: DrawUnderlineOptions
             svg.appendChild(line);
         });
     });
+    //p.cache.offsetY = totalHeight;
     return svg;
 };
 

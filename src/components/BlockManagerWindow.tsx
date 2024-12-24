@@ -14,7 +14,8 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                 {
                     type: BlockType.StandoffEditorBlock,
                     text: "Standoff Property Text Editor",
-                    blockProperties: [ { type: "block/font/size/h3" }]
+                    blockProperties: [ { type: "block/font/size/h3" }],
+                    standoffProperties: [{ type: "style/rainbow", start: 18, end: 21, value: "1442" }]
                 },
                 {
                     type: BlockType.StandoffEditorBlock,
