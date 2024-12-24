@@ -307,7 +307,7 @@ export const createRainbow = (p: StandoffProperty, options: DrawUnderlineOptions
     const bottomH = cells[last].cache.offset!.h;
     const width = options.containerWidth;
     const lineHeight = 2;
-    const colours = ["#ff0000", "#ffa500", "#ffff00", "#008000", "#0000ff", "#4b0082", "#ee82ee"];
+    const colours = ["#ff0000","#ff8000","#ffff00","#00ff00","#00ffff","#0000ff","#8000ff"];
     const totalHeight = colours.length * lineHeight;
     const height = bottomY + bottomH - topY + totalHeight;
     const svg = p.cache.underline = createSvg({
@@ -324,7 +324,7 @@ export const createRainbow = (p: StandoffProperty, options: DrawUnderlineOptions
         const { x1, x2, y1, y2, colour, strokeWidth } = args;
         var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.style.stroke = colour;
-        line.style.strokeWidth = lineHeight + "";
+        line.style.strokeWidth = strokeWidth + "";
         line.setAttribute("x1", x1);
         line.setAttribute("y1", y1);
         line.setAttribute("x2", x2);
@@ -343,15 +343,13 @@ export const createRainbow = (p: StandoffProperty, options: DrawUnderlineOptions
         const x2 = endOffset.x + endOffset.w;
         const y2 = endOffset.y + startOffset.h - topY + options.offsetY;
         colours.forEach((c, i) => {
-            const offsetY = (i * 1) - 1;
+            const offsetY = (i * lineHeight) - lineHeight;
             const line = createLine({
                 colour: c,
-                strokeOpacity: options.strokeOpacity,
-                strokeWidth: options.strokeWidth || lineHeight,
-                x1: startOffset.x,
-                y1: startOffset.y + startOffset.h - topY + offsetY,
-                x2: endOffset.x + endOffset.w,
-                y2: endOffset.y + endOffset.h - topY + offsetY
+                strokeOpacity: options.strokeOpacity || 1,
+                strokeWidth: lineHeight,
+                x1, x2,
+                y1: y1 + offsetY, y2: y2 + offsetY
             });
             svg.appendChild(line);
         });

@@ -355,7 +355,7 @@ export class TextProcessor {
                     block.addBlockProperties([prop]);
                     block.applyBlockPropertyStyling();
                 } else {
-                    const textStart = m.start - wrapperStart + 1, textEnd = m.end - wrapperEnd - 1;
+                    const textStart = m.start, textEnd = m.end - wrapperStart - 1;
                     block.addStandoffPropertiesDto([
                         { type: rule.type, start: textStart, end: textEnd } as StandoffPropertyDto
                     ]);
