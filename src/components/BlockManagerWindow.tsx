@@ -71,17 +71,17 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         }
                     }
                 } as IStandoffEditorBlockDto,
-                // {
-                //     type: BlockType.StandoffEditorBlock,
-                //     text: "Video",
-                //     blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
-                // },
-                // {
-                //     type: BlockType.VideoBlock,
-                //     metadata: {
-                //         url: "https://www.youtube.com/watch?v=fJemjesBMVE"
-                //     }
-                // },
+                {
+                    type: BlockType.StandoffEditorBlock,
+                    text: "Video",
+                    blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
+                },
+                {
+                    type: BlockType.VideoBlock,
+                    metadata: {
+                        url: "https://www.youtube.com/watch?v=fJemjesBMVE"
+                    }
+                },
                 {
                     type: BlockType.StandoffEditorBlock,
                     text: "Other Text Editors",

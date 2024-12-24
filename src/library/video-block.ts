@@ -46,9 +46,8 @@ export class VideoBlock extends AbstractBlock {
         
     }
     async destroyAsync(): Promise<void> {
-        await this.player?.destroy();
-        await this.player?.player?.destroy();
-        this.container?.remove();
+        if (!this.player) return;
+        await this.player.destroy();
+        this.player=null;
     }
-
 }

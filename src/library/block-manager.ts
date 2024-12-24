@@ -157,7 +157,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.loadDocument(last);
         console.log("redoHistory", { undoStack: this.undoStack, redoStack: this.redoStack });
     }
-    undoHistory() {
+    async undoHistory() {
         const last = this.undoStack.pop();
         if (!last) return;
         if (this.redoStack.length == 10) {
@@ -166,13 +166,20 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const dto = this.getDocument();
         this.redoStack.push(last);
         this.redoStack.push(dto);
-        this.destroyVideos();
+        await this.destroyAll();
         this.loadDocument(last);
         console.log("undoHistory", { undoStack: this.undoStack, redoStack: this.redoStack });
     }
-    destroyVideos() {
-        const videos = this.registeredBlocks.filter(x=> x.type == BlockType.VideoBlock);
-        videos?.forEach(async x => await x?.destroyAsync());
+    async destroyAll() {
+        await this.registeredBlocks.forEach(async (x: any) => {
+            if (x.destroy && !x.destroyAsync) { 
+                //x.destroy();
+                return;
+            }
+            if (x.destroyAsync) {
+                await x.destroyAsync();
+            }
+        });
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
@@ -1643,7 +1650,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     name: "Undo",
                     description: "",
                     handler: async (args) => {
-                        self.undoHistory();
+                        await self.undoHistory();
                     }
                 }
             },
@@ -1834,6 +1841,27 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                             manager.setBlockFocus(newBlock);
                             newBlock.setCaret(0, CARET.LEFT);
                         }, 1);
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: ["Mac:Control-R"]
+                },
+                action: {
+                    name: "Right-align",
+                    description: "",
+                    handler: async (args) => {
+                        const block = args.block as StandoffEditorBlock;
+                        const props = block
+                            .blockProperties
+                            .filter((x) => x.type.indexOf("block/alignment/") >= 0);
+                        if (props.length) props.forEach(p => p.block?.removeBlockProperty(p));
+                        block.addBlockProperties([ { type: "block/alignment/right" } ]);
+                        block.applyBlockPropertyStyling();
+                        block.updateView();
                     }
                 }
             },
@@ -2175,21 +2203,21 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const overlay = block.getOrSetOverlay(type);
         const cw = block.cache?.offset?.w || block.container.offsetWidth;
         const underlines = properties.map(p => {
-            if (p.metadata.offsetY == -1) {
+            if (p.cache.offsetY == -1) {
                 const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
                 const existingLines = overlaps
-                    .filter(x => x.id != p.id && typeof x.metadata?.offsetY != "undefined");
-                const highestY = _.max(existingLines, x => x.metadata.offsetY)?.metadata?.offsetY;
+                    .filter(x => x.id != p.id && typeof x.cache?.offsetY != "undefined");
+                const highestY = _.max(existingLines, x => x.cache.offsetY)?.cache?.offsetY;
                 if (existingLines.length == 0) {
-                    p.metadata.offsetY = 0;
+                    p.cache.offsetY = 0;
                 } else {
-                    p.metadata.offsetY = highestY >= 0 ? highestY + 2 : 0;
+                    p.cache.offsetY = highestY >= 0 ? highestY + 2 : 0;
                 }
             }
             return createUnderline(p, {
                 stroke: colour,
                 containerWidth: cw,
-                offsetY: p.metadata.offsetY
+                offsetY: p.cache.offsetY
             });
         }) as SVGElement[];
         const frag = document.createDocumentFragment();

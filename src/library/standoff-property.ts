@@ -27,12 +27,12 @@ export class StandoffProperty {
         this.start = start;
         this.end = end;
         this.schema = schema;
-        this.metadata = metadata || {
-            offsetY: -1
-        };
+        this.metadata = metadata || { };
         this.value = value || "";
         this.block = block;
-        this.cache = {};
+        this.cache = {
+            offsetY: -1
+        };
         this.clientOnly = clientOnly;
         this.styled = false;
         this.bracket = {
@@ -100,7 +100,7 @@ export class StandoffProperty {
         this.applyStyling();
     }
     resetOffset() {
-        this.metadata.offsetY = -1;
+        this.cache.offsetY = -1;
     }
     shiftLeft(suppressFlash?: boolean) {
         var previousStartCell = this.start.previous;
