@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { createUnderline, updateElement } from "./svg";
+import { createRainbow, createUnderline, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 import { DocumentBlock } from "./document-block";
 import { IndentedListBlock } from "./indented-list-block";
@@ -2176,6 +2176,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         owner.renderUnderlines("codex/entity-reference", args.properties, args.block, "purple", 1);
                     }
                 }
+            },
+            {
+                type: "style/rainbow",
+                name: "Rainbow",
+                render: {
+                    destroy: ({ properties }) => {
+                        properties.forEach(p => p.cache.underline?.remove())
+                    },
+                    update: (args) => {
+                        const manager = args.block.manager as BlockManager;
+                        manager.renderRainbow("style/rainbow", args.properties, args.block);
+                    }
+                }
             }
         ] as IStandoffPropertySchema[];
     }
@@ -2199,8 +2212,30 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             blocks: this.blocks.map(x => x.serialize())
         }                                                                                  
     }
+    renderRainbow(type: string, properties: StandoffProperty[], block: StandoffEditorBlock) {
+        const cw = block.cache?.offset?.w || block.container.offsetWidth;
+        const underlines = properties.map(p => {
+            if (p.cache.offsetY == -1) {
+                const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
+                const existingLines = overlaps
+                    .filter(x => x.id != p.id && typeof x.cache?.offsetY != "undefined");
+                const highestY = _.max(existingLines, x => x.cache.offsetY)?.cache?.offsetY;
+                if (existingLines.length == 0) {
+                    p.cache.offsetY = 0;
+                } else {
+                    p.cache.offsetY = highestY >= 0 ? highestY + 2 : 0;
+                }
+            }
+            return createRainbow(p, {
+                containerWidth: cw,
+                offsetY: p.cache.offsetY
+            });
+        }) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...underlines);
+        block.wrapper.appendChild(frag);
+    }
     renderUnderlines(type: string, properties: StandoffProperty[], block: StandoffEditorBlock, colour: string, offsetY: number) {
-        const overlay = block.getOrSetOverlay(type);
         const cw = block.cache?.offset?.w || block.container.offsetWidth;
         const underlines = properties.map(p => {
             if (p.cache.offsetY == -1) {
@@ -2223,17 +2258,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const frag = document.createDocumentFragment();
         frag.append(...underlines);
         block.wrapper.appendChild(frag);
-        // updateElement(overlay.container, {
-        //     classList: ["overlay"],
-        //     style: {
-        //         position: "relative",
-        //         width: "100%",
-        //         top: 0,
-        //         left: 0
-        //     },
-        //     parent: block.container,
-        //     children: [frag]
-        // });
     }
     getPlatformKey(codes: TPlatformKey[]) {
         return codes.find(x=> x.platform == Platform.Windows);

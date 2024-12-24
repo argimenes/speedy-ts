@@ -290,6 +290,75 @@ export const createUnderline = (p: StandoffProperty, options: DrawUnderlineOptio
     return underline;
 };
 
+export const createRainbow = (p: StandoffProperty, options: DrawUnderlineOptions) => {
+    options.offsetY = typeof (options.offsetY) == "undefined" ? 2 : options.offsetY;
+    if (p.cache.underline) {
+        p.cache.underline.remove();
+    }
+    const cells = p.getCells();
+    if (cells.length == 0) {
+        return;
+    }
+    const rows = Array.from(groupBy(cells, x => x.cache.offset.y));
+    const ordered = rows.sort((a, b) => a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0);
+    const last = cells.length - 1;
+    const topY = cells[0].cache.offset!.y;
+    const bottomY = cells[last].cache.offset!.y;
+    const bottomH = cells[last].cache.offset!.h;
+    const width = options.containerWidth;
+    const lineHeight = 2;
+    const colours = ["#ff0000", "#ffa500", "#ffff00", "#008000", "#0000ff", "#4b0082", "#ee82ee"];
+    const totalHeight = colours.length * lineHeight;
+    const height = bottomY + bottomH - topY + totalHeight;
+    const svg = p.cache.underline = createSvg({
+        style: {
+            position: "absolute",
+            left: 0,
+            top: topY + "px",
+            width: "100%",
+            height: height + "px",
+            "pointer-events": "none"
+        }
+    }) as SVGElement;
+    function createLine(args) {
+        const { x1, x2, y1, y2, colour, strokeWidth } = args;
+        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.style.stroke = colour;
+        line.style.strokeWidth = lineHeight + "";
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+        return line;
+    }
+    
+    ordered.forEach(row => {
+        const _cells = row[1] as Cell[];
+        const start = _cells[0],
+              end = _cells[_cells.length-1];
+        const startOffset = start.cache.offset,
+              endOffset = end.cache.offset;
+        const x1 = startOffset.x;
+        const y1 = startOffset.y + startOffset.h - topY + options.offsetY;
+        const x2 = endOffset.x + endOffset.w;
+        const y2 = endOffset.y + startOffset.h - topY + options.offsetY;
+        colours.forEach((c, i) => {
+            const offsetY = (i * 1) - 1;
+            const line = createLine({
+                colour: c,
+                strokeOpacity: options.strokeOpacity,
+                strokeWidth: options.strokeWidth || lineHeight,
+                x1: startOffset.x,
+                y1: startOffset.y + startOffset.h - topY + offsetY,
+                x2: endOffset.x + endOffset.w,
+                y2: endOffset.y + endOffset.h - topY + offsetY
+            });
+            svg.appendChild(line);
+        });
+    });
+    return svg;
+};
+
 const svgElement = (svg: SVGElement, type: string, config: any) => {
     var el = document.createElementNS(svg.namespaceURI, type);
     return updateSVGElement(el, config);

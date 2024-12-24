@@ -243,6 +243,9 @@ export class TextProcessor {
                 }
             },
             {
+                pattern: "/rain/(.*?)/", type: "style/rainbow", wrapper: { start: "/rain/", end: "/" }
+            },
+            {
                 pattern: "/arial/(.*?)/", type: "font/family/arial", wrapper: { start: "/arial/", end: "/" }
             },
             {
