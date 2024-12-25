@@ -15,7 +15,10 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                     type: BlockType.StandoffEditorBlock,
                     text: "Standoff Property Text Editor",
                     blockProperties: [ { type: "block/font/size/h3" }],
-                    standoffProperties: [{ type: "style/rainbow", start: 18, end: 21, value: "1442" }]
+                    standoffProperties: [
+                        { type: "style/rainbow", start: 18, end: 21 },
+                        { type: "style/highlighter", start: 5, end: 12 }
+                    ]
                 },
                 {
                     type: BlockType.StandoffEditorBlock,
@@ -27,6 +30,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         { type: "codex/entity-reference", start: 10, end: 18, value: "abd-def-ghi-123" },
                         { type: "codex/block-reference", start: 5, end: 14, value: "abd-def-ghi-321" },
                         { type: "codex/time-reference", start: 15, end: 22, value: "abd-def-ghi-432" },
+                        { type: "style/rectangle", start: 20, end: 32 },
                     ],
                     blockProperties: [
                         { type: "block/alignment/left" }

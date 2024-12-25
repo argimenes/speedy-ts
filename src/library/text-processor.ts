@@ -102,9 +102,6 @@ export class TextProcessor {
                 wrapper: { start: "[(", end: ")]" }
             },
             {
-                pattern: "\\[<(.*?)>\\]", type: "rectangle", wrapper: { start: "[<", end: ">]" }
-            },
-            {
                 pattern: "`(.*?)`", type: "code", wrapper: { start: "`", end: "`" }
             },
             {
@@ -246,6 +243,9 @@ export class TextProcessor {
                 pattern: "/high/(.*?)/", type: "style/highlighter", wrapper: { start: "/high/", end: "/" }
             },
             {
+                pattern: "\\[<(.*?)>\\]", type: "style/rectangle", wrapper: { start: "[<", end: ">]" }
+            },
+            {
                 pattern: "/rain/(.*?)/", type: "style/rainbow", wrapper: { start: "/rain/", end: "/" }
             },
             {
@@ -351,6 +351,14 @@ export class TextProcessor {
                 }
                 const schemas = (block.schemas as IPropertySchema[]).concat(block.blockSchemas);
                 const type = schemas.find(x => x.type == rule.type) as IPropertySchema;
+                if (!type) {
+                    console.log("type is null", { m, rule, wrapperEnd, wrapperStart })
+                    return;
+                }
+                if (!type.type) {
+                    console.log("type.type is null", { m, rule, wrapperEnd, wrapperStart })
+                    return;
+                }
                 block.removeCellsAtIndex(m.end, wrapperEnd);
                 block.removeCellsAtIndex(m.start, wrapperStart);
                 if (type.type.indexOf("block") >= 0 ) {

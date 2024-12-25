@@ -156,12 +156,12 @@ function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     return map;
 };
 
-export const drawFilledRectangle = (p: StandoffProperty, options: DrawUnderlineOptions) => {
+export const drawRectangle = (p: StandoffProperty, options: IDrawRectangleOptions) => {
     options = options || {} as DrawUnderlineOptions;
     if (p.cache.svg) {
         p.cache.svg.remove();
     }
-    const mx = 60;
+    const mx = 0;
     const mx2 = 3;
     const my2 = 4;
     const container = p.block.container;
@@ -211,12 +211,6 @@ export const drawFilledRectangle = (p: StandoffProperty, options: DrawUnderlineO
             fill: "transparent"
         }
     });
-    if (options.fill) {
-        polygon.style.fill = options.fill;
-        //polygon.style.fillOpacity = "0.4";
-        polygon.style.strokeOpacity = "0";
-        polygon.style["mix-blend-mode"] = "multiply";
-    }
     if (options.stroke) {
         polygon.style.stroke = options.stroke;
         polygon.style.strokeWidth = options.strokeWidth || "1";
@@ -227,6 +221,107 @@ export const drawFilledRectangle = (p: StandoffProperty, options: DrawUnderlineO
     svg.appendChild(polygon);
     const parent = p.start.element?.parentNode as ParentNode;
     parent.insertBefore(svg, p.start?.element as Node);
+    return svg;
+};
+
+export const drawAnimatedSelection = (p: StandoffProperty, options: IDrawRectangleOptions) => {
+    options = options || {} as DrawUnderlineOptions;
+    if (p.cache.svg) {
+        p.cache.svg.remove();
+    }
+
+    const mx = 0;
+    const mx2 = 3;
+    const my2 = 4;
+    const container = p.block.container;
+    const containerRect = container.getBoundingClientRect();
+    const buffer = p.start.cache.offset.y;
+    const topLeftX = p.start.cache.offset.x;
+    const topLeftY = p.start.cache.offset.y;
+    const bottomRightX = p.end.cache.offset.x + p.end.cache.offset.w;
+    const bottomRightY = p.end.cache.offset.y + p.end.cache.offset.h;
+
+    // Create SVG container
+    const svg = p.cache.svg = createSvg({
+        style: {
+            position: "absolute",
+            left: 0,
+            top: topLeftY - 2,
+            width: containerRect.width,
+            height: bottomRightY - topLeftY + my2,
+            "pointer-events": "none"
+        }
+    });
+
+    // Define points for the polygon
+    const onSameLine = (p.start.cache.offset.y == p.end.cache.offset.y);
+    const pairs = onSameLine ? [
+        [topLeftX - mx2, topLeftY - buffer],
+        [topLeftX - mx2, bottomRightY - buffer + my2],
+        [bottomRightX + mx2, bottomRightY - buffer + my2],
+        [bottomRightX + mx2, topLeftY - buffer],
+        [topLeftX - mx2, topLeftY - buffer]
+    ] : [
+        [topLeftX - mx2, topLeftY - buffer],
+        [topLeftX - mx2, topLeftY + p.start.cache.offset.h - buffer + my2],
+        [mx, topLeftY + p.start.cache.offset.h - buffer + my2],
+        [mx, bottomRightY - buffer + my2],
+        [bottomRightX + mx2, bottomRightY - buffer + my2],
+        [bottomRightX + mx2, p.end.cache.offset.y - buffer],
+        [containerRect.width - mx, p.end.cache.offset.y - buffer],
+        [containerRect.width - mx, topLeftY - buffer],
+        [topLeftX - mx2, topLeftY - buffer]
+    ];
+
+    const path = pairs.map(x => `${x[0]} ${x[1]}`).join(", ");
+
+    // Create the polygon
+    const polygon = svgElement(svg, "polygon", {
+        attribute: {
+            points: path,
+            fill: "transparent"
+        }
+    });
+
+    // Add stroke properties
+    if (options.stroke) {
+        polygon.style.stroke = options.stroke;
+        polygon.style.strokeWidth = options.strokeWidth || "1";
+        
+        // Fixed dash array values instead of calculating from path length
+        const dashLength = 10;  // Length of each dash
+        const gapLength = 10;   // Length of each gap
+        
+        // Create <style> element for the animation
+        const styleElement = document.createElement('style');
+        const animationName = `crawl-${Math.random().toString(36).substr(2, 9)}`; // Generate unique animation name
+        
+        styleElement.textContent = `
+            @keyframes ${animationName} {
+                0% {
+                    stroke-dashoffset: 0;
+                }
+                100% {
+                    stroke-dashoffset: ${-(dashLength + gapLength)}px;
+                }
+            }
+        `;
+        svg.appendChild(styleElement);
+
+        // Apply the animation properties
+        polygon.style.strokeDasharray = `${dashLength} ${gapLength}`;
+        polygon.style.animation = `${animationName} 0.5s linear infinite`;
+    }
+
+    svg.speedy = {
+        stream: 1
+    };
+
+    // Insert the SVG into the DOM
+    svg.appendChild(polygon);
+    const parent = p.start.element?.parentNode as ParentNode;
+    parent.insertBefore(svg, p.start?.element as Node);
+
     return svg;
 };
 
@@ -250,7 +345,7 @@ export const drawClippedRectangle = (p: StandoffProperty, options: IDrawRectangl
     if (p.cache.highlight) {
         p.cache.highlight.remove();
     }
-    const mx = 60;
+    const mx = 0;
     const mx2 = 3;
     const my2 = 4;
     const blockOffset = block.cache.offset;
@@ -328,7 +423,7 @@ export const drawRectangleAroundNodes = (args: IDrawRectangle) => {
     if (property.cache.rectangleSvg) {
         property.cache.rectangleSvg.rectangleSvg.remove();
     }
-    var mx = 60;
+    var mx = 0;
     var mx2 = 3;
     var my2 = 4;
     const containerOffset = block.cache.offset;
