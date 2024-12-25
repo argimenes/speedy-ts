@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { createRainbow, createUnderline, drawAnimatedSelection, drawClippedRectangle, drawRectangle, updateElement } from "./svg";
+import { createRainbow, createUnderline, drawAnimatedSelection, drawClippedRectangle, drawRectangle, drawSpikySelection, updateElement } from "./svg";
 import { v4 as uuidv4 } from 'uuid';
 import { DocumentBlock } from "./document-block";
 import { IndentedListBlock } from "./indented-list-block";
@@ -2215,6 +2215,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                         manager.renderRectangle(args.properties, args.block, "red");
                     }
                 }
+            },
+            {
+                type: "style/spiky",
+                name: "Spiky",
+                render: {
+                    destroy: ({ properties }) => {
+                        properties.forEach(p => p.cache.highlight?.remove())
+                    },
+                    update: (args) => {
+                        const manager = args.block.manager as BlockManager;
+                        manager.renderSpiky(args.properties, args.block, "red");
+                    }
+                }
             }
         ] as IStandoffPropertySchema[];
     }
@@ -2237,6 +2250,17 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             blockProperties: this.blockProperties.map(x => x.serialize()),
             blocks: this.blocks.map(x => x.serialize())
         }                                                                                  
+    }
+    renderSpiky(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
+        const highlights = properties.map(p => {
+            return drawSpikySelection(p, {
+                stroke: colour || "red",
+                strokeWidth: "3"
+            });
+        }) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...highlights);
+        block.wrapper.appendChild(frag);
     }
     renderRectangle(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
         const highlights = properties.map(p => {

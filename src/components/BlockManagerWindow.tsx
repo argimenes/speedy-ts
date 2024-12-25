@@ -17,7 +17,8 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                     blockProperties: [ { type: "block/font/size/h3" }],
                     standoffProperties: [
                         { type: "style/rainbow", start: 18, end: 21 },
-                        { type: "style/highlighter", start: 5, end: 12 }
+                        { type: "style/highlighter", start: 5, end: 12 },
+                        { type: "style/spiky", start: 15, end: 28 },
                     ]
                 },
                 {

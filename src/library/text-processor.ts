@@ -246,6 +246,9 @@ export class TextProcessor {
                 pattern: "\\[<(.*?)>\\]", type: "style/rectangle", wrapper: { start: "[<", end: ">]" }
             },
             {
+                pattern: "/spiky/(.*?)/", type: "style/spiky", wrapper: { start: "[spike/", end: "/" }
+            },
+            {
                 pattern: "/rain/(.*?)/", type: "style/rainbow", wrapper: { start: "/rain/", end: "/" }
             },
             {

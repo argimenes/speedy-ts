@@ -325,6 +325,127 @@ export const drawAnimatedSelection = (p: StandoffProperty, options: IDrawRectang
     return svg;
 };
 
+export const drawSpikySelection = (p: StandoffProperty, options: IDrawRectangleOptions) => {
+    options = options || {} as IDrawRectangleOptions;
+    if (p.cache.svg) {
+        p.cache.svg.remove();
+    }
+
+    const mx = 0;
+    const mx2 = 3;
+    const my2 = 4;
+    const container = p.block.container;
+    const containerRect = container.getBoundingClientRect();
+    const buffer = p.start.cache.offset.y;
+    const topLeftX = p.start.cache.offset.x;
+    const topLeftY = p.start.cache.offset.y;
+    const bottomRightX = p.end.cache.offset.x + p.end.cache.offset.w;
+    const bottomRightY = p.end.cache.offset.y + p.end.cache.offset.h;
+
+    // Create SVG container with extra padding for spikes
+    const SPIKE_HEIGHT = 4; // Max height of spikes
+    const svg = p.cache.svg = createSvg({
+        style: {
+            position: "absolute",
+            left: 0,
+            top: topLeftY - 2 - SPIKE_HEIGHT,
+            width: containerRect.width,
+            height: (bottomRightY - topLeftY + my2) + (SPIKE_HEIGHT * 2),
+            "pointer-events": "none"
+        }
+    });
+
+    // Function to generate spiky path segment
+    const generateSpikes = (x1: number, y1: number, x2: number, y2: number) => {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const steps = Math.max(2, Math.floor(dist / 12)); // Spike every 12px
+        const stepX = dx / steps;
+        const stepY = dy / steps;
+        const perpX = -dy / dist * SPIKE_HEIGHT;
+        const perpY = dx / dist * SPIKE_HEIGHT;
+
+        let path = `M ${x1} ${y1} `;
+        
+        for (let i = 1; i < steps; i++) {
+            const t = i / steps;
+            const x = x1 + dx * t;
+            const y = y1 + dy * t;
+            
+            // Add spike point
+            if (i % 2 === 1) {
+                path += `L ${x + perpX} ${y + perpY} `;
+            } else {
+                path += `L ${x - perpX} ${y - perpY} `;
+            }
+        }
+        
+        path += `L ${x2} ${y2} `;
+        return path;
+    };
+
+    // Generate the complete path
+    let pathData = "";
+    
+    if (p.start.cache.offset.y === p.end.cache.offset.y) {
+        // Single line selection - create a rectangle with spikes
+        pathData = 
+            generateSpikes(topLeftX - mx2, topLeftY - buffer,
+                         bottomRightX + mx2, topLeftY - buffer) + // Top
+            generateSpikes(bottomRightX + mx2, topLeftY - buffer,
+                         bottomRightX + mx2, bottomRightY - buffer + my2) + // Right
+            generateSpikes(bottomRightX + mx2, bottomRightY - buffer + my2,
+                         topLeftX - mx2, bottomRightY - buffer + my2) + // Bottom
+            generateSpikes(topLeftX - mx2, bottomRightY - buffer + my2,
+                         topLeftX - mx2, topLeftY - buffer) + // Left
+            "Z"; // Close the path
+    } else {
+        // Multi-line selection
+        pathData = 
+            generateSpikes(topLeftX - mx2, topLeftY - buffer,
+                         containerRect.width - mx, topLeftY - buffer) + // Top first line
+            generateSpikes(containerRect.width - mx, topLeftY - buffer,
+                         containerRect.width - mx, topLeftY + p.start.cache.offset.h - buffer + my2) + // Right first line
+            generateSpikes(containerRect.width - mx, topLeftY + p.start.cache.offset.h - buffer + my2,
+                         mx, topLeftY + p.start.cache.offset.h - buffer + my2) + // Bottom first line to left margin
+            generateSpikes(mx, topLeftY + p.start.cache.offset.h - buffer + my2,
+                         mx, bottomRightY - buffer + my2) + // Left margin
+            generateSpikes(mx, bottomRightY - buffer + my2,
+                         bottomRightX + mx2, bottomRightY - buffer + my2) + // Bottom last line
+            generateSpikes(bottomRightX + mx2, bottomRightY - buffer + my2,
+                         bottomRightX + mx2, p.end.cache.offset.y - buffer) + // Right last line
+            generateSpikes(bottomRightX + mx2, p.end.cache.offset.y - buffer,
+                         containerRect.width - mx, p.end.cache.offset.y - buffer) + // Top last line
+            generateSpikes(containerRect.width - mx, p.end.cache.offset.y - buffer,
+                         containerRect.width - mx, topLeftY - buffer) + // Right margin to top
+            "Z"; // Close the path
+    }
+
+    // Create the path element
+    const path = svgElement(svg, "path", {
+        attribute: {
+            d: pathData,
+            fill: "transparent",
+            "stroke-linecap": "round",
+            "stroke-linejoin": "round"
+        }
+    });
+
+    if (options.stroke) {
+        path.style.stroke = options.stroke;
+        path.style.strokeWidth = options.strokeWidth || "1";
+    }
+
+    svg.speedy = { stream: 1 };
+    svg.appendChild(path);
+
+    const parent = p.start.element?.parentNode as ParentNode;
+    parent.insertBefore(svg, p.start?.element as Node);
+
+    return svg;
+};
+
 interface IDrawRectangle {
     property: StandoffProperty,
     options: {
