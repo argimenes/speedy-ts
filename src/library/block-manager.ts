@@ -29,6 +29,7 @@ import { AnnotationPanelBlock } from '../components/annotation-panel';
 import { CheckboxBlock } from './checkbox-block';
 import _ from 'underscore';
 import { EntitiesListBlock } from '../components/entities-list';
+import BlockVines from './plugins/block-vines';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
@@ -525,6 +526,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     }
                 }
             },
+            
             {
                 type: "block/size",
                 name: "Block size",
@@ -546,6 +548,16 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     getBlockSchemas() {
         const self = this;
         return [
+            {
+                type: "block/vines",
+                name: "Block vines",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const vines = new BlockVines(p.block);
+                        vines.update();
+                    }
+                }
+            },
             {
                 type: "block/position",
                 name: "Block position",
@@ -1157,6 +1169,22 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                     description: "Pastes plain text",
                     handler: async (args) => {
                         args.allowPassthrough && args.allowPassthrough();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: ["Mac:Control-N"]
+                },
+                action: {
+                    name: "Block vines",
+                    description: "",
+                    handler: async (args) => {
+                        const prop = { type: "block/vines" };
+                        args.block.addBlockProperties([prop]);
+                        args.block.applyBlockPropertyStyling(); 
                     }
                 }
             },
