@@ -6,6 +6,8 @@ import bodyParser from 'body-parser';
 import fs from "fs";
 import { BlockType, IBlockDto, IndexedBlock } from "./types";
 import { IBlock } from "../src/library/types";
+import { RecordId, Surreal } from "surrealdb";
+let db: Surreal | undefined;
 
 type Document ={
   id: string;
@@ -27,6 +29,48 @@ interface GraphData {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+export async function initDb(): Promise<Surreal | undefined> {
+  if (db) return db;
+  db = new Surreal();
+  try {
+      await db.connect("http://127.0.0.1:8000/rpc", {
+        namespace: "codex-ns", database: "codex-db",
+        auth: {
+          username: "root",
+          password: "root"
+        }
+      });
+      return db;
+  } catch (err) {
+      console.error("Failed to connect to SurrealDB:", err);
+      throw err;
+  }
+}
+
+export async function saveAgents(agents: any[]) {
+  for (const node of agents) {
+    // Create a record ID from the node's properties
+    // Adjust the table name and ID based on your data structure
+    const recordId = new RecordId("Entity", node.Guid);
+    const data = {
+      Name: node.Name,
+      AgentType: node.AgentType,
+      IsDeleted: node.IsDeleted
+    };
+    // Create the record in SurrealDB
+    await db.create(recordId, data);
+  }
+}
+
+export async function closeDb(): Promise<void> {
+  if (!db) return;
+  await db.close();
+  db = undefined;
+}
+
+await initDb();
+
 const app = express();
 
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -141,6 +185,14 @@ const loadAgents = () =>{
   const data = fs.readFileSync(filepath, 'utf8');
   agents = JSON.parse(data);
 }
+
+
+app.get('/api/saveAgentsJson', async function(req: Request, res: Response) {
+  await saveAgents(agents);
+  res.send({
+    Success: true
+  });
+});
 
 app.get('/api/loadDocumentJson', async function(req: Request, res: Response) {
   const filename = req.query.filename as string;
