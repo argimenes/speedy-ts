@@ -57,6 +57,11 @@ export async function restoreDatabase() {
   await saveClaims(claims);
   const concepts = await loadConcepts();
   await saveConcepts(concepts);
+  /**
+   * Insert relationships
+   */
+  const subsetOfConcepts = await loadSubsetOfConcepts();
+  await saveSubsetOfConcepts(subsetOfConcepts);
 }
 interface IConceptDto {
   Guid: string;
@@ -95,9 +100,11 @@ type Claim = {
   deleted: boolean;
 }
 
+const toId = (guid: string) => guid;
+
 export async function saveConcepts(claims: IConceptDto[]) {
   for (const node of claims) {
-    const recordId = new RecordId("Concept", node.Guid);
+    const recordId = new RecordId("Concept", toId(node.Guid));
     const data = {
       name: node.Name,
       code: node.Code,
@@ -107,9 +114,40 @@ export async function saveConcepts(claims: IConceptDto[]) {
   }
 }
 
+type ConceptDto = {
+  Guid: string;
+  Name: string;
+  Code: string;
+}
+
+type SubsetOfConceptDto = {
+  IsPrimary: boolean;
+  Source: ConceptDto;
+  Target: ConceptDto;
+}
+
+type SubsetOfConcept = {
+	//id: RecordId<"SubsetOfConcept">;
+	in: RecordId<"Concept">;
+	out: RecordId<"Concept">;
+  primary: boolean;
+};
+
+export async function saveSubsetOfConcepts(relations: SubsetOfConceptDto[]) {
+  for (const relation of relations) {
+    const sourceId = new RecordId("Concept", toId(relation.Source.Guid));
+    const targetId = new RecordId("Concept", toId(relation.Target.Guid));
+    await db.insert_relation<SubsetOfConcept>('subset_of_concept', {
+      in: sourceId,
+      out: targetId,
+      primary: relation.IsPrimary
+    });
+  }
+}
+
 export async function saveClaims(claims: IClaimDto[]) {
   for (const node of claims) {
-    const recordId = new RecordId("Claim", node.Guid);
+    const recordId = new RecordId("Claim", toId(node.Guid));
     const data = {
       name: node.Name,
       role: node.Role,
@@ -121,7 +159,7 @@ export async function saveClaims(claims: IClaimDto[]) {
 
 export async function saveAgents(agents: IAgentDto[]) {
   for (const node of agents) {
-    const recordId = new RecordId("Agent", node.Guid);
+    const recordId = new RecordId("Agent", toId(node.Guid));
     const data = {
       name: node.Name,
       type: node.AgentType,
@@ -272,6 +310,12 @@ const loadConcepts = () =>{
   return JSON.parse(data) as IConceptDto[];
 }
 
+const loadSubsetOfConcepts = () =>{
+  const filepath = path.join(__dirname, baseGraphPath, "graph", "edges", "subset_of_concept.json");
+  const data = fs.readFileSync(filepath, 'utf8');
+  return JSON.parse(data) as SubsetOfConceptDto[];
+}
+
 app.get('/api/restoreDatabaseJson', async function(req: Request, res: Response) {
   await restoreDatabase();
   res.send({
@@ -297,12 +341,18 @@ app.get('/api/loadDocumentJson', async function(req: Request, res: Response) {
 
 app.get('/api/getEntitiesJson', async function(req: Request, res: Response) {
   const _ids: string = req.query.ids as string;
-  const ids = _ids.split(",");
-  const data = agents.filter(x => ids.some(id => id == x.Guid));
+  const ids = _ids.split(",").map(id => toId(id));
+  //const data = agents.filter(x => ids.some(id => id == x.Guid));
+  console.log("/api/getEntitiesJson", { ids });
+  const results = await db.query("RETURN SELECT * FROM Agent WHERE record::id(id) IN $ids", {
+    ids: ids
+  });
+  const agents = results[0] as Agent[];
+  console.log("/api/getEntitiesJson", { agents: JSON.stringify(agents) });
   res.send({
     Success: true,
     Data: {
-      entities: data
+      entities: agents.map(x => ({ Guid: x.id.toString().split(":")[1].replaceAll("⟨", "").replaceAll("⟩", ""), Name: x.name }))
     }
   });
 });
