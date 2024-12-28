@@ -1460,7 +1460,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     async getEntities() {
         const props = this.getAllStandoffPropertiesByType("codex/entity-reference");
         const ids = _.unique(props.map(x => x.value)).join(",");
-        const res = await fetchGet("/api/getEntitiesJson", { ids });
+        const res = await fetch('/api/getEntitiesJson', {
+            method: 'POST',
+            body: JSON.stringify({ ids }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        //const res = await fetchPost("/api/getEntitiesJson", { ids });
         const json = await res.json();
         if (!json.Success) return [];
         return json.Data.entities;
@@ -2435,11 +2442,12 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const node = await component.render();
         updateElement(node, {
             style: {
-                position: "absolute",
+                position: "fixed",
                 top: "20px",
                 left: "20px",
                 width: "250px",
-                height: "600px",
+                "max-height": "720px",
+                height: "auto",
                 "overflow-y": "auto",
                 "overflow-x": "hidden",
                 "z-index": this.getHighestZIndex()

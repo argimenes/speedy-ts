@@ -339,20 +339,20 @@ app.get('/api/loadDocumentJson', async function(req: Request, res: Response) {
   });
 });
 
-app.get('/api/getEntitiesJson', async function(req: Request, res: Response) {
-  const _ids: string = req.query.ids as string;
+app.post('/api/getEntitiesJson', async function(req: Request, res: Response) {
+  console.log('/api/getEntitiesJson', { body: req.body });
+  const _ids = req.body.ids;
+  console.log({ _ids });
   const ids = _ids.split(",").map(id => toId(id));
-  //const data = agents.filter(x => ids.some(id => id == x.Guid));
-  console.log("/api/getEntitiesJson", { ids });
-  const results = await db.query("RETURN SELECT * FROM Agent WHERE record::id(id) IN $ids", {
-    ids: ids
-  });
+  const results = await db.query("RETURN SELECT * FROM Agent WHERE record::id(id) IN $ids", { ids: ids });
   const agents = results[0] as Agent[];
-  console.log("/api/getEntitiesJson", { agents: JSON.stringify(agents) });
   res.send({
     Success: true,
     Data: {
-      entities: agents.map(x => ({ Guid: x.id.toString().split(":")[1].replaceAll("⟨", "").replaceAll("⟩", ""), Name: x.name }))
+      entities: agents.map(x => ({
+        Guid: x.id.toString().split(":")[1].replaceAll("⟨", "").replaceAll("⟩", ""),
+        Name: x.name
+      }))
     }
   });
 });
