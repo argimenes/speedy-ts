@@ -48,18 +48,86 @@ export async function initDb(): Promise<Surreal | undefined> {
   }
 }
 
-export async function saveAgents(agents: any[]) {
-  for (const node of agents) {
-    // Create a record ID from the node's properties
-    // Adjust the table name and ID based on your data structure
-    const recordId = new RecordId("Entity", node.Guid);
+export async function restoreDatabase() {
+  await db.query("REMOVE DATABASE IF EXISTS `codex-db`;");
+  await db.query("DEFINE DATABASE `codex-db`;");
+  const agents = await loadAgents();
+  await saveAgents(agents);
+  const claims = await loadClaims();
+  await saveClaims(claims);
+  const concepts = await loadConcepts();
+  await saveConcepts(concepts);
+}
+interface IConceptDto {
+  Guid: string;
+  Name: string;
+  Code: string;
+  IsDeleted: boolean;
+}
+interface IClaimDto {
+  Guid: string;
+  Name: string;
+  Role: string|null;
+  IsDeleted: boolean;
+}
+interface IAgentDto {
+  Guid: string;
+  Name: string;
+  AgentType: string;
+  IsDeleted: boolean;
+}
+type Agent = {
+  id: string;
+  name: string;
+  type: string;
+  deleted: boolean;
+}
+type Concept = {
+  id: string;
+  name: string;
+  code: string;
+  deleted: boolean;
+}
+type Claim = {
+  id: string;
+  name: string;
+  role: string;
+  deleted: boolean;
+}
+
+export async function saveConcepts(claims: IConceptDto[]) {
+  for (const node of claims) {
+    const recordId = new RecordId("Concept", node.Guid);
     const data = {
-      Name: node.Name,
-      AgentType: node.AgentType,
-      IsDeleted: node.IsDeleted
-    };
-    // Create the record in SurrealDB
-    await db.create(recordId, data);
+      name: node.Name,
+      code: node.Code,
+      deleted: node.IsDeleted
+    } as any;
+    await db.create<Concept>(recordId, data);
+  }
+}
+
+export async function saveClaims(claims: IClaimDto[]) {
+  for (const node of claims) {
+    const recordId = new RecordId("Claim", node.Guid);
+    const data = {
+      name: node.Name,
+      role: node.Role,
+      deleted: node.IsDeleted
+    } as any;
+    await db.create<Claim>(recordId, data);
+  }
+}
+
+export async function saveAgents(agents: IAgentDto[]) {
+  for (const node of agents) {
+    const recordId = new RecordId("Agent", node.Guid);
+    const data = {
+      name: node.Name,
+      type: node.AgentType,
+      deleted: node.IsDeleted
+    } as any;
+    await db.create<Agent>(recordId, data);
   }
 }
 
@@ -180,15 +248,32 @@ app.get('/api/loadGraphJson', function(req: Request, res: Response) {
 
 let agents: any[] = [];
 
-const loadAgents = () =>{
+const setAgents = () =>{
   const filepath = path.join(__dirname, baseGraphPath, "graph", "nodes", "agents.json");
   const data = fs.readFileSync(filepath, 'utf8');
   agents = JSON.parse(data);
 }
 
+const loadAgents = () =>{
+  const filepath = path.join(__dirname, baseGraphPath, "graph", "nodes", "agents.json");
+  const data = fs.readFileSync(filepath, 'utf8');
+  return JSON.parse(data) as IAgentDto[];
+}
 
-app.get('/api/saveAgentsJson', async function(req: Request, res: Response) {
-  await saveAgents(agents);
+const loadClaims = () =>{
+  const filepath = path.join(__dirname, baseGraphPath, "graph", "nodes", "claims.json");
+  const data = fs.readFileSync(filepath, 'utf8');
+  return JSON.parse(data) as IClaimDto[];
+}
+
+const loadConcepts = () =>{
+  const filepath = path.join(__dirname, baseGraphPath, "graph", "nodes", "concepts.json");
+  const data = fs.readFileSync(filepath, 'utf8');
+  return JSON.parse(data) as IConceptDto[];
+}
+
+app.get('/api/restoreDatabaseJson', async function(req: Request, res: Response) {
+  await restoreDatabase();
   res.send({
     Success: true
   });
@@ -281,7 +366,7 @@ function listFolders(): string[] {
   }
 }
 
-loadAgents();
+setAgents();
 
 const port = process.env.PORT || 3002;
 app.listen(port, () => {
