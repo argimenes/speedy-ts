@@ -14,6 +14,9 @@
     "isolatedModules": true,
     "outDir": "./dist",
     "rootDir": "./",
+    "declaration": true,           // Add this to generate .d.ts files
+    "declarationDir": "./dist",    // Add this to specify where .d.ts files go
+    "verbatimModuleSyntax": false   // --Add this for better ESM compatibility
   },
   "eslint.workingDirectories": ["./src"],
   "include": ["src/**/*", "server/**/*"],

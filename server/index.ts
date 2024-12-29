@@ -1,11 +1,12 @@
-import express, { Request, Response } from "express";
+import express, { type Request, type Response } from "express";
 import path from "path";
-import multer, { FileFilterCallback } from 'multer';
+import multer, { type FileFilterCallback } from 'multer';
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
 import fs from "fs";
-import { BlockType, IBlockDto, IndexedBlock, StandoffEditorBlockDto } from "./types";
 import { RecordId, Surreal } from "surrealdb";
+import type { IBlockDto, StandoffEditorBlockDto, BlockType, IndexedBlock } from "./types";
+//import { BlockType } from "./types";
 let db: Surreal | undefined;
 
 type MulterRequest = Request & { files: Express.Multer.File[] };
@@ -403,9 +404,9 @@ const saveDocumentIndex = async (doc: IBlockDto) => {
       metadata: doc.metadata
   } as Document;
   console.log({ documentData });
-  await db.create<Document>(new RecordId("Document", doc.id), documentData);
+  await db.upsert<Document>(new RecordId("Document", doc.id), documentData);
   const textBlocks = blocks
-    .filter(x => x.block.type == BlockType.StandoffEditorBlock)
+    .filter(x => x.block.type == "standoff-editor-block")
     .map(x => x.block as any as StandoffEditorBlockDto);
   for (let i = 0; i < textBlocks.length; i++) {
     /**
@@ -419,7 +420,7 @@ const saveDocumentIndex = async (doc: IBlockDto) => {
         metadata: textBlock.metadata
     } as TextBlock;
     console.log({ textBlockData });
-    await db.create<TextBlock>(new RecordId("TextBlock", textBlock.id), textBlockData);
+    await db.upsert<TextBlock>(new RecordId("TextBlock", textBlock.id), textBlockData);
     let properties = textBlock.standoffProperties.filter(x => x.type == "codex/entity-reference");
     for (let j = 0; j < properties.length; j++) {
       /**
@@ -436,7 +437,7 @@ const saveDocumentIndex = async (doc: IBlockDto) => {
         metadata: property.metadata
       } as StandoffProperty;
       console.log({ standoffPropertyData });
-      await db.create<StandoffProperty>(new RecordId("StandoffProperty", property.id), standoffPropertyData);
+      await db.upsert<StandoffProperty>(new RecordId("StandoffProperty", property.id), standoffPropertyData);
       const sourceId = new RecordId("StandoffProperty", property.id);
       const targetId = new RecordId("Agent", property.value);
       console.log({ sourceId, targetId });
