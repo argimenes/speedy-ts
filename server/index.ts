@@ -4,17 +4,9 @@ import multer, { FileFilterCallback } from 'multer';
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
 import fs from "fs";
-import { BlockType, IBlockDto, IndexedBlock } from "./types";
-import { IBlock } from "../src/library/types";
+import { BlockType, IBlockDto, IndexedBlock, StandoffEditorBlockDto } from "./types";
 import { RecordId, Surreal } from "surrealdb";
 let db: Surreal | undefined;
-
-type Document ={
-  id: string;
-  name: string;
-  filename: string;
-  metadata: {};
-}
 
 type MulterRequest = Request & { files: Express.Multer.File[] };
 
@@ -82,13 +74,13 @@ interface IAgentDto {
   IsDeleted: boolean;
 }
 type Agent = {
-  id: string;
+  id: RecordId;
   name: string;
   type: string;
   deleted: boolean;
 }
 type Concept = {
-  id: string;
+  id: RecordId;
   name: string;
   code: string;
   deleted: boolean;
@@ -99,12 +91,36 @@ type Claim = {
   role: string;
   deleted: boolean;
 }
+type Document = {
+  id: string;
+  metadata: {};
+  deleted: boolean;
+}
+type TextBlock = {
+  id: string;
+  documentId: RecordId<"Document">;
+  type: string;
+  text: string;
+  standoffProperties: [];
+  blockProperties: [];
+  metadata?: {};
+}
+type StandoffProperty = {
+  id: string;
+  textBlockId: RecordId<"TextBlock">;
+  type: string;
+  text: string;
+  start: number;
+  end: number;
+  value: string;
+  metadata?: {};
+}
 
 const toId = (guid: string) => guid;
 
 export async function saveConcepts(claims: IConceptDto[]) {
   for (const node of claims) {
-    const recordId = new RecordId("Concept", toId(node.Guid));
+    const recordId = new RecordId("Concept", node.Guid);
     const data = {
       name: node.Name,
       code: node.Code,
@@ -127,10 +143,14 @@ type SubsetOfConceptDto = {
 }
 
 type SubsetOfConcept = {
-	//id: RecordId<"SubsetOfConcept">;
 	in: RecordId<"Concept">;
 	out: RecordId<"Concept">;
   primary: boolean;
+};
+
+type StandoffProperty_RefersTo_Agent = {
+	in: RecordId<"StandoffProperty">;
+	out: RecordId<"Agent">;
 };
 
 export async function saveSubsetOfConcepts(relations: SubsetOfConceptDto[]) {
@@ -368,10 +388,65 @@ app.post('/api/saveDocumentJson', async function(req: Request, res: Response) {
   const doc = json.document as IBlockDto;
   doc.metadata = { filepath };
   doc.lastUpdated = new Date();
+  await saveDocumentIndex(doc);
   res.send({
     Success: true
   });
 });
+
+const saveDocumentIndex = async (doc: IBlockDto) => {
+  const blocks = generateIndex(doc);
+  /**
+   * Delete existing TextBlocks and StandoffProperties
+   */
+  let documentData = {
+      metadata: doc.metadata
+  } as Document;
+  console.log({ documentData });
+  await db.create<Document>(new RecordId("Document", doc.id), documentData);
+  const textBlocks = blocks
+    .filter(x => x.block.type == BlockType.StandoffEditorBlock)
+    .map(x => x.block as any as StandoffEditorBlockDto);
+  for (let i = 0; i < textBlocks.length; i++) {
+    /**
+     * Insert TextBlock
+     */
+    let textBlock = textBlocks[i];
+    let textBlockData = {
+        text: textBlock.text,
+        standoffProperties: textBlock.standoffProperties,
+        blockProperties: textBlock.blockProperties,
+        metadata: textBlock.metadata
+    } as TextBlock;
+    console.log({ textBlockData });
+    await db.create<TextBlock>(new RecordId("TextBlock", textBlock.id), textBlockData);
+    let properties = textBlock.standoffProperties.filter(x => x.type == "codex/entity-reference");
+    for (let j = 0; j < properties.length; j++) {
+      /**
+       * Insert StandoffProperty
+       */
+      let property = properties[j];
+      let standoffPropertyData = {
+        textBlockId: new RecordId("TextBlock", textBlock.id),
+        type: property.type,
+        text: property.text,
+        start: property.start,
+        end: property.end,
+        value: property.value,
+        metadata: property.metadata
+      } as StandoffProperty;
+      console.log({ standoffPropertyData });
+      await db.create<StandoffProperty>(new RecordId("StandoffProperty", property.id), standoffPropertyData);
+      const sourceId = new RecordId("StandoffProperty", property.id);
+      const targetId = new RecordId("Agent", property.value);
+      console.log({ sourceId, targetId });
+      await db.insert_relation<StandoffProperty_RefersTo_Agent>('standoff_property_refers_to_agent', {
+        in: sourceId,
+        out: targetId
+      });
+    }
+  }
+}
 
 const generateIndex = (doc: IBlockDto): IndexedBlock[] => {
   const result: IndexedBlock[] = [];

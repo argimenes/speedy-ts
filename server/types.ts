@@ -22,7 +22,7 @@ export type StandoffPropertyDto = {
     type: string,
     text?: string,
     value?: string
-    metadata?: Record<string, any>;
+    metadata: Record<string, any>;
 }
 export type BlockPropertyDto = {
     id?: GUID,
@@ -36,6 +36,7 @@ export type StandoffEditorBlockDto = {
     text: string
     standoffProperties: StandoffPropertyDto[]
     blockProperties?: BlockPropertyDto[]
+    metadata?: {};
 }
 export enum BlockType {
     BlockManagerBlock = "block-manager-block",
