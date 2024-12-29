@@ -258,6 +258,12 @@ app.get("/api/listDocuments", function (req: Request, res: Response) {
   });
 });
 
+const listJsonFiles = (folder: string = ".") => {
+  const folderPath = path.join(__dirname, baseDocumentPath, folder);
+  const files = fs.readdirSync(folderPath).filter(file => path.extname(file) === '.json');
+  return files;
+}
+
 app.get("/api/listFolders", function (req: Request, res: Response) {
   const folders = listFolders();
   res.send({ folders });
@@ -344,6 +350,36 @@ app.get('/api/restoreDatabaseJson', async function(req: Request, res: Response) 
   });
 });
 
+app.get('/api/indexAllDocumentsJson', async function(req: Request, res: Response) {
+  const folders = listFolders();
+  for (let i = 0; i < folders.length; i++) {
+    const folder = folders[i];
+    const files = listJsonFiles(folder);
+    for (let j = 0; j < files.length; j++) {
+      let filename = files[j];
+      const filepath = path.join(__dirname, baseDocumentPath, folder, filename);
+      //console.log({ folder, filename, filepath });
+      try {
+        const data = fs.readFileSync(filepath, 'utf8');
+        const doc = JSON.parse(data) as IBlockDto;
+        if (!doc || doc?.type != "main-list-block") {
+          console.log("main-list-block not found", { doc })
+          continue;
+        }
+        await saveDocumentIndex(doc);
+      } catch (ex) {
+        console.log({ ex });
+      }
+    }
+  }
+  res.send({
+    Success: true,
+    Data: {
+      folders
+    }
+  });
+});
+
 app.get('/api/loadDocumentJson', async function(req: Request, res: Response) {
   const filename = req.query.filename as string;
   const folder = (req.query?.folder as string) || "data";
@@ -403,7 +439,7 @@ const saveDocumentIndex = async (doc: IBlockDto) => {
   let documentData = {
       metadata: doc.metadata
   } as Document;
-  console.log({ documentData });
+  //console.log({ documentData });
   await db.upsert<Document>(new RecordId("Document", doc.id), documentData);
   const textBlocks = blocks
     .filter(x => x.block.type == "standoff-editor-block")
@@ -419,7 +455,7 @@ const saveDocumentIndex = async (doc: IBlockDto) => {
         blockProperties: textBlock.blockProperties,
         metadata: textBlock.metadata
     } as TextBlock;
-    console.log({ textBlockData });
+    //console.log({ textBlockData });
     await db.upsert<TextBlock>(new RecordId("TextBlock", textBlock.id), textBlockData);
     let properties = textBlock.standoffProperties.filter(x => x.type == "codex/entity-reference");
     for (let j = 0; j < properties.length; j++) {
@@ -436,11 +472,11 @@ const saveDocumentIndex = async (doc: IBlockDto) => {
         value: property.value,
         metadata: property.metadata
       } as StandoffProperty;
-      console.log({ standoffPropertyData });
+      //console.log({ standoffPropertyData });
       await db.upsert<StandoffProperty>(new RecordId("StandoffProperty", property.id), standoffPropertyData);
       const sourceId = new RecordId("StandoffProperty", property.id);
       const targetId = new RecordId("Agent", property.value);
-      console.log({ sourceId, targetId });
+      //console.log({ sourceId, targetId });
       await db.insert_relation<StandoffProperty_RefersTo_Agent>('standoff_property_refers_to_agent', {
         in: sourceId,
         out: targetId
@@ -455,7 +491,7 @@ const generateIndex = (doc: IBlockDto): IndexedBlock[] => {
       // Visit the current node
       result.push({ block, index: result.length, depth, path });
       // Recursively traverse all children
-      block.children.forEach((child, index) => {
+      block.children?.forEach((child, index) => {
           traverse(child, depth + 1, `${path}.${index + 1}`);
       });
   }
