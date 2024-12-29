@@ -466,7 +466,7 @@ const saveDocumentIndex = async (doc: IBlockDto) => {
       let standoffPropertyData = {
         textBlockId: new RecordId("TextBlock", textBlock.id),
         type: property.type,
-        text: property.text,
+        text: textBlock.text.substring(property.start, property.end + 1),
         start: property.start,
         end: property.end,
         value: property.value,
