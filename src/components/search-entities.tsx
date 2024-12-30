@@ -6,7 +6,7 @@ import { createSignal, For } from "solid-js";
 import { AbstractBlock } from "../library/abstract-block";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
 import { StandoffProperty } from "../library/standoff-property";
-import { renderToNode } from "../library/common";
+import { fetchGet, renderToNode } from "../library/common";
 import { FindReplaceBlock } from './find-replace';
 import { BlockManager } from '../library/block-manager';
 
@@ -191,8 +191,11 @@ export class SearchEntitiesBlock extends AbstractBlock
         const [files, setFiles] = createStore<string[]>([
             "default.graph.json"
         ]);
-        const searchGraph = (text: string) => {
-            const matches = entities.filter(x => x.name?.toLowerCase().indexOf(text.toLowerCase()) >= 0);
+        const searchGraph = async (text: string) => {
+            const res = await fetchGet("/api/findAgentsByNameJson", { text });
+            const json = await res.json();
+            if (!json.Success) return;
+            const matches: Entity[] = json.Data;
             setResults(matches);
         }
         const addToGraph = async (entity: Entity) => {

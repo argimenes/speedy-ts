@@ -396,6 +396,97 @@ app.get('/api/loadDocumentJson', async function(req: Request, res: Response) {
   });
 });
 
+type AgentMention = {
+  id: string;
+  name: string;
+  mentions: number;
+}
+
+app.get("/api/findAgentsByNameJson", async function(req: Request, res: Response) {
+  const text = req.query.text as string;
+  const page: any = req.query.page || 1;
+  const order: any = req.query.order || "ByMentions";
+  const direction: any = req.query.direction || "Ascending";
+  const byMentionsDescending = "mentions DESC, name";
+  const orderBy = 
+    order == "ByMentions"
+      ? direction == "Ascending" ? "mentions, name" : byMentionsDescending
+      : order == "ByName"
+        ? direction == "Ascending" ? "name, mentions DESC" : "name DESC, mentions DESC"
+        : byMentionsDescending
+  ;
+  const rows: any = 20;
+  const query = `SELECT id, name, count(<-standoff_property_refers_to_agent<-StandoffProperty) as mentions
+      FROM Agent 
+      WHERE name CONTAINS $text
+      ORDER BY ${orderBy}`;
+  const pageset = await paginate(query, { text }, page, rows);
+  if (!pageset) {
+    res.send({ Success: false });
+    return;
+  }
+  res.send(pageset);
+});
+
+type AgentAlias = {
+  text: string;
+  mentions: number;
+  id: string;
+  name: string;
+}
+
+const getCount = async (query: string, props: {}) => {
+  const count = (await db.query(`SELECT count() FROM (` + query + `) GROUP BY count`, props))[0][0]?.count;  
+  return count;
+}
+
+const paginate = async (query: string, props: {}, page: number, rows: number) => {
+  const count = await getCount(query, props);
+  const maxPage = Math.ceil(count / rows);
+  page = page > maxPage ? maxPage : page;
+  const pageIndex = (page - 1) * rows;
+  const pageset = await db.query(query + ` START $pageIndex LIMIT BY $rows`, { ...props, rows, pageIndex }); 
+  const results = pageset[0];
+  return {
+      Success: true,
+      Count: count,
+      Page: page,
+      Rows: rows,
+      MaxPage: maxPage,
+      Results: results
+  };
+}
+
+app.get("/api/findAgentsByAliasJson", async function(req: Request, res: Response) {
+  const text = req.query.text as string;
+  const page: any = req.query.page || 1;
+  const order: any = req.query.order || "ByText";
+  const direction: any = req.query.direction || "Ascending";
+  const byMentionsDescending = "count DESC, in.text";
+  const orderBy =
+    order == "ByText"
+      ? direction == "Ascending" ? "in.text, count DESC" : "in.text DESC, count DESC"
+      : order == "ByMentions" 
+        ? direction == "Ascending" ? "count, in.text" : byMentionsDescending
+        : byMentionsDescending
+    ;
+  const rows: any = 20;
+  const query = `SELECT text, count as mentions, out.id as id, out.name as name FROM (
+        SELECT in.text as text, out, count()
+        FROM standoff_property_refers_to_agent  
+        WHERE in.text CONTAINS $text
+        GROUP BY in.text, out
+        ORDER BY ${orderBy}
+  )`;
+  console.log({ query, text, page, rows});
+  const pageset = await paginate(query, { text }, page, rows);
+  if (!pageset) {
+    res.send({ Success: false });
+    return;
+  }
+  res.send(pageset);
+});
+
 app.post('/api/getEntitiesJson', async function(req: Request, res: Response) {
   console.log('/api/getEntitiesJson', { body: req.body });
   const _ids = req.body.ids;

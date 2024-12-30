@@ -20,24 +20,14 @@
             ORDER BY count DESC
         ) AS mentions
     FROM Agent 
-    WHERE record::id(id) IN [
-        "21671569-3eea-412b-85cc-08f659f58019",
-        "add92e01-cefe-4f13-94dd-f00eb82155b0","0090151c-4cb3-415b-afb2-e7f0fd27cd2a",
-        "002edabe-d5b4-4ed3-809d-a4f936694e0f","4d9da495-e794-463f-a78e-8b9570674e05",
-        "4e92650a-b925-4a33-bcb5-0d64bd88cf2b", "5d9cbd12-a35b-4b1c-9130-36c6786145b2"
-    ];
+    WHERE name CONTAINS $text
 
-### WIP : reverse alias lookup
+### Reverse entity lookup, i.e., query by alias
 
-    SELECT text, Array::first(mentions) FROM (
-    SELECT 
-        text,
-        (
-            SELECT 
-                id, name
-            FROM ->standoff_property_refers_to_agent->Agent
-
-        ) AS mentions
-    FROM StandoffProperty 
-    WHERE text = "He"
-    ) 
+    SELECT text, count, { id: out.id, name: out.name } as agent FROM (
+        SELECT in.text as text, out, count()
+        FROM standoff_property_refers_to_agent  
+        WHERE in.text CONTAINS "citizen"
+        GROUP BY in.text, out
+        ORDER BY in.text, count DESC
+    )
