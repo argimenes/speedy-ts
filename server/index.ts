@@ -42,8 +42,8 @@ export async function initDb(): Promise<Surreal | undefined> {
 }
 
 export async function restoreDatabase() {
-  await db.query("REMOVE DATABASE IF EXISTS `codex-db`;");
-  await db.query("DEFINE DATABASE `codex-db`;");
+  // await db.query("REMOVE DATABASE IF EXISTS `codex-db`;");
+  // await db.query("DEFINE DATABASE `codex-db`;");
   const agents = await loadAgents();
   await saveAgents(agents);
   const claims = await loadClaims();
