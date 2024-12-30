@@ -27,3 +27,17 @@
         "4e92650a-b925-4a33-bcb5-0d64bd88cf2b", "5d9cbd12-a35b-4b1c-9130-36c6786145b2"
     ];
 
+### WIP : reverse alias lookup
+
+    SELECT text, Array::first(mentions) FROM (
+    SELECT 
+        text,
+        (
+            SELECT 
+                id, name
+            FROM ->standoff_property_refers_to_agent->Agent
+
+        ) AS mentions
+    FROM StandoffProperty 
+    WHERE text = "He"
+    ) 
