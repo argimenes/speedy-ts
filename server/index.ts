@@ -283,6 +283,15 @@ app.post('/api/graph/update-entity-references', async (req: Request, res: Respon
   res.send({ Success: true });
 });
 
+app.post('/api/addToGraphJson', async (req: Request, res: Response) => {
+  const { id, name } = req.body;
+  const results = await db.upsert<Agent>(new RecordId("Agent", id), { name } as Agent);
+  console.log('/api/addToGraphJson', { results, id, name });
+  res.send({
+    Success: true
+  });
+});
+
 app.post('/api/addToGraph', async (req: Request, res: Response) => {
   const { filename, id, name } = req.body;
   const filepath = path.join(__dirname, baseGraphPath, filename);

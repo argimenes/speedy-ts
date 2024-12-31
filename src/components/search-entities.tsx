@@ -12,11 +12,22 @@ import { BlockManager } from '../library/block-manager';
 
 type Model = {
     search: string;
+    page: string;
+    order: string;
+    direction: string;
 }
 
 export type Entity = {
     id: GUID;
     name: string;
+    mentions: number;
+}
+
+type Search<T> = {
+    MaxPage: number;
+    Page: number;
+    Count: number;
+    Results: T[];
 }
 
 export interface ISearchEntitiesBlockConstructor extends IAbstractBlockConstructor {
@@ -108,7 +119,7 @@ export class SearchEntitiesBlock extends AbstractBlock
                         
                     `,
                     handler: async (args) => {
-                        const item = results[currentResultIndex()];
+                        const item = search[currentResultIndex()];
                         if (self.onBulkSubmit) {
                             self.onBulkSubmit({
                                 Text: item.name, Value: item.id
@@ -151,7 +162,7 @@ export class SearchEntitiesBlock extends AbstractBlock
                         
                     `,
                     handler: async (args) => {
-                        const len = results.length;
+                        const len = search.length;
                         if (currentResultIndex() == len -1) {
                             setCurrentResultIndex(0);
                             return;
@@ -172,7 +183,7 @@ export class SearchEntitiesBlock extends AbstractBlock
                         
                     `,
                     handler: async (args) => {
-                        const len = results.length;
+                        const len = search.length;
                         if (currentResultIndex() == 0) {
                             setCurrentResultIndex(len-1);
                             return;
@@ -183,28 +194,40 @@ export class SearchEntitiesBlock extends AbstractBlock
             }
         );
         const [model, setModel] = createStore<Model>({
-            search: ""
+            search: "",
+            page: "1",
+            order: "ByName",
+            direction: "Ascending"
         });
-        const [entities, setEntities] = createStore<Entity[]>([]);
-        const [results, setResults] = createStore<Entity[]>([]);
+        const [search, setSearch] = createStore<Search<Entity>>({
+            Page: "1", MaxPage: "1", Results: []
+        } as any);
         const [currentResultIndex, setCurrentResultIndex] = createSignal<number>(0);
         const [files, setFiles] = createStore<string[]>([
             "default.graph.json"
         ]);
         const searchGraph = async (text: string) => {
-            const res = await fetchGet("/api/findAgentsByNameJson", { text });
+            const data = {
+                ...model, text
+            }
+            const res = await fetchGet("/api/findAgentsByNameJson", data);
             const json = await res.json();
             if (!json.Success) return;
-            const matches: Entity[] = json.Data;
-            setResults(matches);
+            const search = json as Search<Entity>;
+            setModel("page", search.Page + "");
+            setSearch({
+                Count: search.Count,
+                Page: search.Page,
+                MaxPage: search.MaxPage,
+                Results: search.Results
+            });
         }
         const addToGraph = async (entity: Entity) => {
             const data = {
-                filename: "default.graph.json",
                 id: entity.id,
                 name: entity.name
             }
-            const res = await fetch(`api/addToGraph`, {
+            const res = await fetch(`/api/addToGraphJson`, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -212,17 +235,9 @@ export class SearchEntitiesBlock extends AbstractBlock
                 body: JSON.stringify(data)
             });
             const json = await res.json();
-            await loadGraph("default.graph.json");
-        }
-        const loadGraph = async (filename: string) => {
-            const res = await fetch("api/loadGraphJson?filename=" + encodeURIComponent(filename));
-            const json = await res.json();
-            if (!json.Success) {
-                return;
-            }
-            const _entities = json.Data.document.nodes;
-            setEntities(_entities);
-            console.log("loadGraph", { json, entities })
+            self.onSelected({
+                Text: entity.name, Value: entity.id
+            });
         }
         const onSearchChanged = async (e: Event) => {
             e.preventDefault();
@@ -230,7 +245,6 @@ export class SearchEntitiesBlock extends AbstractBlock
             await searchGraph(model.search);
         }
         const addEntity = async (entity: Entity) => {
-            setEntities([...entities, entity]);
             await addToGraph(entity);
             self.onSelected({
                 Text: entity.name, Value: entity.id
@@ -274,7 +288,7 @@ export class SearchEntitiesBlock extends AbstractBlock
                         <form onSubmit={handleSubmit}>
                             <div>
                                 <input
-                                    id={self.id + "-input"}
+                                    id={self.id + "-search"}
                                     type="text"
                                     tabIndex={1}
                                     value={model.search}
@@ -283,14 +297,25 @@ export class SearchEntitiesBlock extends AbstractBlock
                                     class="form-control"
                                     onInput={onSearchChanged}
                                 />
+                                <input
+                                    id={self.id + "-page"}
+                                    type="number"
+                                    tabIndex={2}
+                                    value={model.page}
+                                    use:autofocus
+                                    autofocus
+                                    class="form-control"
+                                    onInput={(e) => setModel("page", e.currentTarget.value)}
+                                />
                                 <button type="submit" class="btn btn-primary">Add</button>
                                 <button type="button" class="btn btn-default" onClick={handleClose}>Close</button>
                             </div>
                             <div>
-                                <For each={results}>{(item, i) =>
+                                <For each={search.Results}>{(item, i) =>
                                     <>
                                         <div class="search-entities-list-item">
                                             <div classList={{ "highlight": i() == currentResultIndex() }}>
+                                                <span style="width: 100px; margin-right: 10px;">{item.mentions}</span>
                                                 <button onClick={(e) => { e.preventDefault(); onSelectFromList(item); }}>Select</button>{item.name}
                                             </div>
                                         </div>
@@ -302,7 +327,6 @@ export class SearchEntitiesBlock extends AbstractBlock
                 </>
             )
         }
-        await loadGraph("default.graph.json");
         const jsx = SearchEntitiesWindow();
         const node = this.node = renderToNode(jsx);
         return node;
