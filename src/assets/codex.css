@@ -295,6 +295,17 @@ body {
   .codex-search-highlight {
     background-color: pink;
   }
+  .table-search-entities {
+    font-size: 0.5rem;
+    line-height: 0.5rem;
+    margin-top: 5px;
+    button {
+      margin-right: 10px;
+    }
+    .highlight {
+      border: 1px solid blue;
+    }    
+  }
   .search-entities-list-item {
     font-size: 0.5rem;
     line-height: 0.5rem;

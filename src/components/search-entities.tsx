@@ -21,6 +21,7 @@ type Model = {
 
 export type Entity = {
     id: GUID;
+    text: string;
     name: string;
     mentions: number;
 }
@@ -258,9 +259,10 @@ export class SearchEntitiesBlock extends AbstractBlock
             e.preventDefault();
             setModel("search", ((e.currentTarget as HTMLInputElement).value as string));
             if (Date.now() - timer < 500) {
-                timer = Date.now();
+                setTimeout(async () => { if (Date.now() - timer >= 500) await searchGraph(model.search); }, 500);
                 return;
             }
+            timer = Date.now(); // not quite right as it doesn't evoke the searchGraph on the LAST key stroke
             await searchGraph(model.search);
         }
         const addEntity = async (entity: Entity) => {
@@ -353,16 +355,36 @@ export class SearchEntitiesBlock extends AbstractBlock
                                 <button type="button" class="btn btn-default" onClick={handleClose}>Close</button>
                             </div>
                             <div>
-                                <For each={search.Results}>{(item, i) =>
-                                    <>
-                                        <div class="search-entities-list-item">
-                                            <div classList={{ "highlight": i() == currentResultIndex() }}>
-                                                <span style="width: 100px; margin-right: 10px;">{item.mentions}</span>
-                                                <button onClick={(e) => { e.preventDefault(); onSelectFromList(item); }}>Select</button>{item.name}
-                                            </div>
-                                        </div>
-                                    </>
-                                }</For>
+                                <table class="table-search-entities">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 80px;"></th>
+                                            <th style="width: 80px;"></th>
+                                            <th style="width: 125px;"></th>
+                                            <th>
+
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <For each={search.Results}>{(item, i) =>
+                                            <tr classList={{ "highlight": i() == currentResultIndex() }}>
+                                                <td>
+                                                    <button onClick={(e) => { e.preventDefault(); onSelectFromList(item); }}>Select</button>
+                                                </td>
+                                                <td>
+                                                    {item.mentions}
+                                                </td>
+                                                <td>
+                                                    "{item.text}"
+                                                </td>
+                                                <td>
+                                                    {item.name}
+                                                </td>
+                                            </tr>
+                                        }</For>
+                                    </tbody>
+                                </table>
                             </div>
                         </form>
                     </div>
