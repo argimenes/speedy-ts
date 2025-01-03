@@ -6,12 +6,14 @@ import { createSignal, For } from "solid-js";
 import { AbstractBlock } from "../library/abstract-block";
 import { StandoffEditorBlock } from "../library/standoff-editor-block";
 import { StandoffProperty } from "../library/standoff-property";
-import { fetchGet, renderToNode } from "../library/common";
+import { fetchGet, fetchGetCache, renderToNode } from "../library/common";
 import { FindReplaceBlock } from './find-replace';
 import { BlockManager } from '../library/block-manager';
 
 type Model = {
     search: string;
+    byAlias: boolean;
+    byPartial: boolean;
     page: string;
     order: string;
     direction: string;
@@ -162,7 +164,7 @@ export class SearchEntitiesBlock extends AbstractBlock
                         
                     `,
                     handler: async (args) => {
-                        const len = search.length;
+                        const len = search.Results.length;
                         if (currentResultIndex() == len -1) {
                             setCurrentResultIndex(0);
                             return;
@@ -195,9 +197,11 @@ export class SearchEntitiesBlock extends AbstractBlock
         );
         const [model, setModel] = createStore<Model>({
             search: "",
+            byAlias: false,
+            byPartial: true,
             page: "1",
-            order: "ByName",
-            direction: "Ascending"
+            order: "ByMentions",
+            direction: "Descending"
         });
         const [search, setSearch] = createStore<Search<Entity>>({
             Page: "1", MaxPage: "1", Results: []
@@ -207,11 +211,21 @@ export class SearchEntitiesBlock extends AbstractBlock
             "default.graph.json"
         ]);
         const searchGraph = async (text: string) => {
+            if (!model.search) {
+                setSearch({
+                    Count: 0,
+                    Page: 1,
+                    MaxPage: 1,
+                    Results: []
+                });
+                return;
+            }
+            if (model.search.length <= 3 && !model.byAlias) return;
             const data = {
                 ...model, text
             }
-            const res = await fetchGet("/api/findAgentsByNameJson", data);
-            const json = await res.json();
+            const url = model.byAlias ? "/api/findAgentsByAliasJson" : "/api/findAgentsByNameJson";
+            const json = await fetchGetCache(url, data);
             if (!json.Success) return;
             const search = json as Search<Entity>;
             setModel("page", search.Page + "");
@@ -239,9 +253,14 @@ export class SearchEntitiesBlock extends AbstractBlock
                 Text: entity.name, Value: entity.id
             });
         }
+        let timer = Date.now();
         const onSearchChanged = async (e: Event) => {
             e.preventDefault();
             setModel("search", ((e.currentTarget as HTMLInputElement).value as string));
+            if (Date.now() - timer < 500) {
+                timer = Date.now();
+                return;
+            }
             await searchGraph(model.search);
         }
         const addEntity = async (entity: Entity) => {
@@ -265,6 +284,16 @@ export class SearchEntitiesBlock extends AbstractBlock
         const handleClose = (e:Event) => {
             e.preventDefault();
             self.close();
+        }
+        const toggleByAlias = async (e: Event) => {
+            e.preventDefault();
+            setModel("byAlias", !model.byAlias);
+            await searchGraph(model.search);
+        }
+        const toggleByPartial = async (e: Event) => {
+            e.preventDefault();
+            setModel("byPartial", !model.byPartial);
+            await searchGraph(model.search);
         }
         const handleSubmit = async (e: Event) => {
             e.preventDefault();
@@ -294,19 +323,32 @@ export class SearchEntitiesBlock extends AbstractBlock
                                     value={model.search}
                                     use:autofocus
                                     autofocus
+                                    style="margin-right: 5px;"
                                     class="form-control"
                                     onInput={onSearchChanged}
                                 />
-                                <input
-                                    id={self.id + "-page"}
-                                    type="number"
-                                    tabIndex={2}
-                                    value={model.page}
-                                    use:autofocus
-                                    autofocus
-                                    class="form-control"
-                                    onInput={(e) => setModel("page", e.currentTarget.value)}
-                                />
+                                <div style="display: inline-block; margin-right: 10px;">
+                                    <input
+                                        type="checkbox"
+                                        checked={model.byAlias}
+                                        onInput={toggleByAlias}
+                                        style="margin-right: 5px;"
+                                    />
+                                    <span style="font-size: 0.5rem;">
+                                        alias
+                                    </span>
+                                </div>
+                                <div style="display: inline-block; margin-right: 10px;">
+                                    <input
+                                        type="checkbox"
+                                        checked={model.byPartial}
+                                        onInput={toggleByPartial}
+                                        style="margin-right: 5px;"
+                                    />
+                                    <span style="font-size: 0.5rem;">
+                                        partial
+                                    </span>
+                                </div>
                                 <button type="submit" class="btn btn-primary">Add</button>
                                 <button type="button" class="btn btn-default" onClick={handleClose}>Close</button>
                             </div>

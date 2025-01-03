@@ -33,6 +33,7 @@ import BlockVines from './plugins/block-vines';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
+const maxHistoryItems = 30;
 
 const passoverClass = "block-modal";
 
@@ -150,7 +151,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     redoHistory() {
         const last = this.redoStack.pop();
         if (!last) return;
-        if (this.undoStack.length == 10) {
+        if (this.undoStack.length == maxHistoryItems) {
             this.undoStack.shift();
         }
         const dto = this.getDocument();
@@ -161,7 +162,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
     async undoHistory() {
         const last = this.undoStack.pop();
         if (!last) return;
-        if (this.redoStack.length == 10) {
+        if (this.redoStack.length == maxHistoryItems) {
             this.redoStack.shift();
         }
         const dto = this.getDocument();

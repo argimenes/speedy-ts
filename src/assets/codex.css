@@ -296,7 +296,8 @@ body {
     background-color: pink;
   }
   .search-entities-list-item {
-    font-size: 0.5em;
+    font-size: 0.5rem;
+    line-height: 0.5rem;
     margin-top: 5px;
     button {
       margin-right: 10px;

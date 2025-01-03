@@ -1,10 +1,22 @@
 import { JSX } from "solid-js";
 import { render } from "solid-js/web";
+const cache = {};
 
 export const renderToNode = (jsx: JSX.Element) => {
     const node = document.createElement("DIV");
     render(() => jsx, node);
     return node;
+};
+export const fetchGetCache = async (url: string, params: any) => {
+    const key = url + "?" + toQueryString(params);
+    if (cache[key]) {
+        return cache[key];
+    } else {
+        const res = await fetch(url + "?" + toQueryString(params));
+        const value = await res.json();
+        cache[key] = value;
+        return value;
+    }
 };
 export const fetchGet = async (url: string, params: any) => {
     return await fetch(url + "?" + toQueryString(params));

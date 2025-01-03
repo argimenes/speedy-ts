@@ -412,7 +412,8 @@ type AgentMention = {
 }
 
 app.get("/api/findAgentsByNameJson", async function(req: Request, res: Response) {
-  const text = req.query.text as string;
+  const text = req.query.search as string;
+  const byPartial = req.query.byPartial === "true";
   const page: any = req.query.page || 1;
   const order: any = req.query.order || "ByMentions";
   const direction: any = req.query.direction || "Ascending";
@@ -424,10 +425,11 @@ app.get("/api/findAgentsByNameJson", async function(req: Request, res: Response)
         ? direction == "Ascending" ? "name, mentions DESC" : "name DESC, mentions DESC"
         : byMentionsDescending
   ;
-  const rows: any = 20;
+  const rows: any = 10;
+  const where = byPartial ? "WHERE name CONTAINS $text" : "WHERE name = $text";
   const query = `SELECT id, name, count(<-standoff_property_refers_to_agent<-StandoffProperty) as mentions
       FROM Agent 
-      WHERE name CONTAINS $text
+      ${where}
       ORDER BY ${orderBy}`;
   const pageset = await paginate(query, { text }, page, rows);
   if (!pageset) {
@@ -467,7 +469,8 @@ const paginate = async (query: string, props: {}, page: number, rows: number) =>
 }
 
 app.get("/api/findAgentsByAliasJson", async function(req: Request, res: Response) {
-  const text = req.query.text as string;
+  const text = req.query.search as string;
+  const byPartial = req.query.byPartial === "true";
   const page: any = req.query.page || 1;
   const order: any = req.query.order || "ByText";
   const direction: any = req.query.direction || "Ascending";
@@ -479,11 +482,12 @@ app.get("/api/findAgentsByAliasJson", async function(req: Request, res: Response
         ? direction == "Ascending" ? "count, in.text" : byMentionsDescending
         : byMentionsDescending
     ;
-  const rows: any = 20;
+  const rows: any = 10;
+  const where = byPartial ? "WHERE in.text CONTAINS $text" : "WHERE in.text = $text";
   const query = `SELECT text, count as mentions, out.id as id, out.name as name FROM (
         SELECT in.text as text, out, count()
         FROM standoff_property_refers_to_agent  
-        WHERE in.text CONTAINS $text
+        ${where}
         GROUP BY in.text, out
         ORDER BY ${orderBy}
   )`;
