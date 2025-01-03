@@ -264,7 +264,7 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                                         </Show>
                                     </td>
                                     <td>
-                                        <div style="display: inline-block;" onClick={(e) => { e.preventDefault(); setItemVisible(item, !item.visible); }}>
+                                        <div class="monitor-property-type" onClick={(e) => { e.preventDefault(); setItemVisible(item, !item.visible); }}>
                                             {item.property.type}
                                         </div>
                                         <Show when={item.visible}>
@@ -295,6 +295,11 @@ export const StandoffEditorBlockMonitor : Component<Props> = (props) => {
                                                     onMouseOver={(e) => { e.preventDefault(); item.property.highlight(); }}
                                                     onMouseOut={(e) => { e.preventDefault(); item.property.unhighlight(); }}
                                                     onClick={(e) => { e.preventDefault(); onDelete(item.property) }}>&times;</button>
+                                            </div>
+                                        </Show>
+                                        <Show when={item.property.cache.entity}>
+                                            <div class="monitor-entity-name">
+                                                {item.property.cache.entity.Name}
                                             </div>
                                         </Show>
                                     </td>

@@ -148,7 +148,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         dto = dto || this.getDocument();
         this.undoStack.push(dto);
     }
-    redoHistory() {
+    async redoHistory() {
         const last = this.redoStack.pop();
         if (!last) return;
         if (this.undoStack.length == maxHistoryItems) {
@@ -156,7 +156,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         const dto = this.getDocument();
         this.undoStack.push(dto);
-        this.loadDocument(last);
+        await this.loadDocument(last);
         console.log("redoHistory", { undoStack: this.undoStack, redoStack: this.redoStack });
     }
     async undoHistory() {
@@ -169,7 +169,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         this.redoStack.push(last);
         this.redoStack.push(dto);
         await this.destroyAll();
-        this.loadDocument(last);
+        await this.loadDocument(last);
         console.log("undoHistory", { undoStack: this.undoStack, redoStack: this.redoStack });
     }
     async destroyAll() {
@@ -1468,7 +1468,6 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 'Content-Type': 'application/json'
             }
         });
-        //const res = await fetchPost("/api/getEntitiesJson", { ids });
         const json = await res.json();
         if (!json.Success) return [];
         return json.Data.entities;
@@ -2691,7 +2690,14 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         const dto = json.Data.document as IBlockDto;
         dto.metadata = { ...this.metadata, filename, folder };
         this.clearHistory();
-        this.loadDocument(dto);
+        await this.loadDocument(dto);
+        const entities = await this.getEntities();
+        const props = this.getAllStandoffPropertiesByType("codex/entity-reference");
+        props.forEach(p => {
+            let entity = entities.find(e => e.Guid == p.value);
+            if (!entity) return;
+            p.cache.entity = entity;
+        });
         this.takeSnapshot(dto);
     }
     clearHistory() {

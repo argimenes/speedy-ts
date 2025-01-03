@@ -306,6 +306,13 @@ body {
       border: 1px solid blue;
     }    
   }
+  .monitor-property-type {
+    display: inline-block;
+    font-size: 0.8rem;
+  }
+  .monitor-entity-name {
+    font-size: 0.5rem;
+  }
   .search-entities-list-item {
     font-size: 0.5rem;
     line-height: 0.5rem;
