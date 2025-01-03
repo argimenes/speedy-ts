@@ -29,6 +29,7 @@ export interface IStandoffEditorBlockMonitor {
 }
 
 export enum BlockType {
+    WindowBlock = "window-block",
     ControlPanelBlock = "control-panel-block",
     BlockManagerBlock = "block-manager-block",
     AbstractBlock = "root-block",
