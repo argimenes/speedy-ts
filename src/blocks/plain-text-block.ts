@@ -1,5 +1,5 @@
 import { AbstractBlock } from "./abstract-block";
-import { BlockManager } from "../block-manager";
+import { WorkspaceBlock } from "../workspace-block";
 import { getCursorPos } from "../library/keyboard";
 import { updateElement } from "../library/svg";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IPlainTextBlockDto, IBindingHandlerArgs, Caret, CaretAnchor } from "../library/types";
@@ -24,7 +24,7 @@ export class PlainTextBlock extends AbstractBlock {
     attachEventHandlers() {
         const self = this;
         this.textarea.addEventListener("click", () => {
-            (self.manager as BlockManager).setBlockFocus(self);
+            (self.manager as WorkspaceBlock).setBlockFocus(self);
         });
         this.textarea.addEventListener("keydown", this.handleKeyDown.bind(this));
     }

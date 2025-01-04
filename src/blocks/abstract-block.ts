@@ -4,7 +4,7 @@ import { updateElement } from '../library/svg';
 import { BlockProperty } from '../library/block-property';
 import { KEYS } from '../library/keyboard';
 import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET } from '../library/types';
-import { BlockManager } from '../block-manager';
+import { WorkspaceBlock } from '../workspace-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
 
 const isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
@@ -29,7 +29,7 @@ export abstract class AbstractBlock implements IBlock {
     container: HTMLElement;
     relation: Record<string, IBlock>;
     canSerialize: boolean;
-    manager?: BlockManager;
+    manager?: WorkspaceBlock;
     /**
      * A place to store data about the Block, especially the kind that may not be relevant to every instance
      * of Block in every circumstance. For example, 'indentLevel: number' is relevant to a Block in a nested-list

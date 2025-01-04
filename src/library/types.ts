@@ -1,4 +1,4 @@
-import { BlockManager } from "../block-manager";
+import { WorkspaceBlock } from "../workspace-block";
 import { BlockProperty } from "./block-property";
 import { Cell } from "./cell";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
@@ -31,7 +31,7 @@ export interface IStandoffEditorBlockMonitor {
 export enum BlockType {
     WindowBlock = "window-block",
     ControlPanelBlock = "control-panel-block",
-    BlockManagerBlock = "block-manager-block",
+    WorkspaceBlock = "workspace-block",
     AbstractBlock = "root-block",
     DocumentBlock = "main-list-block",
     IndentedListBlock = "indented-list-block",
@@ -59,7 +59,7 @@ export enum BlockType {
 }
 export interface IBlock {
     id: GUID;
-    manager?: BlockManager; // for coordinating actions between Blocks
+    manager?: WorkspaceBlock; // for coordinating actions between Blocks
     root?: IBlock;
     type: BlockType;
     blocks: IBlock[];
@@ -108,7 +108,7 @@ export interface IBlockPropertyConstructor {
     metadata?: Record<string, any>;
 }
 export interface IArrowNavigation {
-    manager: BlockManager;
+    manager: WorkspaceBlock;
     e?: Event;
 }
 export interface IBindingHandlerArgs {
@@ -217,7 +217,7 @@ export interface IBatchRelateArgs {
     toAdd?: IEdge[];
 }
 
-export interface IBlockManagerConstructor {
+export interface IWorkspaceBlockConstructor {
     id?: GUID;
     container?: HTMLDivElement;
 }
@@ -233,7 +233,7 @@ export enum PointerDirection {
     Undo,
     Redo
 }
-export interface IBlockManager extends IBlock {
+export interface IWorkspaceBlock extends IBlock {
 
 }
 export type CaretAnchor = {
@@ -273,7 +273,7 @@ export interface ICursor {
 export interface IAbstractBlockConstructor {
     id?: string;
     container?: HTMLDivElement;
-    manager?: BlockManager;
+    manager?: WorkspaceBlock;
     metadata?: Record<string, any>;
     root?: IBlock;
 }

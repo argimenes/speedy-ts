@@ -4,7 +4,7 @@ import { BlockType, FindMatch, IAbstractBlockConstructor, IBlock, IBlockDto, Inp
 import { createSignal, Show } from "solid-js";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { renderToNode } from "../library/common";
-import { BlockManager } from '../block-manager';
+import { WorkspaceBlock } from '../workspace-block';
 import { AbstractBlock } from "../blocks/abstract-block";
 
 type Model = {
@@ -18,7 +18,7 @@ enum Mode {
 }
 export interface IFindReplaceBlockConstructor extends IAbstractBlockConstructor {
     source: StandoffEditorBlock;
-    manager: BlockManager;
+    manager: WorkspaceBlock;
 }
 export class FindReplaceBlock extends AbstractBlock
 {

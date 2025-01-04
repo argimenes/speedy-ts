@@ -1,10 +1,10 @@
 import { Component } from "solid-js"
-import { BlockManager } from "../block-manager"
+import { WorkspaceBlock } from "../workspace-block"
 import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto, ICheckBlockDto } from "../library/types";
 import { uniqueId } from "underscore";
 
 type Props = {
-    getInstance: (inst: BlockManager) => void;
+    getInstance: (inst: WorkspaceBlock) => void;
 }
 export const BlockManagerWindow : Component<Props> = (props) => {
     const initialise = (el: HTMLDivElement) => {
@@ -455,7 +455,7 @@ const foo = (bar) => {
                 }
             ]
         } as IMainListBlockDto;
-        const manager = new BlockManager();
+        const manager = new WorkspaceBlock();
         manager.container = el;
         const win = {
             id: uniqueId(),

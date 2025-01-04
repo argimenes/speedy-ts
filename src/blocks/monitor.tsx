@@ -3,7 +3,7 @@ import { StandoffProperty } from "../library/standoff-property";
 import { createStore } from "solid-js/store";
 
 import { IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
-import { BlockManager } from "../block-manager";
+import { WorkspaceBlock } from "../workspace-block";
 import { updateElement } from "../library/svg";
 import { AbstractBlock } from "./abstract-block";
 
@@ -18,7 +18,7 @@ type Props = {
     onClose: () => void;
 }
 export interface IMonitorBlockConstructor {
-    manager: BlockManager;
+    manager: WorkspaceBlock;
 }
 export interface IHandleyKeyboardInput {
     handleKeyDown(e: KeyboardEvent): Promise<void>;

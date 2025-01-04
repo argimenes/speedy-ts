@@ -2,7 +2,7 @@ import { Component, For, onMount } from "solid-js";
 import { StandoffProperty } from "../library/standoff-property";
 import { createStore } from "solid-js/store";
 import { CARET, Caret, GUID, IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
-import { BlockManager } from "../block-manager";
+import { WorkspaceBlock } from "../workspace-block";
 import { updateElement } from "../library/svg";
 import { render } from "solid-js/web";
 import _ from "underscore";
@@ -18,7 +18,7 @@ type EntityGroup = {
     count: number;
 }
 export interface IEntitiesListBlockConstructor {
-    manager: BlockManager;
+    manager: WorkspaceBlock;
     source: StandoffEditorBlock;
 }
 export class EntitiesListBlock extends AbstractBlock {
