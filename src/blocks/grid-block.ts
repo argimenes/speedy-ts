@@ -1,5 +1,5 @@
 import { AbstractBlock } from "./abstract-block";
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from "./types";
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from "../library/types";
 
 export class GridBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {

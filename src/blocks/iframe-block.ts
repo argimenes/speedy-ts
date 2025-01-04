@@ -1,8 +1,8 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { updateElement } from "./svg";
+import { updateElement } from "../library/svg";
 import { AbstractBlock } from './abstract-block';
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from './types';
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from '../library/types';
 
 export class IframeBlock extends AbstractBlock {
     iframe: HTMLIFrameElement;

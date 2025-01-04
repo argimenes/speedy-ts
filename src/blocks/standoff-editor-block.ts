@@ -1,11 +1,11 @@
 import _ from "underscore";
-import { updateElement } from "./svg";
-import { BlockProperty } from "./block-property";
-import { StandoffProperty } from "./standoff-property";
+import { updateElement } from "../library/svg";
+import { BlockProperty } from "../library/block-property";
+import { StandoffProperty } from "../library/standoff-property";
 import { AbstractBlock } from "./abstract-block";
-import { Cell, Row } from "./cell";
-import { KEYS } from "./keyboard";
-import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation, FindMatch } from "./types";
+import { Cell, Row } from "../library/cell";
+import { KEYS } from "../library/keyboard";
+import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation, FindMatch } from "../library/types";
 import { DocumentBlock } from "./document-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 

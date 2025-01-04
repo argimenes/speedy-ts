@@ -1,6 +1,5 @@
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { AbstractBlock } from './abstract-block';
-import { DragDropManager } from './drag-manager';
-import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock } from './types';
 
 type WindowBlockMetadata = {} & {
     title: string;

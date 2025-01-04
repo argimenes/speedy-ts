@@ -2,10 +2,10 @@ import { createStore } from "solid-js/store";
 import { autofocus } from "@solid-primitives/autofocus";
 import { BlockType, FindMatch, IAbstractBlockConstructor, IBlock, IBlockDto, InputEventSource } from "../library/types";
 import { createSignal, Show } from "solid-js";
-import { AbstractBlock } from "../library/abstract-block";
-import { StandoffEditorBlock } from "../library/standoff-editor-block";
+import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { renderToNode } from "../library/common";
-import { BlockManager } from '../library/block-manager';
+import { BlockManager } from '../block-manager';
+import { AbstractBlock } from "../blocks/abstract-block";
 
 type Model = {
     findText: string;

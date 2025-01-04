@@ -3,12 +3,12 @@ import { createStore } from "solid-js/store";
 import { autofocus } from "@solid-primitives/autofocus";
 import { FindMatch, GUID, IAbstractBlockConstructor, IBlock, IBlockDto, InputEventSource, ISelection } from "../library/types";
 import { createSignal, For } from "solid-js";
-import { AbstractBlock } from "../library/abstract-block";
-import { StandoffEditorBlock } from "../library/standoff-editor-block";
+import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { StandoffProperty } from "../library/standoff-property";
-import { fetchGet, fetchGetCache, renderToNode } from "../library/common";
+import { fetchGetCache, renderToNode } from "../library/common";
 import { FindReplaceBlock } from './find-replace';
-import { BlockManager } from '../library/block-manager';
+import { BlockManager } from '../block-manager';
+import { AbstractBlock } from '../blocks/abstract-block';
 
 type Model = {
     search: string;
@@ -186,7 +186,7 @@ export class SearchEntitiesBlock extends AbstractBlock
                         
                     `,
                     handler: async (args) => {
-                        const len = search.length;
+                        const len = search.Results.length;
                         if (currentResultIndex() == 0) {
                             setCurrentResultIndex(len-1);
                             return;

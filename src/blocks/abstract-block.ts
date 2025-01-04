@@ -1,12 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 import _ from 'underscore';
-import { updateElement } from './svg';
-import { BlockProperty } from './block-property';
-import { KEYS } from './keyboard';
-import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET } from './types';
+import { updateElement } from '../library/svg';
+import { BlockProperty } from '../library/block-property';
+import { KEYS } from '../library/keyboard';
+import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET } from '../library/types';
+import { BlockManager } from '../block-manager';
 import { StandoffEditorBlock } from './standoff-editor-block';
-import { BlockManager } from './block-manager';
-import { classList } from 'solid-js/web';
 
 const isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
 const isWindows = navigator.platform.toUpperCase().indexOf('WIN')>=0;

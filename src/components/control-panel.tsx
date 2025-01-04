@@ -1,12 +1,12 @@
 import { For } from "solid-js"
 import { createStore } from "solid-js/store";
-import { GridBlock, GridCellBlock } from "../library/grid-block";
-import { TabBlock, TabRowBlock } from "../library/tabs-block";
-import { IndentedListBlock } from "../library/indented-list-block";
-import { StandoffEditorBlock } from "../library/standoff-editor-block";
+import { GridBlock, GridCellBlock } from "../blocks/grid-block";
+import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
+import { IndentedListBlock } from "../blocks/indented-list-block";
+import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { BlockType, CARET, IAbstractBlockConstructor, IBlock, IBlockDto } from "../library/types";
-import { AbstractBlock } from "../library/abstract-block";
 import { renderToNode } from "../library/common";
+import { AbstractBlock } from "../blocks/abstract-block";
 
 type Model = {
     command: string;
@@ -332,12 +332,12 @@ export class ControlPanelBlock extends AbstractBlock {
         }
         const folderChanged = async (e: Event) => {
             if (!e.currentTarget) return;
-            setModel("folder", e.currentTarget.value);
+            setModel("folder", (e.currentTarget as HTMLInputElement).value);
             await loadFolderClicked(e);
         }
         const fileChanged = async (e: Event) => {
             if (!e.currentTarget) return;
-            setModel("file", e.currentTarget.value);
+            setModel("file", (e.currentTarget as HTMLInputElement).value);
             await loadSelectedFileClicked(e);
         }
         const ControlPanel = () => {

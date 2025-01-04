@@ -1,6 +1,6 @@
 import { BlockProperty } from "./block-property";
 import { Cell } from "./cell";
-import { StandoffEditorBlock } from "./standoff-editor-block";
+import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { BlockPropertyDto, Caret, CARET, IBindingHandlerArgs, IPropertySchema, IRange, StandoffPropertyDto } from "./types";
 
 export interface ITextProcessorConstructor {

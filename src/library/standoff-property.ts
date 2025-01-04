@@ -1,7 +1,7 @@
 import { Cell } from "./cell";
 import { v4 as uuidv4 } from 'uuid';
 import { unwrapRange, wrapRange } from "./svg";
-import { StandoffEditorBlock } from "./standoff-editor-block";
+import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { GUID, IStandoffPropertySchema, IStandoffPropertyConstructor, CellHtmlElement, IPlugin } from "./types";
 
 export class StandoffProperty {

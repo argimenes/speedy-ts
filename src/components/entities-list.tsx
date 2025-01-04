@@ -1,13 +1,13 @@
 import { Component, For, onMount } from "solid-js";
 import { StandoffProperty } from "../library/standoff-property";
 import { createStore } from "solid-js/store";
-import { AbstractBlock } from "../library/abstract-block";
-import { CARET, Caret, GUID, IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource, IRange } from "../library/types";
-import { BlockManager } from "../library/block-manager";
+import { CARET, Caret, GUID, IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
+import { BlockManager } from "../block-manager";
 import { updateElement } from "../library/svg";
 import { render } from "solid-js/web";
 import _ from "underscore";
-import { StandoffEditorBlock } from "../library/standoff-editor-block";
+import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
+import { AbstractBlock } from "../blocks/abstract-block";
 
 type StandoffPropertyGroup = {
     item: StandoffProperty;

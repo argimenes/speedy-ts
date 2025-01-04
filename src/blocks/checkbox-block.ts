@@ -1,10 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
-import { AbstractBlock } from "./abstract-block";
-import { createElement, updateElement } from "./svg";
-import { BlockType, IBlockDto, IBlock, IAbstractBlockConstructor, InputEventSource, IArrowNavigation, Caret, CARET, IRange } from "./types";
+import { BlockType, IBlockDto, IBlock, IAbstractBlockConstructor, InputEventSource, IArrowNavigation, Caret, CARET, IRange } from "../library/types";
 import { DocumentBlock } from './document-block';
-import { StandoffEditorBlock } from './standoff-editor-block';
 import { TabBlock, TabRowBlock } from './tabs-block';
+import { createElement, updateElement } from '../library/svg';
+import { AbstractBlock } from './abstract-block';
+import { StandoffEditorBlock } from './standoff-editor-block';
 
 export interface ICheckBlockConstructor extends IAbstractBlockConstructor {
     checked?: boolean;
@@ -155,7 +155,6 @@ export class CheckboxBlock extends AbstractBlock {
         throw new Error("Method not implemented.");
     }
     destroy(): void {
-        this.textbox.destroy();
         this.container.remove();
     }
 }

@@ -1,7 +1,6 @@
 import { Component } from "solid-js"
-import { BlockManager } from "../library/block-manager"
+import { BlockManager } from "../block-manager"
 import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto, ICheckBlockDto } from "../library/types";
-import { ICheckBlockConstructor } from "../library/checkbox-block";
 import { uniqueId } from "underscore";
 
 type Props = {

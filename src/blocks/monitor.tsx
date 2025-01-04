@@ -1,10 +1,11 @@
 import { Component, For, onCleanup, Show } from "solid-js";
 import { StandoffProperty } from "../library/standoff-property";
 import { createStore } from "solid-js/store";
-import { AbstractBlock } from "../library/abstract-block";
+
 import { IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
-import { BlockManager } from "../library/block-manager";
+import { BlockManager } from "../block-manager";
 import { updateElement } from "../library/svg";
+import { AbstractBlock } from "./abstract-block";
 
 type StandoffPropertyState = {
     visible: boolean;

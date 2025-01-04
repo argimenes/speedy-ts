@@ -1,4 +1,4 @@
-import { StandoffEditorBlock } from "../standoff-editor-block";
+import { StandoffEditorBlock } from "../../blocks/standoff-editor-block";
 
 interface IPoint {
     x: number;

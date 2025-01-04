@@ -1,7 +1,7 @@
-import { AbstractBlock } from "./abstract-block";
-import { BlockType, IAbstractBlockConstructor, IBlock, ICodeMirrorBlockDto } from "./types";
 import {basicSetup, EditorView} from "codemirror"
 import {javascript} from "@codemirror/lang-javascript"
+import { IAbstractBlockConstructor, BlockType, ICodeMirrorBlockDto, IBlock } from "../library/types";
+import { AbstractBlock } from "./abstract-block";
 
 export interface ICodeMirrorBlockConstructor extends IAbstractBlockConstructor {
     text: string;

@@ -1,8 +1,8 @@
 import { AbstractBlock } from "./abstract-block";
-import { BlockManager } from "./block-manager";
-import { getCursorPos } from "./keyboard";
-import { updateElement } from "./svg";
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IPlainTextBlockDto, IBindingHandlerArgs, Caret, CaretAnchor } from "./types";
+import { BlockManager } from "../block-manager";
+import { getCursorPos } from "../library/keyboard";
+import { updateElement } from "../library/svg";
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IPlainTextBlockDto, IBindingHandlerArgs, Caret, CaretAnchor } from "../library/types";
 
 export class PlainTextBlock extends AbstractBlock {
     text: string;

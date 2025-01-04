@@ -1,36 +1,38 @@
 import axios from 'axios';
-import { createRainbow, createUnderline, drawAnimatedSelection, drawClippedRectangle, drawRectangle, drawSpikySelection, updateElement } from "./svg";
+import { createRainbow, createUnderline, drawAnimatedSelection, drawClippedRectangle, drawSpikySelection, updateElement } from "./library/svg";
 import { v4 as uuidv4 } from 'uuid';
-import { DocumentBlock } from "./document-block";
-import { IndentedListBlock } from "./indented-list-block";
-import { TabBlock, TabRowBlock } from "./tabs-block";
-import { GridBlock, GridCellBlock, GridRowBlock } from "./grid-block";
-import { ImageBlock } from "./image-block";
-import { VideoBlock } from "./video-block";
-import { IframeBlock } from "./iframe-block";
-import { AbstractBlock } from "./abstract-block";
-import { BlockProperty } from "./block-property";
-import { StandoffEditorBlock } from "./standoff-editor-block";
-import { StandoffProperty } from "./standoff-property";
-import { IBlockManager,InputEvent, BlockType, IBlock, InputAction, IBlockSelection, Commit, IBlockPropertySchema, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto, BlockPropertyDto, FindMatch, StandoffEditorBlockDto } from "./types";
-import { PlainTextBlock } from "./plain-text-block";
-import { CodeMirrorBlock } from "./code-mirror-block";
-import { ClockPlugin } from "./plugins/clock";
-import { TextProcessor } from "./text-processor";
-import { EmbedDocumentBlock } from "./embed-document-block";
-import { SearchEntitiesBlock } from "../components/search-entities";
-import { fetchGet, fetchPost, renderToNode } from "./common";
-import { MonitorBlock, StandoffEditorBlockMonitor } from "../components/monitor";
-import { TableBlock, TableCellBlock, TableRowBlock } from './tables-blocks';
-import { classList } from 'solid-js/web';
-import { FindReplaceBlock } from '../components/find-replace';
-import { ControlPanelBlock } from '../components/control-panel';
-import { AnnotationPanelBlock } from '../components/annotation-panel';
-import { CheckboxBlock } from './checkbox-block';
+import { DocumentBlock } from "./blocks/document-block";
+import { IndentedListBlock } from "./blocks/indented-list-block";
+import { TabBlock, TabRowBlock } from "./blocks/tabs-block";
+import { GridBlock, GridCellBlock, GridRowBlock } from "./blocks/grid-block";
+import { ImageBlock } from "./blocks/image-block";
+import { VideoBlock } from "./blocks/video-block";
+import { IframeBlock } from "./blocks/iframe-block";
+
+import { BlockProperty } from "./library/block-property";
+import { StandoffEditorBlock } from "./blocks/standoff-editor-block";
+import { StandoffProperty } from "./library/standoff-property";
+import { IBlockManager,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IBlockManagerConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto, BlockPropertyDto, FindMatch, StandoffEditorBlockDto } from "./library/types";
+import { PlainTextBlock } from "./blocks/plain-text-block";
+
+import { ClockPlugin } from "./library/plugins/clock";
+import { TextProcessor } from "./library/text-processor";
+import { EmbedDocumentBlock } from "./blocks/embed-document-block";
+import { SearchEntitiesBlock } from "./components/search-entities";
+import { fetchGet, fetchPost, renderToNode } from "./library/common";
+import { MonitorBlock, StandoffEditorBlockMonitor } from "./blocks/monitor";
+import { TableBlock, TableCellBlock, TableRowBlock } from './blocks/tables-blocks';
+import { FindReplaceBlock } from './components/find-replace';
+import { ControlPanelBlock } from './components/control-panel';
+import { AnnotationPanelBlock } from './components/annotation-panel';
+
 import _ from 'underscore';
-import { EntitiesListBlock } from '../components/entities-list';
-import BlockVines from './plugins/block-vines';
-import { WindowBlock } from './window-block';
+import { EntitiesListBlock } from './components/entities-list';
+import BlockVines from './library/plugins/block-vines';
+import { WindowBlock } from './blocks/window-block';
+import { AbstractBlock } from './blocks/abstract-block';
+import { CheckboxBlock } from './blocks/checkbox-block';
+import { CodeMirrorBlock } from './blocks/code-mirror-block';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
@@ -2326,7 +2328,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
                 const existingLines = overlaps
                     .filter(x => x.id != p.id && typeof x.cache?.offsetY != "undefined");
-                const highestY = _.max(existingLines, x => x.cache.offsetY)?.cache?.offsetY;
+                const highestY = (_.max(existingLines, x => x.cache.offsetY) as StandoffProperty).cache?.offsetY;
                 if (existingLines.length == 0) {
                     p.cache.offsetY = 0;
                 } else {
@@ -2349,7 +2351,7 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
                 const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
                 const existingLines = overlaps
                     .filter(x => x.id != p.id && typeof x.cache?.offsetY != "undefined");
-                const highestY = _.max(existingLines, x => x.cache.offsetY)?.cache?.offsetY;
+                const highestY = (_.max(existingLines, x => x.cache.offsetY) as StandoffProperty).cache?.offsetY;
                 if (existingLines.length == 0) {
                     p.cache.offsetY = 0;
                 } else {

@@ -1,7 +1,6 @@
-import { classList } from "solid-js/web";
 import { AbstractBlock } from "./abstract-block";
-import { updateElement } from "./svg";
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "./types";
+import { updateElement } from "../library/svg";
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "../library/types";
 
 export class TableBlock extends AbstractBlock {
     rows?: TableRowBlock[];

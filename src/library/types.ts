@@ -1,7 +1,7 @@
-import { BlockManager } from "./block-manager";
+import { BlockManager } from "../block-manager";
 import { BlockProperty } from "./block-property";
 import { Cell } from "./cell";
-import { StandoffEditorBlock } from "./standoff-editor-block";
+import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { StandoffProperty } from "./standoff-property";
 
 export type GUID = string;

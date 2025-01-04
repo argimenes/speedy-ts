@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { AbstractBlock } from './abstract-block';
-import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock } from './types';
+import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock } from '../library/types';
 
 export interface IndexedBlock {
   block: IBlock;

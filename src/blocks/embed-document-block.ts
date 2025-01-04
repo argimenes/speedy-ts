@@ -1,5 +1,5 @@
 import { AbstractBlock } from "./abstract-block";
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "./types"
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "../library/types"
 
 export interface IEmbedDocumentBlockConstructor extends IAbstractBlockConstructor {
     filename?: string;

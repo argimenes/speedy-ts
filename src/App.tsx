@@ -1,6 +1,6 @@
 import { Component, Show } from 'solid-js';
 import { BlockManagerWindow } from './components/BlockManagerWindow';
-import { BlockManager } from './library/block-manager';
+import { BlockManager } from './block-manager';
 import { createStore } from 'solid-js/store';
 
 type Model = {

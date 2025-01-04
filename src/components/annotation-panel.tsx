@@ -1,9 +1,8 @@
 import { createSignal, For, Match, Show, Switch } from "solid-js";
-import { AbstractBlock } from "../library/abstract-block";
 import { renderToNode } from "../library/common";
-import { StandoffEditorBlock } from "../library/standoff-editor-block";
+import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { IBlockDto, IBlock, IAbstractBlockConstructor, ISelection, InputEventSource } from "../library/types";
-import { AnyARecord } from "dns";
+import { AbstractBlock } from "../blocks/abstract-block";
 
 
 export interface IAnnotationPanelBlockConstructor extends IAbstractBlockConstructor {

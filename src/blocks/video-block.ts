@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import YouTubePlayer from 'youtube-player';
 import { AbstractBlock } from './abstract-block';
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from './types';
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { Options } from 'youtube-player/dist/types';
 
 export class VideoBlock extends AbstractBlock {

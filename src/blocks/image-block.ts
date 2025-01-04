@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import { updateElement } from "./svg";
+import { updateElement } from "../library/svg";
 import { AbstractBlock } from './abstract-block';
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from './types';
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 
 export class ImageBlock extends AbstractBlock {
     image: HTMLImageElement;

@@ -1,5 +1,5 @@
 import { classList } from "solid-js/web";
-import { StandoffEditorBlock } from "./standoff-editor-block";
+import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { updateElement } from "./svg";
 import { ICellCoordOffsets, CellHtmlElement, ICellConstructor, ELEMENT_ROLE, DIRECTION, CellElement } from "./types";
 
