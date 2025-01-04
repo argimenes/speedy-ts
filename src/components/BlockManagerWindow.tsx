@@ -455,19 +455,14 @@ const foo = (bar) => {
                 }
             ]
         } as IMainListBlockDto;
-        const manager = new WorkspaceBlock();
-        manager.container = el;
-        const win = {
-            id: uniqueId(),
-            type: BlockType.WindowBlock,
-            children: [doc]
-        };
-        manager.loadWindow(win);
-        manager.takeSnapshot(doc);
+        const workspace = new WorkspaceBlock();
+        workspace.container = el;
+        workspace.loadDocument(doc);
+        workspace.takeSnapshot(doc);
         //(manager.setupControlPanel()).then(() => {});
         
-        props.getInstance(manager);
-        console.log("== GLOBAL ==", { manager, block: manager.blocks[0] })
+        props.getInstance(workspace);
+        console.log("== GLOBAL ==", { manager: workspace, block: workspace.blocks[0] })
     }
     
     return (
