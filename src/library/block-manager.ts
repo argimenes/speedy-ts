@@ -30,6 +30,7 @@ import { CheckboxBlock } from './checkbox-block';
 import _ from 'underscore';
 import { EntitiesListBlock } from '../components/entities-list';
 import BlockVines from './plugins/block-vines';
+import { WindowBlock } from './window-block';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
@@ -2722,6 +2723,19 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
             return;
         }
     }
+    async buildWindowBlock(container: HTMLElement, blockDto: IBlockDto) {
+        const wind = this.createWindowBlock(blockDto);
+        await this.buildChildren(wind, blockDto, (child) => {
+            updateElement(child.container, {
+                style: {
+                    display: "inline-block"
+                }
+            });
+            wind.container.appendChild(child.container);
+        });
+        container.appendChild(wind.container);
+        return wind;
+    }
     async buildCheckboxBlock(container: HTMLElement, blockDto: IBlockDto) {
         const todo = this.createCheckboxBlock(blockDto);
         await this.buildChildren(todo, blockDto, (child) => {
@@ -2995,6 +3009,9 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
     }
     async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
+        if (blockDto.type == BlockType.WindowBlock) {
+            return await this.buildWindowBlock(container, blockDto);
+        }
         if (blockDto.type == BlockType.CheckboxBlock) {
             return await this.buildCheckboxBlock(container, blockDto);
         }
@@ -3084,8 +3101,24 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }
         return dto;
     }
+    async loadWindow(dto: IBlockDto) {
+        this.state = DocumentState.loading;
+        
+        if (this.container.childNodes.length) {
+            this.container.innerHTML = "";
+        }
+        if (this.blocks.length) {
+            this.blocks = [];
+            this.registeredBlocks = [];
+        }
+        const container = document.createElement("DIV") as HTMLElement;
+        const windowBlock = this.createWindowBlock();
+        this.addBlockTo(this, windowBlock, true);
+        await this.loadDocument(dto.children[0]);
+        this.container = windowBlock.container;
+    }
     async loadDocument(dto: IMainListBlockDto) {
-        if (dto.type != BlockType.DocumentBlock && dto.type != BlockType.BlockManagerBlock) {
+        if (dto.type != BlockType.DocumentBlock && dto.type != BlockType.BlockManagerBlock && dto.type != BlockType.WindowBlock) {
             console.error("Expected doc.type to be a MainListBlock");
             return;
         }
@@ -3559,6 +3592,10 @@ export class BlockManager extends AbstractBlock implements IBlockManager {
         }) as IframeBlock;
         iframe.build();
         this.addBlockAfter(iframe, anchor);
+    }
+    createWindowBlock(dto?: IBlockDto) {
+        const block = new WindowBlock({ manager: this, ...dto });
+        return block;
     }
     createCheckboxBlock(dto?: IBlockDto) {
         const block = new CheckboxBlock({ manager: this, ...dto });

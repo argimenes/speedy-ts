@@ -2,6 +2,7 @@ import { Component } from "solid-js"
 import { BlockManager } from "../library/block-manager"
 import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto, ICheckBlockDto } from "../library/types";
 import { ICheckBlockConstructor } from "../library/checkbox-block";
+import { uniqueId } from "underscore";
 
 type Props = {
     getInstance: (inst: BlockManager) => void;
@@ -457,7 +458,12 @@ const foo = (bar) => {
         } as IMainListBlockDto;
         const manager = new BlockManager();
         manager.container = el;
-        manager.loadDocument(doc);
+        const win = {
+            id: uniqueId(),
+            type: BlockType.WindowBlock,
+            children: [doc]
+        };
+        manager.loadWindow(win);
         manager.takeSnapshot(doc);
         //(manager.setupControlPanel()).then(() => {});
         

@@ -332,3 +332,13 @@ body {
     box-shadow:#666 3px 3px 3px;
     font-size: 0.7rem;
   }
+  .window-block {
+    position: absolute;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .window-block-header {
+    cursor: move;
+    user-select: none;
+  } 
