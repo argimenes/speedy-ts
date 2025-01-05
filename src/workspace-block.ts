@@ -3119,13 +3119,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
         await this.loadDocument(dto.children[0]);
         this.container = windowBlock.container;
     }
-    async loadDocument(dto: IMainListBlockDto) {
-        if (dto.type != BlockType.DocumentBlock && dto.type != BlockType.WorkspaceBlock && dto.type != BlockType.WindowBlock) {
-            console.error("Expected doc.type to be a MainListBlock");
-            return;
-        }
-        this.state = BlockState.loading;
-        
+    clearWorkspace() {
         if (this.container.childNodes.length) {
             this.container.innerHTML = "";
         }
@@ -3133,6 +3127,14 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
             this.blocks = [];
             this.registeredBlocks = [];
         }
+    }
+    async loadDocument(dto: IMainListBlockDto) {
+        if (dto.type != BlockType.DocumentBlock && dto.type != BlockType.WorkspaceBlock && dto.type != BlockType.WindowBlock) {
+            console.error("Expected doc.type to be a MainListBlock");
+            return;
+        }
+        this.state = BlockState.loading;
+        this.clearWorkspace();
         this.id = dto.id || uuidv4();
         const container = document.createElement("DIV") as HTMLElement;
         const documentBlock = this.createDocumentBlock();
