@@ -3128,38 +3128,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
             this.registeredBlocks = [];
         }
     }
-    async loadDocument(dto: IMainListBlockDto) {
-        if (dto.type != BlockType.DocumentBlock && dto.type != BlockType.WorkspaceBlock && dto.type != BlockType.WindowBlock) {
-            console.error("Expected doc.type to be a MainListBlock");
-            return;
-        }
-        this.state = BlockState.loading;
-        this.clearWorkspace();
-        this.id = dto.id || uuidv4();
-        const container = document.createElement("DIV") as HTMLElement;
-        const documentBlock = this.createDocumentBlock();
-        this.addBlockTo(this, documentBlock, true);
-        documentBlock.bind(dto);
-        if (dto.children) {
-            const len = dto.children.length;
-            for (let i = 0; i <= len - 1; i++) {
-                let block = await this.recursivelyBuildBlock(container, dto.children[i]) as IBlock;
-                await this.handleBuildingMarginBlocks(block, dto.children[i]);
-                this.addBlockTo(documentBlock, block, true);
-                block.relation.parent = documentBlock;
-                if (i > 0) {
-                    let previous = documentBlock.blocks[i - 1];
-                    previous.relation.next = block;
-                    block.relation.previous = previous;
-                }
-            }
-        }
-        this.addParentSiblingRelations(documentBlock);
-        container.appendChild(documentBlock.container);
-        this.container.appendChild(container);
-
-        documentBlock.generateIndex();
-
+    setDocumentFocus(dto: IMainListBlockDto) {
         if (dto?.metadata?.focus?.blockId) {
             const block = this.getBlock(dto.metadata.focus.blockId);
             this.setBlockFocus(block);
@@ -3173,10 +3142,16 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                 textBlock.moveCaretStart();
             }
         }
-
-        this.metadata = dto.metadata;
-
-        this.state = BlockState.loaded;
+    }
+    async loadDocument(dto: IMainListBlockDto, container?: HTMLDivElement) {
+        if (dto.type != BlockType.DocumentBlock) {
+            console.error("Expected doc.type to be BlockType.DocumentBlock.");
+            return;
+        }
+        container = container || document.createElement("DIV") as HTMLDivElement;
+        const rootDocumentBlock = await this.recursivelyBuildBlock(container, dto) as DocumentBlock;
+        rootDocumentBlock.generateIndex();
+        this.setDocumentFocus(dto);
     }
     minimalTimeElapsedSinceLastChange() {
         if (this.state == BlockState.loading) {
