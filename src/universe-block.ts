@@ -2617,14 +2617,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     async buildWorkspaceBlock(container: HTMLElement, blockDto: IBlockDto) {
         const workspace = this.createWorkspaceBlock(blockDto);
-        await this.buildChildren(workspace, blockDto, (child) => {
-            updateElement(child.container, {
-                style: {
-                    display: "inline-block"
-                }
-            });
-            workspace.container.appendChild(child.container);
-        });
+        await this.buildChildren(workspace, blockDto);
         container.appendChild(workspace.container);
         return workspace;
     }
@@ -3056,7 +3049,18 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const container = document.createElement("DIV") as HTMLDivElement;
         const doc = await this.recursivelyBuildBlock(container, dto) as DocumentBlock;
         const workspace = this.registeredBlocks.find(x => x.type == BlockType.WorkspaceBlock);
+        const count = this.registeredBlocks.filter(x => x.type == BlockType.DocumentBlock).length;
+        const buffer = count * 20;
         this.addBlockTo(workspace, doc);
+        updateElement(doc.container, {
+            style: {
+                position: "relative",
+                top: buffer + 20 + "px",
+                left: 100 + buffer + "px",
+                zIndex: this.getHighestZIndex(),
+                backgroundColor: "#efefef"
+            }
+        });
         workspace.container.appendChild(doc.container);
         doc.generateIndex();
         doc.setFocus();
