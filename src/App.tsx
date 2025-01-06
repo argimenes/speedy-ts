@@ -1,5 +1,5 @@
 import { Component, Show } from 'solid-js';
-import { BlockManagerWindow } from './components/BlockManagerWindow';
+import { BlockManagerWindow } from './components/workspace';
 import { WorkspaceBlock } from './workspace-block';
 import { createStore } from 'solid-js/store';
 

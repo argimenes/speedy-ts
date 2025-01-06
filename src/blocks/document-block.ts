@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { AbstractBlock } from './abstract-block';
-import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock } from '../library/types';
+import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock, CARET } from '../library/types';
+import { StandoffEditorBlock } from './standoff-editor-block';
 
 export interface IndexedBlock {
   block: IBlock;
@@ -15,6 +16,22 @@ export class DocumentBlock extends AbstractBlock {
         super(args);
         this.type = BlockType.DocumentBlock;
         this.index = [];
+    }
+    setFocus() {
+        const workspace = this.manager;
+        if (this.metadata?.focus?.blockId) {
+            const block = this.getBlock(this.metadata.focus.blockId);
+            workspace.setBlockFocus(block);
+            if (this.metadata.focus.caret) {
+                (block as StandoffEditorBlock)?.setCaret(this.metadata.focus.caret, CARET.LEFT);
+            }
+        } else {
+            const textBlock = workspace.registeredBlocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
+            if (textBlock) {
+                workspace.setBlockFocus(textBlock);
+                textBlock.moveCaretStart();
+            }
+        }
     }
     generateIndex(): IndexedBlock[] {
       const result: IndexedBlock[] = [];

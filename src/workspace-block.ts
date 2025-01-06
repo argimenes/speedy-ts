@@ -2725,6 +2725,19 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
             return;
         }
     }
+    async buildWorkspaceBlock(container: HTMLElement, blockDto: IBlockDto) {
+        const workspace = this.createWorkspaceBlock(blockDto);
+        await this.buildChildren(workspace, blockDto, (child) => {
+            updateElement(child.container, {
+                style: {
+                    display: "inline-block"
+                }
+            });
+            workspace.container.appendChild(child.container);
+        });
+        container.appendChild(workspace.container);
+        return workspace;
+    }
     async buildWindowBlock(container: HTMLElement, blockDto: IBlockDto) {
         const wind = this.createWindowBlock(blockDto);
         await this.buildChildren(wind, blockDto, (child) => {
@@ -2750,12 +2763,6 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
         });
         container.appendChild(todo.container);
         return todo;
-    }
-    async buildCheckboxBlock_OLD(container: HTMLElement, blockDto: IBlockDto) {
-        const checkboxBlock = this.createCheckboxBlock(blockDto);
-        await this.buildChildren(checkboxBlock, blockDto);
-        container.appendChild(checkboxBlock.container);
-        return checkboxBlock;
     }
     async buildStandoffEditorBlock(container: HTMLElement, blockDto: IBlockDto) {
         const textBlock = this.createStandoffEditorBlock(blockDto);
@@ -3011,6 +3018,9 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
         }
     }
     async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
+        if (blockDto.type == BlockType.WorkspaceBlock) {
+            return await this.buildWorkspaceBlock(container, blockDto);
+        }
         if (blockDto.type == BlockType.WindowBlock) {
             return await this.buildWindowBlock(container, blockDto);
         }
@@ -3128,12 +3138,12 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
             this.registeredBlocks = [];
         }
     }
-    setDocumentFocus(dto: IMainListBlockDto) {
-        if (dto?.metadata?.focus?.blockId) {
-            const block = this.getBlock(dto.metadata.focus.blockId);
+    setDocumentFocus(doc: DocumentBlock) {
+        if (doc.metadata?.focus?.blockId) {
+            const block = this.getBlock(doc.metadata.focus.blockId);
             this.setBlockFocus(block);
-            if (dto.metadata.focus.caret) {
-                (block as StandoffEditorBlock)?.setCaret(dto.metadata.focus.caret, CARET.LEFT);
+            if (doc.metadata.focus.caret) {
+                (block as StandoffEditorBlock)?.setCaret(doc.metadata.focus.caret, CARET.LEFT);
             }
         } else {
             const textBlock = this.registeredBlocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
@@ -3143,15 +3153,32 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
             }
         }
     }
+    async createWorkspace() {
+        const dto = {
+            type: BlockType.WorkspaceBlock
+        };
+        const container = document.createElement("DIV") as HTMLDivElement;
+        const workspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
+        this.container.appendChild(workspace.container);
+    }
+    async addDocumentToWorkspace(dto: IMainListBlockDto) {
+        const container = document.createElement("DIV") as HTMLDivElement;
+        const doc = await this.recursivelyBuildBlock(container, dto) as DocumentBlock;
+        const workspace = this.registeredBlocks.find(x => x.type == BlockType.WorkspaceBlock);
+        this.addBlockTo(workspace, doc);
+        workspace.container.appendChild(doc.container);
+        doc.generateIndex();
+        doc.setFocus();
+    }
     async loadDocument(dto: IMainListBlockDto, container?: HTMLDivElement) {
         if (dto.type != BlockType.DocumentBlock) {
             console.error("Expected doc.type to be BlockType.DocumentBlock.");
             return;
         }
         container = container || document.createElement("DIV") as HTMLDivElement;
-        const rootDocumentBlock = await this.recursivelyBuildBlock(container, dto) as DocumentBlock;
-        rootDocumentBlock.generateIndex();
-        this.setDocumentFocus(dto);
+        const doc = await this.recursivelyBuildBlock(container, dto) as DocumentBlock;
+        doc.generateIndex();
+        doc.setFocus();
     }
     minimalTimeElapsedSinceLastChange() {
         if (this.state == BlockState.loading) {
@@ -3571,6 +3598,10 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
         }) as IframeBlock;
         iframe.build();
         this.addBlockAfter(iframe, anchor);
+    }
+    createWorkspaceBlock(dto?: IBlockDto) {
+        const block = new WorkspaceBlock({ ...dto });
+        return block;
     }
     createWindowBlock(dto?: IBlockDto) {
         const block = new WindowBlock({ manager: this, ...dto });

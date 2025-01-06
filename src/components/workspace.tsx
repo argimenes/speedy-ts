@@ -457,10 +457,9 @@ const foo = (bar) => {
         } as IMainListBlockDto;
         const workspace = new WorkspaceBlock();
         workspace.container = el;
-        workspace.loadDocument(doc);
+        workspace.createWorkspace().then();
+        workspace.addDocumentToWorkspace(doc).then();
         workspace.takeSnapshot(doc);
-        //(manager.setupControlPanel()).then(() => {});
-        
         props.getInstance(workspace);
         console.log("== GLOBAL ==", { manager: workspace, block: workspace.blocks[0] })
     }
