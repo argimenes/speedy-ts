@@ -455,7 +455,7 @@ const foo = (bar) => {
                 }
             ]
         } as IMainListBlockDto;
-        const workspace = new WorkspaceBlock();
+        const workspace = new UniverseBlock();
         workspace.container = el;
         workspace.createWorkspace().then();
         workspace.addDocumentToWorkspace(doc).then(x => { x.takeSnapshot(); });

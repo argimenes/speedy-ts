@@ -12,7 +12,7 @@ import { IframeBlock } from "./blocks/iframe-block";
 import { BlockProperty } from "./library/block-property";
 import { StandoffEditorBlock } from "./blocks/standoff-editor-block";
 import { StandoffProperty } from "./library/standoff-property";
-import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IWorkspaceBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType } from "./library/types";
+import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IUniverseBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType } from "./library/types";
 import { PlainTextBlock } from "./blocks/plain-text-block";
 
 import { ClockPlugin } from "./library/plugins/clock";
@@ -38,7 +38,6 @@ import { WorkspaceBlock } from './blocks/workspace-block';
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
 const passoverClass = "block-modal";
-type UniverseBlockEvent = Record<string, ((data?: {}) => void)[]>
 
 export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     //id: string;
@@ -63,7 +62,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     clipboard: Record<string, any>[];
     registeredBlocks: IBlock[];
     textProcessor: TextProcessor;
-    events: UniverseBlockEvent;
+    
     state: string;
     constructor(props?: IUniverseBlockConstructor) {
         super({ id: props?.id, container: props?.container });
@@ -91,7 +90,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.textProcessor = new TextProcessor();
         this.attachEventBindings();
         this.setupControlPanel();
-        this.events = {};
+        this.blockEvents = {};
         this.setupSubscriptions();
         this.state = BlockState.initalised;
     }
@@ -3049,8 +3048,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             type: BlockType.WorkspaceBlock
         };
         const container = document.createElement("DIV") as HTMLDivElement;
-        const workspace = await this.recursivelyBuildBlock(container, dto) as UniverseBlock;
+        const workspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
         this.container.appendChild(workspace.container);
+        this.addBlockTo(this, workspace);
     }
     async addDocumentToWorkspace(dto: IMainListBlockDto) {
         const container = document.createElement("DIV") as HTMLDivElement;

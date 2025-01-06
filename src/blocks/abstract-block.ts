@@ -3,8 +3,8 @@ import _ from 'underscore';
 import { updateElement } from '../library/svg';
 import { BlockProperty } from '../library/block-property';
 import { KEYS } from '../library/keyboard';
-import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET } from '../library/types';
-import { WorkspaceBlock } from '../universe-block';
+import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET, UniverseBlockEvent } from '../library/types';
+import { UniverseBlock } from '../universe-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
 
 const isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
@@ -29,7 +29,7 @@ export abstract class AbstractBlock implements IBlock {
     container: HTMLElement;
     relation: Record<string, IBlock>;
     canSerialize: boolean;
-    manager?: WorkspaceBlock;
+    manager?: UniverseBlock;
     /**
      * A place to store data about the Block, especially the kind that may not be relevant to every instance
      * of Block in every circumstance. For example, 'indentLevel: number' is relevant to a Block in a nested-list
@@ -38,6 +38,7 @@ export abstract class AbstractBlock implements IBlock {
      */
     metadata: Record<string, any>;
     commitHandler: (commit: Commit) => void;
+    blockEvents: UniverseBlockEvent;
     constructor(args: IAbstractBlockConstructor) {
         this.id = args?.id || uuidv4();
         this.manager = args.manager;
@@ -64,15 +65,15 @@ export abstract class AbstractBlock implements IBlock {
         this.modes = ["default"];
     }
     subscribeTo(eventName: string, handler: () => void) {
-        const evt = this.events[eventName];
+        const evt = this.blockEvents[eventName];
         if (!evt) {
-            this.events[eventName] = [handler];
+            this.blockEvents[eventName] = [handler];
             return;
         }
         evt.push(handler);
     }
     publish(eventName: string, data?: {}) {
-        const evt = this.events[eventName];
+        const evt = this.blockEvents[eventName];
         if (!evt) return;
         evt.forEach((e,i) => {
             try {

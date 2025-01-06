@@ -1,4 +1,4 @@
-import { WorkspaceBlock } from "../universe-block";
+import { UniverseBlock } from "../universe-block";
 import { BlockProperty } from "./block-property";
 import { Cell } from "./cell";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
@@ -70,7 +70,7 @@ export enum BlockType {
 }
 export interface IBlock {
     id: GUID;
-    manager?: WorkspaceBlock; // for coordinating actions between Blocks
+    manager?: UniverseBlock; // for coordinating actions between Blocks
     root?: IBlock;
     type: BlockType;
     blocks: IBlock[];
@@ -119,7 +119,7 @@ export interface IBlockPropertyConstructor {
     metadata?: Record<string, any>;
 }
 export interface IArrowNavigation {
-    manager: WorkspaceBlock;
+    manager: UniverseBlock;
     e?: Event;
 }
 export interface IBindingHandlerArgs {
@@ -228,7 +228,7 @@ export interface IBatchRelateArgs {
     toAdd?: IEdge[];
 }
 
-export interface IWorkspaceBlockConstructor {
+export interface IUniverseBlockConstructor {
     id?: GUID;
     container?: HTMLDivElement;
 }
@@ -284,7 +284,7 @@ export interface ICursor {
 export interface IAbstractBlockConstructor {
     id?: string;
     container?: HTMLDivElement;
-    manager?: WorkspaceBlock;
+    manager?: UniverseBlock;
     metadata?: Record<string, any>;
     root?: IBlock;
 }
@@ -436,7 +436,7 @@ export interface ICheckBlockDto extends IBlockDto {
 export interface ISelection extends IRange {
     direction: DIRECTION;
 }
-
+export type UniverseBlockEvent = Record<string, ((data?: {}) => void)[]>
 export interface IStandoffEditorBlockConstructor extends IAbstractBlockConstructor {
     text?: string;
     standoffProperties?: StandoffPropertyDto[];

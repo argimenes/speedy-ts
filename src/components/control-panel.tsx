@@ -117,7 +117,7 @@ export class ControlPanelBlock extends AbstractBlock {
         }
         const createDocument = () => {
             if (!manager) return;
-            manager.clearHistory();
+            //manager.clearHistory();
             const doc = {
                 type: BlockType.DocumentBlock,
                 children: [

@@ -7,7 +7,7 @@ import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { StandoffProperty } from "../library/standoff-property";
 import { fetchGetCache, renderToNode } from "../library/common";
 import { FindReplaceBlock } from './find-replace';
-import { WorkspaceBlock } from '../universe-block';
+import { UniverseBlock } from '../universe-block';
 import { AbstractBlock } from '../blocks/abstract-block';
 
 type Model = {
@@ -86,7 +86,7 @@ export class SearchEntitiesBlock extends AbstractBlock
                     handler: async (args) => {
                         const _text = self.source.getText();
                         const text = _text.substring(self.selection.start.index, self.selection.end.index + 1);
-                        const find = new FindReplaceBlock({ source: self.source, manager: self.source!.manager as WorkspaceBlock });
+                        const find = new FindReplaceBlock({ source: self.source, manager: self.source!.manager as UniverseBlock });
                         const matches = self.matches = find.findMatches(text) as FindMatch[];
                         matches.forEach(m => m.block.removeStandoffPropertiesByType("codex/search/highlight"));
                         matches.forEach(m => find.applyHighlights(m.block, [m]));
