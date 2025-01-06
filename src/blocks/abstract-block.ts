@@ -4,7 +4,7 @@ import { updateElement } from '../library/svg';
 import { BlockProperty } from '../library/block-property';
 import { KEYS } from '../library/keyboard';
 import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET } from '../library/types';
-import { WorkspaceBlock } from '../workspace-block';
+import { WorkspaceBlock } from '../universe-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
 
 const isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
@@ -63,7 +63,25 @@ export abstract class AbstractBlock implements IBlock {
         this.canSerialize = true;
         this.modes = ["default"];
     }
-    
+    subscribeTo(eventName: string, handler: () => void) {
+        const evt = this.events[eventName];
+        if (!evt) {
+            this.events[eventName] = [handler];
+            return;
+        }
+        evt.push(handler);
+    }
+    publish(eventName: string, data?: {}) {
+        const evt = this.events[eventName];
+        if (!evt) return;
+        evt.forEach((e,i) => {
+            try {
+                e(data);
+            } catch (ex) {
+                console.log("publish", { eventName, handler: e, i })
+            }
+        });
+    }
     getOrSetOverlay(name: string) {
         const overlay = this.overlays.find(x=> x.name == name);
         if (overlay) return overlay;

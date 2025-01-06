@@ -1,5 +1,5 @@
 import { AbstractBlock } from "./abstract-block";
-import { WorkspaceBlock } from "../workspace-block";
+import { WorkspaceBlock } from "../universe-block";
 import { getCursorPos } from "../library/keyboard";
 import { updateElement } from "../library/svg";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IPlainTextBlockDto, IBindingHandlerArgs, Caret, CaretAnchor } from "../library/types";

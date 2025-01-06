@@ -12,7 +12,7 @@ import { IframeBlock } from "./blocks/iframe-block";
 import { BlockProperty } from "./library/block-property";
 import { StandoffEditorBlock } from "./blocks/standoff-editor-block";
 import { StandoffProperty } from "./library/standoff-property";
-import { IWorkspaceBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IWorkspaceBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto, BlockPropertyDto, FindMatch, StandoffEditorBlockDto } from "./library/types";
+import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IWorkspaceBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType } from "./library/types";
 import { PlainTextBlock } from "./blocks/plain-text-block";
 
 import { ClockPlugin } from "./library/plugins/clock";
@@ -33,27 +33,14 @@ import { WindowBlock } from './blocks/window-block';
 import { AbstractBlock } from './blocks/abstract-block';
 import { CheckboxBlock } from './blocks/checkbox-block';
 import { CodeMirrorBlock } from './blocks/code-mirror-block';
+import { WorkspaceBlock } from './blocks/workspace-block';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
-const maxHistoryItems = 30;
-
 const passoverClass = "block-modal";
+type UniverseBlockEvent = Record<string, ((data?: {}) => void)[]>
 
-const EventType = {
-    "beforeChange": "beforeChange",
-    "afterChange": "afterChange",
-    "addToHistory":"addToHistory"
-};
-type WorkspaceBlockEvent = Record<string, ((data?: {}) => void)[]>
-const BlockState = {
-    "initalising": "initialising",
-    "initalised": "initialised",
-    "loading": "loading",
-    "loaded": "loaded"
-};
-
-export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
+export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     //id: string;
     //type: BlockType;
     //container: HTMLElement;
@@ -76,16 +63,13 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
     clipboard: Record<string, any>[];
     registeredBlocks: IBlock[];
     textProcessor: TextProcessor;
-    events: WorkspaceBlockEvent;
-    undoStack: IBlockDto[];
-    redoStack: IBlockDto[];
-    lastChange: number;
+    events: UniverseBlockEvent;
     state: string;
-    constructor(props?: IWorkspaceBlockConstructor) {
+    constructor(props?: IUniverseBlockConstructor) {
         super({ id: props?.id, container: props?.container });
         this.state = BlockState.initalising;
         this.id = props?.id || uuidv4();
-        this.type = BlockType.WorkspaceBlock;
+        this.type = BlockType.UniverseBlock;
         this.container = props?.container || document.createElement("DIV") as HTMLElement;
         this.blocks = [];
         this.metadata = {};
@@ -108,72 +92,11 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
         this.attachEventBindings();
         this.setupControlPanel();
         this.events = {};
-        this.undoStack = [];
-        this.redoStack = [];
         this.setupSubscriptions();
-        this.lastChange = Date.now();
         this.state = BlockState.initalised;
     }
     setupSubscriptions() {
-        this.subscribeTo(EventType.beforeChange, this.addToHistory.bind(this));
-    }
-    subscribeTo(eventName: string, handler: () => void) {
-        const evt = this.events[eventName];
-        if (!evt) {
-            this.events[eventName] = [handler];
-            return;
-        }
-        evt.push(handler);
-    }
-    publish(eventName: string, data?: {}) {
-        const evt = this.events[eventName];
-        if (!evt) return;
-        evt.forEach((e,i) => {
-            try {
-                e(data);
-            } catch (ex) {
-                console.log("publish", { eventName, handler: e, i })
-            }
-        });
-    }
-    addToHistory() {
-        if (!this.minimalTimeElapsedSinceLastChange()) {
-            //console.log("bounced: addToHistory");
-            return;
-        }
-        this.takeSnapshot();
-    }
-    takeSnapshot(dto?: IBlockDto) {
-        const len = this.undoStack.length;
-        if (len == 10) {
-            this.undoStack.shift();
-        }
-        dto = dto || this.getDocument();
-        this.undoStack.push(dto);
-    }
-    async redoHistory() {
-        const last = this.redoStack.pop();
-        if (!last) return;
-        if (this.undoStack.length == maxHistoryItems) {
-            this.undoStack.shift();
-        }
-        const dto = this.getDocument();
-        this.undoStack.push(dto);
-        await this.loadDocument(last);
-        console.log("redoHistory", { undoStack: this.undoStack, redoStack: this.redoStack });
-    }
-    async undoHistory() {
-        const last = this.undoStack.pop();
-        if (!last) return;
-        if (this.redoStack.length == maxHistoryItems) {
-            this.redoStack.shift();
-        }
-        const dto = this.getDocument();
-        this.redoStack.push(last);
-        this.redoStack.push(dto);
-        await this.destroyAll();
-        await this.loadDocument(last);
-        console.log("undoHistory", { undoStack: this.undoStack, redoStack: this.redoStack });
+        
     }
     async destroyAll() {
         await this.registeredBlocks.forEach(async (x: any) => {
@@ -482,12 +405,12 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                 return;
             }
             case "createStandoffEditorBlock": {
-                let block = this.getBlock(command.id) as WorkspaceBlock;
+                let block = this.getBlock(command.id) as UniverseBlock;
                 block.createStandoffEditorBlock();
                 return;
             }
             case "uncreateStandoffEditorBlock": {
-                let block = this.getBlock(command.id) as WorkspaceBlock;
+                let block = this.getBlock(command.id) as UniverseBlock;
                 block.uncreateStandoffEditorBlock(value.id);
                 return;
             }
@@ -729,7 +652,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                 description: "Animates the paragraph as a text sine wave.",
                 event: {
                     onInit: (p: BlockProperty) => {
-                        const manager = p.block.manager as WorkspaceBlock;
+                        const manager = p.block.manager as UniverseBlock;
                         manager.animateSineWave(p);
                     }
                 }
@@ -855,7 +778,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                     description: "",
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block;
-                        const manager = block.manager as WorkspaceBlock;
+                        const manager = block.manager as UniverseBlock;
                         manager.setBlockFocus(block);
                     }
                 }
@@ -876,7 +799,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                     description: "",
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as ImageBlock;
-                        const manager = block.manager as WorkspaceBlock;
+                        const manager = block.manager as UniverseBlock;
                         manager.setBlockFocus(block);
                     }
                 }
@@ -892,7 +815,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                     description: "",
                     handler: async (args: IBindingHandlerArgs) => {
                         const imageBlock = args.block as ImageBlock;
-                        const manager = imageBlock.manager as WorkspaceBlock;
+                        const manager = imageBlock.manager as UniverseBlock;
                         const newBlock = manager.createStandoffEditorBlock();
                         newBlock.addEOL();
                         manager.addBlockAfter(newBlock, imageBlock);
@@ -1101,7 +1024,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                     description: ``,
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block;
-                        const manager = block.manager as WorkspaceBlock;
+                        const manager = block.manager as UniverseBlock;
                         const next = block.relation.next;
                         const previous = block.relation.previous;
                         const parent= block.relation.parent;
@@ -1125,7 +1048,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                     description: ``,
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block;
-                        const manager = block.manager as WorkspaceBlock;
+                        const manager = block.manager as UniverseBlock;
                         const next = block.relation.next;
                         const previous = block.relation.previous;
                         const parent= block.relation.parent;
@@ -1217,7 +1140,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                     description: "",
                     handler: async (args: IBindingHandlerArgs) => {
                         args.e?.preventDefault();
-                        const manager = args.block.manager as WorkspaceBlock;
+                        const manager = args.block.manager as UniverseBlock;
                         let filename = manager.metadata.filename;
                         if (!filename) {
                             filename = prompt("Filename?");
@@ -1678,34 +1601,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                     handler: this.moveCaretToEndOfTextBlock
                 }
             },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: ["Mac:Meta-Z","Windows:Control-Z"]
-                },
-                action: {
-                    name: "Undo",
-                    description: "",
-                    handler: async (args) => {
-                        await self.undoHistory();
-                    }
-                }
-            },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: ["Mac:Meta-D","Windows:Control-D"]
-                },
-                action: {
-                    name: "Redo",
-                    description: "",
-                    handler: async (args) => {
-                        self.redoHistory();
-                    }
-                }
-            },
+            
             {
                 mode: "default",
                 trigger: {
@@ -1842,7 +1738,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                     description: "Either wraps the text in a new tab, or creates a new tab",
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as StandoffEditorBlock;
-                        const self = block.manager as WorkspaceBlock;
+                        const self = block.manager as UniverseBlock;
                         const parent = self.getParent(block) as IBlock;
                         if (!parent) return;
                         if (parent.type == BlockType.TabBlock) {
@@ -1865,7 +1761,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                     description: "Breaks out of current container",
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as StandoffEditorBlock;
-                        const manager = block.manager as WorkspaceBlock;
+                        const manager = block.manager as UniverseBlock;
                         const structure = manager.getParentOfType(block, BlockType.TabRowBlock)
                             || manager.getParentOfType(block, BlockType.GridBlock)
                             || manager.getParentOfType(block, BlockType.TableBlock)
@@ -1914,7 +1810,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                     description: "Links to an entity in the graph database.",
                     handler: async (args) => {
                         const block = args.block as StandoffEditorBlock;
-                        const manager = block.manager as WorkspaceBlock;
+                        const manager = block.manager as UniverseBlock;
                         await manager.loadEntitiesList(args);
                     }
                 }
@@ -1955,7 +1851,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                 description: "",
                 event: {
                     onInit: async (p:StandoffProperty) => {
-                        const manager = new WorkspaceBlock();
+                        const manager = new UniverseBlock();
                         const container = p.start.element as HTMLSpanElement;
                         updateElement(container, {
                             style: {
@@ -2112,7 +2008,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
-                        const owner = args.block.manager as WorkspaceBlock;
+                        const owner = args.block.manager as UniverseBlock;
                         owner.renderUnderlines("codex/block-reference", args.properties, args.block, "green", 3);
                     }
                 }
@@ -2131,7 +2027,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
-                        const owner = args.block.manager as WorkspaceBlock;
+                        const owner = args.block.manager as UniverseBlock;
                         owner.renderUnderlines("codex/trait-reference", args.properties, args.block, "blue", 3);
                     }
                 }
@@ -2150,7 +2046,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
-                        const owner = args.block.manager as WorkspaceBlock;
+                        const owner = args.block.manager as UniverseBlock;
                         owner.renderUnderlines("codex/claim-reference", args.properties, args.block, "red", 1);
                     }
                 }
@@ -2169,7 +2065,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
-                        const owner = args.block.manager as WorkspaceBlock;
+                        const owner = args.block.manager as UniverseBlock;
                         owner.renderUnderlines("codex/meta-relation-reference", args.properties, args.block, "orange", 3);
                     }
                 }
@@ -2188,7 +2084,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
-                        const owner = args.block.manager as WorkspaceBlock;
+                        const owner = args.block.manager as UniverseBlock;
                         owner.renderUnderlines("codex/time-reference", args.properties, args.block, "cyan", 3);
                     }
                 }
@@ -2210,7 +2106,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
-                        const owner = args.block.manager as WorkspaceBlock;
+                        const owner = args.block.manager as UniverseBlock;
                         owner.renderUnderlines("codex/entity-reference", args.properties, args.block, "purple", 1);
                     }
                 }
@@ -2223,7 +2119,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                         properties.forEach(p => p.cache.highlight?.remove())
                     },
                     update: (args) => {
-                        const manager = args.block.manager as WorkspaceBlock;
+                        const manager = args.block.manager as UniverseBlock;
                         manager.renderHighlight(args.properties, args.block, "yellow");
                     }
                 }
@@ -2236,7 +2132,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
-                        const manager = args.block.manager as WorkspaceBlock;
+                        const manager = args.block.manager as UniverseBlock;
                         manager.renderRainbow("style/rainbow", args.properties, args.block);
                     }
                 }
@@ -2249,7 +2145,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                         properties.forEach(p => p.cache.highlight?.remove())
                     },
                     update: (args) => {
-                        const manager = args.block.manager as WorkspaceBlock;
+                        const manager = args.block.manager as UniverseBlock;
                         manager.renderRectangle(args.properties, args.block, "red");
                     }
                 }
@@ -2262,7 +2158,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
                         properties.forEach(p => p.cache.highlight?.remove())
                     },
                     update: (args) => {
-                        const manager = args.block.manager as WorkspaceBlock;
+                        const manager = args.block.manager as UniverseBlock;
                         manager.renderSpiky(args.properties, args.block, "red");
                     }
                 }
@@ -2681,7 +2577,6 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
             return;
         }
         this.loadDocument(json.Data.document);
-        
     }
     async loadServerDocument(filename: string, folder: string = ".") {
         const res = await fetchGet("/api/loadDocumentJson", { filename, folder });
@@ -2692,8 +2587,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
         }
         const dto = json.Data.document as IBlockDto;
         dto.metadata = { ...this.metadata, filename, folder };
-        this.clearHistory();
-        await this.loadDocument(dto);
+        const doc = await this.addDocumentToWorkspace(dto);
         const entities = await this.getEntities();
         const props = this.getAllStandoffPropertiesByType("codex/entity-reference");
         props.forEach(p => {
@@ -2701,14 +2595,12 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
             if (!entity) return;
             p.cache.entity = entity;
         });
-        this.takeSnapshot(dto);
-    }
-    clearHistory() {
-        this.undoStack = [];
-        this.redoStack = [];
+        doc.takeSnapshot();
     }
     async saveServerDocument(filename: string, folder: string = ".") {
-        const data = this.getDocument();
+        const focus = this.getBlockInFocus();
+        const docRoot = this.getParentOfType(focus, BlockType.DocumentBlock);
+        const dto = docRoot.serialize();
         if (!filename) return;
         const res = await fetch("/api/saveDocumentJson", {
             headers: { "Content-Type": "application/json" },
@@ -2716,11 +2608,10 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
             body: JSON.stringify({
                 folder: folder,
                 filename: filename,
-                document: data
+                document: dto
             })
         });
         const json = await res.json();
-        console.log("saveServerDocument", { filename, json, data })
         if (!json.Success) {
             return;
         }
@@ -2866,7 +2757,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
         await this.buildChildren(embed, blockDto);
         embed.filename = blockDto.filename;
         if (embed.filename) {
-            const manager = new WorkspaceBlock();
+            const manager = new UniverseBlock();
             await manager.loadServerDocument(embed.filename);
             embed.container.appendChild(manager.container);
             updateElement(embed.container, {
@@ -3158,7 +3049,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
             type: BlockType.WorkspaceBlock
         };
         const container = document.createElement("DIV") as HTMLDivElement;
-        const workspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
+        const workspace = await this.recursivelyBuildBlock(container, dto) as UniverseBlock;
         this.container.appendChild(workspace.container);
     }
     async addDocumentToWorkspace(dto: IMainListBlockDto) {
@@ -3169,6 +3060,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
         workspace.container.appendChild(doc.container);
         doc.generateIndex();
         doc.setFocus();
+        return doc;
     }
     async loadDocument(dto: IMainListBlockDto, container?: HTMLDivElement) {
         if (dto.type != BlockType.DocumentBlock) {
@@ -3179,21 +3071,6 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
         const doc = await this.recursivelyBuildBlock(container, dto) as DocumentBlock;
         doc.generateIndex();
         doc.setFocus();
-    }
-    minimalTimeElapsedSinceLastChange() {
-        if (this.state == BlockState.loading) {
-            return false;
-        }
-        const now = Date.now();
-        const ms = now - this.lastChange;
-        if (ms < 1000) {
-            return false;
-        }
-        this.updateLastChange();
-        return true;
-    }
-    updateLastChange() {
-        this.lastChange = Date.now();
     }
     insertItem<T>(list: T[], index: number, item: T) {
         list.splice(index, 0, item);
@@ -4322,7 +4199,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
     }
     async embedDocument(sibling: IBlock, filename: string) {
         const parent = this.getParent(sibling) as AbstractBlock;
-        const manager = new WorkspaceBlock();
+        const manager = new UniverseBlock();
         await manager.loadServerDocument(filename);
         updateElement(manager.container, {
             style: {
@@ -4508,7 +4385,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
     }
     async handleCreateLeftMargin(args: IBindingHandlerArgs){
         const block = args.block as StandoffEditorBlock;
-        const manager = block.manager as WorkspaceBlock;
+        const manager = block.manager as UniverseBlock;
         let leftMargin = block.relation.leftMargin as DocumentBlock;
         /**
          * If there is no LeftMarginBlock already then create one and add
@@ -4550,7 +4427,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
     }
     async handleCreateRightMargin(args: IBindingHandlerArgs){
         const block = args.block as StandoffEditorBlock;
-        const manager = block.manager as WorkspaceBlock;
+        const manager = block.manager as UniverseBlock;
         let rightMargin = block.relation.rightMargin as DocumentBlock;
         /**
          * If there is no LeftMarginBlock already then create one and add
@@ -4667,7 +4544,7 @@ export class WorkspaceBlock extends AbstractBlock implements IWorkspaceBlock {
     }
     async handleCreateNewTab(args: IBindingHandlerArgs) {
         const block = args.block as StandoffEditorBlock;
-        const self = block.manager as WorkspaceBlock;
+        const self = block.manager as UniverseBlock;
         const parent = self.getParent(block) as IBlock;
         if (!parent) return;
         if (parent.type == BlockType.TabBlock) {

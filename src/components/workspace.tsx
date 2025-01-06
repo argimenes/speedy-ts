@@ -1,10 +1,10 @@
 import { Component } from "solid-js"
-import { WorkspaceBlock } from "../workspace-block"
+import { UniverseBlock } from "../universe-block"
 import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto, ICheckBlockDto } from "../library/types";
 import { uniqueId } from "underscore";
 
 type Props = {
-    getInstance: (inst: WorkspaceBlock) => void;
+    getInstance: (inst: UniverseBlock) => void;
 }
 export const BlockManagerWindow : Component<Props> = (props) => {
     const initialise = (el: HTMLDivElement) => {
@@ -458,8 +458,7 @@ const foo = (bar) => {
         const workspace = new WorkspaceBlock();
         workspace.container = el;
         workspace.createWorkspace().then();
-        workspace.addDocumentToWorkspace(doc).then();
-        workspace.takeSnapshot(doc);
+        workspace.addDocumentToWorkspace(doc).then(x => { x.takeSnapshot(); });
         props.getInstance(workspace);
         console.log("== GLOBAL ==", { manager: workspace, block: workspace.blocks[0] })
     }

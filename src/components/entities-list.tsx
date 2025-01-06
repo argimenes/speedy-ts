@@ -2,7 +2,7 @@ import { Component, For, onMount } from "solid-js";
 import { StandoffProperty } from "../library/standoff-property";
 import { createStore } from "solid-js/store";
 import { CARET, Caret, GUID, IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
-import { WorkspaceBlock } from "../workspace-block";
+import { WorkspaceBlock } from "../universe-block";
 import { updateElement } from "../library/svg";
 import { render } from "solid-js/web";
 import _ from "underscore";

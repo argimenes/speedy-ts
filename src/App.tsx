@@ -1,10 +1,10 @@
 import { Component, Show } from 'solid-js';
 import { BlockManagerWindow } from './components/workspace';
-import { WorkspaceBlock } from './workspace-block';
+import { UniverseBlock } from './universe-block';
 import { createStore } from 'solid-js/store';
 
 type Model = {
-  manager: WorkspaceBlock;
+  manager: UniverseBlock;
 }
 const App: Component = () => {
   const [model, setModel] = createStore<Model>({} as Model);

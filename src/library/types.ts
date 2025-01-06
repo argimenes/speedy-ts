@@ -1,4 +1,4 @@
-import { WorkspaceBlock } from "../workspace-block";
+import { WorkspaceBlock } from "../universe-block";
 import { BlockProperty } from "./block-property";
 import { Cell } from "./cell";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
@@ -18,7 +18,17 @@ export interface IBlockPropertySchema extends IPropertySchema {
 export interface IMainListBlockDto extends IBlockDto {
 
 }
-
+export const BlockState = {
+    "initalising": "initialising",
+    "initalised": "initialised",
+    "loading": "loading",
+    "loaded": "loaded"
+};
+export const EventType = {
+    "beforeChange": "beforeChange",
+    "afterChange": "afterChange",
+    "addToHistory":"addToHistory"
+};
 export interface IStandoffEditorBlockMonitorUpdateArgs {
     caret: Caret;
     block: StandoffEditorBlock;
@@ -31,6 +41,7 @@ export interface IStandoffEditorBlockMonitor {
 export enum BlockType {
     WindowBlock = "window-block",
     ControlPanelBlock = "control-panel-block",
+    UniverseBlock = "universe-block",
     WorkspaceBlock = "workspace-block",
     AbstractBlock = "root-block",
     DocumentBlock = "main-list-block",
@@ -233,7 +244,7 @@ export enum PointerDirection {
     Undo,
     Redo
 }
-export interface IWorkspaceBlock extends IBlock {
+export interface IUniverseBlock extends IBlock {
 
 }
 export type CaretAnchor = {

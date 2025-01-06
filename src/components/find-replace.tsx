@@ -4,7 +4,7 @@ import { BlockType, FindMatch, IAbstractBlockConstructor, IBlock, IBlockDto, Inp
 import { createSignal, Show } from "solid-js";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { renderToNode } from "../library/common";
-import { WorkspaceBlock } from '../workspace-block';
+import { WorkspaceBlock } from '../universe-block';
 import { AbstractBlock } from "../blocks/abstract-block";
 
 type Model = {

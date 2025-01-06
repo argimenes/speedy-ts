@@ -7,7 +7,7 @@ import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { StandoffProperty } from "../library/standoff-property";
 import { fetchGetCache, renderToNode } from "../library/common";
 import { FindReplaceBlock } from './find-replace';
-import { WorkspaceBlock } from '../workspace-block';
+import { WorkspaceBlock } from '../universe-block';
 import { AbstractBlock } from '../blocks/abstract-block';
 
 type Model = {
