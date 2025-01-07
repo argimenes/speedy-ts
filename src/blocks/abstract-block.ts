@@ -59,6 +59,7 @@ export abstract class AbstractBlock implements IBlock {
         this.inputBuffer = [];
         this.inputActions = [];
         this.canSerialize = true;
+        this.blockEvents = {};
         this.modes = ["default"];
     }
     subscribeTo(eventName: string, handler: () => void) {

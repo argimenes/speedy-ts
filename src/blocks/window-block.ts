@@ -18,18 +18,14 @@ type WindowBlockMetadata = {} & {
 export class WindowBlock extends AbstractBlock {
     declare metadata: WindowBlockMetadata;
     isDragging: boolean;
-    startMouseX: number;
-    startMouseY: number;
-    startWindowX: number;
-    startWindowY: number;
-     mouseOffsetX: number;
-   mouseOffsetY: number;
+    mouseOffsetX: number;
+    mouseOffsetY: number;
     header: HTMLDivElement;
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.WindowBlock;
         this.metadata = {
-            title: "",
+            title: args?.metadata?.title || "Untitled",
             position: { x: 0, y: 0 },
             size: { h: 0, w: 0 },
             state: "normal",
@@ -47,29 +43,27 @@ export class WindowBlock extends AbstractBlock {
     setupEventHandlers() {
         const self = this;
         const win = self.container;
-        // Store the window's position relative to the mouse when dragging starts
         this.header.addEventListener('mousedown', (e) => {
             self.isDragging = true;
-            // Calculate mouse offset within the window
             const rect = win.getBoundingClientRect();
+            self.metadata.position.x = rect.left;
+            self.metadata.position.y = rect.top;
+            self.metadata.size.h = rect.height;
+            self.metadata.size.w = rect.width;
             self.mouseOffsetX = e.clientX - rect.left;
             self.mouseOffsetY = e.clientY - rect.top;
-            // Prevent text selection and default dragging
             e.preventDefault();
         });
-
-        // Update the window position as the mouse moves
         document.addEventListener('mousemove', (e) => {
             if (!self.isDragging) return;
-            win.style.transform = `translate(${e.clientX - self.mouseOffsetX}px,${e.clientY - self.mouseOffsetY}px)`;
+            const x = e.clientX - self.mouseOffsetX, y = e.clientY - self.mouseOffsetY;
+            self.metadata.position.x = x;
+            self.metadata.position.y = y;
+            win.style.transform = `translate(${x}px,${y}px)`;
         });
-
-        // Stop dragging when the mouse is released
         document.addEventListener('mouseup', () => {
             self.isDragging = false;
         });
-        
-        // Prevent the window from getting stuck if the mouse leaves the window
         document.addEventListener('mouseleave', () => {
             self.isDragging = false;
         });
@@ -89,7 +83,10 @@ export class WindowBlock extends AbstractBlock {
         const closeBtn = this.createWindowButton('×', () => { /*this.closeWindow(state.id)*/ });
         closeBtn.style.color = '#ff0000';
 
-        controls.append(minimizeBtn, maximizeBtn, closeBtn);
+        const title = document.createElement("SPAN") as HTMLSpanElement;
+        title.textContent = this.metadata.title;
+
+        controls.append(minimizeBtn, maximizeBtn, closeBtn, title);
         return controls;
     }
     private createWindowButton(text: string, onClick: () => void): HTMLElement {

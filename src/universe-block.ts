@@ -39,6 +39,7 @@ import { classList } from 'solid-js/web';
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
 const passoverClass = "block-modal";
+const maxHistoryItems = 30;
 
 export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     //id: string;
@@ -63,7 +64,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     clipboard: Record<string, any>[];
     registeredBlocks: IBlock[];
     textProcessor: TextProcessor;
-    
+    undoStack: IBlockDto[];
+    redoStack: IBlockDto[];
+    lastChange: number;
     state: string;
     constructor(props?: IUniverseBlockConstructor) {
         super({ id: props?.id, container: props?.container });
@@ -83,7 +86,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.inputEvents = this.getBlockManagerEvents();
         this.inputActions = [];
         this.modes = ["global","default"];
-        this.highestZIndex = this.getHighestZIndex();
+        this.undoStack = [];
+        this.redoStack = [];
+        this.lastChange = Date.now();
+        this.highestZIndex = 0;
         this.plugins = [];
         this.clipboard = [];
         this.manager = this;
@@ -94,9 +100,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.blockEvents = {};
         this.setupSubscriptions();
         this.state = BlockState.initalised;
-    }
-    setupSubscriptions() {
-        
     }
     async destroyAll() {
         await this.registeredBlocks.forEach(async (x: any) => {
@@ -1464,6 +1467,34 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             {
                 mode: "default",
                 trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: ["Mac:Meta-Z","Windows:Control-Z"]
+                },
+                action: {
+                    name: "Undo",
+                    description: "",
+                    handler: async (args) => {
+                        self.undoHistory();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: ["Mac:Meta-D","Windows:Control-D"]
+                },
+                action: {
+                    name: "Redo",
+                    description: "",
+                    handler: async (args) => {
+                        self.redoHistory();
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
                     source: InputEventSource.Custom,
                     match: "onTextChanged"
                 },
@@ -2384,6 +2415,65 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }
         this.insertBlockBefore(previous, block);
     }
+    setupSubscriptions() {
+        this.subscribeTo(EventType.beforeChange, this.addToHistory.bind(this));
+    }
+    minimalTimeElapsedSinceLastChange() {
+        if (this.state == BlockState.loading) {
+            return false;
+        }
+        const now = Date.now();
+        const ms = now - this.lastChange;
+        if (ms < 1000) {
+            return false;
+        }
+        this.updateLastChange();
+        return true;
+    }
+    updateLastChange() {
+        this.lastChange = Date.now();
+    }
+    takeSnapshot(dto?: IBlockDto) {
+        const len = this.undoStack.length;
+        if (len == 10) {
+            this.undoStack.shift();
+        }
+        dto = dto || this.serialize();
+        this.undoStack.push(dto);
+    }
+    addToHistory() {
+        if (!this.minimalTimeElapsedSinceLastChange()) {
+            //console.log("bounced: addToHistory");
+            return;
+        }
+        this.takeSnapshot();
+    }
+    clearHistory() {
+        this.undoStack = [];
+        this.redoStack = [];
+    }
+    async redoHistory() {
+        const last = this.redoStack.pop();
+        if (!last) return;
+        if (this.undoStack.length == maxHistoryItems) {
+            this.undoStack.shift();
+        }
+        const dto = this.serialize();
+        this.undoStack.push(dto);
+        await this.manager.loadDocument(last);
+    }
+    async undoHistory() {
+        const last = this.undoStack.pop();
+        if (!last) return;
+        if (this.redoStack.length == maxHistoryItems) {
+            this.redoStack.shift();
+        }
+        const dto = this.serialize();
+        this.redoStack.push(last);
+        this.redoStack.push(dto);
+        // await this.destroyAll();
+        await this.manager.loadDocument(last);
+    }
     triggerBeforeChange() {
         this.publish(EventType.beforeChange);
     }
@@ -2604,7 +2694,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             if (!entity) return;
             p.cache.entity = entity;
         });
-        doc.takeSnapshot();
+        this.takeSnapshot();
     }
     async saveServerDocument(filename: string, folder: string = ".") {
         const focus = this.getBlockInFocus();
@@ -3057,7 +3147,12 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     async addDocumentToWorkspace(dto: IMainListBlockDto) {
         const container = document.createElement("DIV") as HTMLDivElement;
-        const win = await this.recursivelyBuildBlock(container, { type: BlockType.WindowBlock }) as WindowBlock;
+        const win = await this.recursivelyBuildBlock(container, {
+            type: BlockType.WindowBlock,
+            metadata: {
+                title: dto.metadata?.filename
+            }
+        }) as WindowBlock;
         const doc = await this.recursivelyBuildBlock(win.container, dto) as DocumentBlock;
         const workspace = this.registeredBlocks.find(x => x.type == BlockType.WorkspaceBlock) as AbstractBlock;
         const count = this.registeredBlocks.filter(x => x.type == BlockType.WindowBlock).length;
@@ -3072,8 +3167,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 position: "absolute",
                 top: buffer + 20 + "px",
                 left: 100 + buffer + "px",
-                zIndex: this.getHighestZIndex(),
-                backgroundColor: "#efefef"
+                "z-index": this.getHighestZIndex(),
+                backgroundColor: "#efefef",
             }
         });
         workspace.container.appendChild(win.container);
