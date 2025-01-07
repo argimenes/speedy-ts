@@ -3047,21 +3047,33 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     async addDocumentToWorkspace(dto: IMainListBlockDto) {
         const container = document.createElement("DIV") as HTMLDivElement;
-        const doc = await this.recursivelyBuildBlock(container, dto) as DocumentBlock;
+        const win = await this.recursivelyBuildBlock(container, { type: BlockType.WindowBlock }) as WindowBlock;
+        const doc = await this.recursivelyBuildBlock(win.container, dto) as DocumentBlock;
         const workspace = this.registeredBlocks.find(x => x.type == BlockType.WorkspaceBlock);
-        const count = this.registeredBlocks.filter(x => x.type == BlockType.DocumentBlock).length;
+        const count = this.registeredBlocks.filter(x => x.type == BlockType.WindowBlock).length;
         const buffer = count * 20;
-        this.addBlockTo(workspace, doc);
+        this.addBlockTo(win, doc);
+        this.addBlockTo(workspace, win);
         updateElement(doc.container, {
             style: {
-                position: "relative",
+                overflowX: "auto",
+                overflowY: "scroll",
+                width: "800px",
+                height: "auto",
+                maxHeight: "600px",
+                backgroundColor: "#efefef"
+            }
+        });
+        updateElement(win.container, {
+            style: {
+                position: "absolute",
                 top: buffer + 20 + "px",
                 left: 100 + buffer + "px",
                 zIndex: this.getHighestZIndex(),
                 backgroundColor: "#efefef"
             }
         });
-        workspace.container.appendChild(doc.container);
+        workspace.container.appendChild(win.container);
         doc.generateIndex();
         doc.setFocus();
         return doc;

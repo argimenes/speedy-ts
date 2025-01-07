@@ -18,10 +18,10 @@ type WindowBlockMetadata = {} & {
 export class WindowBlock extends AbstractBlock {
     declare metadata: WindowBlockMetadata;
     isDragging: boolean;
-    currentX: number;
-    currentY: number;
-    initialX: number;
-    initialY: number;
+    startMouseX: number;
+    startMouseY: number;
+    startWindowX: number;
+    startWindowY: number;
     header: HTMLDivElement;
     constructor(args: IAbstractBlockConstructor) {
         super(args);
@@ -44,31 +44,35 @@ export class WindowBlock extends AbstractBlock {
     }
     setupEventHandlers() {
         const self = this;
+        const win = self.container;
         // Store the window's position relative to the mouse when dragging starts
         this.header.addEventListener('mousedown', (e) => {
             self.isDragging = true;
             
-            // Get the current mouse coordinates
-            self.initialX = e.clientX;
-            self.initialY = e.clientY;
+            // Get initial mouse position
+            self.startMouseX = e.clientX;
+            self.startMouseY = e.clientY;
             
-            // Get the current window position
-            const rect = this.container.getBoundingClientRect();
-            self.currentX = rect.left;
-            self.currentY = rect.top;
+            // Get the current rendered position of the window
+            const rect = win.getBoundingClientRect();
+            self.startWindowX = rect.left;
+            self.startWindowY = rect.top;
+            
+            // Prevent text selection and default dragging
+            e.preventDefault();
         });
 
         // Update the window position as the mouse moves
         document.addEventListener('mousemove', (e) => {
             if (!self.isDragging) return;
             
-            // Calculate the distance moved
-            const dx = e.clientX - self.initialX;
-            const dy = e.clientY - self.initialY;
+            // Calculate the distance moved from the starting position
+            const dx = e.clientX - self.startMouseX;
+            const dy = e.clientY - self.startMouseY;
             
-            // Update the window position
-            self.container.style.left = `${self.currentX + dx}px`;
-            self.container.style.top = `${self.currentY + dy}px`;
+            // Update position relative to the initial window position
+            win.style.left = `${self.startWindowX + dx}px`;
+            win.style.top = `${self.startWindowY + dy}px`;
         });
 
         // Stop dragging when the mouse is released
