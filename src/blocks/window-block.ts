@@ -22,6 +22,8 @@ export class WindowBlock extends AbstractBlock {
     startMouseY: number;
     startWindowX: number;
     startWindowY: number;
+     mouseOffsetX: number;
+   mouseOffsetY: number;
     header: HTMLDivElement;
     constructor(args: IAbstractBlockConstructor) {
         super(args);
@@ -49,14 +51,10 @@ export class WindowBlock extends AbstractBlock {
         this.header.addEventListener('mousedown', (e) => {
             self.isDragging = true;
             
-            // Get initial mouse position
-            self.startMouseX = e.clientX;
-            self.startMouseY = e.clientY;
-            
-            // Get the current rendered position of the window
+            // Calculate mouse offset within the window
             const rect = win.getBoundingClientRect();
-            self.startWindowX = rect.left;
-            self.startWindowY = rect.top;
+            self.mouseOffsetX = e.clientX - rect.left;
+            self.mouseOffsetY = e.clientY - rect.top;
             
             // Prevent text selection and default dragging
             e.preventDefault();
@@ -66,13 +64,8 @@ export class WindowBlock extends AbstractBlock {
         document.addEventListener('mousemove', (e) => {
             if (!self.isDragging) return;
             
-            // Calculate the distance moved from the starting position
-            const dx = e.clientX - self.startMouseX;
-            const dy = e.clientY - self.startMouseY;
-            
-            // Update position relative to the initial window position
-            win.style.left = `${self.startWindowX + dx}px`;
-            win.style.top = `${self.startWindowY + dy}px`;
+            win.style.left = `${e.clientX - self.mouseOffsetX}px`;
+            win.style.top = `${e.clientY - self.mouseOffsetY}px`;
         });
 
         // Stop dragging when the mouse is released

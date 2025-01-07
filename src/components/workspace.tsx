@@ -465,9 +465,7 @@ const foo = (bar) => {
     
     return (
         <>
-            <div ref={initialise}
-                class="block-window"
-                style="top: 10px; margin: 0 auto;" />
+            <div ref={initialise} />
         </>
     )
 }

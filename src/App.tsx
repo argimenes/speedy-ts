@@ -20,11 +20,10 @@ const App: Component = () => {
   return (
     <div class="App">
       <div class="workspace">
+        <BlockManagerWindow getInstance={(inst) => { setModel("manager", inst) }} />
         <Show when={!!model.manager}>
           <div ref={initControlPanel} />
         </Show>
-        <BlockManagerWindow getInstance={(inst) => { setModel("manager", inst) }} />
-
       </div>
     </div>
   );

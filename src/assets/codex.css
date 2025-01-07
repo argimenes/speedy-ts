@@ -58,11 +58,22 @@ body {
   }
   
   .abstract-block {
-    position: relative;
+    z-index: -1;
+    line-height: 1.5rem;
+  }
+
+  .document-container {
+    overflow-x: auto;
+    overflow-y: scroll;
+    width: 800px;
+    height: auto;
+    max-height: 600px;
+    padding: 0 20px;
+    background-color: #efefef;
   }
 
   .block-window {
-    position: relative;
+    /* position: relative; */
     margin-top: 20px;
     margin-bottom: 40px;
     width: 800px;
@@ -71,6 +82,7 @@ body {
     margin: 0 300px;
     line-height: 1.5rem;
     background-color: #efefef;
+    z-index: -1;
   }
 
   .block_marginalia_left { 

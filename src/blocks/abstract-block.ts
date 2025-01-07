@@ -46,9 +46,6 @@ export abstract class AbstractBlock implements IBlock {
         this.type = BlockType.AbstractBlock;
         this.container = args?.container || document.createElement("DIV") as HTMLDivElement;
         updateElement(this.container, {
-            // style:{
-            //     position: "relative"
-            // },
             classList: ["abstract-block"]
         });
         this.commitHandler = () => { };

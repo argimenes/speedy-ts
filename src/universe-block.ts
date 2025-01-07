@@ -34,6 +34,7 @@ import { AbstractBlock } from './blocks/abstract-block';
 import { CheckboxBlock } from './blocks/checkbox-block';
 import { CodeMirrorBlock } from './blocks/code-mirror-block';
 import { WorkspaceBlock } from './blocks/workspace-block';
+import { classList } from 'solid-js/web';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
@@ -429,6 +430,15 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.focus = block;
         this.focus.container.classList.add("focus-highlight");
         this.lastFocus = oldFocus;
+        const win = this.getParentOfType(block, BlockType.WindowBlock);
+        if (win) {
+            console.log({ win, container: win.container });
+            updateElement(win.container, {
+                style: {
+                    "z-index": this.getHighestZIndex()
+                }
+            });
+        }
         block.setFocus();
     }
     getImageBlockSchemas() {
@@ -3049,20 +3059,13 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const container = document.createElement("DIV") as HTMLDivElement;
         const win = await this.recursivelyBuildBlock(container, { type: BlockType.WindowBlock }) as WindowBlock;
         const doc = await this.recursivelyBuildBlock(win.container, dto) as DocumentBlock;
-        const workspace = this.registeredBlocks.find(x => x.type == BlockType.WorkspaceBlock);
+        const workspace = this.registeredBlocks.find(x => x.type == BlockType.WorkspaceBlock) as AbstractBlock;
         const count = this.registeredBlocks.filter(x => x.type == BlockType.WindowBlock).length;
         const buffer = count * 20;
         this.addBlockTo(win, doc);
         this.addBlockTo(workspace, win);
         updateElement(doc.container, {
-            style: {
-                overflowX: "auto",
-                overflowY: "scroll",
-                width: "800px",
-                height: "auto",
-                maxHeight: "600px",
-                backgroundColor: "#efefef"
-            }
+            classList: ["document-container"]
         });
         updateElement(win.container, {
             style: {
@@ -3074,8 +3077,11 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             }
         });
         workspace.container.appendChild(win.container);
+        this.addParentSiblingRelations(win);
+        this.addParentSiblingRelations(workspace);
         doc.generateIndex();
         doc.setFocus();
+        
         return doc;
     }
     async loadDocument(dto: IMainListBlockDto, container?: HTMLDivElement) {
