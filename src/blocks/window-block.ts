@@ -45,23 +45,23 @@ export class WindowBlock extends AbstractBlock {
         const win = self.container;
         this.header.addEventListener('mousedown', (e) => {
             self.isDragging = true;
+            const pos = self.metadata.position;
+            const size = self.metadata.size;
             const rect = win.getBoundingClientRect();
-            console.log({ win, rect });
-            self.metadata.position.x = rect.left;
-            self.metadata.position.y = rect.top;
-            self.metadata.size.h = rect.height;
-            self.metadata.size.w = rect.width;
-            self.mouseOffsetX = e.clientX;// - rect.left;
-            self.mouseOffsetY = e.clientY;// - rect.top;
-            // win.style.top = "0";
-            // win.style.left = "0";
+            pos.x = rect.left;
+            pos.y = rect.top;
+            size.h = rect.height;
+            size.w = rect.width;
+            self.mouseOffsetX = e.clientX;
+            self.mouseOffsetY = e.clientY;
             e.preventDefault();
         });
         document.addEventListener('mousemove', (e) => {
             if (!self.isDragging) return;
             const x = e.clientX - self.mouseOffsetX, y = e.clientY - self.mouseOffsetY;
-            self.metadata.position.x = x;
-            self.metadata.position.y = y;
+            const pos = self.metadata.position;
+            pos.x = x;
+            pos.y = y;
             win.style.transform = `translate(${x}px,${y}px)`;
         });
         document.addEventListener('mouseup', () => {
@@ -87,6 +87,7 @@ export class WindowBlock extends AbstractBlock {
         closeBtn.style.color = '#ff0000';
 
         const title = document.createElement("SPAN") as HTMLSpanElement;
+        title.style.fontSize = "0.5rem";
         title.textContent = this.metadata.title;
 
         controls.append(minimizeBtn, maximizeBtn, closeBtn, title);
