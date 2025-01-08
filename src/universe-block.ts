@@ -1153,12 +1153,14 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                     handler: async (args: IBindingHandlerArgs) => {
                         args.e?.preventDefault();
                         const manager = args.block.manager as UniverseBlock;
-                        let filename = manager.metadata.filename;
+                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock);
+                        if (!doc) return;
+                        let filename = doc.metadata.filename;
                         if (!filename) {
                             filename = prompt("Filename?");
-                            manager.metadata.filename = filename;
+                            doc.metadata.filename = filename;
                         }
-                        const folder = manager.metadata.folder || ".";
+                        const folder = doc.metadata.folder || ".";
                         await manager.saveServerDocument(filename, folder);
                     }
                 }

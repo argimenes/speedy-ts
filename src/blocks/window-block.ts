@@ -46,12 +46,15 @@ export class WindowBlock extends AbstractBlock {
         this.header.addEventListener('mousedown', (e) => {
             self.isDragging = true;
             const rect = win.getBoundingClientRect();
+            console.log({ win, rect });
             self.metadata.position.x = rect.left;
             self.metadata.position.y = rect.top;
             self.metadata.size.h = rect.height;
             self.metadata.size.w = rect.width;
-            self.mouseOffsetX = e.clientX - rect.left;
-            self.mouseOffsetY = e.clientY - rect.top;
+            self.mouseOffsetX = e.clientX;// - rect.left;
+            self.mouseOffsetY = e.clientY;// - rect.top;
+            // win.style.top = "0";
+            // win.style.left = "0";
             e.preventDefault();
         });
         document.addEventListener('mousemove', (e) => {
