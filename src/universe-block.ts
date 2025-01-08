@@ -36,6 +36,7 @@ import { CodeMirrorBlock } from './blocks/code-mirror-block';
 import { WorkspaceBlock } from './blocks/workspace-block';
 import { classList } from 'solid-js/web';
 import { DocumentWindowBlock } from './blocks/document-window-block';
+import { ImageBackgroundBlock } from './blocks/image-background-block';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
@@ -2724,6 +2725,14 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         container.appendChild(workspace.container);
         return workspace;
     }
+    async buildImageBackgroundBlock(container: HTMLElement, blockDto: IBlockDto) {
+        const bg = this.createImageBackgroundBlock(blockDto);
+        await this.buildChildren(bg, blockDto, (child) => {
+            bg.container.appendChild(child.container);
+        });
+        container.appendChild(bg.container);
+        return bg;
+    }
     async buildDocumentWindowBlock(container: HTMLElement, blockDto: IBlockDto) {
         const wind = this.createDocumentWindowBlock(blockDto);
         await this.buildChildren(wind, blockDto, (child) => {
@@ -3015,6 +3024,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (blockDto.type == BlockType.WorkspaceBlock) {
             return await this.buildWorkspaceBlock(container, blockDto);
         }
+        if (blockDto.type == BlockType.ImageBackgroundBlock) {
+            return await this.buildImageBackgroundBlock(container, blockDto);
+        }
         if (blockDto.type == BlockType.DocumentWindowBlock) {
             return await this.buildDocumentWindowBlock(container, blockDto);
         }
@@ -3152,12 +3164,22 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     async createWorkspace() {
         const dto = {
-            type: BlockType.WorkspaceBlock
+            type: BlockType.WorkspaceBlock,
+            children: [
+                {
+                    type: BlockType.ImageBackgroundBlock,
+                    metadata: {
+                        url: "https://upload.wikimedia.org/wikipedia/commons/c/c5/Aurora_borealis_above_Lyngenfjorden%2C_2012_March_%28cropped%29.jpg"
+                    }
+                }
+            ]
         };
         const container = document.createElement("DIV") as HTMLDivElement;
         const workspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
         this.container.appendChild(workspace.container);
         this.addBlockTo(this, workspace);
+        this.addParentSiblingRelations(workspace);
+        return workspace;
     }
     async addDocumentToWorkspace(dto: IMainListBlockDto) {
         const container = document.createElement("DIV") as HTMLDivElement;
@@ -3169,10 +3191,11 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }) as WindowBlock;
         const doc = await this.recursivelyBuildBlock(win.container, dto) as DocumentBlock;
         const workspace = this.registeredBlocks.find(x => x.type == BlockType.WorkspaceBlock) as AbstractBlock;
+        const background = workspace.blocks[0];
         const count = this.registeredBlocks.filter(x => x.type == BlockType.DocumentWindowBlock).length;
         const buffer = count * 20;
         this.addBlockTo(win, doc);
-        this.addBlockTo(workspace, win);
+        this.addBlockTo(background, win);
         updateElement(doc.container, {
             classList: ["document-container"]
         });
@@ -3609,6 +3632,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     createWorkspaceBlock(dto?: IBlockDto) {
         const block = new WorkspaceBlock({ ...dto });
+        return block;
+    }
+    createImageBackgroundBlock(dto?: IBlockDto) {
+        const block = new ImageBackgroundBlock({ manager: this, ...dto });
         return block;
     }
     createDocumentWindowBlock(dto?: IBlockDto) {

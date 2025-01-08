@@ -458,7 +458,7 @@ const foo = (bar) => {
         const workspace = new UniverseBlock();
         workspace.container = el;
         workspace.createWorkspace().then();
-        workspace.addDocumentToWorkspace(doc).then(x => { x.takeSnapshot(); });
+        workspace.addDocumentToWorkspace(doc).then();
         props.getInstance(workspace);
         console.log("== GLOBAL ==", { manager: workspace, block: workspace.blocks[0] })
     }
