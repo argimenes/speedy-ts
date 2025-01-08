@@ -39,6 +39,7 @@ export interface IStandoffEditorBlockMonitor {
 }
 
 export enum BlockType {
+    DocumentWindowBlock = "document-window-block",
     WindowBlock = "window-block",
     ControlPanelBlock = "control-panel-block",
     UniverseBlock = "universe-block",

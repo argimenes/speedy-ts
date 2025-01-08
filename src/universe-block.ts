@@ -35,6 +35,7 @@ import { CheckboxBlock } from './blocks/checkbox-block';
 import { CodeMirrorBlock } from './blocks/code-mirror-block';
 import { WorkspaceBlock } from './blocks/workspace-block';
 import { classList } from 'solid-js/web';
+import { DocumentWindowBlock } from './blocks/document-window-block';
 
 const isStr = (value: any) => typeof (value) == "string";
 const isNum = (value: any) => typeof (value) == "number";
@@ -2723,14 +2724,22 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         container.appendChild(workspace.container);
         return workspace;
     }
+    async buildDocumentWindowBlock(container: HTMLElement, blockDto: IBlockDto) {
+        const wind = this.createDocumentWindowBlock(blockDto);
+        await this.buildChildren(wind, blockDto, (child) => {
+            wind.container.appendChild(child.container);
+        });
+        container.appendChild(wind.container);
+        return wind;
+    }
     async buildWindowBlock(container: HTMLElement, blockDto: IBlockDto) {
         const wind = this.createWindowBlock(blockDto);
         await this.buildChildren(wind, blockDto, (child) => {
-            updateElement(child.container, {
-                style: {
-                    display: "inline-block"
-                }
-            });
+            // updateElement(child.container, {
+            //     style: {
+            //         display: "inline-block"
+            //     }
+            // });
             wind.container.appendChild(child.container);
         });
         container.appendChild(wind.container);
@@ -3006,6 +3015,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (blockDto.type == BlockType.WorkspaceBlock) {
             return await this.buildWorkspaceBlock(container, blockDto);
         }
+        if (blockDto.type == BlockType.DocumentWindowBlock) {
+            return await this.buildDocumentWindowBlock(container, blockDto);
+        }
         if (blockDto.type == BlockType.WindowBlock) {
             return await this.buildWindowBlock(container, blockDto);
         }
@@ -3150,14 +3162,14 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     async addDocumentToWorkspace(dto: IMainListBlockDto) {
         const container = document.createElement("DIV") as HTMLDivElement;
         const win = await this.recursivelyBuildBlock(container, {
-            type: BlockType.WindowBlock,
+            type: BlockType.DocumentWindowBlock,
             metadata: {
                 title: dto.metadata?.filename
             }
         }) as WindowBlock;
         const doc = await this.recursivelyBuildBlock(win.container, dto) as DocumentBlock;
         const workspace = this.registeredBlocks.find(x => x.type == BlockType.WorkspaceBlock) as AbstractBlock;
-        const count = this.registeredBlocks.filter(x => x.type == BlockType.WindowBlock).length;
+        const count = this.registeredBlocks.filter(x => x.type == BlockType.DocumentWindowBlock).length;
         const buffer = count * 20;
         this.addBlockTo(win, doc);
         this.addBlockTo(workspace, win);
@@ -3597,6 +3609,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     createWorkspaceBlock(dto?: IBlockDto) {
         const block = new WorkspaceBlock({ ...dto });
+        return block;
+    }
+    createDocumentWindowBlock(dto?: IBlockDto) {
+        const block = new DocumentWindowBlock({ manager: this, ...dto });
         return block;
     }
     createWindowBlock(dto?: IBlockDto) {
