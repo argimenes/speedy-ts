@@ -42,8 +42,9 @@ export class WindowBlock extends AbstractBlock {
     }
     setupEventHandlers() {
         const self = this;
-        const win = self.container;
-        this.header.addEventListener('mousedown', (e) => {
+        const win = this.container;
+        const header = this.header;
+        [win, header].forEach(x => x.addEventListener('mousedown', (e) => {
             self.isDragging = true;
             const pos = self.metadata.position;
             const size = self.metadata.size;
@@ -54,22 +55,18 @@ export class WindowBlock extends AbstractBlock {
             size.w = rect.width;
             self.mouseOffsetX = e.clientX;
             self.mouseOffsetY = e.clientY;
-            e.preventDefault();
-        });
-        document.addEventListener('mousemove', (e) => {
+            //e.preventDefault();
+        }));
+        [header].forEach(x => x.addEventListener('mousemove', (e) => {
             if (!self.isDragging) return;
             const x = e.clientX - self.mouseOffsetX, y = e.clientY - self.mouseOffsetY;
             const pos = self.metadata.position;
             pos.x = x;
             pos.y = y;
             win.style.transform = `translate(${x}px,${y}px)`;
-        });
-        document.addEventListener('mouseup', () => {
-            self.isDragging = false;
-        });
-        document.addEventListener('mouseleave', () => {
-            self.isDragging = false;
-        });
+        }));
+        [win].forEach(x => x.addEventListener('mouseup', () => self.isDragging = false));
+        [win].forEach(x => x.addEventListener('mouseleave', () => self.isDragging = false));
     }
     private createControls() {
         const controls = document.createElement('div');
