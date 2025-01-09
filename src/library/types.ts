@@ -318,7 +318,7 @@ export type InputEvent = {
     trigger: Trigger;
     action: InputAction;             // See the one below
 }
-
+export const passoverClass = "block-modal";
 export type InputAction = {
     name: string;                   // "copy"
     description?: string;           // "Copies text in the selection for pasting elsewhere."

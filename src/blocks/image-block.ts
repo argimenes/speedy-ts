@@ -1,7 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { updateElement } from "../library/svg";
 import { AbstractBlock } from './abstract-block';
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, CARET, IBindingHandlerArgs, InputEventSource } from '../library/types';
+import { UniverseBlock } from '../universe-block';
 
 export class ImageBlock extends AbstractBlock {
     image: HTMLImageElement;
@@ -9,7 +10,50 @@ export class ImageBlock extends AbstractBlock {
         super(args);
         this.type = BlockType.ImageBlock;
         this.image = document.createElement("IMG") as HTMLImageElement;
+        this.inputEvents = this.getInputEvents();
         this.attachEventHandlers();
+    }
+    getInputEvents() {
+        return [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Enter"
+                },
+                action: {
+                    name: "Create a new text block underneath.",
+                    description: "",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const imageBlock = args.block as ImageBlock;
+                        const manager = imageBlock.manager as UniverseBlock;
+                        const newBlock = manager.createStandoffEditorBlock();
+                        newBlock.addEOL();
+                        manager.addBlockAfter(newBlock, imageBlock);
+                        setTimeout(() => {
+                            manager.setBlockFocus(newBlock);
+                            newBlock.setCaret(0, CARET.LEFT);
+                        });
+                    }
+                }
+            },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Mouse,
+                    match: "click"
+                },
+                action: {
+                    name: "Set focus to the current block.",
+                    description: "",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block as ImageBlock;
+                        const manager = block.manager as UniverseBlock;
+                        manager.setBlockFocus(block);
+                    }
+                }
+            }
+        ];
     }
     attachEventHandlers() {
         this.container.addEventListener("click", this.handleClick.bind(this));
