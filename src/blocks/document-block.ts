@@ -43,6 +43,7 @@ export class DocumentBlock extends AbstractBlock {
         this.lastChange = Date.now();
         this.textProcessor = new TextProcessor();
         this.inputEvents = this.getInputEvents();
+        this.setupSubscriptions();
     }
     setupSubscriptions() {
         this.subscribeTo(EventType.beforeChange, this.addToHistory.bind(this));
@@ -449,7 +450,7 @@ export class DocumentBlock extends AbstractBlock {
     }
     takeSnapshot(dto?: IBlockDto) {
         const len = this.undoStack.length;
-        if (len == 10) {
+        if (len == maxHistoryItems) {
             this.undoStack.shift();
         }
         dto = dto || this.serialize();
@@ -1816,7 +1817,30 @@ export class DocumentBlock extends AbstractBlock {
         }
         const dto = this.serialize();
         this.undoStack.push(dto);
-        await this.manager.loadDocument(last);
+        await this.reloadDocument(last);
+    }
+    clearDocument() {
+        this.blocks.forEach(b => b.destroy());
+        this.container.remove();
+    }
+    async reloadDocument(dto: IBlockDto) {
+        const manager = this.manager;
+        const parent = this.relation.parent as AbstractBlock;
+        if (!parent) return;
+        this.clearDocument();
+        const doc = await manager.recursivelyBuildBlock(parent.container, dto) as DocumentBlock;
+        this.id = doc.id;
+        this.metadata = doc.metadata;
+        this.blockProperties = doc.blockProperties;
+        this.blocks = doc.blocks;
+        this.container = doc.container;
+        manager.addBlockTo(parent, this);
+        manager.addParentSiblingRelations(parent);
+        doc.generateIndex();
+        doc.setFocus();
+        updateElement(this.container, {
+            classList: ["document-container"]
+        });
     }
     async undoHistory() {
         const last = this.undoStack.pop();
@@ -1827,8 +1851,7 @@ export class DocumentBlock extends AbstractBlock {
         const dto = this.serialize();
         this.redoStack.push(last);
         this.redoStack.push(dto);
-        // await this.destroyAll();
-        await this.manager.loadDocument(last);
+        await this.reloadDocument(last);
     }
     pastePlainTextItem(targetBlockId: GUID, ci: number, item: any) {
         const manager = this.manager;
@@ -2129,17 +2152,17 @@ export class DocumentBlock extends AbstractBlock {
         }, 1);
     }
     setFocus() {
-        const workspace = this.manager;
+        const manager = this.manager;
         if (this.metadata?.focus?.blockId) {
             const block = this.getBlock(this.metadata.focus.blockId);
-            workspace.setBlockFocus(block);
+            manager.setBlockFocus(block);
             if (this.metadata.focus.caret) {
                 (block as StandoffEditorBlock)?.setCaret(this.metadata.focus.caret, CARET.LEFT);
             }
         } else {
-            const textBlock = workspace.registeredBlocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
+            const textBlock = manager.registeredBlocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
             if (textBlock) {
-                workspace.setBlockFocus(textBlock);
+                manager.setBlockFocus(textBlock);
                 textBlock.moveCaretStart();
             }
         }

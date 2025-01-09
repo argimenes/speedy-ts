@@ -1480,7 +1480,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             if (!entity) return;
             p.cache.entity = entity;
         });
-        doc.takeSnapshot();
+        
     }
     async saveServerDocument(filename: string, folder: string = ".") {
         const focus = this.getBlockInFocus();
@@ -1994,7 +1994,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addParentSiblingRelations(workspace);
         doc.generateIndex();
         doc.setFocus();
-        
+        doc.takeSnapshot();
         return doc;
     }
     async loadDocument(dto: IMainListBlockDto, container?: HTMLDivElement) {

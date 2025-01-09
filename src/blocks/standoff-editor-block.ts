@@ -394,7 +394,9 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.setCaret(0, CARET.LEFT);
     }
     triggerBeforeChange() {
-        this.manager?.publish("beforeChange");
+        const doc = this.manager.getParentOfType(this, BlockType.DocumentBlock) as AbstractBlock;
+        if (!doc) return;
+        doc.publish("beforeChange");
     }
     insertTextAtIndex(text: string, index: number): Cell[] {
         this.triggerBeforeChange();
