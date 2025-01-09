@@ -158,7 +158,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 }
             }
         }
-        const blocks = [parentBlock, this];
+        // const blocks = [parentBlock, this];
+        const blocks = this.getAncestors(parentBlock);
         for (let i = 0; i < blocks.length; i++) {
             const b = blocks[i];
             if (!(b as any).getFirstMatchingInputEvent) continue;
@@ -211,7 +212,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             console.log("handleKeyboardInputEvents", { message: "Input received from outside of @focusedBlock", focusedBlock, target: e.target });
         }
         const isStandoffBlock = focusedBlock.type == BlockType.StandoffEditorBlock;
-        const blocks = [focusedBlock, this];
+        // const blocks = [focusedBlock, this];
+        const blocks = this.getAncestors(focusedBlock);
         for (let i = 0; i < blocks.length; i++) {
             const b = blocks[i];
             if (!(b as any).getFirstMatchingInputEvent) continue;
@@ -1387,6 +1389,18 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             current = current.relation.previous;
         }
         return null;
+    }
+    getAncestors(block: IBlock) {
+        const list = [block];
+        let current = block;
+        while (current) {
+            let parent = current.relation.parent;
+            if (parent) {
+                list.push(parent);
+            }
+            current = parent;
+        }
+        return list;
     }
     getAllStandoffPropertiesByType(type: string) {
         const blocks = this.registeredBlocks
