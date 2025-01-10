@@ -59,10 +59,7 @@ export class TabRowBlock extends AbstractBlock {
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
-    }
-    destroy(): void {
-        if (this.container) this.container.remove();
-    }
+    }    
 }
 
 export class TabBlock extends AbstractBlock {

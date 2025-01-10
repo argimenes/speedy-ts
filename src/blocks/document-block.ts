@@ -1,12 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import { AbstractBlock } from './abstract-block';
-import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock, CARET, InputEventSource, InputEvent, RowPosition, Caret, IBindingHandlerArgs, DIRECTION, ISelection, passoverClass, IRange, FindMatch, EventType, BlockState, GUID, StandoffPropertyDto } from '../library/types';
+import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock, CARET, InputEventSource, InputEvent, RowPosition, Caret, IBindingHandlerArgs, DIRECTION, ISelection, passoverClass, IRange, FindMatch, EventType, BlockState, GUID, StandoffPropertyDto, isStr } from '../library/types';
 import { StandoffEditorBlock } from './standoff-editor-block';
 import { updateElement } from '../library/svg';
 import { UniverseBlock } from '../universe-block';
 import { AnnotationPanelBlock } from '../components/annotation-panel';
 import { renderToNode } from '../library/common';
-import { MonitorBlock, StandoffEditorBlockMonitor } from './monitor';
+import { MonitorBlock, StandoffEditorBlockMonitor } from './monitor-block';
 import { TextProcessor } from '../library/text-processor';
 import _ from 'underscore';
 import { SearchEntitiesBlock } from '../components/search-entities';
@@ -16,6 +16,8 @@ import { ImageBlock } from './image-block';
 import { VideoBlock } from './video-block';
 import { IndentedListBlock } from './indented-list-block';
 import { TabBlock } from './tabs-block';
+import { BlockProperty } from '../library/block-property';
+import BlockVines from '../library/plugins/block-vines';
 
 const maxHistoryItems = 30;
 
@@ -43,7 +45,190 @@ export class DocumentBlock extends AbstractBlock {
         this.lastChange = Date.now();
         this.textProcessor = new TextProcessor();
         this.inputEvents = this.getInputEvents();
+        this.setBlockSchemas(this.getBlockSchemas());
         this.setupSubscriptions();
+    }
+    getBlockSchemas() {
+        const manager = this.manager;
+        return [
+            {
+                type: "block/vines",
+                name: "Block vines",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const vines = new BlockVines(p.block);
+                        vines.update();
+                    }
+                }
+            },
+            {
+                type: "block/position",
+                name: "Block position",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const container = p.block.container;
+                        const {x, y, position } = p.metadata;
+                        updateElement(container, {
+                            style: {
+                                position: position || "absolute",
+                                left: x + "px",
+                                top: y + "px",
+                                "z-index": manager.getHighestZIndex()
+                            }
+                        });
+                    }
+                }
+            },
+            {
+                type: "block/size",
+                name: "Block dimensions",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const container = p.block.container;
+                        const {width, height} = p.metadata;
+                        updateElement(container, {
+                            style: {
+                                height: isStr(height) ? height : height + "px",
+                                width: isStr(width) ? width : width + "px",
+                                "overflow-y": "auto",
+                                "overflow-x": "hidden"
+                            }
+                        });
+                        const minWidth = p.metadata["min-width"];
+                        if (minWidth) {
+                            updateElement(container, {
+                            style: {
+                                "min-width": minWidth + "px"
+                            }
+                        });
+                        }
+                    }
+                }
+            },
+            {
+                type: "block/font/size",
+                name: "Specified size",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        updateElement(p.block.container, {
+                            style: {
+                                "font-size": p.value
+                            }
+                        });
+                    }
+                }
+            },
+            {
+                type: "block/font/size/half",
+                name: "Half-sized font",
+                decorate: {
+                    blockClass: "font_size_half"
+                }
+            },
+            {
+                type: "block/font/size/three-quarters",
+                name: "3/4 the regular font size",
+                decorate: {
+                    blockClass: "block_font-size_three-quarters"
+                }
+            },
+            {
+                type: "block/margin/top/20px",
+                name: "Top margin - 20",
+                decorate: {
+                    blockClass: "block_margin_top_20px"
+                }
+            },
+            {
+                type: "block/margin/top/40px",
+                name: "Top margin - 40",
+                decorate: {
+                    blockClass: "block_margin_top_40px"
+                }
+            },
+            {
+                type: "block/alignment/right",
+                name: "Right Alignment",
+                description: "Align text in the block to the right.",
+                decorate: {
+                    blockClass: "block_alignment_right"
+                }
+            },
+            {
+                type: "block/alignment/center",
+                name: "Centre Alignment",
+                description: "Align text in the block to the middle.",
+                decorate: {
+                    blockClass: "block_alignment_centre"
+                }
+            },
+            {
+                type: "block/alignment/left",
+                name: "Left Alignment",
+                description: "Align text in the block to the left",
+                decorate: {
+                    blockClass: "block_alignment_left"
+                }
+            },
+            {
+                type: "block/alignment/justify",
+                name: "Justified Alignment",
+                description: "Justifies the alignment of the text.",
+                decorate: {
+                    blockClass: "block_alignment_justify"
+                }
+            },
+            {
+                type: "block/blue-and-white",
+                name: "Blue and White",
+                decorate: {
+                    blockClass: "block_blue_and_white"
+                }
+            },
+            {
+                type: "block/background/image",
+                name: "Set background image",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const url = p.value || (p.value = prompt("Background image url: ") || "");
+                        if (!url) return;
+                        const panel = p.block.container;
+                        updateElement(panel, {
+                            style: {
+                                "background-size": "cover",
+                                "background": "url(" + url + ") no-repeat center center fixed"
+                            }
+                        });
+                    }
+                }
+            },
+            {
+                type: "block/background/colour",
+                name: "Set background colour",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        updateElement(p.block.container, {
+                            style: {
+                                "background-color": p.value
+                            }
+                        });
+                    }
+                }
+            },
+            {
+                type: "block/font/colour",
+                name: "Set font colour",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        updateElement(p.block.container, {
+                            style: {
+                                "color": p.value
+                            }
+                        });
+                    }
+                }
+            }
+        ]
     }
     setupSubscriptions() {
         this.subscribeTo(EventType.beforeChange, this.addToHistory.bind(this));
@@ -1820,27 +2005,17 @@ export class DocumentBlock extends AbstractBlock {
         await this.reloadDocument(last);
     }
     clearDocument() {
-        this.blocks.forEach(b => b.destroy());
-        this.container.remove();
+        
     }
     async reloadDocument(dto: IBlockDto) {
         const manager = this.manager;
         const parent = this.relation.parent as AbstractBlock;
         if (!parent) return;
-        this.clearDocument();
+        this.destroy();
         const doc = await manager.recursivelyBuildBlock(parent.container, dto) as DocumentBlock;
-        this.id = doc.id;
-        this.metadata = doc.metadata;
-        this.blockProperties = doc.blockProperties;
-        this.blocks = doc.blocks;
-        this.container = doc.container;
-        manager.addBlockTo(parent, this);
+        manager.addBlockTo(parent, doc);
         manager.addParentSiblingRelations(parent);
-        doc.generateIndex();
-        doc.setFocus();
-        updateElement(this.container, {
-            classList: ["document-container"]
-        });
+        doc.generateIndex();        
     }
     async undoHistory() {
         const last = this.undoStack.pop();
@@ -2201,7 +2376,5 @@ export class DocumentBlock extends AbstractBlock {
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
     }
-    destroy(): void {
-        if (this.container) this.container.remove();
-    }
+    
 }

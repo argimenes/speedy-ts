@@ -19,11 +19,6 @@ export class ImageBackgroundBlock extends AbstractBlock {
     deserialize(json: any | any[]): IBlock {
         return null;
     }
-    destroy(): void {
-        this.blocks.forEach(b => b.destroy());
-        this.container.remove();
-        this.manager.deregisterBlock(this.id);
-    }
     constructor(args: IImageBackgroundBlockConstructor ) {
         super(args);
         updateElement(this.container, {

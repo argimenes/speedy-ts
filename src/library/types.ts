@@ -466,3 +466,6 @@ export enum ClockDirection {
     Clockwise,
     Anticlockwise
 }
+
+export const isStr = (value: any) => typeof (value) == "string";
+export const isNum = (value: any) => typeof (value) == "number";

@@ -5,9 +5,11 @@ import { StandoffProperty } from "../library/standoff-property";
 import { AbstractBlock } from "./abstract-block";
 import { Cell, Row } from "../library/cell";
 import { KEYS } from "../library/keyboard";
-import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation, FindMatch } from "../library/types";
+import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation, FindMatch, isStr } from "../library/types";
 import { DocumentBlock } from "./document-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
+import BlockVines from "../library/plugins/block-vines";
+import { UniverseBlock } from "../universe-block";
 
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     const map = new Map();
@@ -93,6 +95,244 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.monitors = [];
         this.standoffProperties = [];
         this.selections = [];
+        this.setBlockSchemas(this.getBlockSchemas());
+    }
+    getBlockSchemas() {
+        const manager = this.manager;
+        return [
+            {
+                type: "block/vines",
+                name: "Block vines",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const vines = new BlockVines(p.block);
+                        vines.update();
+                    }
+                }
+            },
+            {
+                type: "block/position",
+                name: "Block position",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const container = p.block.container;
+                        const {x, y, position } = p.metadata;
+                        updateElement(container, {
+                            style: {
+                                position: position || "absolute",
+                                left: x + "px",
+                                top: y + "px",
+                                "z-index": manager.getHighestZIndex()
+                            }
+                        });
+                    }
+                }
+            },
+            {
+                type: "block/size",
+                name: "Block dimensions",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const container = p.block.container;
+                        const {width, height} = p.metadata;
+                        updateElement(container, {
+                            style: {
+                                height: isStr(height) ? height : height + "px",
+                                width: isStr(width) ? width : width + "px",
+                                "overflow-y": "auto",
+                                "overflow-x": "hidden"
+                            }
+                        });
+                        const minWidth = p.metadata["min-width"];
+                        if (minWidth) {
+                            updateElement(container, {
+                            style: {
+                                "min-width": minWidth + "px"
+                            }
+                        });
+                        }
+                    }
+                }
+            },
+            {
+                type: "block/font/size",
+                name: "Specified size",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        updateElement(p.block.container, {
+                            style: {
+                                "font-size": p.value
+                            }
+                        });
+                    }
+                }
+            },
+            {
+                type: "block/font/size/half",
+                name: "Half-sized font",
+                decorate: {
+                    blockClass: "font_size_half"
+                }
+            },
+            {
+                type: "block/font/size/three-quarters",
+                name: "3/4 the regular font size",
+                decorate: {
+                    blockClass: "block_font-size_three-quarters"
+                }
+            },
+            {
+                type: "block/margin/top/20px",
+                name: "Top margin - 20",
+                decorate: {
+                    blockClass: "block_margin_top_20px"
+                }
+            },
+            {
+                type: "block/margin/top/40px",
+                name: "Top margin - 40",
+                decorate: {
+                    blockClass: "block_margin_top_40px"
+                }
+            },
+            {
+                type: "block/font/size/h1",
+                name: "H1",
+                decorate: {
+                    blockClass: "block_font-size_h1"
+                }
+            },
+            {
+                type: "block/font/size/h2",
+                name: "H2",
+                decorate: {
+                    blockClass: "block_font-size_h2"
+                }
+            },
+            {
+                type: "block/font/size/h3",
+                name: "H3",
+                decorate: {
+                    blockClass: "block_font-size_h3"
+                }
+            },
+            {
+                type: "block/font/size/h4",
+                name: "h4",
+                decorate: {
+                    blockClass: "block_font-size_h4"
+                }
+            },
+            {
+                type: "block/marginalia/left",
+                name: "Left margin block",
+                description: "Handles the alignment of a left margin block to the one to its right.",
+                decorate: {
+                    blockClass: "block_marginalia_left"
+                }
+            },
+            {
+                type: "block/marginalia/right",
+                name: "Right margin block",
+                description: "Handles the alignment of a right margin block to the one to its left.",
+                decorate: {
+                    blockClass: "block_marginalia_right"
+                }
+            },
+            {
+                type: "block/alignment/right",
+                name: "Right Alignment",
+                description: "Align text in the block to the right.",
+                decorate: {
+                    blockClass: "block_alignment_right"
+                }
+            },
+            {
+                type: "block/alignment/center",
+                name: "Centre Alignment",
+                description: "Align text in the block to the middle.",
+                decorate: {
+                    blockClass: "block_alignment_centre"
+                }
+            },
+            {
+                type: "block/alignment/left",
+                name: "Left Alignment",
+                description: "Align text in the block to the left",
+                decorate: {
+                    blockClass: "block_alignment_left"
+                }
+            },
+            {
+                type: "block/alignment/justify",
+                name: "Justified Alignment",
+                description: "Justifies the alignment of the text.",
+                decorate: {
+                    blockClass: "block_alignment_justify"
+                }
+            },
+            {
+                type: "block/animation/sine-wave",
+                name: "Sine Wave",
+                description: "Animates the paragraph as a text sine wave.",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const manager = p.block.manager as UniverseBlock;
+                        manager.animateSineWave(p);
+                    }
+                }
+            },
+            {
+                type: "block/blue-and-white",
+                name: "Blue and White",
+                decorate: {
+                    blockClass: "block_blue_and_white"
+                }
+            },
+            {
+                type: "block/background/image",
+                name: "Set background image",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const url = p.value || (p.value = prompt("Background image url: ") || "");
+                        if (!url) return;
+                        const panel = p.block.container;
+                        updateElement(panel, {
+                            style: {
+                                "background-size": "cover",
+                                "background": "url(" + url + ") no-repeat center center fixed"
+                            }
+                        });
+                    }
+                }
+            },
+            {
+                type: "block/background/colour",
+                name: "Set background colour",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        updateElement(p.block.container, {
+                            style: {
+                                "background-color": p.value
+                            }
+                        });
+                    }
+                }
+            },
+            {
+                type: "block/font/colour",
+                name: "Set font colour",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        updateElement(p.block.container, {
+                            style: {
+                                "color": p.value
+                            }
+                        });
+                    }
+                }
+            }
+        ]
     }
     addMode(mode: string) {
         this.modes.push(mode);
@@ -897,7 +1137,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.schemas =[];
         this.blockSchemas = [];
         this.overlays = [];
-        if (this.container) this.container.remove();
+        super.destroy();
     }
     removeStandoffPropertiesByType(type: string) {
         this.triggerBeforeChange();

@@ -46,7 +46,10 @@ export abstract class AbstractBlock implements IBlock {
         this.type = BlockType.AbstractBlock;
         this.container = args?.container || document.createElement("DIV") as HTMLDivElement;
         updateElement(this.container, {
-            classList: ["abstract-block"]
+            classList: ["abstract-block"],
+            attribute: {
+                id: this.id
+            }
         });
         this.commitHandler = () => { };
         this.metadata = {};
@@ -296,5 +299,17 @@ export abstract class AbstractBlock implements IBlock {
     }
     abstract serialize():IBlockDto;
     abstract deserialize(json: any|any[]): IBlock;
-    abstract destroy(): void;
+    destroy() {
+        if (this.blocks.length) {
+            this.blocks.forEach(b => b.destroy());
+        }
+        this.manager.deregisterBlock(this.id);
+        const parent = this.relation.parent as AbstractBlock;
+        if (parent) {
+            this.manager.removeBlockFrom(parent, this);
+        }
+        if (this.container) {
+            this.container.remove();
+        }
+    }
 }

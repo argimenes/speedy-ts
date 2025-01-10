@@ -11,7 +11,7 @@ import { IframeBlock } from "./blocks/iframe-block";
 import { BlockProperty } from "./library/block-property";
 import { StandoffEditorBlock } from "./blocks/standoff-editor-block";
 import { StandoffProperty } from "./library/standoff-property";
-import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IUniverseBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType, passoverClass } from "./library/types";
+import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IUniverseBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType, passoverClass, isStr } from "./library/types";
 import { PlainTextBlock } from "./blocks/plain-text-block";
 import { ClockPlugin } from "./library/plugins/clock";
 import { EmbedDocumentBlock } from "./blocks/embed-document-block";
@@ -20,7 +20,6 @@ import { TableBlock, TableCellBlock, TableRowBlock } from './blocks/tables-block
 import { ControlPanelBlock } from './components/control-panel';
 import _ from 'underscore';
 import { EntitiesListBlock } from './components/entities-list';
-import BlockVines from './library/plugins/block-vines';
 import { WindowBlock } from './blocks/window-block';
 import { AbstractBlock } from './blocks/abstract-block';
 import { CheckboxBlock } from './blocks/checkbox-block';
@@ -28,9 +27,6 @@ import { CodeMirrorBlock } from './blocks/code-mirror-block';
 import { WorkspaceBlock } from './blocks/workspace-block';
 import { DocumentWindowBlock } from './blocks/document-window-block';
 import { ImageBackgroundBlock } from './blocks/image-background-block';
-
-const isStr = (value: any) => typeof (value) == "string";
-const isNum = (value: any) => typeof (value) == "number";
 
 export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     lastFocus?: IBlock;
@@ -438,243 +434,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             }
         ]
     }
-    getBlockSchemas() {
-        const self = this;
-        return [
-            {
-                type: "block/vines",
-                name: "Block vines",
-                event: {
-                    onInit: (p: BlockProperty) => {
-                        const vines = new BlockVines(p.block);
-                        vines.update();
-                    }
-                }
-            },
-            {
-                type: "block/position",
-                name: "Block position",
-                event: {
-                    onInit: (p: BlockProperty) => {
-                        const container = p.block.container;
-                        const {x, y, position } = p.metadata;
-                        updateElement(container, {
-                            style: {
-                                position: position || "absolute",
-                                left: x + "px",
-                                top: y + "px",
-                                "z-index": self.getHighestZIndex()
-                            }
-                        });
-                    }
-                }
-            },
-            {
-                type: "block/size",
-                name: "Block dimensions",
-                event: {
-                    onInit: (p: BlockProperty) => {
-                        const container = p.block.container;
-                        const {width, height} = p.metadata;
-                        updateElement(container, {
-                            style: {
-                                height: isStr(height) ? height : height + "px",
-                                width: isStr(width) ? width : width + "px",
-                                "overflow-y": "auto",
-                                "overflow-x": "hidden"
-                            }
-                        });
-                        const minWidth = p.metadata["min-width"];
-                        if (minWidth) {
-                            updateElement(container, {
-                            style: {
-                                "min-width": minWidth + "px"
-                            }
-                        });
-                        }
-                    }
-                }
-            },
-            {
-                type: "block/font/size",
-                name: "Specified size",
-                event: {
-                    onInit: (p: BlockProperty) => {
-                        updateElement(p.block.container, {
-                            style: {
-                                "font-size": p.value
-                            }
-                        });
-                    }
-                }
-            },
-            {
-                type: "block/font/size/half",
-                name: "Half-sized font",
-                decorate: {
-                    blockClass: "font_size_half"
-                }
-            },
-            {
-                type: "block/font/size/three-quarters",
-                name: "3/4 the regular font size",
-                decorate: {
-                    blockClass: "block_font-size_three-quarters"
-                }
-            },
-            {
-                type: "block/margin/top/20px",
-                name: "Top margin - 20",
-                decorate: {
-                    blockClass: "block_margin_top_20px"
-                }
-            },
-            {
-                type: "block/margin/top/40px",
-                name: "Top margin - 40",
-                decorate: {
-                    blockClass: "block_margin_top_40px"
-                }
-            },
-            {
-                type: "block/font/size/h1",
-                name: "H1",
-                decorate: {
-                    blockClass: "block_font-size_h1"
-                }
-            },
-            {
-                type: "block/font/size/h2",
-                name: "H2",
-                decorate: {
-                    blockClass: "block_font-size_h2"
-                }
-            },
-            {
-                type: "block/font/size/h3",
-                name: "H3",
-                decorate: {
-                    blockClass: "block_font-size_h3"
-                }
-            },
-            {
-                type: "block/font/size/h4",
-                name: "h4",
-                decorate: {
-                    blockClass: "block_font-size_h4"
-                }
-            },
-            {
-                type: "block/marginalia/left",
-                name: "Left margin block",
-                description: "Handles the alignment of a left margin block to the one to its right.",
-                decorate: {
-                    blockClass: "block_marginalia_left"
-                }
-            },
-            {
-                type: "block/marginalia/right",
-                name: "Right margin block",
-                description: "Handles the alignment of a right margin block to the one to its left.",
-                decorate: {
-                    blockClass: "block_marginalia_right"
-                }
-            },
-            {
-                type: "block/alignment/right",
-                name: "Right Alignment",
-                description: "Align text in the block to the right.",
-                decorate: {
-                    blockClass: "block_alignment_right"
-                }
-            },
-            {
-                type: "block/alignment/center",
-                name: "Centre Alignment",
-                description: "Align text in the block to the middle.",
-                decorate: {
-                    blockClass: "block_alignment_centre"
-                }
-            },
-            {
-                type: "block/alignment/left",
-                name: "Left Alignment",
-                description: "Align text in the block to the left",
-                decorate: {
-                    blockClass: "block_alignment_left"
-                }
-            },
-            {
-                type: "block/alignment/justify",
-                name: "Justified Alignment",
-                description: "Justifies the alignment of the text.",
-                decorate: {
-                    blockClass: "block_alignment_justify"
-                }
-            },
-            {
-                type: "block/animation/sine-wave",
-                name: "Sine Wave",
-                description: "Animates the paragraph as a text sine wave.",
-                event: {
-                    onInit: (p: BlockProperty) => {
-                        const manager = p.block.manager as UniverseBlock;
-                        manager.animateSineWave(p);
-                    }
-                }
-            },
-            {
-                type: "block/blue-and-white",
-                name: "Blue and White",
-                decorate: {
-                    blockClass: "block_blue_and_white"
-                }
-            },
-            {
-                type: "block/background/image",
-                name: "Set background image",
-                event: {
-                    onInit: (p: BlockProperty) => {
-                        const url = p.value || (p.value = prompt("Background image url: ") || "");
-                        if (!url) return;
-                        const panel = p.block.container;
-                        updateElement(panel, {
-                            style: {
-                                "background-size": "cover",
-                                "background": "url(" + url + ") no-repeat center center fixed"
-                            }
-                        });
-                    }
-                }
-            },
-            {
-                type: "block/background/colour",
-                name: "Set background colour",
-                event: {
-                    onInit: (p: BlockProperty) => {
-                        updateElement(p.block.container, {
-                            style: {
-                                "background-color": p.value
-                            }
-                        });
-                    }
-                }
-            },
-            {
-                type: "block/font/colour",
-                name: "Set font colour",
-                event: {
-                    onInit: (p: BlockProperty) => {
-                        updateElement(p.block.container, {
-                            style: {
-                                "color": p.value
-                            }
-                        });
-                    }
-                }
-            }
-        ]
-    }
+    
     animateSineWave(p: BlockProperty) {
         let pos = 0;
         let startTime = 0;
@@ -1306,6 +1066,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const i = parent.blocks.findIndex(x => x.id == block.id);
         parent.blocks.splice(i, 1);
         this.deregisterBlock(block.id);
+        /**
+         * We should also deregister all child blocks ...
+         */
         if (!skipIndexation) this.reindexAncestorDocument(parent);
     }
     insertBlockAfter(anchor: IBlock, block: IBlock, skipIndexation?: boolean) {
@@ -1802,6 +1565,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }
     }
     async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
+        if (blockDto.type == BlockType.DocumentBlock) {
+            return await this.buildDocumentBlock(container, blockDto);
+        }
         if (blockDto.type == BlockType.WorkspaceBlock) {
             return await this.buildWorkspaceBlock(container, blockDto);
         }
@@ -1820,9 +1586,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (blockDto.type == BlockType.StandoffEditorBlock) {
             return await this.buildStandoffEditorBlock(container, blockDto);
         }
-        if (blockDto.type == BlockType.DocumentBlock) {
-            return await this.buildDocumentBlock(container, blockDto);
-        }
+        
         if (blockDto.type == BlockType.LeftMarginBlock) {
             return await this.buildLeftMarginBlock(container, blockDto);
         }
@@ -2024,42 +1788,36 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         });
     }
     createDocumentBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const block = new DocumentBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
+        updateElement(block.container, { classList: ["document-container"] });
         return block;
     }
     createIndentedListBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const block = new IndentedListBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         return block;
     }
     createTabBlock(dto?: IBlockDto){
-        const blockSchemas = this.getBlockSchemas();
         const inputEvents = this.getTabBlockEvents();
         const block = new TabBlock({
             manager: this
         });
         block.inputEvents = inputEvents;
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         return block;
     }
     createGridCellBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const block = new GridCellBlock({
             manager: this,
             id: dto?.id
@@ -2074,38 +1832,32 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }
         updateElement(block.container, {
             style: {
-                //"display": "table-cell",
                 "vertical-align": "top"
             }
         });
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.addBlockTo(this, block);
         return block;
     }
     createGridRowBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const block = new GridRowBlock({
             manager: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.addBlockTo(this, block);
         return block;
     }
     createPlainTextBlock(dto?: IPlainTextBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const events = this.getPlainTextInputEvents();
         const block = new PlainTextBlock({
             manager: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         block.setEvents(events);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
@@ -2113,113 +1865,95 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         return block;
     }
     createTableBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const block = new TableBlock({
             manager: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.addBlockTo(this, block);
         return block;
     }
     createTableRowBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const block = new TableRowBlock({
             manager: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.addBlockTo(this, block);
         return block;
     }
     createTableCellBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const block = new TableCellBlock({
             manager: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.addBlockTo(this, block);
         return block;
     }
     createGridBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const block = new GridBlock({
             manager: this,
             id: dto?.id
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.addBlockTo(this, block);
         return block;
     }
     createTabRowBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const inputEvents = this.getTabBlockEvents();
         const block = new TabRowBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         block.inputEvents = inputEvents;
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         return block;
     }
     createLeftMarginBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const block = new DocumentBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         block.addBlockProperties([ { type: "block/marginalia/left" } ]);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         return block;
     }
     createEmbedDocumentBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const block = new EmbedDocumentBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.addBlockTo(this, block);
         return block;
     }
     createIFrameBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const block = new IframeBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.addBlockTo(this, block);
         return block;
     }
     createVideoBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const block = new VideoBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.addBlockTo(this, block);
@@ -2238,12 +1972,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         return block;
     }
     createRightMarginBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getBlockSchemas();
         const block = new DocumentBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         block.addBlockProperties([ { type: "block/marginalia/right" }, { type: "block/alignment/right" } ]);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
@@ -2306,13 +2038,11 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     createStandoffEditorBlock(dto?: IBlockDto) {
         const standoffSchemas = this.getStandoffSchemas();
-        const blockSchemas = this.getBlockSchemas();
         const textBlock = new StandoffEditorBlock({
             id: dto?.id,
             manager: this
         });
         textBlock.setSchemas(standoffSchemas);
-        textBlock.setBlockSchemas(blockSchemas);
         textBlock.setCommitHandler(this.storeCommit.bind(this));
         if (dto?.metadata) textBlock.metadata = dto.metadata;
         if (dto?.blockProperties) textBlock.addBlockProperties(dto.blockProperties);

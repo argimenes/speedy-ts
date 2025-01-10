@@ -17,10 +17,7 @@ export class GridBlock extends AbstractBlock {
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
-    }
-    destroy(): void {
-        this.container.remove();
-    }
+    }    
 }
 
 export class GridRowBlock extends AbstractBlock {
@@ -96,8 +93,5 @@ export class GridCellBlock extends AbstractBlock {
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
-    }
-    destroy(): void {
-        this.container.remove();
-    }
+    }    
 }

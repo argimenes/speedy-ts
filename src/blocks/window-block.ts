@@ -234,14 +234,5 @@ export class WindowBlock extends AbstractBlock {
     }
     deserialize(json: any): IBlock {
         return null;
-    }
-    destroy(): void {
-        if (this.blocks) {
-            this.blocks.forEach(b => b.destroy());
-        }
-        if (this.container) {
-            this.container.remove();
-        }
-        this.manager.deregisterBlock(this.id);
-    }
+    }    
 }

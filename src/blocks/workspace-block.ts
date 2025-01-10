@@ -30,11 +30,5 @@ export class WorkspaceBlock extends AbstractBlock {
     }
     deserialize(json: any): IBlock {
         return null;   
-    }
-    destroy() {
-        
-    }
-    async destroyAsync(): Promise<void> {
-        
-    }
+    }    
 }

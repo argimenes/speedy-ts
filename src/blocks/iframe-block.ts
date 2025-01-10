@@ -44,8 +44,4 @@ export class IframeBlock extends AbstractBlock {
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
     }
-    destroy(): void {
-        this.container.remove();
-    }
-
 }
