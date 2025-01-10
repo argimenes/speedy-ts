@@ -2138,6 +2138,19 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     getHighestZIndex() {
         return ++this.highestZIndex;
     }
+    undoHistory(id: string) {
+        const history = this.history[id];
+        const last = history.undoStack.pop();
+        if (!last) return;
+        if (history.redoStack.length == 30) {
+            history.redoStack.shift();
+        }
+        const block = this.getBlock(id);
+        const dto = block.serialize();
+        history.redoStack.push(last);
+        history.redoStack.push(dto);
+        return last;
+    }
     findNearestNephew(block: IBlock): IBlock {
         /**
          * Unsure about this algorithm ... might get trapped in the first nephew branch rather than the last.

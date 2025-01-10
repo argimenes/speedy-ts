@@ -2015,20 +2015,14 @@ export class DocumentBlock extends AbstractBlock {
         if (!parent) return;
         this.destroy();
         const doc = await manager.recursivelyBuildBlock(parent.container, dto) as DocumentBlock;
+        doc.id = dto.id;
         manager.addBlockTo(parent, doc);
         manager.addParentSiblingRelations(parent);
-        doc.generateIndex();        
+        doc.generateIndex();
+        this.manager.takeSnapshot(doc.id);     
     }
     async undoHistory() {
-        const history = this.getHistory();
-        const last = history.undoStack.pop();
-        if (!last) return;
-        if (history.redoStack.length == maxHistoryItems) {
-            history.redoStack.shift();
-        }
-        const dto = this.serialize();
-        history.redoStack.push(last);
-        history.redoStack.push(dto);
+        const last = this.manager.undoHistory(this.id);
         await this.reloadDocument(last);
     }
     pastePlainTextItem(targetBlockId: GUID, ci: number, item: any) {
