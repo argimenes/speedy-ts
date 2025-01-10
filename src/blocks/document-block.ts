@@ -29,10 +29,7 @@ export interface IndexedBlock {
 }
 
 export class DocumentBlock extends AbstractBlock {
-    undoStack: IBlockDto[];
-    redoStack: IBlockDto[];
     index: IndexedBlock[];
-    lastChange: number;
     textProcessor: TextProcessor;
     state: string;
     constructor(args: IAbstractBlockConstructor) {
@@ -40,13 +37,20 @@ export class DocumentBlock extends AbstractBlock {
         this.type = BlockType.DocumentBlock;
         this.state = BlockState.initalising;
         this.index = [];
-        this.undoStack = [];
-        this.redoStack = [];
-        this.lastChange = Date.now();
+        this.manager.history[this.id] = {
+            id: this.id,
+            undoStack: [],
+            redoStack: [],
+            lastChange: Date.now()
+        };
         this.textProcessor = new TextProcessor();
         this.inputEvents = this.getInputEvents();
         this.setBlockSchemas(this.getBlockSchemas());
         this.setupSubscriptions();
+    }
+    getHistory() {
+        let history = this.manager.history[this.id];
+        return history;
     }
     getBlockSchemas() {
         const manager = this.manager;
@@ -622,8 +626,9 @@ export class DocumentBlock extends AbstractBlock {
         if (this.state == BlockState.loading) {
             return false;
         }
+        const history = this.getHistory();
         const now = Date.now();
-        const ms = now - this.lastChange;
+        const ms = now - history.lastChange;
         if (ms < 1000) {
             return false;
         }
@@ -631,25 +636,21 @@ export class DocumentBlock extends AbstractBlock {
         return true;
     }
     updateLastChange() {
-        this.lastChange = Date.now();
+        const history = this.getHistory();
+        history.lastChange = Date.now();
     }
-    takeSnapshot(dto?: IBlockDto) {
-        const len = this.undoStack.length;
-        if (len == maxHistoryItems) {
-            this.undoStack.shift();
-        }
-        dto = dto || this.serialize();
-        this.undoStack.push(dto);
-    }
+    
     addToHistory() {
         if (!this.minimalTimeElapsedSinceLastChange()) {
             return;
         }
-        this.takeSnapshot();
+        this.manager.takeSnapshot(this.id);
     }
     clearHistory() {
-        this.undoStack = [];
-        this.redoStack = [];
+        const history = this.getHistory();
+        history.lastChange = Date.now();
+        history.undoStack = [];
+        history.redoStack = [];
     }
     triggerBeforeChange() {
         this.publish(EventType.beforeChange);
@@ -1995,13 +1996,14 @@ export class DocumentBlock extends AbstractBlock {
         }
     }
     async redoHistory() {
-        const last = this.redoStack.pop();
+        const history = this.getHistory();
+        const last = history.redoStack.pop();
         if (!last) return;
-        if (this.undoStack.length == maxHistoryItems) {
-            this.undoStack.shift();
+        if (history.undoStack.length == maxHistoryItems) {
+            history.undoStack.shift();
         }
         const dto = this.serialize();
-        this.undoStack.push(dto);
+        history.undoStack.push(dto);
         await this.reloadDocument(last);
     }
     clearDocument() {
@@ -2018,14 +2020,15 @@ export class DocumentBlock extends AbstractBlock {
         doc.generateIndex();        
     }
     async undoHistory() {
-        const last = this.undoStack.pop();
+        const history = this.getHistory();
+        const last = history.undoStack.pop();
         if (!last) return;
-        if (this.redoStack.length == maxHistoryItems) {
-            this.redoStack.shift();
+        if (history.redoStack.length == maxHistoryItems) {
+            history.redoStack.shift();
         }
         const dto = this.serialize();
-        this.redoStack.push(last);
-        this.redoStack.push(dto);
+        history.redoStack.push(last);
+        history.redoStack.push(dto);
         await this.reloadDocument(last);
     }
     pastePlainTextItem(targetBlockId: GUID, ci: number, item: any) {

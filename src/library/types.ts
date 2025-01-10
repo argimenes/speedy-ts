@@ -469,3 +469,10 @@ export enum ClockDirection {
 
 export const isStr = (value: any) => typeof (value) == "string";
 export const isNum = (value: any) => typeof (value) == "number";
+
+export type DocumentHistory = {
+    id: string;
+    undoStack: IBlockDto[];
+    redoStack: IBlockDto[];
+    lastChange: number;
+}

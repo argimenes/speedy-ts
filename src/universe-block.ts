@@ -11,7 +11,7 @@ import { IframeBlock } from "./blocks/iframe-block";
 import { BlockProperty } from "./library/block-property";
 import { StandoffEditorBlock } from "./blocks/standoff-editor-block";
 import { StandoffProperty } from "./library/standoff-property";
-import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IUniverseBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType, passoverClass, isStr } from "./library/types";
+import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IUniverseBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType, passoverClass, isStr, DocumentHistory } from "./library/types";
 import { PlainTextBlock } from "./blocks/plain-text-block";
 import { ClockPlugin } from "./library/plugins/clock";
 import { EmbedDocumentBlock } from "./blocks/embed-document-block";
@@ -40,6 +40,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     clipboard: Record<string, any>[];
     registeredBlocks: IBlock[];
     state: string;
+    history: Record<string, DocumentHistory>;
     constructor(props?: IUniverseBlockConstructor) {
         super({ id: props?.id, container: props?.container });
         this.state = BlockState.initalising;
@@ -62,6 +63,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.plugins = [];
         this.clipboard = [];
         this.manager = this;
+        this.history = {};
         this.registeredBlocks = [this];
         this.attachEventBindings();
         this.setupControlPanel();
@@ -1435,10 +1437,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         container.appendChild(video.container);
         return video;
     }
-    addBlockTo(parent: IBlock, block: IBlock, skipIndexation?: boolean) {
+    addBlockTo(parent: AbstractBlock, block: IBlock, skipIndexation?: boolean) {
         parent.blocks.push(block);
         this.registerBlock(block);
-        this.generatePreviousNextRelations(parent);
+        this.addParentSiblingRelations(parent);
         if (!skipIndexation) this.reindexAncestorDocument(parent);
     }
     async buildChildren(parent: AbstractBlock, blockDto: IBlockDto, update?: (b: IBlock) => void) {
@@ -1740,7 +1742,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const count = this.registeredBlocks.filter(x => x.type == BlockType.DocumentWindowBlock).length;
         const buffer = count * 20;
         this.addBlockTo(win, doc);
-        this.addBlockTo(background, win);
+        this.addBlockTo(background as AbstractBlock, win);
         updateElement(doc.container, {
             classList: ["document-container"]
         });
@@ -1758,8 +1760,27 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addParentSiblingRelations(workspace);
         doc.generateIndex();
         doc.setFocus();
-        doc.takeSnapshot();
+        this.takeSnapshot(doc.id);
         return doc;
+    }
+    takeSnapshot(id: string) {
+        const block = this.getBlock(id);
+        let dto = block.serialize();
+        let history = this.history[id];
+        if (!history) {
+            this.history[id] = {
+                id,
+                undoStack: [dto],
+                redoStack: [],
+                lastChange: Date.now()
+            };
+            return;
+        }
+        const len = history.undoStack.length;
+        if (len == 30) {
+            history.undoStack.shift();
+        }
+        history.undoStack.push(dto);
     }
     async loadDocument(dto: IMainListBlockDto, container?: HTMLDivElement) {
         if (dto.type != BlockType.DocumentBlock) {
