@@ -52,9 +52,9 @@ export abstract class AbstractBlock implements IBlock {
             }
         });
         this.commitHandler = () => { };
-        this.metadata = {};
-        this.blockProperties =[];
-        this.blockSchemas = [];
+        this.metadata = args.metadata || {};
+        this.blockProperties = args.blockProperties || [];
+        this.blockSchemas = args.blockSchemas || [];
         this.commitHandler = () => { };
         this.blocks=[];
         this.overlays = [];

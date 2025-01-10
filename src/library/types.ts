@@ -288,6 +288,8 @@ export interface IAbstractBlockConstructor {
     container?: HTMLDivElement;
     manager?: UniverseBlock;
     metadata?: Record<string, any>;
+    blockProperties?: BlockProperty[];
+    blockSchemas?: IBlockPropertySchema[];
     root?: IBlock;
 }
 export enum InputEventSource {

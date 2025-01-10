@@ -18,6 +18,7 @@ import { IndentedListBlock } from './indented-list-block';
 import { TabBlock } from './tabs-block';
 import { BlockProperty } from '../library/block-property';
 import BlockVines from '../library/plugins/block-vines';
+import { StandoffProperty } from '../library/standoff-property';
 
 const maxHistoryItems = 30;
 
@@ -1402,14 +1403,14 @@ export class DocumentBlock extends AbstractBlock {
                     description: "Either wraps the text in a new tab, or creates a new tab",
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block as StandoffEditorBlock;
-                        const self = block.manager as UniverseBlock;
-                        const parent = self.getParent(block) as IBlock;
+                        const manager = block.manager as UniverseBlock;
+                        const parent = manager.getParent(block) as IBlock;
                         if (!parent) return;
                         if (parent.type == BlockType.TabBlock) {
                             const previous = parent.relation.previous;
-                            self.addTab({ tabId: parent.id, name: "...", copyTextBlockId: block.id });
+                            manager.addTab({ tabId: parent.id, name: "...", copyTextBlockId: block.id });
                         } else {
-                            self.convertBlockToTab(block.id);
+                            _this.convertBlockToTab(block.id);
                         }
                     }
                 }
@@ -1446,7 +1447,7 @@ export class DocumentBlock extends AbstractBlock {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: ["Mac:Control-R"]
+                    match: ["Control-R"]
                 },
                 action: {
                     name: "Right-align",
@@ -1635,7 +1636,7 @@ export class DocumentBlock extends AbstractBlock {
             const newTabName = parsed ? ((tabNum as number) + 1) + "" : "...";
             manager.addTab({ tabId: parent.id, name: newTabName });
         } else {
-            manager.convertBlockToTab(block.id);
+            this.convertBlockToTab(block.id);
         }
     }
     async deindentBlock(args: IBindingHandlerArgs) {
@@ -1726,6 +1727,32 @@ export class DocumentBlock extends AbstractBlock {
         } else {
             // TBC
         }      
+    }
+    getAllStandoffPropertiesByType(type: string) {
+        const blocks = this.manager.registeredBlocks
+            .filter(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock[];
+        const props: StandoffProperty[] = [];
+        blocks.forEach(b => {
+            if (!b.standoffProperties.length) return;
+            const entities = b.standoffProperties.filter(x => x.type == type);
+            if (!entities) return;
+            props.push(...entities);
+        });
+        return props;
+    }
+    async getEntities() {
+        const props = this.getAllStandoffPropertiesByType("codex/entity-reference");
+        const ids = _.unique(props.map(x => x.value)).join(",");
+        const res = await fetch('/api/getEntitiesJson', {
+            method: 'POST',
+            body: JSON.stringify({ ids }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const json = await res.json();
+        if (!json.Success) return [];
+        return json.Data.entities;
     }
     async handleAnnotationMonitorClicked(args: IBindingHandlerArgs) {
         const caret = args.caret as Caret;
@@ -2019,7 +2046,6 @@ export class DocumentBlock extends AbstractBlock {
         manager.addBlockTo(parent, doc);
         manager.addParentSiblingRelations(parent);
         doc.generateIndex();
-        this.manager.takeSnapshot(doc.id);     
     }
     async undoHistory() {
         const last = this.manager.undoHistory(this.id);
