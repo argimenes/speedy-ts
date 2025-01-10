@@ -127,7 +127,7 @@ export async function saveConcepts(claims: IConceptDto[]) {
       code: node.Code,
       deleted: node.IsDeleted
     } as any;
-    await db.create<Concept>(recordId, data);
+    await db.upsert<Concept>(recordId, data);
   }
 }
 
@@ -174,7 +174,7 @@ export async function saveClaims(claims: IClaimDto[]) {
       role: node.Role,
       deleted: node.IsDeleted
     } as any;
-    await db.create<Claim>(recordId, data);
+    await db.upsert<Claim>(recordId, data);
   }
 }
 
@@ -186,7 +186,7 @@ export async function saveAgents(agents: IAgentDto[]) {
       type: node.AgentType,
       deleted: node.IsDeleted
     } as any;
-    await db.create<Agent>(recordId, data);
+    await db.upsert<Agent>(recordId, data);
   }
 }
 
