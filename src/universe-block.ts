@@ -1218,10 +1218,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         };
         const doc = await this.addDocumentToWorkspace(dto);
     }
-    async saveServerDocument(filename: string, folder: string = ".") {
-        const focus = this.getBlockInFocus();
-        const docRoot = this.getParentOfType(focus, BlockType.DocumentBlock);
-        const dto = docRoot.serialize();
+    async saveServerDocument(blockId: string, filename: string, folder: string = ".") {
+        const doc = this.getBlock(blockId) as DocumentBlock;
+        const dto = doc.serialize();
         if (!filename) return;
         const res = await fetch("/api/saveDocumentJson", {
             headers: { "Content-Type": "application/json" },
@@ -1767,13 +1766,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     takeSnapshot(id: string) {
         const block = this.getBlock(id);
         let dto = block.serialize();
-        const focus = this.getBlockInFocus() as StandoffEditorBlock;
-        dto.metadata.focus = {
-            blockId: focus.id
-        };
-        if (focus.type == BlockType.StandoffEditorBlock) {
-            dto.metadata.focus.caret = focus.getCaret().right.index;
-        }
         let history = this.history[id];
         if (!history) {
             this.history[id] = {

@@ -1121,16 +1121,14 @@ export class DocumentBlock extends AbstractBlock {
                     description: "",
                     handler: async (args: IBindingHandlerArgs) => {
                         args.e?.preventDefault();
-                        const manager = args.block.manager as UniverseBlock;
-                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock);
-                        if (!doc) return;
-                        let filename = doc.metadata.filename;
+                        const manager = _this.manager as UniverseBlock;
+                        let filename = _this.metadata.filename;
                         if (!filename) {
                             filename = prompt("Filename?");
-                            doc.metadata.filename = filename;
+                            _this.metadata.filename = filename;
                         }
-                        const folder = doc.metadata.folder || ".";
-                        await manager.saveServerDocument(filename, folder);
+                        const folder = _this.metadata.folder || ".";
+                        await manager.saveServerDocument(_this.id, filename, folder);
                     }
                 }
             },
@@ -2386,13 +2384,22 @@ export class DocumentBlock extends AbstractBlock {
         this.metadata = data.metadata || {};
     }
     serialize() {
-        return {
+        const dto = {
             id: this.id,
             type: this.type,
             metadata: this.metadata,
             blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
-            children: this.blocks?.map(x => x.serialize()) || []
+            children: this.blocks.map(x => x.serialize())
         } as IBlockDto;
+        dto.metadata = dto.metadata || {};
+        const focus = this.manager.getBlockInFocus() as StandoffEditorBlock;
+        dto.metadata.focus = {
+            blockId: focus.id
+        };
+        if (focus.type == BlockType.StandoffEditorBlock) {
+            dto.metadata.focus.caret = focus.getCaret().right.index;
+        }
+        return dto;
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
