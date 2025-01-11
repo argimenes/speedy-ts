@@ -1738,6 +1738,12 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             if (!entity) return;
             p.cache.entity = entity;
         });
+        this.history[doc.id] = {
+            id: doc.id,
+            redoStack: [],
+            undoStack: [],
+            lastChange: Date.now()
+        };
         return doc;
     }
     takeSnapshot(id: string) {
@@ -2124,6 +2130,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const dto = block.serialize();
         history.redoStack.push(last);
         history.redoStack.push(dto);
+        console.log("undoHistory", { id, history, dto, last })
         return last;
     }
     findNearestNephew(block: IBlock): IBlock {

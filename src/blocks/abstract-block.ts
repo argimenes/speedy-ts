@@ -311,5 +311,6 @@ export abstract class AbstractBlock implements IBlock {
         if (this.container) {
             this.container.remove();
         }
+        console.log("destroy", { type: this.type, block: this, container: this.container })
     }
 }

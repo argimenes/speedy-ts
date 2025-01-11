@@ -38,12 +38,6 @@ export class DocumentBlock extends AbstractBlock {
         this.type = BlockType.DocumentBlock;
         this.state = BlockState.initalising;
         this.index = [];
-        this.manager.history[this.id] = {
-            id: this.id,
-            undoStack: [],
-            redoStack: [],
-            lastChange: Date.now()
-        };
         this.textProcessor = new TextProcessor();
         this.inputEvents = this.getInputEvents();
         this.setBlockSchemas(this.getBlockSchemas());
@@ -2040,15 +2034,18 @@ export class DocumentBlock extends AbstractBlock {
         const manager = this.manager;
         const parent = this.relation.parent as AbstractBlock;
         if (!parent) return;
+        console.log("reloadDocument", { parent, dto })
         this.destroy();
         const doc = await manager.recursivelyBuildBlock(parent.container, dto) as DocumentBlock;
-        doc.id = dto.id;
         manager.addBlockTo(parent, doc);
         manager.addParentSiblingRelations(parent);
         doc.generateIndex();
     }
     async undoHistory() {
         const last = this.manager.undoHistory(this.id);
+        if (!last) {
+            return;
+        }
         await this.reloadDocument(last);
     }
     pastePlainTextItem(targetBlockId: GUID, ci: number, item: any) {
