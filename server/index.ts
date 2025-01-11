@@ -9,6 +9,9 @@ import type { IBlockDto, StandoffEditorBlockDto, BlockType, IndexedBlock } from 
 //import { BlockType } from "./types";
 let db: Surreal | undefined;
 
+const baseGraphPath = "../../../codex-data";
+const baseDocumentPath = "../../../codex-data/data";
+
 type MulterRequest = Request & { files: Express.Multer.File[] };
 
 interface GraphData {
@@ -205,6 +208,7 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('dist'));
 app.use("/templates", express.static('templates'));
 app.use('/uploads', express.static('uploads'));
+app.use('/video-backgrounds', express.static(path.join(__dirname, baseGraphPath, 'backgrounds/video')));
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb'}));
 
@@ -269,8 +273,7 @@ app.get("/api/listFolders", function (req: Request, res: Response) {
   res.send({ folders });
 });
 
-const baseGraphPath = "../../../codex-data";
-const baseDocumentPath = "../../../codex-data/data";
+
 
 app.post('/api/graph/update-entity-references', async (req: Request, res: Response) => {
   const { filename, nodes, edges } = req.body;

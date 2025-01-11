@@ -27,6 +27,7 @@ import { CodeMirrorBlock } from './blocks/code-mirror-block';
 import { WorkspaceBlock } from './blocks/workspace-block';
 import { DocumentWindowBlock } from './blocks/document-window-block';
 import { ImageBackgroundBlock } from './blocks/image-background-block';
+import { VideoBackgroundBlock } from './blocks/video-background-block';
 
 export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     lastFocus?: IBlock;
@@ -1242,6 +1243,14 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         container.appendChild(workspace.container);
         return workspace;
     }
+    async buildVideoBackgroundBlock(container: HTMLElement, blockDto: IBlockDto) {
+        const bg = this.createVideoBackgroundBlock(blockDto);
+        await this.buildChildren(bg, blockDto, (child) => {
+            bg.container.appendChild(child.container);
+        });
+        container.appendChild(bg.container);
+        return bg;
+    }
     async buildImageBackgroundBlock(container: HTMLElement, blockDto: IBlockDto) {
         const bg = this.createImageBackgroundBlock(blockDto);
         await this.buildChildren(bg, blockDto, (child) => {
@@ -1543,6 +1552,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (blockDto.type == BlockType.WorkspaceBlock) {
             return await this.buildWorkspaceBlock(container, blockDto);
         }
+        if (blockDto.type == BlockType.VideoBackgroundBlock) {
+            return await this.buildVideoBackgroundBlock(container, blockDto);
+        }
         if (blockDto.type == BlockType.ImageBackgroundBlock) {
             return await this.buildImageBackgroundBlock(container, blockDto);
         }
@@ -1683,10 +1695,16 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const dto = {
             type: BlockType.WorkspaceBlock,
             children: [
+                // {
+                //     type: BlockType.ImageBackgroundBlock,
+                //     metadata: {
+                //         url: "https://upload.wikimedia.org/wikipedia/commons/c/c5/Aurora_borealis_above_Lyngenfjorden%2C_2012_March_%28cropped%29.jpg"
+                //     }
+                // },
                 {
-                    type: BlockType.ImageBackgroundBlock,
+                    type: BlockType.VideoBackgroundBlock,
                     metadata: {
-                        url: "https://upload.wikimedia.org/wikipedia/commons/c/c5/Aurora_borealis_above_Lyngenfjorden%2C_2012_March_%28cropped%29.jpg"
+                        url: "/video-backgrounds/green-aurora.mp4"
                     }
                 }
             ]
@@ -2027,6 +2045,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     createWorkspaceBlock(dto?: IBlockDto) {
         const block = new WorkspaceBlock({ ...dto });
+        return block;
+    }
+    createVideoBackgroundBlock(dto?: IBlockDto) {
+        const block = new VideoBackgroundBlock({ manager: this, ...dto });
         return block;
     }
     createImageBackgroundBlock(dto?: IBlockDto) {
