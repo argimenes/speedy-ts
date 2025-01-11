@@ -2040,6 +2040,7 @@ export class DocumentBlock extends AbstractBlock {
         manager.addBlockTo(parent, doc);
         manager.addParentSiblingRelations(parent);
         doc.generateIndex();
+        doc.setFocus();
     }
     async undoHistory() {
         const last = this.manager.undoHistory(this.id);
