@@ -55,7 +55,19 @@ export class WindowBlock extends AbstractBlock {
         this.container.appendChild(this.header);
         this.container.classList.add("window-block");
         this.state = "normal";
+        this.blockSchemas = this.getBlockSchemas();
         this.setupEventHandlers();
+    }
+    getBlockSchemas() {
+        return [
+            {
+                type: "block/theme/glass",
+                name: "Glass window",
+                decorate: {
+                    blockClass: "block_theme_glass"
+                }
+            }
+        ]
     }
     setupEventHandlers() {
         const self = this;

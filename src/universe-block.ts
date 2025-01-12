@@ -1267,17 +1267,19 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         return wind;
     }
     async buildWindowBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const wind = this.createWindowBlock(blockDto);
-        await this.buildChildren(wind, blockDto, (child) => {
+        const win = this.createWindowBlock(blockDto);
+        await this.buildChildren(win, blockDto, (child) => {
             // updateElement(child.container, {
             //     style: {
             //         display: "inline-block"
             //     }
             // });
-            wind.container.appendChild(child.container);
+            win.container.appendChild(child.container);
         });
-        container.appendChild(wind.container);
-        return wind;
+        win.addBlockProperties(blockDto.blockProperties);
+        win.applyBlockPropertyStyling();
+        container.appendChild(win.container);
+        return win;
     }
     async buildCheckboxBlock(container: HTMLElement, blockDto: IBlockDto) {
         const todo = this.createCheckboxBlock(blockDto);
@@ -1721,7 +1723,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             type: BlockType.DocumentWindowBlock,
             metadata: {
                 title: dto.metadata?.filename
-            }
+            },
+            blockProperties: [
+                { type: "block/theme/glass" }
+            ]
         }) as WindowBlock;
         const doc = await this.recursivelyBuildBlock(win.container, dto) as DocumentBlock;
         const workspace = this.registeredBlocks.find(x => x.type == BlockType.WorkspaceBlock) as AbstractBlock;
@@ -1742,6 +1747,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 backgroundColor: "#efefef",
             }
         });
+        
         workspace.container.appendChild(win.container);
         this.addParentSiblingRelations(win);
         this.addParentSiblingRelations(workspace);

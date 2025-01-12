@@ -67,6 +67,7 @@ body {
   }
   
   
+  
   .fullscreen-background {
     position: fixed;
     top: 0;
@@ -88,7 +89,7 @@ body {
     height: auto;
     max-height: 600px;
     padding: 0 20px;
-    background-color: #efefef;
+    /* background-color: #efefef; */
   }
 
   .block-window {
@@ -368,6 +369,16 @@ body {
     border: 1px solid #ccc;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .block_theme_glass {
+    /* From https://css.glass */
+    color: white;
+    background: rgba(97, 120, 221, 0.24) !important;
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5.9px);
+    -webkit-backdrop-filter: blur(5.9px);
+    border: 1px solid rgba(97, 120, 221, 0.3);
   }
   .window-block-header {
     cursor: move;
