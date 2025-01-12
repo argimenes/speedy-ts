@@ -1259,24 +1259,19 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         return bg;
     }
     async buildDocumentWindowBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const wind = this.createDocumentWindowBlock(blockDto);
-        await this.buildChildren(wind, blockDto, (child) => {
-            wind.container.appendChild(child.container);
+        const win = this.createDocumentWindowBlock(blockDto);
+        await this.buildChildren(win, blockDto, (child) => {
+            win.container.appendChild(child.container);
         });
-        container.appendChild(wind.container);
-        return wind;
+        win.applyBlockPropertyStyling();
+        container.appendChild(win.container);
+        return win;
     }
     async buildWindowBlock(container: HTMLElement, blockDto: IBlockDto) {
         const win = this.createWindowBlock(blockDto);
         await this.buildChildren(win, blockDto, (child) => {
-            // updateElement(child.container, {
-            //     style: {
-            //         display: "inline-block"
-            //     }
-            // });
             win.container.appendChild(child.container);
         });
-        win.addBlockProperties(blockDto.blockProperties);
         win.applyBlockPropertyStyling();
         container.appendChild(win.container);
         return win;
@@ -2054,11 +2049,15 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         return block;
     }
     createDocumentWindowBlock(dto?: IBlockDto) {
-        const block = new DocumentWindowBlock({ manager: this, ...dto });
+        const block = new DocumentWindowBlock({ manager: this });
+        block.metadata = dto.metadata;
+        block.addBlockProperties(dto.blockProperties);
         return block;
     }
     createWindowBlock(dto?: IBlockDto) {
-        const block = new WindowBlock({ manager: this, ...dto });
+        const block = new WindowBlock({ manager: this });
+        block.metadata = dto.metadata;
+        block.addBlockProperties(dto.blockProperties);
         return block;
     }
     createCheckboxBlock(dto?: IBlockDto) {

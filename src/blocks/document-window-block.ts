@@ -17,5 +17,17 @@ export class DocumentWindowBlock extends WindowBlock
         };
         super(args);
         this.type = BlockType.DocumentWindowBlock;
+        this.blockSchemas = this.getBlockSchemas();
+    }
+    getBlockSchemas() {
+        return [
+            {
+                type: "block/theme/glass",
+                name: "Glass window",
+                decorate: {
+                    blockClass: "block_theme_glass"
+                }
+            }
+        ]
     }
 }
