@@ -1712,6 +1712,36 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addParentSiblingRelations(workspace);
         return workspace;
     }
+    async saveWorkspace() {
+        const filename = prompt("Filename: ");
+        const dto = this.serialize() as any;
+        dto.metadata = { ...dto.metadata, filename };
+        let blocks = [];
+        let current = dto;
+        let hasBlocks = true
+        while (hasBlocks) {
+            if (current.blocks.length) {
+                blocks.push(...current.blocks);
+                current = current.blocks[0];
+            }
+            hasBlocks = false;
+        } 
+        const documents = blocks.filter(x => x.type.indexOf("Document") >= 0);
+        documents.forEach(d => {
+            d.metadata = { ...d.metadata, loadFromExternal: true };
+            d.blocks = [];
+        });
+        console.log("saveWorkspace", { dto });
+        const res = await fetch("/api/saveWorkspaceJson", {
+            method: "POST",
+            body: JSON.stringify({
+                filename,
+                workspace: dto
+            }),
+            headers: { "Content-Type": "application/json" }
+        });
+        const json = await res.json();
+    }
     async addDocumentToWorkspace(dto: IMainListBlockDto) {
         const container = document.createElement("DIV") as HTMLDivElement;
         const win = await this.recursivelyBuildBlock(container, {

@@ -521,6 +521,20 @@ app.post('/api/getEntitiesJson', async function(req: Request, res: Response) {
   });
 });
 
+app.post('/api/saveWorkspaceJson', async function(req: Request, res: Response) {
+  const json = req.body;
+  const filename = json?.filename + ".json";
+  const folder = (json?.folder as string) || "workspaces";
+  const filepath = path.join(__dirname, baseDocumentPath, folder, filename);
+  const workspace = JSON.stringify(json.workspace);
+  await fs.writeFile(filepath, workspace, (err) => {
+    console.log('writeFile', { err });
+  });
+  res.send({
+    Success: true
+  });
+});
+
 app.post('/api/saveDocumentJson', async function(req: Request, res: Response) {
   const json = req.body;
   const folder = (json?.folder as string) || "data";
