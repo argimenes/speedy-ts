@@ -57,7 +57,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.direction = PointerDirection.Undo;
         this.blockProperties= [];
         this.blockSchemas=[];
-        this.inputEvents = this.getBlockManagerEvents();
+        this.inputEvents = this.getInputEvents();
         this.inputActions = [];
         this.modes = ["global","default"];
         this.highestZIndex = 0;
@@ -515,9 +515,25 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         ]
         return events;
     }
-    getBlockManagerEvents() {
+    getInputEvents() {
+        const _this = this;
         const events: InputEvent[] = [
-            
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Mac:Meta-1"
+                },
+                action: {
+                    name: "Save workspace",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        await _this.saveWorkspace();
+                    }
+                }
+            },
         ];
         return events;
     }
@@ -551,6 +567,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             }
             current = parent;
         }
+        list.push(this);
         return list;
     }
     findNearestWord(index: number, words: Word[]) {
@@ -901,8 +918,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             metadata: this.metadata,
             relation: this.relation,
             blockProperties: this.blockProperties.map(x => x.serialize()),
-            blocks: this.blocks.map(x => x.serialize())
-        }                                                                                  
+            children: this.blocks.map(x => x.serialize())
+        } as IBlockDto                                                                           
     }
     renderSpiky(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
         const highlights = properties.map(p => {
@@ -1714,29 +1731,30 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     async saveWorkspace() {
         const filename = prompt("Filename: ");
-        const dto = this.serialize() as any;
-        dto.metadata = { ...dto.metadata, filename };
+        const ws = this.serialize().children[0];
+        ws.metadata = { ...ws.metadata, filename };
         let blocks = [];
-        let current = dto;
+        let current = ws;
         let hasBlocks = true
         while (hasBlocks) {
-            if (current.blocks.length) {
-                blocks.push(...current.blocks);
-                current = current.blocks[0];
+            if (current.children?.length) {
+                blocks.push(...current.children);
+                current = current.children[0];
+                continue;
             }
             hasBlocks = false;
         } 
-        const documents = blocks.filter(x => x.type.indexOf("Document") >= 0);
+        const documents = blocks.filter(x => x.type == BlockType.DocumentBlock);
         documents.forEach(d => {
             d.metadata = { ...d.metadata, loadFromExternal: true };
-            d.blocks = [];
+            d.children = [];
         });
-        console.log("saveWorkspace", { dto });
+        console.log("saveWorkspace", { dto: ws });
         const res = await fetch("/api/saveWorkspaceJson", {
             method: "POST",
             body: JSON.stringify({
                 filename,
-                workspace: dto
+                workspace: ws
             }),
             headers: { "Content-Type": "application/json" }
         });

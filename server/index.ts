@@ -9,8 +9,9 @@ import type { IBlockDto, StandoffEditorBlockDto, BlockType, IndexedBlock } from 
 //import { BlockType } from "./types";
 let db: Surreal | undefined;
 
-const baseGraphPath = "../../../codex-data";
-const baseDocumentPath = "../../../codex-data/data";
+const basePath = "../../../codex-data";
+const baseDocumentPath = basePath + "/data";
+const baseWorkspacesPath = basePath + "/workspaces"
 
 type MulterRequest = Request & { files: Express.Multer.File[] };
 
@@ -208,7 +209,7 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('dist'));
 app.use("/templates", express.static('templates'));
 app.use('/uploads', express.static('uploads'));
-app.use('/video-backgrounds', express.static(path.join(__dirname, baseGraphPath, 'backgrounds/video')));
+app.use('/video-backgrounds', express.static(path.join(__dirname, basePath, 'backgrounds/video')));
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb'}));
 
@@ -277,7 +278,7 @@ app.get("/api/listFolders", function (req: Request, res: Response) {
 
 app.post('/api/graph/update-entity-references', async (req: Request, res: Response) => {
   const { filename, nodes, edges } = req.body;
-  const filepath = path.join(__dirname, baseGraphPath, filename);
+  const filepath = path.join(__dirname, basePath, filename);
   const data = fs.readFileSync(filepath, 'utf8') || "{ \"nodes\": [], \"edges\": [] }";
   const json: GraphData = JSON.parse(data);
   json.edges.push(...edges);
@@ -297,7 +298,7 @@ app.post('/api/addToGraphJson', async (req: Request, res: Response) => {
 
 app.post('/api/addToGraph', async (req: Request, res: Response) => {
   const { filename, id, name } = req.body;
-  const filepath = path.join(__dirname, baseGraphPath, filename);
+  const filepath = path.join(__dirname, basePath, filename);
   const data = fs.readFileSync(filepath, 'utf8') || "{ \"nodes\": [], \"edges\": [] }";
   const json: GraphData = JSON.parse(data);
   json.nodes.push({ id, name, type: "Entity" });
@@ -312,7 +313,7 @@ app.post('/api/addToGraph', async (req: Request, res: Response) => {
 
 app.get('/api/loadGraphJson', function(req: Request, res: Response) {
   const filename = req.query.filename as string;
-  const filepath = path.join(__dirname, baseGraphPath, filename);
+  const filepath = path.join(__dirname, basePath, filename);
   const data = fs.readFileSync(filepath, 'utf8');
   const json: GraphData = JSON.parse(data || "{ \"nodes\": [], \"edges\": [] }");
   res.send({
@@ -326,31 +327,31 @@ app.get('/api/loadGraphJson', function(req: Request, res: Response) {
 let agents: any[] = [];
 
 const setAgents = () =>{
-  const filepath = path.join(__dirname, baseGraphPath, "graph", "nodes", "agents.json");
+  const filepath = path.join(__dirname, basePath, "graph", "nodes", "agents.json");
   const data = fs.readFileSync(filepath, 'utf8');
   agents = JSON.parse(data);
 }
 
 const loadAgents = () =>{
-  const filepath = path.join(__dirname, baseGraphPath, "graph", "nodes", "agents.json");
+  const filepath = path.join(__dirname, basePath, "graph", "nodes", "agents.json");
   const data = fs.readFileSync(filepath, 'utf8');
   return JSON.parse(data) as IAgentDto[];
 }
 
 const loadClaims = () =>{
-  const filepath = path.join(__dirname, baseGraphPath, "graph", "nodes", "claims.json");
+  const filepath = path.join(__dirname, basePath, "graph", "nodes", "claims.json");
   const data = fs.readFileSync(filepath, 'utf8');
   return JSON.parse(data) as IClaimDto[];
 }
 
 const loadConcepts = () =>{
-  const filepath = path.join(__dirname, baseGraphPath, "graph", "nodes", "concepts.json");
+  const filepath = path.join(__dirname, basePath, "graph", "nodes", "concepts.json");
   const data = fs.readFileSync(filepath, 'utf8');
   return JSON.parse(data) as IConceptDto[];
 }
 
 const loadSubsetOfConcepts = () =>{
-  const filepath = path.join(__dirname, baseGraphPath, "graph", "edges", "subset_of_concept.json");
+  const filepath = path.join(__dirname, basePath, "graph", "edges", "subset_of_concept.json");
   const data = fs.readFileSync(filepath, 'utf8');
   return JSON.parse(data) as SubsetOfConceptDto[];
 }
@@ -524,8 +525,7 @@ app.post('/api/getEntitiesJson', async function(req: Request, res: Response) {
 app.post('/api/saveWorkspaceJson', async function(req: Request, res: Response) {
   const json = req.body;
   const filename = json?.filename + ".json";
-  const folder = (json?.folder as string) || "workspaces";
-  const filepath = path.join(__dirname, baseDocumentPath, folder, filename);
+  const filepath = path.join(__dirname, baseWorkspacesPath, filename);
   const workspace = JSON.stringify(json.workspace);
   await fs.writeFile(filepath, workspace, (err) => {
     console.log('writeFile', { err });
