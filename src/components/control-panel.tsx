@@ -7,6 +7,7 @@ import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { BlockType, CARET, IAbstractBlockConstructor, IBlock, IBlockDto } from "../library/types";
 import { renderToNode } from "../library/common";
 import { AbstractBlock } from "../blocks/abstract-block";
+import { DocumentBlock } from "../blocks/document-block";
 
 type Model = {
     command: string;
@@ -48,7 +49,8 @@ export class ControlPanelBlock extends AbstractBlock {
             if (!manager) return;
             const filename = parameters && parameters[0] || model.file;
             const block = manager.getBlockInFocus() as IBlock;
-            await manager.embedDocument(block, filename);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            await doc.embedDocument(block, filename);
         }
         const loadMicroDocument = async (parameters: string[]) => {
             if (!manager) return;
@@ -109,12 +111,16 @@ export class ControlPanelBlock extends AbstractBlock {
         const createCodeMirrorBlock = () => {
             const block = manager?.getBlockInFocus();
             if (!block) return;
-            manager?.addCodeMirrorBlock(block);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            doc.addCodeMirrorBlock(block);
         }
         const createNewDocumentClicked = (e: Event) => {
             e.preventDefault();
             createDocument();
         }
+        const saveWorkspace = async () => {
+            await manager.saveWorkspace();
+        };
         const createDocument = () => {
             if (!manager) return;
             //manager.clearHistory();
@@ -164,33 +170,39 @@ export class ControlPanelBlock extends AbstractBlock {
         const addImage = (url: string) => {
             const block = manager?.getBlockInFocus();
             if (!block) return;
-            manager?.addImageBlock(block, url);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            doc.addImageBlock(block, url);
         }
         const addImageRight = (url: string) => {
             const block = manager?.getBlockInFocus();
             if (!block) return;
-            manager?.addImageRight(block, url);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            doc.addImageRight(block, url);
         }
         const addImageLeft = (url: string) => {
             const block = manager?.getBlockInFocus();
             if (!block) return;
-            manager?.addImageLeft(block, url);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            doc.addImageLeft(block, url);
         }
         const addVideo = (url: string) => {
             const block = manager?.getBlockInFocus();
             if (!block) return;
-            manager?.addVideoBlock(block, url);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            doc.addVideoBlock(block, url);
         }
         const addIFrame = (url: string) => {
             const block = manager?.getBlockInFocus();
             if (!block) return;
-            manager?.addIFrameBlock(block, url);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            doc.addIFrameBlock(block, url);
         }
         const createGrid = (rows: number, cells: number) => {
             const block = manager.getBlockInFocus();
             if (!block) return;
-            const grid = manager.createGrid(rows, cells) as GridBlock;
-            manager.addBlockAfter(grid, block);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const grid = doc.createGrid(rows, cells) as GridBlock;
+            doc.addBlockAfter(grid, block);
             const textBlock = grid.blocks[0].blocks[0].blocks[0] as StandoffEditorBlock;
             manager.setBlockFocus(textBlock);
             textBlock.moveCaretStart();
@@ -198,8 +210,9 @@ export class ControlPanelBlock extends AbstractBlock {
         const createTable = (rows: number, cells: number) => {
             const block = manager.getBlockInFocus();
             if (!block) return;
-            const table = manager.createTable(rows, cells) as GridBlock;
-            manager.addBlockAfter(table, block);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const table = doc.createTable(rows, cells) as GridBlock;
+            doc.addBlockAfter(table, block);
             const textBlock = table.blocks[0].blocks[0].blocks[0] as StandoffEditorBlock;
             manager.setBlockFocus(textBlock);
             textBlock.moveCaretStart();
@@ -235,13 +248,15 @@ export class ControlPanelBlock extends AbstractBlock {
             if (!block) return;
             const next = block.relation.next;
             if (!next) return;
-            manager?.mergeBlocks(next.id, block.id);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            doc.mergeBlocks(next.id, block.id);
         }
         const split = () => {
             const block = manager?.getBlockInFocus() as StandoffEditorBlock;
             if (!block) return;
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
             const caret = block.lastCaret;
-            manager?.splitBlock(block.id, caret.index || 0);
+            doc.splitBlock(block.id, caret.index || 0);
         }
         const swapGridCells = () => {
             const block = manager?.getBlockInFocus() as IBlock;
@@ -274,19 +289,23 @@ export class ControlPanelBlock extends AbstractBlock {
         }
         const makeCheckbox = () => {
             const block = manager?.lastFocus;
-            manager?.makeCheckbox(block);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            doc?.makeCheckbox(block);
         }
         const moveBlockUp = () => {
             const block = manager?.getBlockInFocus() as IBlock;
-            manager?.moveBlockUp(block);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            doc.moveBlockUp(block);
         }
         const moveBlockDown = () => {
             const block = manager?.getBlockInFocus() as IBlock;
-            manager?.moveBlockDown(block);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            doc.moveBlockDown(block);
         }
         const toTab = () => {
             const block = manager?.getBlockInFocus();
-            manager?.convertBlockToTab(block!.id);
+            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            doc.convertBlockToTab(block!.id);
         }
         const runCommand = async () => {
             if (!model.command) {
@@ -327,6 +346,7 @@ export class ControlPanelBlock extends AbstractBlock {
                 case "embed-doc": await embedDocument(parameters); return;
                 case "merge-next": mergeNext(); return;
                 case "split": split(); return;
+                case "save-workspace": await saveWorkspace(); return;
                 default: break;
             }
         }
