@@ -36,12 +36,19 @@ export class WindowBlock extends AbstractBlock {
     constructor(args: IWindowBlockConstructor) {
         super(args);
         this.type = BlockType.WindowBlock;
-        this.metadata = {
-            title: args?.metadata?.title || "Untitled",
-            position: { x: 0, y: 0 },
-            size: { h: 0, w: 0 },
-            state: "normal",
-            zIndex: 0
+        const md = args.metadata;
+        this.metadata = args?.metadata || {
+            title: "Untitled",
+            position: {
+                x: "20px",
+                y: "20px"
+            },
+            size: {
+                w: "840px",
+                h: "620px"
+            },
+            zIndex: this.manager.getHighestZIndex(),
+            state: "normal"
         };
         this.onMaximize = args.onMaximize;
         this.onMinimize = args.onMinimize;
@@ -57,6 +64,18 @@ export class WindowBlock extends AbstractBlock {
         this.state = "normal";
         this.blockSchemas = this.getBlockSchemas();
         this.setupEventHandlers();
+        this.updatePosition();
+    }
+    updatePosition() {
+        const pos = this.metadata.position;
+        this.container.style.transform = `translate(${pos.x}px,${pos.y}px)`;
+        updateElement(this.container, {
+            style: {
+                width: this.metadata.size.w,
+                height: this.metadata.size.h,
+                "z-index": this.metadata.zIndex
+            }
+        })
     }
     getBlockSchemas() {
         return [

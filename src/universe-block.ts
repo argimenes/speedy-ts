@@ -534,6 +534,22 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                     }
                 }
             },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Mac:Meta-2"
+                },
+                action: {
+                    name: "Load workspace",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        await _this.loadWorkspace();
+                    }
+                }
+            }
         ];
         return events;
     }
@@ -1729,6 +1745,19 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addParentSiblingRelations(workspace);
         return workspace;
     }
+    async loadWorkspace() {
+        const filename = prompt("Filename: ");
+        const res = await fetchGet("/api/loadWorkspaceJson", { filename });
+        const json = await res.json();
+        if (!json.Success) {
+            return;
+        }
+        const ws = this.blocks[0];
+        ws.destroy();
+        const workspace = await this.recursivelyBuildBlock(this.container, json.workspace);
+        this.addBlockTo(this, workspace);
+        this.addParentSiblingRelations(this);
+    }
     async saveWorkspace() {
         const filename = prompt("Filename: ");
         const ws = this.serialize().children[0];
@@ -1762,10 +1791,22 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     async addDocumentToWorkspace(dto: IMainListBlockDto) {
         const container = document.createElement("DIV") as HTMLDivElement;
+        const count = this.registeredBlocks.filter(x => x.type == BlockType.DocumentWindowBlock).length;
+        const buffer = count * 20;
         const win = await this.recursivelyBuildBlock(container, {
             type: BlockType.DocumentWindowBlock,
             metadata: {
-                title: dto.metadata?.filename
+                title: dto.metadata?.filename,
+                position: {
+                    y: buffer + 20 + "px",
+                    x: 100 + buffer + "px",
+                },
+                size: {
+                    w: "840px",
+                    h: "620px",
+                },
+                state: "normal",
+                zIndex: this.getHighestZIndex()
             },
             blockProperties: [
                 { type: "block/theme/glass" }
@@ -1774,23 +1815,12 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const doc = await this.recursivelyBuildBlock(win.container, dto) as DocumentBlock;
         const workspace = this.registeredBlocks.find(x => x.type == BlockType.WorkspaceBlock) as AbstractBlock;
         const background = workspace.blocks[0];
-        const count = this.registeredBlocks.filter(x => x.type == BlockType.DocumentWindowBlock).length;
-        const buffer = count * 20;
+        
         this.addBlockTo(win, doc);
         this.addBlockTo(background as AbstractBlock, win);
         updateElement(doc.container, {
             classList: ["document-container"]
         });
-        updateElement(win.container, {
-            style: {
-                position: "absolute",
-                top: buffer + 20 + "px",
-                left: 100 + buffer + "px",
-                "z-index": this.getHighestZIndex(),
-                backgroundColor: "#efefef",
-            }
-        });
-        
         workspace.container.appendChild(win.container);
         this.addParentSiblingRelations(win);
         this.addParentSiblingRelations(workspace);

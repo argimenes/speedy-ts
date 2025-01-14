@@ -535,6 +535,19 @@ app.post('/api/saveWorkspaceJson', async function(req: Request, res: Response) {
   });
 });
 
+app.get('/api/loadWorkspaceJson', async function(req: Request, res: Response) {
+  const filename = req.query.filename + ".json";
+  const filepath = path.join(__dirname, baseWorkspacesPath, filename);
+  const data = fs.readFileSync(filepath, 'utf8');
+  const ws = JSON.parse(data) as IBlockDto;
+  res.send({
+    Success: true,
+    Data: {
+      workspace: ws
+    }
+  });
+});
+
 app.post('/api/saveDocumentJson', async function(req: Request, res: Response) {
   const json = req.body;
   const folder = (json?.folder as string) || "data";
