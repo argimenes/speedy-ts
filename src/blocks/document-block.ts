@@ -2397,7 +2397,7 @@ export class DocumentBlock extends AbstractBlock {
             blockId: focus.id
         };
         if (focus.type == BlockType.StandoffEditorBlock) {
-            dto.metadata.focus.caret = focus.getCaret().right.index;
+            dto.metadata.focus.caret = focus.getCaret()?.right?.index || 0;
         }
         return dto;
     }
