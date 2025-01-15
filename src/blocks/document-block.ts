@@ -50,6 +50,23 @@ export class DocumentBlock extends AbstractBlock {
         let history = this.manager.history[this.id];
         return history;
     }
+    async extractIntoNewDocument(id: GUID) {
+        const block = this.manager.getBlock(id);
+        const { metadata } = this.manager.getParentOfType(block, BlockType.DocumentBlock);
+        const dto = block.serialize();
+        const docDto = {
+            type: BlockType.DocumentBlock,
+            metadata: {
+              ...metadata,
+              filename: `${block.type}-${id}.json`
+            },
+            children: [
+                dto
+            ]
+        } as IDocumentBlockDto;
+        const doc = await this.manager.addDocumentToWorkspace(docDto);
+        await this.manager.saveServerDocument(doc.id, docDto.metadata.filename, metadata.folder);
+    }
     getBlockSchemas() {
         const manager = this.manager;
         return [
@@ -656,6 +673,22 @@ export class DocumentBlock extends AbstractBlock {
     getInputEvents() {
         const _this = this;
         return [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Control-X"
+                },
+                action: {
+                    name: "Copy current block into a new DocumentWindow.",
+                    description: `
+                        
+                    `,
+                    handler: async (args) => {
+                        await _this.extractIntoNewDocument(args.block.id);
+                    }
+                }
+            },
             {
                 mode: "default",
                 trigger: {
