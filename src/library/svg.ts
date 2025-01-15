@@ -521,7 +521,7 @@ export const drawClippedRectangle = (p: StandoffProperty, options: IDrawRectangl
         polygon.style.fill = options.fill;
         //polygon.style.fillOpacity = "0.4";
         polygon.style.strokeOpacity = "0";
-        polygon.style["mix-blend-mode"] = "multiply";
+        polygon.style["mix-blend-mode"] = "color-dodge";
     }
     if (options.stroke) {
         polygon.style.stroke = options.stroke;

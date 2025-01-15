@@ -2158,6 +2158,7 @@ export class DocumentBlock extends AbstractBlock {
         block.applyStandoffPropertyStyling();
         block.clearSelection();
         const panel = new AnnotationPanelBlock({
+            manager: this.manager,
             source: block,
             selection,
             events: {

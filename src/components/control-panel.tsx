@@ -8,6 +8,7 @@ import { BlockType, CARET, IAbstractBlockConstructor, IBlock, IBlockDto } from "
 import { renderToNode } from "../library/common";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { DocumentBlock } from "../blocks/document-block";
+import { Template } from "../library/templates";
 
 type Model = {
     command: string;
@@ -136,23 +137,10 @@ export class ControlPanelBlock extends AbstractBlock {
         const saveWorkspace = async () => {
             await manager.saveWorkspace();
         };
-        const createDocument = () => {
+        const createDocument = async () => {
             if (!manager) return;
-            //manager.clearHistory();
-            const doc = {
-                type: BlockType.DocumentBlock,
-                children: [
-                    {
-                        type: BlockType.StandoffEditorBlock,
-                        text: "",
-                        standoffProperties: [],
-                        blockProperties: [
-                            { type: "block/alignment/left "}
-                        ]
-                    }
-                ]
-            };
-            manager.loadDocument(doc);
+            const doc = Template.EmptyDocument;
+            await manager.addDocumentToWorkspace(doc);
         }
         const setBackgroundColour = (colour: string) => {
             const prop = {
