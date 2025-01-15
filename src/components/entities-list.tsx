@@ -1,13 +1,14 @@
 import { Component, For, onMount } from "solid-js";
 import { StandoffProperty } from "../library/standoff-property";
 import { createStore } from "solid-js/store";
-import { CARET, Caret, GUID, IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
+import { BlockType, CARET, Caret, GUID, IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { updateElement } from "../library/svg";
 import { render } from "solid-js/web";
 import _ from "underscore";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { AbstractBlock } from "../blocks/abstract-block";
+import { DocumentBlock } from "../blocks/document-block";
 
 type StandoffPropertyGroup = {
     item: StandoffProperty;
@@ -143,8 +144,9 @@ export const EntitiesListComponent : Component<EntitiesListComponentProps> = ({ 
         }));
     }
     onMount(async () => {
-        const properties = manager.getAllStandoffPropertiesByType("codex/entity-reference");
-        const entities = await manager.getEntities() as Entity[];
+        const doc = manager.getParentOfType(wrapper.source, BlockType.DocumentBlock) as DocumentBlock;
+        const properties = doc.getAllStandoffPropertiesByType("codex/entity-reference");
+        const entities = await doc.getEntities() as Entity[];
         const group = countItems(properties);
         const countMap = _.indexBy(group, (result) => result.item.value);
         const entitiesGroup = _.chain(entities)

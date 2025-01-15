@@ -530,7 +530,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                         
                     `,
                     handler: async (args) => {
-                        await _this.saveWorkspace();
+                        _this.saveWorkspace();
                     }
                 }
             },
@@ -1755,7 +1755,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addParentSiblingRelations(workspace);
         return workspace;
     }
-    async loadWorkspace(filename: string) {
+    async loadWorkspace(filename: string = null) {
+        const manager = this;
         filename = filename || prompt("Filename: ");
         const res = await fetchGet("/api/loadWorkspaceJson", { filename });
         const json = await res.json();
@@ -1768,37 +1769,42 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const workspace = await this.recursivelyBuildBlock(this.container, dto);
         this.addBlockTo(this, workspace);
         this.addParentSiblingRelations(this);
+        setTimeout(() => {
+            manager.registeredBlocks
+                .filter(x => x.type == BlockType.DocumentBlock)
+                .forEach(b => manager.takeSnapshot(b.id));
+        }, 500);
     }
-    async saveWorkspace() {
+    flatten(root: IBlockDto): IBlockDto[] {
+          const result: IBlockDto[] = [];
+          function traverse(block: IBlockDto): void {
+              result.push(block);
+              block.children.forEach((child) => {
+                  traverse(child);
+              });
+          }
+          traverse(root);
+          return result;
+    }
+    saveWorkspace() {
         const filename = prompt("Filename: ");
         const ws = this.serialize().children[0];
         ws.metadata = { ...ws.metadata, filename };
-        let blocks = [];
-        let current = ws;
-        let hasBlocks = true
-        while (hasBlocks) {
-            if (current.children?.length) {
-                blocks.push(...current.children);
-                current = current.children[0];
-                continue;
-            }
-            hasBlocks = false;
-        } 
-        const documents = blocks.filter(x => x.type == BlockType.DocumentBlock);
+        let children = this.flatten(ws);
+        const documents = children.filter(x => x.type == BlockType.DocumentBlock);
         documents.forEach(d => {
             d.metadata = { ...d.metadata, loadFromExternal: true };
             d.children = [];
         });
-        console.log("saveWorkspace", { dto: ws });
-        const res = await fetch("/api/saveWorkspaceJson", {
+        console.log("saveWorkspace", { dto: ws, children, documents });
+        fetch("/api/saveWorkspaceJson", {
             method: "POST",
             body: JSON.stringify({
                 filename,
                 workspace: ws
             }),
             headers: { "Content-Type": "application/json" }
-        });
-        const json = await res.json();
+        }).then();
     }
     async addDocumentToWorkspace(dto: IMainListBlockDto) {
         const container = document.createElement("DIV") as HTMLDivElement;

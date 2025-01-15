@@ -302,6 +302,7 @@ export abstract class AbstractBlock implements IBlock {
     destroy() {
         if (this.blocks.length) {
             this.blocks.forEach(b => b.destroy());
+            this.blocks = [];
         }
         this.manager.deregisterBlock(this.id);
         const parent = this.relation.parent as AbstractBlock;
