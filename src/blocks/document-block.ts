@@ -39,6 +39,7 @@ export class DocumentBlock extends AbstractBlock {
         super(args);
         this.type = BlockType.DocumentBlock;
         this.state = BlockState.initalising;
+        this.metadata = args.metadata || {};
         this.index = [];
         this.textProcessor = new TextProcessor();
         this.inputEvents = this.getInputEvents();

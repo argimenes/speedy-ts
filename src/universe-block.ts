@@ -522,7 +522,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Mac:Meta-1"
+                    match: ["Mac:Meta-1","Win:Control-1"]
                 },
                 action: {
                     name: "Save workspace",
@@ -538,7 +538,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Mac:Meta-2"
+                    match: ["Mac:Meta-2","Win:Control-2"]
                 },
                 action: {
                     name: "Load workspace",
@@ -1331,6 +1331,11 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         return textBlock;
     }
     async buildDocumentBlock(container: HTMLElement, blockDto: IBlockDto) {
+        if (blockDto.metadata?.loadFromExternal) {
+            const res = await fetchGet("/api/loadDocumentJson", { folder: blockDto.metadata.folder, filename: blockDto.metadata.filename });
+            const json = await res.json();
+            blockDto = json.Data.document;
+        }
         const documentBlock = this.createDocumentBlock(blockDto);
         await this.buildChildren(documentBlock, blockDto);
         container.appendChild(documentBlock.container);
@@ -1754,7 +1759,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }
         const ws = this.blocks[0];
         ws.destroy();
-        const workspace = await this.recursivelyBuildBlock(this.container, json.workspace);
+        const dto = json.Data.workspace;
+        const workspace = await this.recursivelyBuildBlock(this.container, dto);
         this.addBlockTo(this, workspace);
         this.addParentSiblingRelations(this);
     }
@@ -1798,12 +1804,12 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             metadata: {
                 title: dto.metadata?.filename,
                 position: {
-                    y: buffer + 20 + "px",
-                    x: 100 + buffer + "px",
+                    y: buffer + 20,
+                    x: buffer + 100,
                 },
                 size: {
-                    w: "840px",
-                    h: "620px",
+                    w: 840,
+                    h: 620,
                 },
                 state: "normal",
                 zIndex: this.getHighestZIndex()

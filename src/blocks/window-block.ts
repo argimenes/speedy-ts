@@ -253,13 +253,7 @@ export class WindowBlock extends AbstractBlock {
             type: this.type,
             metadata: this.metadata,
             blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
-            children: this.blocks?.map(x => {
-                const dto = x.serialize();
-                return {
-                    id: dto.id,
-                    type: dto.type
-                }
-            }) as IBlockDto[] || []
+            children: this.blocks?.map(x => x.serialize())
         } as IBlockDto;
     }
     deserialize(json: any): IBlock {
