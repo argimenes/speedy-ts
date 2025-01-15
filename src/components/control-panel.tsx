@@ -14,11 +14,13 @@ type Model = {
     file: string;
     folder: string;
     template: string;
+    workspace: string;
 }
 type Resources = {
     folders: string[];
     files: string[];
     templates: string[];
+    workspaces: string[];
 }
 export interface IControlPanelBlockConstructor extends IAbstractBlockConstructor {}
 
@@ -36,12 +38,14 @@ export class ControlPanelBlock extends AbstractBlock {
         const [model, setModel] = createStore<Model>({
             command: "",
             file: "",
-            template: ""
+            template: "",
+            workspace: ""
         } as any);
         const [resources, setResources] = createStore<Resources>({
             folders: [],
             files: [],
-            templates: []
+            templates: [],
+            workspaces: [],
         });
         const onSubmit = (e:Event) => {
             e.preventDefault();
@@ -80,6 +84,11 @@ export class ControlPanelBlock extends AbstractBlock {
             const filename = parameters && parameters[0] || model.file;
             await manager.loadServerTemplate(filename);
         }
+        const loadWorkspace = async (parameters: string[]) => {
+            if (!manager) return;
+            const workspace = parameters && parameters[0] || model.workspace;
+            await manager.loadWorkspace(workspace);
+        }
         const save = async (parameters: string[]) => {
             if (!manager) return;
             const filename = parameters && parameters[0] || model.file;
@@ -109,6 +118,10 @@ export class ControlPanelBlock extends AbstractBlock {
         const loadSelectedTemplateClicked = async (e: Event) => {
             e.preventDefault();
             await loadTemplate([model.template]);
+        }
+        const loadSelectedWorkspaceClicked = async (e: Event) => {
+            e.preventDefault();
+            await loadWorkspace([model.workspace]);
         }
         const createCodeMirrorBlock = () => {
             const block = manager?.getBlockInFocus();
@@ -409,15 +422,27 @@ export class ControlPanelBlock extends AbstractBlock {
                         </select>
                         <button class="form-control" onClick={loadSelectedTemplateClicked}>Load</button>
                     </div>
+                    <div class="partition">
+                        <select value={model.workspace} onInput={(e) => setModel("workspace", e.currentTarget.value)}>
+                            <For each={resources.workspaces}>{(workspace) =>
+                                <option value={workspace}>
+                                    {workspace}
+                                </option>
+                            }</For>
+                        </select>
+                        <button class="form-control" onClick={loadSelectedWorkspaceClicked}>Load</button>
+                    </div>
                 </div>
             )
         }
         const folders = await manager?.listFolders();
         const files = await manager?.listDocuments() as string[];
         const templates = await manager?.listTemplates() as string[];
+        const workspaces = await manager?.listWorkspaces() as string[];
         setResources("folders", folders);
         setResources("files", files);
         setResources("templates", templates);
+        setResources("workspaces", workspaces);
         setModel("file", files[0]);
         const jsx = ControlPanel();
         const node = this.node = renderToNode(jsx);

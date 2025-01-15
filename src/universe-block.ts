@@ -1222,6 +1222,11 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const json = await res.json();
         return json.files as string[];
     }
+    async listWorkspaces() {
+        const res = await fetchGet("/api/listWorkspaces", { folder: "workspaces" });
+        const json = await res.json();
+        return json.workspaces as string[];
+    }
     async listTemplates() {
         const res = await fetchGet("/api/listDocuments", { folder: "templates" });
         const json = await res.json();
@@ -1750,8 +1755,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addParentSiblingRelations(workspace);
         return workspace;
     }
-    async loadWorkspace() {
-        const filename = prompt("Filename: ");
+    async loadWorkspace(filename: string) {
+        filename = filename || prompt("Filename: ");
         const res = await fetchGet("/api/loadWorkspaceJson", { filename });
         const json = await res.json();
         if (!json.Success) {

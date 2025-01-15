@@ -263,6 +263,13 @@ app.get("/api/listDocuments", function (req: Request, res: Response) {
   });
 });
 
+app.get("/api/listWorkspaces", function (req: Request, res: Response) {
+  const folder = (req.query?.folder as string) || ".";
+  fs.readdir(path.join(__dirname, baseWorkspacesPath), (err, files) => {
+    res.send({ workspaces: files });
+  });
+});
+
 const listJsonFiles = (folder: string = ".") => {
   const folderPath = path.join(__dirname, baseDocumentPath, folder);
   const files = fs.readdirSync(folderPath).filter(file => path.extname(file) === '.json');
@@ -524,7 +531,7 @@ app.post('/api/getEntitiesJson', async function(req: Request, res: Response) {
 
 app.post('/api/saveWorkspaceJson', async function(req: Request, res: Response) {
   const json = req.body;
-  const filename = json?.filename + ".json";
+  const filename = json?.filename + "";
   const filepath = path.join(__dirname, baseWorkspacesPath, filename);
   const workspace = JSON.stringify(json.workspace);
   await fs.writeFile(filepath, workspace, (err) => {
@@ -536,7 +543,7 @@ app.post('/api/saveWorkspaceJson', async function(req: Request, res: Response) {
 });
 
 app.get('/api/loadWorkspaceJson', async function(req: Request, res: Response) {
-  const filename = req.query.filename + ".json";
+  const filename = req.query.filename + "";
   const filepath = path.join(__dirname, baseWorkspacesPath, filename);
   const data = fs.readFileSync(filepath, 'utf8');
   const ws = JSON.parse(data) as IBlockDto;
