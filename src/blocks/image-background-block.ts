@@ -17,7 +17,7 @@ export class ImageBackgroundBlock extends AbstractBlock {
         } as IBlockDto;
     }
     deserialize(json: any | any[]): IBlock {
-        return null;
+        return this;
     }
     constructor(args: IImageBackgroundBlockConstructor ) {
         super(args);

@@ -3,7 +3,7 @@ import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../libr
 import { AbstractBlock } from './abstract-block';
 import { updateElement } from '../library/svg';
 
-type WindowBlockMetadata = {} & {
+type WindowBlockMetadata =  {
     title: string;
     position: {
         x: number;
@@ -36,7 +36,6 @@ export class WindowBlock extends AbstractBlock {
     constructor(args: IWindowBlockConstructor) {
         super(args);
         this.type = BlockType.WindowBlock;
-        const md = args.metadata;
         this.metadata = args?.metadata || {
             title: "Untitled",
             position: {
@@ -49,7 +48,7 @@ export class WindowBlock extends AbstractBlock {
             },
             zIndex: this.manager.getHighestZIndex(),
             state: "normal"
-        };
+        } as any;
         this.onMaximize = args.onMaximize;
         this.onMinimize = args.onMinimize;
         this.onClose = args.onClose;

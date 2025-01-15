@@ -42,6 +42,6 @@ export class IframeBlock extends AbstractBlock {
         } as IBlockDto;
     }
     deserialize(json: any): IBlock {
-        throw new Error("Method not implemented.");
+        return this;
     }
 }

@@ -29,11 +29,13 @@ export interface IndexedBlock {
   path: string;
 }
 
+export interface IDocumentBlockConstructor extends IAbstractBlockConstructor {}
+
 export class DocumentBlock extends AbstractBlock {
     index: IndexedBlock[];
     textProcessor: TextProcessor;
     state: string;
-    constructor(args: IAbstractBlockConstructor) {
+    constructor(args: IDocumentBlockConstructor) {
         super(args);
         this.type = BlockType.DocumentBlock;
         this.state = BlockState.initalising;
@@ -1562,6 +1564,7 @@ export class DocumentBlock extends AbstractBlock {
         }]);
         block.applyStandoffPropertyStyling();
         const searchBlock = new SearchEntitiesBlock({
+            manager: this.manager,
             source: block,
             selection,
             onClose: async (search: SearchEntitiesBlock) => {

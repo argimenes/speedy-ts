@@ -191,7 +191,7 @@ export enum ActionKey {
 export interface IBlockRelationDto extends IBlockRelation {}
 export interface IBlockDto {
     id?: GUID;
-    type: BlockType;
+    type?: BlockType;
     relation?: Record<string, IBlockDto>;
     children?: IBlockDto[];
     metadata?: Record<string, any>;
@@ -284,10 +284,17 @@ export interface ICursor {
     anchorCell: Cell;
     caret: CARET;
 }
-export interface IAbstractBlockConstructor {
+export interface IAbstractBlockConstructor extends IBlockDto {
     id?: string;
     container?: HTMLDivElement;
-    manager?: UniverseBlock;
+    manager: UniverseBlock;
+    blockSchemas?: IBlockPropertySchema[];
+    root?: IBlock;
+}
+export interface IAbstractBlockConstructor2 {
+    id?: string;
+    container?: HTMLDivElement;
+    manager: UniverseBlock;
     metadata?: Record<string, any>;
     blockProperties?: BlockProperty[];
     blockSchemas?: IBlockPropertySchema[];

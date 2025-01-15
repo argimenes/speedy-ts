@@ -43,7 +43,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     state: string;
     history: Record<string, DocumentHistory>;
     constructor(props?: IUniverseBlockConstructor) {
-        super({ id: props?.id, container: props?.container });
+        super({ manager: null, id: props?.id, container: props?.container });
         this.state = BlockState.initalising;
         this.id = props?.id || uuidv4();
         this.type = BlockType.UniverseBlock;
@@ -2115,7 +2115,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.loadDocument(nextDoc);
     }
     createWorkspaceBlock(dto?: IBlockDto) {
-        const block = new WorkspaceBlock({ ...dto });
+        const block = new WorkspaceBlock({ manager: this, ...dto });
         return block;
     }
     createVideoBackgroundBlock(dto?: IBlockDto) {
@@ -2127,14 +2127,12 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         return block;
     }
     createDocumentWindowBlock(dto?: IBlockDto) {
-        const block = new DocumentWindowBlock({ manager: this });
-        block.metadata = dto.metadata;
+        const block = new DocumentWindowBlock({ ...dto, manager: this, onClose: async (b) => b.destroy() });
         block.addBlockProperties(dto.blockProperties);
         return block;
     }
     createWindowBlock(dto?: IBlockDto) {
-        const block = new WindowBlock({ manager: this });
-        block.metadata = dto.metadata;
+        const block = new WindowBlock({ manager: this, ...dto });
         block.addBlockProperties(dto.blockProperties);
         return block;
     }
@@ -2144,10 +2142,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     createStandoffEditorBlock(dto?: IBlockDto) {
         const standoffSchemas = this.getStandoffSchemas();
-        const textBlock = new StandoffEditorBlock({
-            id: dto?.id,
-            manager: this
-        });
+        const textBlock = new StandoffEditorBlock({ manager: this, ...dto });
         textBlock.setSchemas(standoffSchemas);
         textBlock.setCommitHandler(this.storeCommit.bind(this));
         if (dto?.metadata) textBlock.metadata = dto.metadata;

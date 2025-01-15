@@ -1,8 +1,9 @@
 import { BlockType } from "../library/types";
+import { AbstractBlock } from "./abstract-block";
 import { IWindowBlockConstructor, WindowBlock } from "./window-block";
 
 export interface IDocumentWindowBlockConstructor extends IWindowBlockConstructor {
-    
+    onClose: (b: AbstractBlock) => Promise<void>;
 }
 
 export class DocumentWindowBlock extends WindowBlock

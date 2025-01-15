@@ -20,9 +20,11 @@ type Resources = {
     files: string[];
     templates: string[];
 }
+export interface IControlPanelBlockConstructor extends IAbstractBlockConstructor {}
+
 export class ControlPanelBlock extends AbstractBlock {
     node: HTMLElement;
-    constructor(args: IAbstractBlockConstructor){
+    constructor(args: IControlPanelBlockConstructor){
         super(args);
         this.type = BlockType.ControlPanelBlock;
         this.node = document.createElement("DIV") as HTMLElement;
