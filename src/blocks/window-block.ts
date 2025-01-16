@@ -33,6 +33,7 @@ export class WindowBlock extends AbstractBlock {
     onMaximize?: (win: WindowBlock) => Promise<void>;
     onMinimize?: (win: WindowBlock) => Promise<void>;
     onClose?: (win: WindowBlock) => Promise<void>;
+    title: HTMLSpanElement;
     constructor(args: IWindowBlockConstructor) {
         super(args);
         this.type = BlockType.WindowBlock;
@@ -225,9 +226,13 @@ export class WindowBlock extends AbstractBlock {
         const title = document.createElement("SPAN") as HTMLSpanElement;
         title.style.fontSize = "0.5rem";
         title.textContent = this.metadata.title;
+        this.title = title;
 
         controls.append(minimizeBtn, maximizeBtn, closeBtn, title);
         return controls;
+    }
+    setTitle(title: string) {
+        this.title.textContent = title;
     }
     private createWindowButton(text: string, onClick: () => void): HTMLElement {
         const button = document.createElement('div');

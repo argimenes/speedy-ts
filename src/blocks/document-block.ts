@@ -1158,12 +1158,8 @@ export class DocumentBlock extends AbstractBlock {
                     handler: async (args: IBindingHandlerArgs) => {
                         args.e?.preventDefault();
                         const manager = _this.manager as UniverseBlock;
-                        let filename = _this.metadata.filename;
-                        if (!filename) {
-                            filename = prompt("Filename?");
-                            _this.metadata.filename = filename;
-                        }
-                        const folder = _this.metadata.folder || ".";
+                        const filename = _this.metadata.filename;
+                        const folder = _this.metadata.folder;
                         await manager.saveServerDocument(_this.id, filename, folder);
                     }
                 }

@@ -18,7 +18,7 @@ import { EmbedDocumentBlock } from "./blocks/embed-document-block";
 import { fetchGet } from "./library/common";
 import { TableBlock, TableCellBlock, TableRowBlock } from './blocks/tables-blocks';
 import { ControlPanelBlock } from './components/control-panel';
-import _ from 'underscore';
+import _, { first } from 'underscore';
 import { EntitiesListBlock } from './components/entities-list';
 import { WindowBlock } from './blocks/window-block';
 import { AbstractBlock } from './blocks/abstract-block';
@@ -49,7 +49,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.type = BlockType.UniverseBlock;
         this.container = props?.container || document.createElement("DIV") as HTMLElement;
         this.blocks = [];
-        this.metadata = {};
+        this.metadata = {
+            folder: ""
+        };
         this.relation = {};
         this.selections = [];
         this.commits = [];
@@ -71,6 +73,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.blockEvents = {};
         this.state = BlockState.initalised;
     }
+    setFolder(folder: string) {
+        this.metadata.folder = folder;
+    }
     async destroyAll() {
         await this.registeredBlocks.forEach(async (x: any) => {
             if (x.destroy && !x.destroyAsync) { 
@@ -83,9 +88,11 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         });
     }
     deserialize(json: any): IBlock {
-        throw new Error("Method not implemented.");
+        return this;
     }
     destroy() {
+        this.registeredBlocks = [];
+        this.history = {};
         this.blocks = [];
         this.inputEvents = [];
         this.inputActions = [];
@@ -95,7 +102,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.selections = [];
         this.container.remove();
     }
-    findParentBlock(el: HTMLElement) {
+    findNearestBlockByElement(el: HTMLElement) {
         let current = el;
         while (current) {
             let match = this.registeredBlocks.find(x=> x.container == current);
@@ -109,7 +116,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (!this.container.contains(e.target as HTMLElement)) {
             return;
         }
-        const parentBlock = this.findParentBlock(e.target as HTMLElement);
+        const parentBlock = this.findNearestBlockByElement(e.target as HTMLElement);
         if (!parentBlock) {
             console.log("Could not find a container parent.")
             return;
@@ -1256,10 +1263,23 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         };
         const doc = await this.addDocumentToWorkspace(dto);
     }
-    async saveServerDocument(blockId: string, filename: string, folder: string = ".") {
+    async saveServerDocument(blockId: string, filename: string, folder: string) {
         const doc = this.getBlock(blockId) as DocumentBlock;
+        const win = this.getParentOfType(doc, BlockType.DocumentWindowBlock) as DocumentWindowBlock;
         const dto = doc.serialize();
+        folder = folder || this.metadata.folder;
+        if (!filename) {
+            const firstParagraph = this.flatten(dto).find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlockDto;
+            if (firstParagraph) {
+                filename = firstParagraph.text.substring(0, 20);
+            } else {
+                filename = prompt("Filename?");
+            }
+        }
         if (!filename) return;
+        if (win) {
+            win.setTitle(filename);
+        }
         const res = await fetch("/api/saveDocumentJson", {
             headers: { "Content-Type": "application/json" },
             method: "POST",
