@@ -29,6 +29,9 @@ import { DocumentWindowBlock } from './blocks/document-window-block';
 import { ImageBackgroundBlock } from './blocks/image-background-block';
 import { VideoBackgroundBlock } from './blocks/video-background-block';
 
+export type BlockBuilder =
+    (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => Promise<IBlock>;
+
 export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     lastFocus?: IBlock;
     focus?: IBlock;
@@ -42,6 +45,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     registeredBlocks: IBlock[];
     state: string;
     history: Record<string, DocumentHistory>;
+    blockBuilder: { type: BlockType, builder: BlockBuilder }[];
     constructor(props?: IUniverseBlockConstructor) {
         super({ manager: null, id: props?.id, container: props?.container });
         this.state = BlockState.initalising;
@@ -72,6 +76,50 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.setupControlPanel();
         this.blockEvents = {};
         this.state = BlockState.initalised;
+        this.blockBuilder = this.getBlockBuilders();
+    }
+    getBlockBuilders() {
+        return [
+            {
+                type: BlockType.DocumentBlock,
+                builder: async (container: HTMLElement, blockDto: IBlockDto, manager: UniverseBlock) => {
+                    if (blockDto.metadata?.loadFromExternal) {
+                        const res = await fetchGet("/api/loadDocumentJson", { folder: blockDto.metadata.folder, filename: blockDto.metadata.filename });
+                        const json = await res.json();
+                        blockDto = json.Data.document;
+                    }
+                    const documentBlock = new DocumentBlock({ ...blockDto, manager: manager });
+                    documentBlock.applyBlockPropertyStyling();
+                    updateElement(documentBlock.container, { classList: ["document-container"] });
+                    await manager.buildChildren(documentBlock, blockDto);
+                    container.appendChild(documentBlock.container);
+                    return documentBlock;
+                }
+            },
+            {
+                type: BlockType.WorkspaceBlock,
+                builder: async (container: HTMLElement, blockDto: IBlockDto, manager: UniverseBlock) => {
+                    const workspace = new WorkspaceBlock({ manager, ...blockDto });
+                    await manager.buildChildren(workspace, blockDto);
+                    container.appendChild(workspace.container);
+                    return workspace;
+                }
+            },
+            {
+                type: BlockType.WorkspaceBlock,
+                builder: async (container: HTMLElement, blockDto: IBlockDto, manager: UniverseBlock) => {
+                    const background = new VideoBackgroundBlock({ manager: this, ...blockDto });
+                    await this.buildChildren(background, blockDto, (child) => {
+                        background.container.appendChild(child.container);
+                    });
+                    container.appendChild(background.container);
+                    return background;
+                }
+            }
+        ]
+    }
+    addBlockBuilder(type: BlockType, builder: BlockBuilder) {
+        this.blockBuilder[type] = builder;
     }
     setFolder(folder: string) {
         this.metadata.folder = folder;
@@ -1355,6 +1403,14 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         container.appendChild(textBlock.container);
         return textBlock;
     }
+    async buildUnknownBlock(container: HTMLElement, blockDto: IBlockDto) {
+        const unkownBlock = new DocumentBlock({
+            ...blockDto, manager: this
+        });
+        await this.buildChildren(unkownBlock, blockDto);
+        container.appendChild(unkownBlock.container);
+        return unkownBlock;
+    }
     async buildDocumentBlock(container: HTMLElement, blockDto: IBlockDto) {
         if (blockDto.metadata?.loadFromExternal) {
             const res = await fetchGet("/api/loadDocumentJson", { folder: blockDto.metadata.folder, filename: blockDto.metadata.filename });
@@ -1603,6 +1659,13 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             this.stageRightMarginBlock(rightMargin, anchor);
             rightMargin.generateIndex();
         }
+    }
+    async resursivelyBuild(container: HTMLElement, blockDto: IBlockDto) {
+        const item = this.blockBuilder.find(x => x.type == blockDto.type);
+        if (item) {
+            return await item.builder(container, blockDto, this);
+        }
+        return await this.buildUnknownBlock(container, blockDto);
     }
     async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
         if (blockDto.type == BlockType.DocumentBlock) {
