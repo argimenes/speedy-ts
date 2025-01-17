@@ -1,4 +1,5 @@
-import { BlockType } from "../library/types";
+import { BlockType, IBlockDto } from "../library/types";
+import { UniverseBlock } from "../universe-block";
 import { AbstractBlock } from "./abstract-block";
 import { IWindowBlockConstructor, WindowBlock } from "./window-block";
 
@@ -19,6 +20,24 @@ export class DocumentWindowBlock extends WindowBlock
         super(args);
         this.type = BlockType.DocumentWindowBlock;
         this.blockSchemas = this.getBlockSchemas();
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.DocumentWindowBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const background = new DocumentWindowBlock({
+                    ...dto,
+                    manager,
+                    onClose: async (b) => b.destroy()
+                });
+                background.addBlockProperties(dto.blockProperties);
+                await manager.buildChildren(background, dto, (child) => {
+                    background.container.appendChild(child.container);
+                });
+                container.appendChild(background.container);
+                return background;
+            }
+        };
     }
     getBlockSchemas() {
         return [

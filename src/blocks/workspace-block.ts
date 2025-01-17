@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
+import { UniverseBlock } from '../universe-block';
 
 export class WorkspaceBlock extends AbstractBlock {
     iframe: HTMLDivElement;
@@ -8,6 +9,17 @@ export class WorkspaceBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.WorkspaceBlock;
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.WorkspaceBlock,
+            builder: async (container: HTMLElement, blockDto: IBlockDto, manager: UniverseBlock) => {
+                const workspace = new WorkspaceBlock({ manager, ...blockDto });
+                await manager.buildChildren(workspace, blockDto);
+                container.appendChild(workspace.container);
+                return workspace;
+            }
+        };
     }
     build() {
         

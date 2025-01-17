@@ -2,6 +2,14 @@ import { Component } from "solid-js"
 import { UniverseBlock } from "../universe-block"
 import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto, ICheckBlockDto } from "../library/types";
 import { uniqueId } from "underscore";
+import { DocumentBlock } from "../blocks/document-block";
+import { WorkspaceBlock } from "../blocks/workspace-block";
+import { VideoBackgroundBlock } from "../blocks/video-background-block";
+import { ImageBackgroundBlock } from "../blocks/image-background-block";
+import { DocumentWindowBlock } from "../blocks/document-window-block";
+import { WindowBlock } from "../blocks/window-block";
+import { CheckboxBlock } from "../blocks/checkbox-block";
+import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -457,6 +465,17 @@ const foo = (bar) => {
         } as IMainListBlockDto;
         const workspace = new UniverseBlock();
         workspace.container = el;
+        workspace.addBlockBuilders([
+            CheckboxBlock.getBlockBuilder(),
+            StandoffEditorBlock.getBlockBuilder(),
+            DocumentBlock.getBlockBuilder(),
+            DocumentBlock.getLeftMarginBlockBuilder(),
+            WindowBlock.getBlockBuilder(),
+            DocumentWindowBlock.getBlockBuilder(),
+            VideoBackgroundBlock.getBlockBuilder(),
+            ImageBackgroundBlock.getBlockBuilder(),
+            WorkspaceBlock.getBlockBuilder(),
+        ]);
         workspace.createWorkspace().then();
         workspace.addDocumentToWorkspace(doc).then();
         props.getInstance(workspace);

@@ -5,6 +5,7 @@ import { TabBlock, TabRowBlock } from './tabs-block';
 import { createElement, updateElement } from '../library/svg';
 import { AbstractBlock } from './abstract-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
+import { UniverseBlock } from '../universe-block';
 
 export interface ICheckBlockConstructor extends IAbstractBlockConstructor {
     checked?: boolean;
@@ -59,6 +60,20 @@ export class CheckboxBlock extends AbstractBlock {
         wrapper.append(this.checkbox);
         this.container.append(wrapper);
         this.setupEventHandlers();
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.CheckboxBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new CheckboxBlock({ manager, ...dto });
+                await manager.buildChildren(block, dto, (child) => {
+                    updateElement(child.container, { style: { display: "inline-block" } });
+                    block.wrapper.appendChild(child.container);
+                });
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     setupEventHandlers() {
         const self = this;

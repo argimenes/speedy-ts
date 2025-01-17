@@ -2,6 +2,7 @@ import { uniqueId } from 'underscore';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { AbstractBlock } from './abstract-block';
 import { updateElement } from '../library/svg';
+import { UniverseBlock } from '../universe-block';
 
 type WindowBlockMetadata =  {
     title: string;
@@ -65,6 +66,21 @@ export class WindowBlock extends AbstractBlock {
         this.blockSchemas = this.getBlockSchemas();
         this.setupEventHandlers();
         this.updatePosition();
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.WindowBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new WindowBlock({ manager, ...dto });
+                block.addBlockProperties(dto.blockProperties);
+                await manager.buildChildren(block, dto, (child) => {
+                    block.container.appendChild(child.container);
+                });
+                block.applyBlockPropertyStyling();
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     destroy() {
         super.destroy();

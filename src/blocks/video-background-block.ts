@@ -1,5 +1,6 @@
 import { updateElement } from "../library/svg";
 import { BlockType, IAbstractBlockConstructor, IBlock, IBlockDto } from "../library/types";
+import { UniverseBlock } from "../universe-block";
 import { AbstractBlock } from "./abstract-block";
 
 export interface IVideoBackgroundBlockConstructor extends IAbstractBlockConstructor {
@@ -15,6 +16,19 @@ export class VideoBackgroundBlock extends AbstractBlock {
             children: this.blocks.map(b => b.serialize()),
             metadata: this.metadata
         } as IBlockDto;
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.VideoBackgroundBlock,
+            builder: async (container: HTMLElement, blockDto: IBlockDto, manager: UniverseBlock) => {
+                const background = new VideoBackgroundBlock({ manager, ...blockDto });
+                await manager.buildChildren(background, blockDto, (child) => {
+                    background.container.appendChild(child.container);
+                });
+                container.appendChild(background.container);
+                return background;
+            }
+        };
     }
     deserialize(json: any | any[]): IBlock {
         return null;

@@ -1,5 +1,6 @@
 import { updateElement } from "../library/svg";
-import { IAbstractBlockConstructor, IBlock, IBlockDto } from "../library/types";
+import { BlockType, IAbstractBlockConstructor, IBlock, IBlockDto } from "../library/types";
+import { UniverseBlock } from "../universe-block";
 import { AbstractBlock } from "./abstract-block";
 
 export interface IImageBackgroundBlockConstructor extends IAbstractBlockConstructor {
@@ -7,6 +8,19 @@ export interface IImageBackgroundBlockConstructor extends IAbstractBlockConstruc
 }
 
 export class ImageBackgroundBlock extends AbstractBlock {
+    static getBlockBuilder() {
+        return {
+            type: BlockType.ImageBackgroundBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const bg = new ImageBackgroundBlock({ manager, ...dto });
+                await manager.buildChildren(bg, dto, (child) => {
+                    bg.container.appendChild(child.container);
+                });
+                container.appendChild(bg.container);
+                return bg;
+            }
+        };
+    }
     serialize(): IBlockDto {
         return {
             id: this.id,

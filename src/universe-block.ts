@@ -76,39 +76,14 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.setupControlPanel();
         this.blockEvents = {};
         this.state = BlockState.initalised;
-        this.blockBuilder = this.getBlockBuilders();
+        this.blockBuilder = {} as any;
     }
     getBlockBuilders() {
         return [
             {
-                type: BlockType.DocumentBlock,
+                type: BlockType.VideoBackgroundBlock,
                 builder: async (container: HTMLElement, blockDto: IBlockDto, manager: UniverseBlock) => {
-                    if (blockDto.metadata?.loadFromExternal) {
-                        const res = await fetchGet("/api/loadDocumentJson", { folder: blockDto.metadata.folder, filename: blockDto.metadata.filename });
-                        const json = await res.json();
-                        blockDto = json.Data.document;
-                    }
-                    const documentBlock = new DocumentBlock({ ...blockDto, manager: manager });
-                    documentBlock.applyBlockPropertyStyling();
-                    updateElement(documentBlock.container, { classList: ["document-container"] });
-                    await manager.buildChildren(documentBlock, blockDto);
-                    container.appendChild(documentBlock.container);
-                    return documentBlock;
-                }
-            },
-            {
-                type: BlockType.WorkspaceBlock,
-                builder: async (container: HTMLElement, blockDto: IBlockDto, manager: UniverseBlock) => {
-                    const workspace = new WorkspaceBlock({ manager, ...blockDto });
-                    await manager.buildChildren(workspace, blockDto);
-                    container.appendChild(workspace.container);
-                    return workspace;
-                }
-            },
-            {
-                type: BlockType.WorkspaceBlock,
-                builder: async (container: HTMLElement, blockDto: IBlockDto, manager: UniverseBlock) => {
-                    const background = new VideoBackgroundBlock({ manager: this, ...blockDto });
+                    const background = new VideoBackgroundBlock({ manager, ...blockDto });
                     await this.buildChildren(background, blockDto, (child) => {
                         background.container.appendChild(child.container);
                     });
@@ -118,8 +93,12 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             }
         ]
     }
-    addBlockBuilder(type: BlockType, builder: BlockBuilder) {
-        this.blockBuilder[type] = builder;
+    addBlockBuilders(items: { type: BlockType, builder: BlockBuilder }[]) {
+        const self = this;
+        items.forEach(item => self.addBlockBuilder(item));
+    }
+    addBlockBuilder(item: { type: BlockType, builder: BlockBuilder }) {
+        this.blockBuilder[item.type] = item.builder;
     }
     setFolder(folder: string) {
         this.metadata.folder = folder;
@@ -648,329 +627,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             if (index >= word.start) return word;
         }
         return null;
-    }
-    getStandoffSchemas() {
-        const self = this;
-        return [
-            {
-                type: "cell/micro-document",
-                name: "Cell-sized document",
-                description: "",
-                event: {
-                    onInit: async (p:StandoffProperty) => {
-                        const manager = new UniverseBlock();
-                        const container = p.start.element as HTMLSpanElement;
-                        updateElement(container, {
-                            style: {
-                                display: "inline-block",
-                                zoom: 0.08
-                            }
-                        });
-                        await manager.loadServerDocument(p.value);
-                        container.innerHTML = "";
-                        updateElement(manager.container, {
-                            style: {
-                                maxWidth: p.start.cache.offset.w,
-                                maxHeight: p.start.cache.offset.h,
-                                "overflow": "hidden"
-                            }
-                        });
-                        container.appendChild(manager.container);
-                    },
-                    onDestroy: (p: StandoffProperty) => {
-                        const span = p.start.element as HTMLSpanElement;
-                        updateElement(span, {
-                            display: "inline",
-                            zoom: 1
-                        });
-                        span.innerHTML = p.start.text;
-                    }
-                }
-            },
-            {
-                type: "animation/clock",
-                name: "Clock",
-                description: "",
-                event: {
-                    onInit: (p: StandoffProperty) => {
-                        const clock = new ClockPlugin({ property: p });
-                        p.plugin = clock;
-                        self.plugins.push(clock);
-                        clock.start();
-                    },
-                    onDestroy: (p: StandoffProperty) => {
-                        p.plugin?.destroy();
-                        const i = self.plugins.findIndex(x => x == p.plugin);
-                        self.plugins.splice(i, 1);
-                    }
-                }
-            },
-            {
-                type: "style/blur",
-                name: "Blur",
-                wrap: {
-                    cssClass: "style_blur"
-                }
-            },
-            {
-                type: "style/flip",
-                name: "Flip",
-                wrap: {
-                    cssClass: "style_flipY"
-                }
-            },
-            {
-                type: "style/mirror",
-                name: "Mirror",
-                wrap: {
-                    cssClass: "style_flipX"
-                }
-            },
-            {
-                type: "style/superscript",
-                name: "Superscript",
-                decorate: {
-                    cssClass: "style_superscript"
-                }
-            },
-            {
-                type: "style/subscript",
-                name: "Subscript",
-                decorate: {
-                    cssClass: "style_subscript"
-                }
-            },
-            {
-                type: "style/uppercase",
-                name: "Uppercase",
-                decorate: {
-                    cssClass: "style_uppercase"
-                }
-            },
-            {
-                type: "style/italics",
-                name: "Italics",
-                decorate: {
-                    cssClass: "style_italics"
-                }
-            },
-            {
-                type: "style/strikethrough",
-                name: "Strikethrough",
-                decorate: {
-                    cssClass: "style_strikethrough"
-                }
-            },
-            {
-                type: "style/highlight",
-                name: "Highlight",
-                decorate: {
-                    cssClass: "style_highlight"
-                }
-            },
-            {
-                type: "style/bold",
-                name: "Bold",
-                decorate: {
-                    cssClass: "style_bold"
-                }
-            },
-            {
-                type: "style/underline",
-                name: "Underline",
-                decorate: {
-                    cssClass: "style_underline"
-                }
-            },
-            {
-                type: "reference/url",
-                name: "URL",
-                decorate: {
-                    cssClass: "reference_url"
-                },
-                event: {
-                    onDoubleClick: async (args: any) => {
-                        const url = args.property.metadata.url;
-                        window.open(url, '_blank')?.focus();
-                    }
-                }
-            },
-            {
-                type: "codex/search/highlight",
-                name: "Find text highlight",
-                decorate: {
-                    cssClass: "codex-search-highlight"
-                }
-            },
-            {
-                type: "codex/block-reference",
-                name: "Block reference",
-                event: {
-                    beforeStyling: async (args: any) => {
-                        // TBC : will show some interface where a block can be retrieved
-                    }
-                },
-                render: {
-                    destroy: ({ properties }) => {
-                        properties.forEach(p => p.cache.underline?.remove())
-                    },
-                    update: (args) => {
-                        const owner = args.block.manager as UniverseBlock;
-                        owner.renderUnderlines("codex/block-reference", args.properties, args.block, "green", 3);
-                    }
-                }
-            },
-            {
-                type: "codex/trait-reference",
-                name: "Trait reference",
-                event: {
-                    onDoubleClick: async (args: any) => {
-                        const prop = args.property;
-                        alert(prop.value);
-                    }
-                },
-                render: {
-                    destroy: ({ properties }) => {
-                        properties.forEach(p => p.cache.underline?.remove())
-                    },
-                    update: (args) => {
-                        const owner = args.block.manager as UniverseBlock;
-                        owner.renderUnderlines("codex/trait-reference", args.properties, args.block, "blue", 3);
-                    }
-                }
-            },
-            {
-                type: "codex/claim-reference",
-                name: "Claim reference",
-                event: {
-                    onDoubleClick: async (args: any) => {
-                        const prop = args.property;
-                        alert(prop.value);
-                    }
-                },
-                render: {
-                    destroy: ({ properties }) => {
-                        properties.forEach(p => p.cache.underline?.remove())
-                    },
-                    update: (args) => {
-                        const owner = args.block.manager as UniverseBlock;
-                        owner.renderUnderlines("codex/claim-reference", args.properties, args.block, "red", 1);
-                    }
-                }
-            },
-            {
-                type: "codex/meta-relation-reference",
-                name: "Meta-Relation reference",
-                event: {
-                    onDoubleClick: async (args: any) => {
-                        const prop = args.property;
-                        alert(prop.value);
-                    }
-                },
-                render: {
-                    destroy: ({ properties }) => {
-                        properties.forEach(p => p.cache.underline?.remove())
-                    },
-                    update: (args) => {
-                        const owner = args.block.manager as UniverseBlock;
-                        owner.renderUnderlines("codex/meta-relation-reference", args.properties, args.block, "orange", 3);
-                    }
-                }
-            },
-            {
-                type: "codex/time-reference",
-                name: "Time reference",
-                event: {
-                    onDoubleClick: async (args: any) => {
-                        const prop = args.property;
-                        alert(prop.value);
-                    }
-                },
-                render: {
-                    destroy: ({ properties }) => {
-                        properties.forEach(p => p.cache.underline?.remove())
-                    },
-                    update: (args) => {
-                        const owner = args.block.manager as UniverseBlock;
-                        owner.renderUnderlines("codex/time-reference", args.properties, args.block, "cyan", 3);
-                    }
-                }
-            },
-            {
-                type: "codex/entity-reference",
-                name: "Entity reference",
-                event: {
-                    beforeStyling: async (args: any) => {
-                        // TBC : will show a panel where the entity can be searched for
-                    },
-                    onDoubleClick: async (args: any) => {
-                        const prop = args.property;
-                        alert(prop.value);
-                    }
-                },
-                render: {
-                    destroy: ({ properties }) => {
-                        properties.forEach(p => p.cache.underline?.remove())
-                    },
-                    update: (args) => {
-                        const owner = args.block.manager as UniverseBlock;
-                        owner.renderUnderlines("codex/entity-reference", args.properties, args.block, "purple", 1);
-                    }
-                }
-            },
-            {
-                type: "style/highlighter",
-                name: "Highlighter",
-                render: {
-                    destroy: ({ properties }) => {
-                        properties.forEach(p => p.cache.highlight?.remove())
-                    },
-                    update: (args) => {
-                        const manager = args.block.manager as UniverseBlock;
-                        manager.renderHighlight(args.properties, args.block, "yellow");
-                    }
-                }
-            },
-            {
-                type: "style/rainbow",
-                name: "Rainbow",
-                render: {
-                    destroy: ({ properties }) => {
-                        properties.forEach(p => p.cache.underline?.remove())
-                    },
-                    update: (args) => {
-                        const manager = args.block.manager as UniverseBlock;
-                        manager.renderRainbow("style/rainbow", args.properties, args.block);
-                    }
-                }
-            },
-            {
-                type: "style/rectangle",
-                name: "Rectangle",
-                render: {
-                    destroy: ({ properties }) => {
-                        properties.forEach(p => p.cache.highlight?.remove())
-                    },
-                    update: (args) => {
-                        const manager = args.block.manager as UniverseBlock;
-                        manager.renderRectangle(args.properties, args.block, "red");
-                    }
-                }
-            },
-            {
-                type: "style/spiky",
-                name: "Spiky",
-                render: {
-                    destroy: ({ properties }) => {
-                        properties.forEach(p => p.cache.highlight?.remove())
-                    },
-                    update: (args) => {
-                        const manager = args.block.manager as UniverseBlock;
-                        manager.renderSpiky(args.properties, args.block, "red");
-                    }
-                }
-            }
-        ] as IStandoffPropertySchema[];
     }
     deserializeBlock(data: any) {
         switch (data.type) {
@@ -2241,9 +1897,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         return block;
     }
     createStandoffEditorBlock(dto?: IBlockDto) {
-        const standoffSchemas = this.getStandoffSchemas();
         const textBlock = new StandoffEditorBlock({ manager: this, ...dto });
-        textBlock.setSchemas(standoffSchemas);
         textBlock.setCommitHandler(this.storeCommit.bind(this));
         if (dto?.metadata) textBlock.metadata = dto.metadata;
         if (dto?.blockProperties) textBlock.addBlockProperties(dto.blockProperties);

@@ -5,7 +5,7 @@ import { StandoffEditorBlock } from './standoff-editor-block';
 import { updateElement } from '../library/svg';
 import { UniverseBlock } from '../universe-block';
 import { AnnotationPanelBlock } from '../components/annotation-panel';
-import { renderToNode } from '../library/common';
+import { fetchGet, renderToNode } from '../library/common';
 import { MonitorBlock, StandoffEditorBlockMonitor } from './monitor-block';
 import { TextProcessor } from '../library/text-processor';
 import _ from 'underscore';
@@ -45,6 +45,43 @@ export class DocumentBlock extends AbstractBlock {
         this.inputEvents = this.getInputEvents();
         this.setBlockSchemas(this.getBlockSchemas());
         this.setupSubscriptions();
+    }
+    static getLeftMarginBlockBuilder() {
+        return {
+            type: BlockType.LeftMarginBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                if (dto.metadata?.loadFromExternal) {
+                    const res = await fetchGet("/api/loadDocumentJson", { folder: dto.metadata.folder, filename: dto.metadata.filename });
+                    const json = await res.json();
+                    dto = json.Data.document;
+                }
+                const block = new DocumentBlock({ ...dto, manager });
+                block.addBlockProperties([ { type: "block/marginalia/left" } ]);
+                block.applyBlockPropertyStyling();
+                updateElement(block.container, { classList: ["document-container"] });
+                await manager.buildChildren(block, dto);
+                container.appendChild(block.container);
+                return block;
+            }
+        };
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.DocumentBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                if (dto.metadata?.loadFromExternal) {
+                    const res = await fetchGet("/api/loadDocumentJson", { folder: dto.metadata.folder, filename: dto.metadata.filename });
+                    const json = await res.json();
+                    dto = json.Data.document;
+                }
+                const document = new DocumentBlock({ ...dto, manager });
+                document.applyBlockPropertyStyling();
+                updateElement(document.container, { classList: ["document-container"] });
+                await manager.buildChildren(document, dto);
+                container.appendChild(document.container);
+                return document;
+            }
+        };
     }
     getHistory() {
         let history = this.manager.history[this.id];
