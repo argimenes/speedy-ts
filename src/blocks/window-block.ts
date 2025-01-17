@@ -66,6 +66,9 @@ export class WindowBlock extends AbstractBlock {
         this.setupEventHandlers();
         this.updatePosition();
     }
+    destroy() {
+        super.destroy();
+    }
     updatePosition() {
         const pos = this.metadata.position;
         this.container.style.transform = `translate(${pos.x}px,${pos.y}px)`;
@@ -94,6 +97,7 @@ export class WindowBlock extends AbstractBlock {
         const handle = this.header;
         [handle].forEach(x => x.addEventListener('mousedown', (e) => {
             if ((e.target as HTMLElement).contains(win.childNodes[1])) {
+                console.log("click inside window");
                 return;
             }
             self.isDragging = true;
@@ -108,17 +112,26 @@ export class WindowBlock extends AbstractBlock {
             self.mouseOffsetY = e.clientY;
             e.preventDefault();
         }));
-        [handle].forEach(x => x.addEventListener('mousemove', (e) => {
-            if (!self.isDragging) return;
+        [win].forEach(x => x.addEventListener('mouseover', (e) => {
+            console.log("mouseover", { e });
+            if (!self.isDragging) {
+                console.log("not dragging");
+                return;
+            }
             const x = e.clientX - self.mouseOffsetX,
                   y = e.clientY - self.mouseOffsetY;
             const pos = self.metadata.position;
             pos.x = x;
             pos.y = y;
             win.style.transform = `translate(${x}px,${y}px)`;
+            console.log({ x, y });
         }));
-        [win].forEach(x => x.addEventListener('mouseup', () => self.isDragging = false));
+        [win].forEach(x => x.addEventListener('mouseup', (e) => {
+            console.log("mouseup", { e });
+            self.isDragging = false
+        }));
         [win].forEach(x => x.addEventListener('mouseleave', (e) => { 
+            console.log("mouseleave", { e });
             if ((e.target as HTMLElement).contains(win.childNodes[1])) {
                 return;
             }
