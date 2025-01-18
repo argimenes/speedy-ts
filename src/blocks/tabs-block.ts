@@ -1,6 +1,7 @@
 import { AbstractBlock } from "./abstract-block";
 import { updateElement } from "../library/svg";
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "../library/types";
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, InputEvent, InputEventSource, IBindingHandlerArgs } from "../library/types";
+import { UniverseBlock } from "../universe-block";
 
 export class TabRowBlock extends AbstractBlock {
     header: HTMLDivElement;
@@ -11,7 +12,48 @@ export class TabRowBlock extends AbstractBlock {
         this.header = document.createElement("DIV") as HTMLDivElement;
         this.labels = [];
         this.container.appendChild(this.header);
-        //this.attachEventHandlers();
+        this.inputEvents = this.getTabBlockEvents();
+    }
+    getTabBlockEvents() {
+        const events: InputEvent[] = [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Mouse,
+                    match: "click"
+                },
+                action: {
+                    name: "Set focus to the current block.",
+                    description: "",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        const manager = block.manager as UniverseBlock;
+                        manager.setBlockFocus(block);
+                    }
+                }
+            }
+        ]
+        return events;
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.TabRowBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new TabRowBlock({ manager, ...dto });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                await manager.buildChildren(block, dto);
+                block.renderLabels();
+                const activeBlock = block.blocks.find(x => x.metadata.active) as TabBlock;
+                if (activeBlock) {
+                    block.setTabActive(activeBlock);
+                } else {
+                    block.setTabActive(block.blocks[0] as TabBlock);
+                }
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     attachEventHandlers() {
         this.container.addEventListener("click", this.handleClick.bind(this));
@@ -71,7 +113,43 @@ export class TabBlock extends AbstractBlock {
         this.panel = document.createElement("DIV") as HTMLDivElement;
         this.panel.classList.add("tab-panel");
         this.container.appendChild(this.panel);
-        //this.attachEventHandlers();
+        this.inputEvents = this.getTabBlockEvents();
+    }
+    getTabBlockEvents() {
+        const events: InputEvent[] = [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Mouse,
+                    match: "click"
+                },
+                action: {
+                    name: "Set focus to the current block.",
+                    description: "",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        const manager = block.manager as UniverseBlock;
+                        manager.setBlockFocus(block);
+                    }
+                }
+            }
+        ]
+        return events;
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.TabBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new TabBlock({
+                    manager, ...dto
+                });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                await manager.buildChildren(block, dto, (b) => block.panel.appendChild(b.container));
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     attachEventHandlers() {
         this.container.addEventListener("click", this.handleClick.bind(this));
@@ -110,7 +188,7 @@ export class TabBlock extends AbstractBlock {
         } as IBlockDto;
     }
     deserialize(json: any): IBlock {
-        throw new Error("Method not implemented.");
+        return this;
     }
     destroy(): void {
         this.container.innerHTML = "";

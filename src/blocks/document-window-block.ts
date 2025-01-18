@@ -25,17 +25,18 @@ export class DocumentWindowBlock extends WindowBlock
         return {
             type: BlockType.DocumentWindowBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
-                const background = new DocumentWindowBlock({
+                const block = new DocumentWindowBlock({
                     ...dto,
                     manager,
                     onClose: async (b) => b.destroy()
                 });
-                background.addBlockProperties(dto.blockProperties);
-                await manager.buildChildren(background, dto, (child) => {
-                    background.container.appendChild(child.container);
+                block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                await manager.buildChildren(block, dto, (child) => {
+                    block.container.appendChild(child.container);
                 });
-                container.appendChild(background.container);
-                return background;
+                container.appendChild(block.container);
+                return block;
             }
         };
     }

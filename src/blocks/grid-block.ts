@@ -56,7 +56,6 @@ export class GridRowBlock extends AbstractBlock {
                 });
                 if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
                 block.applyBlockPropertyStyling();
-                await manager.buildChildren(block, dto);
                 container.appendChild(block.container);
                 return block;
             }

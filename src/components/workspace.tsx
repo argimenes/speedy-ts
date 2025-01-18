@@ -1,7 +1,6 @@
 import { Component } from "solid-js"
 import { UniverseBlock } from "../universe-block"
 import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto, ICheckBlockDto } from "../library/types";
-import { uniqueId } from "underscore";
 import { DocumentBlock } from "../blocks/document-block";
 import { WorkspaceBlock } from "../blocks/workspace-block";
 import { VideoBackgroundBlock } from "../blocks/video-background-block";
@@ -19,6 +18,7 @@ import { IndentedListBlock } from "../blocks/indented-list-block";
 import { ImageBlock } from "../blocks/image-block";
 import { VideoBlock } from "../blocks/video-block";
 import { EmbedDocumentBlock } from "../blocks/embed-document-block";
+import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -484,6 +484,8 @@ const foo = (bar) => {
             ImageBlock.getBlockBuilder(),
             VideoBlock.getBlockBuilder(),
             EmbedDocumentBlock.getBlockBuilder(),
+            TabRowBlock.getBlockBuilder(),
+            TabBlock.getBlockBuilder(),
             TableBlock.getBlockBuilder(),
             TableRowBlock.getBlockBuilder(),
             TableCellBlock.getBlockBuilder(),
