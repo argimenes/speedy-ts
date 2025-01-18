@@ -354,7 +354,7 @@ export class ControlPanelBlock extends AbstractBlock {
             }
         }
         const folderChanged = async (e: Event) => {
-            if (!e.currentTarget) return;
+            e.preventDefault();
             const folder = (e.currentTarget as HTMLInputElement).value;
             setModel("folder", folder);
             await loadFolderClicked(e);
