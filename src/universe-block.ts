@@ -28,6 +28,7 @@ import { WorkspaceBlock } from './blocks/workspace-block';
 import { DocumentWindowBlock } from './blocks/document-window-block';
 import { ImageBackgroundBlock } from './blocks/image-background-block';
 import { VideoBackgroundBlock } from './blocks/video-background-block';
+import { UnknownBlock } from './blocks/unknown-block';
 
 export type BlockBuilder =
     (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => Promise<IBlock>;
@@ -45,7 +46,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     registeredBlocks: IBlock[];
     state: string;
     history: Record<string, DocumentHistory>;
-    blockBuilder: { type: BlockType, builder: BlockBuilder }[];
+    blockBuilders: { type: BlockType, builder: BlockBuilder }[];
     constructor(props?: IUniverseBlockConstructor) {
         super({ manager: null, id: props?.id, container: props?.container });
         this.state = BlockState.initalising;
@@ -76,29 +77,14 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.setupControlPanel();
         this.blockEvents = {};
         this.state = BlockState.initalised;
-        this.blockBuilder = {} as any;
-    }
-    getBlockBuilders() {
-        return [
-            {
-                type: BlockType.VideoBackgroundBlock,
-                builder: async (container: HTMLElement, blockDto: IBlockDto, manager: UniverseBlock) => {
-                    const background = new VideoBackgroundBlock({ manager, ...blockDto });
-                    await this.buildChildren(background, blockDto, (child) => {
-                        background.container.appendChild(child.container);
-                    });
-                    container.appendChild(background.container);
-                    return background;
-                }
-            }
-        ]
+        this.blockBuilders = [];
     }
     addBlockBuilders(items: { type: BlockType, builder: BlockBuilder }[]) {
         const self = this;
         items.forEach(item => self.addBlockBuilder(item));
     }
     addBlockBuilder(item: { type: BlockType, builder: BlockBuilder }) {
-        this.blockBuilder[item.type] = item.builder;
+        this.blockBuilders.push(item);
     }
     setFolder(folder: string) {
         this.metadata.folder = folder;
@@ -1316,14 +1302,14 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             rightMargin.generateIndex();
         }
     }
-    async resursivelyBuild(container: HTMLElement, blockDto: IBlockDto) {
-        const item = this.blockBuilder.find(x => x.type == blockDto.type);
+    async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
+        const item = this.blockBuilders.find(x => x.type == blockDto.type);
         if (item) {
             return await item.builder(container, blockDto, this);
         }
-        return await this.buildUnknownBlock(container, blockDto);
+        return await UnknownBlock.getBlockBuilder().builder(container, blockDto, this);
     }
-    async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
+    async recursivelyBuildBlock__OLD(container: HTMLElement, blockDto: IBlockDto) {
         if (blockDto.type == BlockType.DocumentBlock) {
             return await this.buildDocumentBlock(container, blockDto);
         }
@@ -1348,7 +1334,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (blockDto.type == BlockType.StandoffEditorBlock) {
             return await this.buildStandoffEditorBlock(container, blockDto);
         }
-        
         if (blockDto.type == BlockType.LeftMarginBlock) {
             return await this.buildLeftMarginBlock(container, blockDto);
         }

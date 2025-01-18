@@ -1,11 +1,11 @@
 import {basicSetup, EditorView} from "codemirror"
 import {javascript} from "@codemirror/lang-javascript"
-import { IAbstractBlockConstructor, BlockType, ICodeMirrorBlockDto, IBlock } from "../library/types";
+import { IAbstractBlockConstructor, BlockType, ICodeMirrorBlockDto, IBlock, IBlockDto } from "../library/types";
 import { AbstractBlock } from "./abstract-block";
+import { UniverseBlock } from "../universe-block";
 
 export interface ICodeMirrorBlockConstructor extends IAbstractBlockConstructor {
-    text: string;
-    type: BlockType;
+    text?: string;
 }
 
 export class CodeMirrorBlock extends AbstractBlock {
@@ -25,6 +25,22 @@ export class CodeMirrorBlock extends AbstractBlock {
             parent: this.wrapper
         });
         this.container.append(this.wrapper);
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.CodeMirrorBlock,
+            builder: async (container: HTMLElement, dto: ICodeMirrorBlockDto, manager: UniverseBlock) => {
+                const block = new CodeMirrorBlock({ manager, ...dto });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                await manager.buildChildren(block, dto);
+                if (dto.text)  {
+                    block.bind(dto.text);
+                }
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     attachEventHandlers() {
         const self = this;

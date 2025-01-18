@@ -21,6 +21,22 @@ export class PlainTextBlock extends AbstractBlock {
         this.container.append(this.textarea);
         this.attachEventHandlers();
     }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.PlainTextBlock,
+            builder: async (container: HTMLElement, dto: IPlainTextBlockDto, manager: UniverseBlock) => {
+                const block = new PlainTextBlock({ manager, ...dto });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                await manager.buildChildren(block, dto);
+                if (dto.text)  {
+                    block.bind(dto.text);
+                }
+                container.appendChild(block.container);
+                return block;
+            }
+        };
+    }
     attachEventHandlers() {
         const self = this;
         this.textarea.addEventListener("click", () => {

@@ -1,8 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { updateElement } from "../library/svg";
 import { AbstractBlock } from './abstract-block';
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, CARET, IBindingHandlerArgs, InputEventSource } from '../library/types';
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, CARET, IBindingHandlerArgs, InputEventSource, isStr } from '../library/types';
 import { UniverseBlock } from '../universe-block';
+import { BlockProperty } from '../library/block-property';
 
 export class ImageBlock extends AbstractBlock {
     image: HTMLImageElement;
@@ -11,7 +12,60 @@ export class ImageBlock extends AbstractBlock {
         this.type = BlockType.ImageBlock;
         this.image = document.createElement("IMG") as HTMLImageElement;
         this.inputEvents = this.getInputEvents();
+        this.setBlockSchemas(this.getBlockSchemas());
         this.attachEventHandlers();
+    }
+    getBlockSchemas() {
+        return [
+            {
+                type: "block/position",
+                name: "Block position",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const container = p.block.container;
+                        const {x, y, position } = p.metadata;
+                        updateElement(container, {
+                            style: {
+                                position: position || "absolute",
+                                left: x + "px",
+                                top: y + "px",
+                                "z-index": p.block.manager.getHighestZIndex()
+                            }
+                        });
+                    }
+                }
+            },
+            {
+                type: "block/size",
+                name: "Block size",
+                event: {
+                    onInit: (p: BlockProperty) => {
+                        const container = p.block.container;
+                        const {width, height} = p.metadata;
+                        updateElement(container, {
+                            style: {
+                                height: isStr(height) ? height : height + "px",
+                                width: isStr(width) ? width : width + "px"
+                            }
+                        });
+                    }
+                }
+            }
+        ]
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.ImageBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new ImageBlock({ manager, ...dto });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                block.build();
+                await manager.buildChildren(block, dto);
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     getInputEvents() {
         return [

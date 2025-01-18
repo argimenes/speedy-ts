@@ -46,6 +46,25 @@ export class DocumentBlock extends AbstractBlock {
         this.setBlockSchemas(this.getBlockSchemas());
         this.setupSubscriptions();
     }
+    static getRightMarginBlockBuilder() {
+        return {
+            type: BlockType.RightMarginBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                if (dto.metadata?.loadFromExternal) {
+                    const res = await fetchGet("/api/loadDocumentJson", { folder: dto.metadata.folder, filename: dto.metadata.filename });
+                    const json = await res.json();
+                    dto = json.Data.document;
+                }
+                const block = new DocumentBlock({ ...dto, manager });
+                block.addBlockProperties([ { type: "block/marginalia/right" }, { type: "block/alignment/right" } ]);
+                block.applyBlockPropertyStyling();
+                updateElement(block.container, { classList: ["document-container"] });
+                await manager.buildChildren(block, dto);
+                container.appendChild(block.container);
+                return block;
+            }
+        };
+    }
     static getLeftMarginBlockBuilder() {
         return {
             type: BlockType.LeftMarginBlock,

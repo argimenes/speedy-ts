@@ -10,6 +10,15 @@ import { DocumentWindowBlock } from "../blocks/document-window-block";
 import { WindowBlock } from "../blocks/window-block";
 import { CheckboxBlock } from "../blocks/checkbox-block";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
+import { TableBlock, TableCellBlock, TableRowBlock } from "../blocks/tables-blocks";
+import { GridBlock, GridCellBlock, GridRowBlock } from "../blocks/grid-block";
+import { IframeBlock } from "../blocks/iframe-block";
+import { PlainTextBlock } from "../blocks/plain-text-block";
+import { CodeMirrorBlock } from "../blocks/code-mirror-block";
+import { IndentedListBlock } from "../blocks/indented-list-block";
+import { ImageBlock } from "../blocks/image-block";
+import { VideoBlock } from "../blocks/video-block";
+import { EmbedDocumentBlock } from "../blocks/embed-document-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -468,8 +477,22 @@ const foo = (bar) => {
         workspace.addBlockBuilders([
             CheckboxBlock.getBlockBuilder(),
             StandoffEditorBlock.getBlockBuilder(),
+            CodeMirrorBlock.getBlockBuilder(),
+            PlainTextBlock.getBlockBuilder(),
+            IframeBlock.getBlockBuilder(),
+            IndentedListBlock.getBlockBuilder(),
+            ImageBlock.getBlockBuilder(),
+            VideoBlock.getBlockBuilder(),
+            EmbedDocumentBlock.getBlockBuilder(),
+            TableBlock.getBlockBuilder(),
+            TableRowBlock.getBlockBuilder(),
+            TableCellBlock.getBlockBuilder(),
+            GridBlock.getBlockBuilder(),
+            GridRowBlock.getBlockBuilder(),
+            GridCellBlock.getBlockBuilder(),
             DocumentBlock.getBlockBuilder(),
             DocumentBlock.getLeftMarginBlockBuilder(),
+            DocumentBlock.getRightMarginBlockBuilder(),
             WindowBlock.getBlockBuilder(),
             DocumentWindowBlock.getBlockBuilder(),
             VideoBackgroundBlock.getBlockBuilder(),

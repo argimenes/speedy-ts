@@ -3,6 +3,7 @@ import YouTubePlayer from 'youtube-player';
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { Options } from 'youtube-player/dist/types';
+import { UniverseBlock } from '../universe-block';
 
 export class VideoBlock extends AbstractBlock {
     iframe: HTMLDivElement;
@@ -16,6 +17,20 @@ export class VideoBlock extends AbstractBlock {
                 origin: "http://localhost:3002"
             }
         } as Options);
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.VideoBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new VideoBlock({ manager, ...dto });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                block.build();
+                await manager.buildChildren(block, dto);
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     build() {
         const id = this.metadata.url.split("=")[1].split("&")[0];

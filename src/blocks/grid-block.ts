@@ -1,10 +1,25 @@
 import { AbstractBlock } from "./abstract-block";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from "../library/types";
+import { UniverseBlock } from "../universe-block";
+import { updateElement } from "../library/svg";
 
 export class GridBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.GridBlock;
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.GridBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new GridBlock({ manager, ...dto });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                await manager.buildChildren(block, dto);
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     serialize() {
         return {
@@ -24,6 +39,28 @@ export class GridRowBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.GridRowBlock;
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.GridRowBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new GridRowBlock({ manager, ...dto });
+                await manager.buildChildren(block, dto, (b) => {
+                    if (b.metadata?.width) {
+                        updateElement(b.container, {
+                            style: {
+                                width: b.metadata?.width
+                            }
+                        });
+                    }
+                });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                await manager.buildChildren(block, dto);
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     serialize() {
         return {
@@ -64,6 +101,31 @@ export class GridCellBlock extends AbstractBlock {
         super(args);
         this.container.classList.add("grid-cell");
         this.type = BlockType.GridCellBlock;
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.GridCellBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new GridCellBlock({ manager, ...dto });
+                if (block.metadata.width) {
+                    updateElement(block.container, {
+                        style: {
+                            width: block.metadata.width
+                        }
+                    });
+                }
+                updateElement(block.container, {
+                    style: {
+                        "vertical-align": "top"
+                    }
+                });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                await manager.buildChildren(block, dto);
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     handleArrowDown(args: IArrowNavigation) {
         if (this.relation.firstChild) {

@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { updateElement } from "../library/svg";
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from '../library/types';
+import { UniverseBlock } from '../universe-block';
 
 export class IframeBlock extends AbstractBlock {
     iframe: HTMLIFrameElement;
@@ -10,6 +11,20 @@ export class IframeBlock extends AbstractBlock {
         super(args);
         this.type = BlockType.IFrameBlock;
         this.iframe = document.createElement("IFRAME") as HTMLIFrameElement;
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.IFrameBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new IframeBlock({ manager, ...dto });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                await manager.buildChildren(block, dto);
+                block.build();
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     build() {
         updateElement(this.iframe, {

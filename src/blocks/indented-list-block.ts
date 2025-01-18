@@ -1,10 +1,31 @@
 import { AbstractBlock } from "./abstract-block";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from "../library/types";
+import { UniverseBlock } from "../universe-block";
+import { updateElement } from "../library/svg";
 
 export class IndentedListBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.IndentedListBlock;
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.IndentedListBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new IndentedListBlock({ manager, ...dto });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                await manager.buildChildren(block, dto, (b) =>
+                    updateElement(b.container, {
+                        classList: ["list-item-numbered"]
+                }));
+                const level = block.metadata.indentLevel || 0 as number;
+                block.metadata.indentLevel = level + 1;
+                manager.renderIndent(block);
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     serialize() {
         return {

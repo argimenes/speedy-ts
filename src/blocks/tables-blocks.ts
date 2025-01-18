@@ -1,6 +1,7 @@
 import { AbstractBlock } from "./abstract-block";
 import { updateElement } from "../library/svg";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "../library/types";
+import { UniverseBlock } from "../universe-block";
 
 export class TableBlock extends AbstractBlock {
     rows?: TableRowBlock[];
@@ -12,6 +13,19 @@ export class TableBlock extends AbstractBlock {
                 display: "table"
             }
         });
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.TableBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new TableBlock({ manager, ...dto });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                await manager.buildChildren(block, dto);
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     attachEventHandlers() {
         this.container.addEventListener("click", this.handleClick.bind(this));
@@ -46,6 +60,19 @@ export class TableRowBlock extends AbstractBlock {
                 display: "table-row"
             }
         });
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.TableRowBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new TableRowBlock({ manager, ...dto });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                await manager.buildChildren(block, dto);
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     attachEventHandlers() {
         this.container.addEventListener("click", this.handleClick.bind(this));
@@ -87,6 +114,19 @@ export class TableCellBlock extends AbstractBlock {
             },
             classList: ["table-cell-block"]
         });
+    }
+    static getBlockBuilder() {
+        return {
+            type: BlockType.TableCellBlock,
+            builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
+                const block = new TableCellBlock({ manager, ...dto });
+                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+                block.applyBlockPropertyStyling();
+                await manager.buildChildren(block, dto);
+                container.appendChild(block.container);
+                return block;
+            }
+        };
     }
     attachEventHandlers() {
         this.container.addEventListener("click", this.handleClick.bind(this));
