@@ -81,9 +81,7 @@ export class EntitiesListBlock extends AbstractBlock {
     }
     async render() {
         const node = document.createElement("DIV") as HTMLDivElement;
-        render(() =>
-            <EntitiesListComponent wrapper={this} />,
-            node);
+        render(() => <EntitiesListView wrapper={this} />, node);
         this.node = node;
         return node;
     }
@@ -108,14 +106,14 @@ type Entity = {
     Guid: GUID;
     Name: string;
 }
-type EntitiesListComponentProps = {
+type EntitiesListViewProps = {
     wrapper: EntitiesListBlock;
 }
 type State = {
     activeItem: number;
     isOpen: boolean;
 }
-export const EntitiesListComponent : Component<EntitiesListComponentProps> = ({ wrapper }) => {
+export const EntitiesListView : Component<EntitiesListViewProps> = ({ wrapper }) => {
     const manager = wrapper.manager;
     const [state, setState] = createStore<State>({
         activeItem: 0,
@@ -162,6 +160,7 @@ export const EntitiesListComponent : Component<EntitiesListComponentProps> = ({ 
             .value();
         setProperties(properties);
         setEntities(entitiesGroup);
+        console.log("onMount", { doc, entitiesGroup });
     });
     return (
         <div class="entities-list-block">

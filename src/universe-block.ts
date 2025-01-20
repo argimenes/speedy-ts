@@ -19,7 +19,7 @@ import { fetchGet } from "./library/common";
 import { TableBlock, TableCellBlock, TableRowBlock } from './blocks/tables-blocks';
 import { ControlPanelBlock } from './components/control-panel';
 import _, { first } from 'underscore';
-import { EntitiesListBlock } from './components/entities-list';
+import { EntitiesListBlock } from './blocks/entities-list-block';
 import { WindowBlock } from './blocks/window-block';
 import { AbstractBlock } from './blocks/abstract-block';
 import { CheckboxBlock } from './blocks/checkbox-block';
@@ -238,6 +238,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     async attachEventBindings() {
         document.body.addEventListener("keydown", this.handleKeyboardInputEvents.bind(this));
+        document.body.addEventListener("keydown", this.handleOnTextChanged.bind(this));
         document.body.addEventListener("click", this.handleMouseInputEvents.bind(this));
         document.body.addEventListener("dblclick", this.handleMouseInputEvents.bind(this));
         document.body.addEventListener("contextmenu", this.handleOnContextMenuEvent.bind(this));
@@ -267,20 +268,27 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     async handleOnPasteEvent(e: ClipboardEvent) {
         await this.handleCustomEvent(e, InputEventSource.Custom, "paste");
     }
-    async handleCustomEvent(e: Event, source: InputEventSource, match: string) {
+    async handleOnTextChanged(e: ClipboardEvent) {
+        await this.handleCustomEvent(e, InputEventSource.Custom, "onTextChanged", false);
+    }
+    async handleCustomEvent(e: Event, source: InputEventSource, match: string, preventDefault: boolean = true) {
         const focusedBlock = this.getBlockInFocus() as StandoffEditorBlock;
-        const isStandoffBlock = focusedBlock.type == BlockType.StandoffEditorBlock;
-        const customEvents = this.inputEvents.filter(x => x.trigger.source == source);
-        const found = customEvents.find(x => x.trigger.match == match);
-        if (found) {
-            e.preventDefault();
-            if (isStandoffBlock) {
-                const caret = focusedBlock.getCaret() as Caret;
-                const selection = focusedBlock.getSelection() as IRange;
-                await found.action.handler({ block: focusedBlock, caret, e, selection });
-                return;
+        const blocks = this.getAncestors(focusedBlock);
+        for (let i = 0; i < blocks.length; i++) {
+            const block = blocks[i] as StandoffEditorBlock;
+            const isStandoffBlock = block.type == BlockType.StandoffEditorBlock;
+            const customEvents = block.inputEvents.filter(x => x.trigger.source == source);
+            const found = customEvents.find(x => x.trigger.match == match);
+            if (found) {
+                if (preventDefault) e.preventDefault();
+                if (isStandoffBlock) {
+                    const caret = block.getCaret() as Caret;
+                    const selection = block.getSelection() as IRange;
+                    await found.action.handler({ block: focusedBlock, caret, e, selection });
+                    return;
+                }
+                await found.action.handler({ block: focusedBlock, e });
             }
-            await found.action.handler({ block: focusedBlock, e });
         }
     }
     getPlainTextInputEvents():InputEvent[] {
