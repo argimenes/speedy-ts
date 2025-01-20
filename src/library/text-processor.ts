@@ -1,7 +1,8 @@
 import { BlockProperty } from "./block-property";
 import { Cell } from "./cell";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
-import { BlockPropertyDto, Caret, CARET, IBindingHandlerArgs, IPropertySchema, IRange, StandoffPropertyDto } from "./types";
+import { BlockPropertyDto, BlockType, Caret, CARET, IBindingHandlerArgs, IPropertySchema, IRange, StandoffPropertyDto } from "./types";
+import { DocumentBlock } from "../blocks/document-block";
 
 export interface ITextProcessorConstructor {
     editor: StandoffEditorBlock;
@@ -91,7 +92,7 @@ export class TextProcessor {
                 pattern: "\\^\\^(.*?)\\^\\^", type: "style/superscript", wrapper: { start: "^^", end: "^^" }
             },
             {
-                pattern: "~~(.*?)~~", type: "style/strike", wrapper: { start: "~~", end: "~~" }
+                pattern: "~~(.*?)~~", type: "style/strikethrough", wrapper: { start: "~~", end: "~~" }
             },
             {
                 pattern: "_(.*?)_", type: "style/italics", wrapper: { start: "_", end: "_" }
@@ -173,16 +174,16 @@ export class TextProcessor {
                 pattern: "\\[ \\]", wrapper: {  start: "[ ]", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
-                    const manager = block.manager;
-                    manager.makeCheckbox(block);
+                    const doc = args.block.manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                    doc.makeCheckbox(block);
                 }
             },
             {
                 pattern: "^- ", wrapper: {  start: "- ", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
-                    const manager = block.manager;
-                    manager.indentBlock({ block });
+                    const doc = args.block.manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                    doc.indentBlock({ block });
                 }
             },
             {
@@ -238,9 +239,6 @@ export class TextProcessor {
                     block.addBlockProperties([ { type: "block/font/size/h4" } ]);
                     block.applyBlockPropertyStyling();
                 }
-            },
-            {
-                pattern: "/high/(.*?)/", type: "style/highlighter", wrapper: { start: "/high/", end: "/" }
             },
             {
                 pattern: "\\[<(.*?)>\\]", type: "style/rectangle", wrapper: { start: "[<", end: ">]" }
@@ -362,14 +360,14 @@ export class TextProcessor {
                     console.log("type.type is null", { m, rule, wrapperEnd, wrapperStart })
                     return;
                 }
-                block.removeCellsAtIndex(m.end, wrapperEnd);
+                block.removeCellsAtIndex(m.end - 1, wrapperEnd);
                 block.removeCellsAtIndex(m.start, wrapperStart);
                 if (type.type.indexOf("block") >= 0 ) {
                     const prop = { type: rule.type } as BlockPropertyDto;
                     block.addBlockProperties([prop]);
                     block.applyBlockPropertyStyling();
                 } else {
-                    const textStart = m.start, textEnd = m.end - wrapperStart - 1;
+                    const textStart = m.start, textEnd = m.end - wrapperStart - 2;
                     block.addStandoffPropertiesDto([
                         { type: rule.type, start: textStart, end: textEnd } as StandoffPropertyDto
                     ]);
