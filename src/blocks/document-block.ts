@@ -19,8 +19,13 @@ import { TabBlock } from './tabs-block';
 import { BlockProperty } from '../library/block-property';
 import BlockVines from '../library/plugins/block-vines';
 import { StandoffProperty } from '../library/standoff-property';
+import { BlockPropertySchemas } from '../properties/block-properties';
 
 const maxHistoryItems = 30;
+export interface IMultiRangeStandoffProperty {
+    blockId: GUID, // The block the Property belongs to 
+    standoffPropertyId: GUID // Standoff Property GUIDs
+}
 
 export interface IndexedBlock {
   block: IBlock;
@@ -126,6 +131,14 @@ export class DocumentBlock extends AbstractBlock {
     getBlockSchemas() {
         const manager = this.manager;
         return [
+            ...BlockPropertySchemas.getDocumentBlockProperties(),
+            {
+                type: "document/contiguous-standoff",
+                name: "A standoff property that is composed of two contiguous standoff properties in adjoining blocks",
+                metadata: {
+                    ranges: [] as IMultiRangeStandoffProperty[]
+                }
+            },
             {
                 type: "block/vines",
                 name: "Block vines",
@@ -134,77 +147,6 @@ export class DocumentBlock extends AbstractBlock {
                         const vines = new BlockVines(p.block);
                         vines.update();
                     }
-                }
-            },
-            {
-                type: "block/position",
-                name: "Block position",
-                event: {
-                    onInit: (p: BlockProperty) => {
-                        const container = p.block.container;
-                        const {x, y, position } = p.metadata;
-                        updateElement(container, {
-                            style: {
-                                position: position || "absolute",
-                                left: x + "px",
-                                top: y + "px",
-                                "z-index": manager.getHighestZIndex()
-                            }
-                        });
-                    }
-                }
-            },
-            {
-                type: "block/size",
-                name: "Block dimensions",
-                event: {
-                    onInit: (p: BlockProperty) => {
-                        const container = p.block.container;
-                        const {width, height} = p.metadata;
-                        updateElement(container, {
-                            style: {
-                                height: isStr(height) ? height : height + "px",
-                                width: isStr(width) ? width : width + "px",
-                                "overflow-y": "auto",
-                                "overflow-x": "hidden"
-                            }
-                        });
-                        const minWidth = p.metadata["min-width"];
-                        if (minWidth) {
-                            updateElement(container, {
-                            style: {
-                                "min-width": minWidth + "px"
-                            }
-                        });
-                        }
-                    }
-                }
-            },
-            {
-                type: "block/font/size",
-                name: "Specified size",
-                event: {
-                    onInit: (p: BlockProperty) => {
-                        updateElement(p.block.container, {
-                            style: {
-                                "font-size": p.value
-                            }
-                        });
-                    }
-                }
-            },
-            {
-                type: "block/font/size/half",
-                name: "Half-sized font",
-                decorate: {
-                    blockClass: "font_size_half"
-                }
-            },
-            {
-                type: "block/font/size/three-quarters",
-                name: "3/4 the regular font size",
-                decorate: {
-                    blockClass: "block_font-size_three-quarters"
                 }
             },
             {
