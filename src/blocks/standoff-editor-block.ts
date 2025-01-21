@@ -266,7 +266,8 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const owner = args.block.manager as UniverseBlock;
-                        owner.renderUnderlines("codex/block-reference", args.properties, args.block, "green", 3);
+                        const doc = owner.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                        doc.renderUnderlines("codex/block-reference", args.properties, args.block, "green", 3);
                     }
                 }
             },
@@ -285,7 +286,8 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const manager = args.block.manager as UniverseBlock;
-                        manager.renderUnderlines("codex/trait-reference", args.properties, args.block, "blue", 3);
+                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                        doc.renderUnderlines("codex/trait-reference", args.properties, args.block, "blue", 3);
                     }
                 }
             },
@@ -304,7 +306,8 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const owner = args.block.manager as UniverseBlock;
-                        owner.renderUnderlines("codex/claim-reference", args.properties, args.block, "red", 1);
+                        const doc = owner.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                        doc.renderUnderlines("codex/claim-reference", args.properties, args.block, "red", 1);
                     }
                 }
             },
@@ -323,7 +326,8 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const owner = args.block.manager as UniverseBlock;
-                        owner.renderUnderlines("codex/meta-relation-reference", args.properties, args.block, "orange", 3);
+                        const doc = owner.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                        doc.renderUnderlines("codex/meta-relation-reference", args.properties, args.block, "orange", 3);
                     }
                 }
             },
@@ -342,7 +346,8 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const owner = args.block.manager as UniverseBlock;
-                        owner.renderUnderlines("codex/time-reference", args.properties, args.block, "cyan", 3);
+                        const doc = owner.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                        doc.renderUnderlines("codex/time-reference", args.properties, args.block, "cyan", 3);
                     }
                 }
             },
@@ -364,7 +369,8 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const manager = args.block.manager as UniverseBlock;
-                        manager.renderUnderlines("codex/entity-reference", args.properties, args.block, "purple", 1);
+                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                        doc.renderUnderlines("codex/entity-reference", args.properties, args.block, "purple", 1);
                     }
                 }
             },
@@ -377,7 +383,8 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const manager = args.block.manager as UniverseBlock;
-                        manager.renderHighlight(args.properties, args.block, "yellow");
+                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                        doc.renderHighlight(args.properties, args.block, "yellow");
                     }
                 }
             },
@@ -390,7 +397,8 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const manager = args.block.manager as UniverseBlock;
-                        manager.renderRainbow("style/rainbow", args.properties, args.block);
+                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                        doc.renderRainbow("style/rainbow", args.properties, args.block);
                     }
                 }
             },
@@ -403,7 +411,8 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const manager = args.block.manager as UniverseBlock;
-                        manager.renderRectangle(args.properties, args.block, "red");
+                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                        doc.renderRectangle(args.properties, args.block, "red");
                     }
                 }
             },
@@ -416,7 +425,8 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const manager = args.block.manager as UniverseBlock;
-                        manager.renderSpiky(args.properties, args.block, "red");
+                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                        doc.renderSpiky(args.properties, args.block, "red");
                     }
                 }
             }

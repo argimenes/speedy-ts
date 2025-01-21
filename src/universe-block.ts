@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { createRainbow, createUnderline, drawAnimatedSelection, drawClippedRectangle, drawSpikySelection, updateElement } from "./library/svg";
+import { updateElement } from "./library/svg";
 import { v4 as uuidv4 } from 'uuid';
 import { DocumentBlock } from "./blocks/document-block";
 import { IndentedListBlock } from "./blocks/indented-list-block";
@@ -10,15 +10,13 @@ import { VideoBlock } from "./blocks/video-block";
 import { IframeBlock } from "./blocks/iframe-block";
 import { BlockProperty } from "./library/block-property";
 import { StandoffEditorBlock } from "./blocks/standoff-editor-block";
-import { StandoffProperty } from "./library/standoff-property";
 import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IUniverseBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType, passoverClass, isStr, DocumentHistory } from "./library/types";
 import { PlainTextBlock } from "./blocks/plain-text-block";
-import { ClockPlugin } from "./library/plugins/clock";
 import { EmbedDocumentBlock } from "./blocks/embed-document-block";
 import { fetchGet } from "./library/common";
 import { TableBlock, TableCellBlock, TableRowBlock } from './blocks/tables-blocks';
 import { ControlPanelBlock } from './components/control-panel';
-import _, { first } from 'underscore';
+import _ from 'underscore';
 import { EntitiesListBlock } from './blocks/entities-list-block';
 import { WindowBlock } from './blocks/window-block';
 import { AbstractBlock } from './blocks/abstract-block';
@@ -642,85 +640,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             children: this.blocks.map(x => x.serialize())
         } as IBlockDto                                                                           
     }
-    renderSpiky(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
-        const highlights = properties.map(p => {
-            return drawSpikySelection(p, {
-                stroke: colour || "red",
-                strokeWidth: "3"
-            });
-        }) as SVGElement[];
-        const frag = document.createDocumentFragment();
-        frag.append(...highlights);
-        block.wrapper.appendChild(frag);
-    }
-    renderRectangle(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
-        const highlights = properties.map(p => {
-            return drawAnimatedSelection(p, {
-                stroke: colour || "red",
-                strokeWidth: "3"
-            });
-        }) as SVGElement[];
-        const frag = document.createDocumentFragment();
-        frag.append(...highlights);
-        block.wrapper.appendChild(frag);
-    }
-    renderHighlight(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
-        const highlights = properties.map(p => {
-            return drawClippedRectangle(p, {
-                fill: colour || "yellow"
-            });
-        }) as SVGElement[];
-        const frag = document.createDocumentFragment();
-        frag.append(...highlights);
-        block.wrapper.appendChild(frag);
-    }
-    renderRainbow(type: string, properties: StandoffProperty[], block: StandoffEditorBlock) {
-        const cw = block.cache?.offset?.w || block.container.offsetWidth;
-        const underlines = properties.map(p => {
-            if (p.cache.offsetY == -1) {
-                const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
-                const existingLines = overlaps
-                    .filter(x => x.id != p.id && typeof x.cache?.offsetY != "undefined");
-                const highestY = (_.max(existingLines, x => x.cache.offsetY) as StandoffProperty).cache?.offsetY;
-                if (existingLines.length == 0) {
-                    p.cache.offsetY = 0;
-                } else {
-                    p.cache.offsetY = highestY >= 0 ? highestY + 2 : 0;
-                }
-            }
-            return createRainbow(p, {
-                containerWidth: cw,
-                offsetY: p.cache.offsetY
-            });
-        }) as SVGElement[];
-        const frag = document.createDocumentFragment();
-        frag.append(...underlines);
-        block.wrapper.appendChild(frag);
-    }
-    renderUnderlines(type: string, properties: StandoffProperty[], block: StandoffEditorBlock, colour: string, offsetY: number) {
-        const cw = block.cache?.offset?.w || block.container.offsetWidth;
-        const underlines = properties.map(p => {
-            if (p.cache.offsetY == -1) {
-                const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
-                const existingLines = overlaps
-                    .filter(x => x.id != p.id && typeof x.cache?.offsetY != "undefined");
-                const highestY = (_.max(existingLines, x => x.cache.offsetY) as StandoffProperty).cache?.offsetY;
-                if (existingLines.length == 0) {
-                    p.cache.offsetY = 0;
-                } else {
-                    p.cache.offsetY = highestY >= 0 ? highestY + 2 : 0;
-                }
-            }
-            return createUnderline(p, {
-                stroke: colour,
-                containerWidth: cw,
-                offsetY: p.cache.offsetY
-            });
-        }) as SVGElement[];
-        const frag = document.createDocumentFragment();
-        frag.append(...underlines);
-        block.wrapper.appendChild(frag);
-    }
     getPlatformKey(codes: TPlatformKey[]) {
         return codes.find(x=> x.platform == Platform.Windows);
     }
@@ -992,67 +911,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             return;
         }
     }
-    async buildWorkspaceBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const workspace = this.createWorkspaceBlock(blockDto);
-        await this.buildChildren(workspace, blockDto);
-        container.appendChild(workspace.container);
-        return workspace;
-    }
-    async buildVideoBackgroundBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const bg = this.createVideoBackgroundBlock(blockDto);
-        await this.buildChildren(bg, blockDto, (child) => {
-            bg.container.appendChild(child.container);
-        });
-        container.appendChild(bg.container);
-        return bg;
-    }
-    async buildImageBackgroundBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const bg = this.createImageBackgroundBlock(blockDto);
-        await this.buildChildren(bg, blockDto, (child) => {
-            bg.container.appendChild(child.container);
-        });
-        container.appendChild(bg.container);
-        return bg;
-    }
-    async buildDocumentWindowBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const win = this.createDocumentWindowBlock(blockDto);
-        await this.buildChildren(win, blockDto, (child) => {
-            win.container.appendChild(child.container);
-        });
-        win.applyBlockPropertyStyling();
-        container.appendChild(win.container);
-        return win;
-    }
-    async buildWindowBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const win = this.createWindowBlock(blockDto);
-        await this.buildChildren(win, blockDto, (child) => {
-            win.container.appendChild(child.container);
-        });
-        win.applyBlockPropertyStyling();
-        container.appendChild(win.container);
-        return win;
-    }
-    async buildCheckboxBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const todo = this.createCheckboxBlock(blockDto);
-        await this.buildChildren(todo, blockDto, (child) => {
-            updateElement(child.container, {
-                style: {
-                    display: "inline-block"
-                }
-            });
-            todo.wrapper.appendChild(child.container);
-        });
-        container.appendChild(todo.container);
-        return todo;
-    }
-    async buildStandoffEditorBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const textBlock = this.createStandoffEditorBlock(blockDto);
-        textBlock.bind(blockDto as IStandoffEditorBlockDto);
-        
-        await this.buildChildren(textBlock, blockDto);
-        container.appendChild(textBlock.container);
-        return textBlock;
-    }
     async buildUnknownBlock(container: HTMLElement, blockDto: IBlockDto) {
         const unkownBlock = new DocumentBlock({
             ...blockDto, manager: this
@@ -1060,126 +918,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         await this.buildChildren(unkownBlock, blockDto);
         container.appendChild(unkownBlock.container);
         return unkownBlock;
-    }
-    async buildDocumentBlock(container: HTMLElement, blockDto: IBlockDto) {
-        if (blockDto.metadata?.loadFromExternal) {
-            const res = await fetchGet("/api/loadDocumentJson", { folder: blockDto.metadata.folder, filename: blockDto.metadata.filename });
-            const json = await res.json();
-            blockDto = json.Data.document;
-        }
-        const documentBlock = this.createDocumentBlock(blockDto);
-        await this.buildChildren(documentBlock, blockDto);
-        container.appendChild(documentBlock.container);
-        return documentBlock;
-    }
-    async buildLeftMarginBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const leftMargin = this.createLeftMarginBlock(blockDto);
-        leftMargin.addBlockProperties([ { type: "block/marginalia/left" } ]);
-        leftMargin.applyBlockPropertyStyling();
-        await this.buildChildren(leftMargin, blockDto);
-        container.appendChild(leftMargin.container);
-        return leftMargin;
-    }
-    async buildImageBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const image = this.createImageBlock(blockDto);
-        image.build();
-        await this.buildChildren(image, blockDto);
-        container.appendChild(image.container);
-        return image;
-    }
-    async buildRightMarginBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const rightMargin = this.createRightMarginBlock(blockDto);
-        await this.buildChildren(rightMargin, blockDto);
-        container.appendChild(rightMargin.container);
-        return rightMargin;
-    }
-    async buildCodeMirrorBlock(container: HTMLElement, blockDto: ICodeMirrorBlockDto) {
-        const cm = this.createCodeMirrorBlock(blockDto);
-        await this.buildChildren(cm, blockDto);
-        if (blockDto.text)  {
-            cm.bind(blockDto.text);
-        }
-        container.appendChild(cm.container);
-        return cm;
-    }
-    async buildPlainTextBlock(container: HTMLElement, blockDto: IPlainTextBlockDto) {
-        const plainText = this.createPlainTextBlock(blockDto);
-        await this.buildChildren(plainText, blockDto);
-        if (blockDto.text)  {
-            plainText.bind(blockDto.text);
-        }
-        container.appendChild(plainText.container);
-        return plainText;
-    }
-    async buildTableBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const table = this.createTableBlock(blockDto);
-        await this.buildChildren(table, blockDto);
-        container.appendChild(table.container);
-        return table;
-    }
-    async buildTableRowBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const table = this.createTableRowBlock(blockDto);
-        await this.buildChildren(table, blockDto);
-        container.appendChild(table.container);
-        return table;
-    }
-    async buildTableCellBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const table = this.createTableCellBlock(blockDto);
-        await this.buildChildren(table, blockDto);
-        container.appendChild(table.container);
-        return table;
-    }
-    async buildGridBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const gridBlock = this.createGridBlock(blockDto);
-        await this.buildChildren(gridBlock, blockDto);
-        container.appendChild(gridBlock.container);
-        return gridBlock;
-    }
-    async buildGridRowBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const rowBlock = this.createGridRowBlock(blockDto);
-        await this.buildChildren(rowBlock, blockDto, (b) => {
-            if (b.metadata?.width) {
-                updateElement(b.container, {
-                    style: {
-                        width: b.metadata?.width
-                    }
-                });
-            }
-        });
-        container.appendChild(rowBlock.container);
-        return rowBlock;
-    }
-    async buildGridCellBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const cellBlock = this.createGridCellBlock(blockDto);
-        await this.buildChildren(cellBlock, blockDto);
-        container.appendChild(cellBlock.container);
-        return cellBlock;
-    }
-    async buildEmbedDocumentBlock(container: HTMLElement, blockDto: IEmbedDocumentBlockDto){
-        const embed = this.createEmbedDocumentBlock(blockDto);
-        await this.buildChildren(embed, blockDto);
-        embed.filename = blockDto.filename;
-        if (embed.filename) {
-            const manager = new UniverseBlock();
-            await manager.loadServerDocument(embed.filename);
-            embed.container.appendChild(manager.container);
-            updateElement(embed.container, {
-                style: {
-                    zoom: 0.5,
-                    "overflow-x": "hidden",
-                    "overflow-y": "scroll"
-                }
-            })
-        }
-        container.appendChild(embed.container);
-        return embed;
-    }
-    async buildVideoBlock(container: HTMLElement, blockDto: IBlockDto){
-        const video = this.createVideoBlock(blockDto);
-        await this.buildChildren(video, blockDto);
-        video.build();
-        container.appendChild(video.container);
-        return video;
     }
     addBlockTo(parent: AbstractBlock, block: IBlock, skipIndexation?: boolean) {
         parent.blocks.push(block);
@@ -1199,26 +937,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             }
         }
         this.addParentSiblingRelations(parent);
-    }
-    async buildIframeBlock(container: HTMLElement, blockDto: IBlockDto){
-        const iframe = this.createIFrameBlock(blockDto);
-        await this.buildChildren(iframe, blockDto);
-        iframe.build();
-        container.appendChild(iframe.container);
-        return iframe;
-    }
-    async buildTabRowBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const rowBlock = this.createTabRowBlock(blockDto);
-        await this.buildChildren(rowBlock, blockDto);
-        rowBlock.renderLabels();
-        const activeBlock = rowBlock.blocks.find(x => x.metadata.active) as TabBlock;
-        if (activeBlock) {
-            rowBlock.setTabActive(activeBlock);
-        } else {
-            rowBlock.setTabActive(rowBlock.blocks[0] as TabBlock);
-        }
-        container.appendChild(rowBlock.container);
-        return rowBlock;
     }
     addTab({ tabId, name, copyTextBlockId }: { tabId: string, name: string, copyTextBlockId?: string }) {
         const tab = this.getBlock(tabId) as TabBlock;
@@ -1262,24 +980,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }, 1);
         return newTab;
     }
-    async buildTabBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const tabBlock = this.createTabBlock(blockDto);
-        await this.buildChildren(tabBlock, blockDto, (b) => tabBlock.panel.appendChild(b.container));
-        container.appendChild(tabBlock.container);
-        return tabBlock;
-    }
-    async buildIndentedListBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const indentedListBlock = this.createIndentedListBlock();
-        await this.buildChildren(indentedListBlock, blockDto, (b) =>
-            updateElement(b.container, {
-                classList: ["list-item-numbered"]
-        }));
-        const level = indentedListBlock.metadata.indentLevel || 0 as number;
-        indentedListBlock.metadata.indentLevel = level + 1;
-        this.renderIndent(indentedListBlock);
-        container.appendChild(indentedListBlock.container);
-        return indentedListBlock;
-    }
     addParentSiblingRelations<T extends AbstractBlock>(parent: T) {
         parent.blocks.forEach((block, i) => {
             if (i == 0) {
@@ -1316,84 +1016,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             return await item.builder(container, blockDto, this);
         }
         return await UnknownBlock.getBlockBuilder().builder(container, blockDto, this);
-    }
-    async recursivelyBuildBlock__OLD(container: HTMLElement, blockDto: IBlockDto) {
-        if (blockDto.type == BlockType.DocumentBlock) {
-            return await this.buildDocumentBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.WorkspaceBlock) {
-            return await this.buildWorkspaceBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.VideoBackgroundBlock) {
-            return await this.buildVideoBackgroundBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.ImageBackgroundBlock) {
-            return await this.buildImageBackgroundBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.DocumentWindowBlock) {
-            return await this.buildDocumentWindowBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.WindowBlock) {
-            return await this.buildWindowBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.CheckboxBlock) {
-            return await this.buildCheckboxBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.StandoffEditorBlock) {
-            return await this.buildStandoffEditorBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.LeftMarginBlock) {
-            return await this.buildLeftMarginBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.RightMarginBlock) {
-            return await this.buildRightMarginBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.TableBlock) {
-            return await this.buildTableBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.TableRowBlock) {
-            return await this.buildTableRowBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.TableCellBlock) {
-            return await this.buildTableCellBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.GridBlock) {
-            return await this.buildGridBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.GridRowBlock) {
-            return await this.buildGridRowBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.GridCellBlock) {
-            return await this.buildGridCellBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.IFrameBlock) {
-            return this.buildIframeBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.TabRowBlock) {
-            return await this.buildTabRowBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.TabBlock) {
-            return await this.buildTabBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.PlainTextBlock) {
-            return await this.buildPlainTextBlock(container, blockDto as IPlainTextBlockDto);
-        }
-        if (blockDto.type == BlockType.CodeMirrorBlock) {
-            return await this.buildCodeMirrorBlock(container, blockDto as ICodeMirrorBlockDto);
-        }
-        if (blockDto.type == BlockType.IndentedListBlock) {
-            return await this.buildIndentedListBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.ImageBlock) {
-            return await this.buildImageBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.VideoBlock) {
-            return await this.buildVideoBlock(container, blockDto);
-        }
-        if (blockDto.type == BlockType.EmbedDocumentBlock) {
-            return await this.buildEmbedDocumentBlock(container, blockDto as IEmbedDocumentBlockDto);
-        }
-        return null;
     }
     getBlockInFocus() {
         return this.focus;
@@ -1558,21 +1180,22 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 zIndex: this.getHighestZIndex()
             },
             blockProperties: [
-                { type: "block/theme/glass" }
-            ]
+              { type: "block/theme/paper" }
+            ],
+            children: [dto]
         }) as WindowBlock;
-        const doc = await this.recursivelyBuildBlock(win.container, dto) as DocumentBlock;
+        //const doc = await this.recursivelyBuildBlock(win.container, dto) as DocumentBlock;
         const workspace = this.registeredBlocks.find(x => x.type == BlockType.WorkspaceBlock) as AbstractBlock;
         const background = workspace.blocks[0];
-        
-        this.addBlockTo(win, doc);
+        //this.addBlockTo(win, doc);
         this.addBlockTo(background as AbstractBlock, win);
-        updateElement(doc.container, {
-            classList: ["document-container"]
-        });
+        // updateElement(doc.container, {
+        //     classList: ["document-container"]
+        // });
         workspace.container.appendChild(win.container);
         this.addParentSiblingRelations(win);
         this.addParentSiblingRelations(workspace);
+        const doc = win.blocks[0] as DocumentBlock;
         doc.generateIndex();
         doc.setFocus();
         this.takeSnapshot(doc.id);

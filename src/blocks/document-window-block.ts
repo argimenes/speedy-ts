@@ -48,6 +48,13 @@ export class DocumentWindowBlock extends WindowBlock
                 decorate: {
                     blockClass: "block_theme_glass"
                 }
+            },
+            {
+                type: "block/theme/paper",
+                name: "Paper window",
+                decorate: {
+                    blockClass: "block_theme_paper"
+                }
             }
         ]
     }

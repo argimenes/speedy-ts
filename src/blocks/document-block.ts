@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock, CARET, InputEventSource, InputEvent, RowPosition, Caret, IBindingHandlerArgs, DIRECTION, ISelection, passoverClass, IRange, FindMatch, EventType, BlockState, GUID, StandoffPropertyDto, isStr } from '../library/types';
 import { StandoffEditorBlock } from './standoff-editor-block';
-import { updateElement } from '../library/svg';
+import { createRainbow, createUnderline, drawAnimatedSelection, drawClippedRectangle, drawSpikySelection, updateElement } from '../library/svg';
 import { UniverseBlock } from '../universe-block';
 import { AnnotationPanelBlock } from '../components/annotation-panel';
 import { fetchGet, renderToNode } from '../library/common';
@@ -2128,6 +2128,85 @@ export class DocumentBlock extends AbstractBlock {
         manager.addParentSiblingRelations(parent);
         doc.generateIndex();
         doc.setFocus();
+    }
+    renderUnderlines(type: string, properties: StandoffProperty[], block: StandoffEditorBlock, colour: string, offsetY: number) {
+        const cw = block.cache?.offset?.w || block.container.offsetWidth;
+        const underlines = properties.map(p => {
+            if (p.cache.offsetY == -1) {
+                const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
+                const existingLines = overlaps
+                    .filter(x => x.id != p.id && typeof x.cache?.offsetY != "undefined");
+                const highestY = (_.max(existingLines, x => x.cache.offsetY) as StandoffProperty).cache?.offsetY;
+                if (existingLines.length == 0) {
+                    p.cache.offsetY = 0;
+                } else {
+                    p.cache.offsetY = highestY >= 0 ? highestY + 2 : 0;
+                }
+            }
+            return createUnderline(p, {
+                stroke: colour,
+                containerWidth: cw,
+                offsetY: p.cache.offsetY
+            });
+        }) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...underlines);
+        block.wrapper.appendChild(frag);
+    }
+    renderRainbow(type: string, properties: StandoffProperty[], block: StandoffEditorBlock) {
+        const cw = block.cache?.offset?.w || block.container.offsetWidth;
+        const underlines = properties.map(p => {
+            if (p.cache.offsetY == -1) {
+                const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
+                const existingLines = overlaps
+                    .filter(x => x.id != p.id && typeof x.cache?.offsetY != "undefined");
+                const highestY = (_.max(existingLines, x => x.cache.offsetY) as StandoffProperty).cache?.offsetY;
+                if (existingLines.length == 0) {
+                    p.cache.offsetY = 0;
+                } else {
+                    p.cache.offsetY = highestY >= 0 ? highestY + 2 : 0;
+                }
+            }
+            return createRainbow(p, {
+                containerWidth: cw,
+                offsetY: p.cache.offsetY
+            });
+        }) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...underlines);
+        block.wrapper.appendChild(frag);
+    }
+    renderHighlight(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
+        const highlights = properties.map(p => {
+            return drawClippedRectangle(p, {
+                fill: colour || "yellow"
+            });
+        }) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...highlights);
+        block.wrapper.appendChild(frag);
+    }
+    renderRectangle(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
+        const highlights = properties.map(p => {
+            return drawAnimatedSelection(p, {
+                stroke: colour || "red",
+                strokeWidth: "3"
+            });
+        }) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...highlights);
+        block.wrapper.appendChild(frag);
+    }
+    renderSpiky(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
+        const highlights = properties.map(p => {
+            return drawSpikySelection(p, {
+                stroke: colour || "red",
+                strokeWidth: "3"
+            });
+        }) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...highlights);
+        block.wrapper.appendChild(frag);
     }
     async undoHistory() {
         const last = this.manager.undoHistory(this.id);
