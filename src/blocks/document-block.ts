@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { AbstractBlock } from './abstract-block';
-import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock, CARET, InputEventSource, InputEvent, RowPosition, Caret, IBindingHandlerArgs, DIRECTION, ISelection, passoverClass, IRange, FindMatch, EventType, BlockState, GUID, StandoffPropertyDto, isStr } from '../library/types';
+import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock, CARET, InputEventSource, InputEvent, RowPosition, Caret, IBindingHandlerArgs, DIRECTION, ISelection, passoverClass, IRange, FindMatch, EventType, BlockState, GUID, StandoffPropertyDto, isStr, Word } from '../library/types';
 import { StandoffEditorBlock } from './standoff-editor-block';
 import { createRainbow, createUnderline, drawAnimatedSelection, drawClippedRectangle, drawSpikySelection, updateElement } from '../library/svg';
 import { UniverseBlock } from '../universe-block';
@@ -845,13 +845,14 @@ export class DocumentBlock extends AbstractBlock {
                         const caret = args.caret as Caret;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.manager;
+                        const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
                         if (!caret.left) {
                             return;
                         }
                         const i = caret.left.index;
                         const text = block.getText();
                         const words = block.getWordsFromText(text);
-                        const nearest = manager.findNearestWord(i, words);
+                        const nearest = doc.findNearestWord(i, words);
                         if (!nearest) {
                             return;
                         }
@@ -1235,13 +1236,14 @@ export class DocumentBlock extends AbstractBlock {
                         const caret = args.caret as Caret;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.manager;
+                        const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
                         if (!caret.left) {
                             return;
                         }
                         const i = caret.left.index;
                         const text = block.getText();
                         const words = block.getWordsFromText(text);
-                        const nearest = manager.findNearestWord(i, words);
+                        const nearest = doc.findNearestWord(i, words);
                         if (!nearest) {
                             block.moveCaretStart();
                             return;
@@ -1321,6 +1323,7 @@ export class DocumentBlock extends AbstractBlock {
                     handler: async (args: IBindingHandlerArgs) => {
                         const caret = args.caret as Caret;
                         const block = args.block as StandoffEditorBlock;
+                        const doc = args.block.manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
                         const manager = block.manager;
                         if (caret.right.isEOL) {
                             return;
@@ -1329,7 +1332,7 @@ export class DocumentBlock extends AbstractBlock {
                         const last = block.getLastCell();
                         const text = block.getText();
                         const words = block.getWordsFromText(text);
-                        const nearest = manager.findNearestWord(i, words);
+                        const nearest = doc.findNearestWord(i, words);
                         if (!nearest) {
                             block.moveCaretStart();
                             return;
@@ -2175,6 +2178,14 @@ export class DocumentBlock extends AbstractBlock {
         const frag = document.createDocumentFragment();
         frag.append(...underlines);
         block.wrapper.appendChild(frag);
+    }
+    findNearestWord(index: number, words: Word[]) {
+        const lastIndex = words.length - 1;
+        for (let i = lastIndex; i >= 0; i--) {
+            let word = words[i];
+            if (index >= word.start) return word;
+        }
+        return null;
     }
     renderHighlight(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
         const highlights = properties.map(p => {

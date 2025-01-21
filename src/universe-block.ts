@@ -342,66 +342,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             }
         });
     }
-    redo() {
-        this.direction = PointerDirection.Redo;
-        this.executeCommandAtPointer();
-        this.pointer++;
-    }
-    undo() {
-        this.direction = PointerDirection.Undo;
-        this.executeCommandAtPointer();
-        this.pointer--;
-    }
-    executeCommandAtPointer() {
-        const commit = this.commits[this.pointer];
-        const cmd = this.direction == PointerDirection.Undo ? commit.undo : commit.redo;
-        if (!cmd) return;
-        this.executeCommand(cmd as Command);
-    }
-    executeCommand(command: Command) {
-        const value = command.value as any;
-        switch (command.name) {
-            case "bind": {
-                let block = this.getBlock(command.id) as StandoffEditorBlock;
-                block.bind(value);
-                return;
-            }
-            case "unbind": {
-                let block = this.getBlock(command.id) as StandoffEditorBlock;
-                block.unbind();
-                return;
-            }
-            case "insertTextAtIndex": {
-                let block = this.getBlock(command.id) as StandoffEditorBlock;
-                block.insertTextAtIndex(value.text, value.index);
-                return;
-            }
-            case "setCaret": {
-                let block = this.getBlock(command.id) as StandoffEditorBlock;
-                block.setCaret(value.index, value.offset);
-                return;
-            }
-            case "removeCellAtIndex": {
-                let block = this.getBlock(command.id) as StandoffEditorBlock;
-                block.removeCellAtIndex(value.index, value.updateCaret);
-                return;
-            }
-            case "removeCellsAtIndex": {
-                let block = this.getBlock(command.id) as StandoffEditorBlock;
-                block.removeCellsAtIndex(value.index, value.length, value.updateCaret);
-                return;
-            }
-            case "createStandoffEditorBlock": {
-                let block = this.getBlock(command.id) as UniverseBlock;
-                block.createStandoffEditorBlock();
-                return;
-            }
-            default: {
-                console.log("Command not handled.", { command });
-                break;
-            }
-        }
-    }
     setFocus() {
         this.container.focus();
     }
@@ -423,46 +363,46 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }
         block.setFocus();
     }
-    getImageBlockSchemas() {
-        const self = this;
-        return [
-            {
-                type: "block/position",
-                name: "Block position",
-                event: {
-                    onInit: (p: BlockProperty) => {
-                        const container = p.block.container;
-                        const {x, y, position } = p.metadata;
-                        updateElement(container, {
-                            style: {
-                                position: position || "absolute",
-                                left: x + "px",
-                                top: y + "px",
-                                "z-index": self.getHighestZIndex()
-                            }
-                        });
-                    }
-                }
-            },
+    // getImageBlockSchemas() {
+    //     const self = this;
+    //     return [
+    //         {
+    //             type: "block/position",
+    //             name: "Block position",
+    //             event: {
+    //                 onInit: (p: BlockProperty) => {
+    //                     const container = p.block.container;
+    //                     const {x, y, position } = p.metadata;
+    //                     updateElement(container, {
+    //                         style: {
+    //                             position: position || "absolute",
+    //                             left: x + "px",
+    //                             top: y + "px",
+    //                             "z-index": self.getHighestZIndex()
+    //                         }
+    //                     });
+    //                 }
+    //             }
+    //         },
             
-            {
-                type: "block/size",
-                name: "Block size",
-                event: {
-                    onInit: (p: BlockProperty) => {
-                        const container = p.block.container;
-                        const {width, height} = p.metadata;
-                        updateElement(container, {
-                            style: {
-                                height: isStr(height) ? height : height + "px",
-                                width: isStr(width) ? width : width + "px"
-                            }
-                        });
-                    }
-                }
-            }
-        ]
-    }
+    //         {
+    //             type: "block/size",
+    //             name: "Block size",
+    //             event: {
+    //                 onInit: (p: BlockProperty) => {
+    //                     const container = p.block.container;
+    //                     const {width, height} = p.metadata;
+    //                     updateElement(container, {
+    //                         style: {
+    //                             height: isStr(height) ? height : height + "px",
+    //                             width: isStr(width) ? width : width + "px"
+    //                         }
+    //                     });
+    //                 }
+    //             }
+    //         }
+    //     ]
+    // }
     
     animateSineWave(p: BlockProperty) {
         let pos = 0;
@@ -612,14 +552,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         list.push(this);
         return list;
     }
-    findNearestWord(index: number, words: Word[]) {
-        const lastIndex = words.length - 1;
-        for (let i = lastIndex; i >= 0; i--) {
-            let word = words[i];
-            if (index >= word.start) return word;
-        }
-        return null;
-    }
+    
     deserializeBlock(data: any) {
         switch (data.type) {
             case BlockType.StandoffEditorBlock: {
@@ -772,11 +705,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 block.relation.previous.relation.next = block;
             }
         }
-    }
-    reset() {
-        this.container.innerHTML = "";
-        this.blocks = [];
-        this.id = uuidv4();
     }
     storeCommit(commit: Commit) {        
         this.commits.push(commit);
@@ -1430,12 +1358,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         return block;
     }
     createImageBlock(dto?: IBlockDto) {
-        const blockSchemas = this.getImageBlockSchemas();
         const block = new ImageBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
-        block.setBlockSchemas(blockSchemas);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         this.addBlockTo(this, block);
@@ -1465,26 +1391,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         ];
         const i = this.randomIntFromInterval(0, lines.length - 1);
         return lines[i];
-    }
-    testLoadDocument(rows: number) {
-        const nextDoc: IBlockDto = {
-            type: BlockType.DocumentBlock,
-            children: []
-        };
-        for (let i = 0; i < rows; i++) {
-            const tb = {
-                type: BlockType.StandoffEditorBlock,
-                text: this.getRandomIpsum(),
-                standoffProperties: [
-                    { type: "style/italics", start: 20, end: 30 },
-                    { type: "style/bold", start: 25, end: 35 },
-                    { type: "codex/entity-reference", start: 27, end: 37 },
-                    { type: "codex/block-reference", start: 19, end: 29 },
-                ]
-            };
-            nextDoc.children?.push(tb);
-        }
-        this.loadDocument(nextDoc);
     }
     createWorkspaceBlock(dto?: IBlockDto) {
         const block = new WorkspaceBlock({ manager: this, ...dto });
@@ -1639,7 +1545,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (uncle) return uncle;
         return block;
     }
-    
     getIndexOfBlockById(id: GUID) {
         const block = this.getBlock(id);
         const parent = this.getParent(block) as IBlock;
@@ -1743,7 +1648,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }
         this.registeredBlocks.push(block);
     }
-    
     addTabRowAfter(blockId: GUID) {
         const target = this.getBlock(blockId) as IBlock;
         if (!target) return;
@@ -1772,8 +1676,4 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     appendSibling(anchor: HTMLElement, sibling: HTMLElement) {
         anchor.insertAdjacentElement("afterend", sibling);
     }
-    startNewDocument() {
-        
-    }
 }
-

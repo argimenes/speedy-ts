@@ -4,6 +4,7 @@ import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, CARET, IBindingHandlerArgs, InputEventSource, isStr } from '../library/types';
 import { UniverseBlock } from '../universe-block';
 import { BlockProperty } from '../library/block-property';
+import { DocumentBlock } from './document-block';
 
 export class ImageBlock extends AbstractBlock {
     image: HTMLImageElement;
@@ -81,9 +82,10 @@ export class ImageBlock extends AbstractBlock {
                     handler: async (args: IBindingHandlerArgs) => {
                         const imageBlock = args.block as ImageBlock;
                         const manager = imageBlock.manager as UniverseBlock;
+                        const doc = manager.getParentOfType(imageBlock, BlockType.DocumentBlock) as DocumentBlock;
                         const newBlock = manager.createStandoffEditorBlock();
                         newBlock.addEOL();
-                        manager.addBlockAfter(newBlock, imageBlock);
+                        doc.addBlockAfter(newBlock, imageBlock);
                         setTimeout(() => {
                             manager.setBlockFocus(newBlock);
                             newBlock.setCaret(0, CARET.LEFT);
