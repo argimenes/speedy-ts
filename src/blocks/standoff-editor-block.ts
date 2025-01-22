@@ -1,5 +1,5 @@
 import _ from "underscore";
-import { updateElement } from "../library/svg";
+import { createRainbow, createUnderline, drawAnimatedSelection, drawClippedRectangle, drawSpikySelection, updateElement } from "../library/svg";
 import { BlockProperty } from "../library/block-property";
 import { StandoffProperty } from "../library/standoff-property";
 import { AbstractBlock } from "./abstract-block";
@@ -266,8 +266,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const owner = args.block.manager as UniverseBlock;
-                        const doc = owner.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
-                        doc.renderUnderlines("codex/block-reference", args.properties, args.block, "green", 3);
+                        self.renderUnderlines("codex/block-reference", args.properties, args.block, "green", 3);
                     }
                 }
             },
@@ -285,9 +284,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
-                        const manager = args.block.manager as UniverseBlock;
-                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
-                        doc.renderUnderlines("codex/trait-reference", args.properties, args.block, "blue", 3);
+                        self.renderUnderlines("codex/trait-reference", args.properties, args.block, "blue", 3);
                     }
                 }
             },
@@ -306,8 +303,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const owner = args.block.manager as UniverseBlock;
-                        const doc = owner.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
-                        doc.renderUnderlines("codex/claim-reference", args.properties, args.block, "red", 1);
+                        self.renderUnderlines("codex/claim-reference", args.properties, args.block, "red", 1);
                     }
                 }
             },
@@ -326,8 +322,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const owner = args.block.manager as UniverseBlock;
-                        const doc = owner.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
-                        doc.renderUnderlines("codex/meta-relation-reference", args.properties, args.block, "orange", 3);
+                        self.renderUnderlines("codex/meta-relation-reference", args.properties, args.block, "orange", 3);
                     }
                 }
             },
@@ -346,8 +341,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const owner = args.block.manager as UniverseBlock;
-                        const doc = owner.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
-                        doc.renderUnderlines("codex/time-reference", args.properties, args.block, "cyan", 3);
+                        self.renderUnderlines("codex/time-reference", args.properties, args.block, "cyan", 3);
                     }
                 }
             },
@@ -369,8 +363,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     update: (args) => {
                         const manager = args.block.manager as UniverseBlock;
-                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
-                        doc.renderUnderlines("codex/entity-reference", args.properties, args.block, "purple", 1);
+                        self.renderUnderlines("codex/entity-reference", args.properties, args.block, "purple", 1);
                     }
                 }
             },
@@ -382,9 +375,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                         properties.forEach(p => p.cache.highlight?.remove())
                     },
                     update: (args) => {
-                        const manager = args.block.manager as UniverseBlock;
-                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
-                        doc.renderHighlight(args.properties, args.block, "yellow");
+                        self.renderHighlight(args.properties, args.block, "yellow");
                     }
                 }
             },
@@ -396,9 +387,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                         properties.forEach(p => p.cache.underline?.remove())
                     },
                     update: (args) => {
-                        const manager = args.block.manager as UniverseBlock;
-                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
-                        doc.renderRainbow("style/rainbow", args.properties, args.block);
+                        self.renderRainbow("style/rainbow", args.properties, args.block);
                     }
                 }
             },
@@ -410,9 +399,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                         properties.forEach(p => p.cache.highlight?.remove())
                     },
                     update: (args) => {
-                        const manager = args.block.manager as UniverseBlock;
-                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
-                        doc.renderRectangle(args.properties, args.block, "red");
+                        self.renderRectangle(args.properties, args.block, "red");
                     }
                 }
             },
@@ -424,9 +411,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                         properties.forEach(p => p.cache.highlight?.remove())
                     },
                     update: (args) => {
-                        const manager = args.block.manager as UniverseBlock;
-                        const doc = manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
-                        doc.renderSpiky(args.properties, args.block, "red");
+                        self.renderSpiky(args.properties, args.block, "red");
                     }
                 }
             }
@@ -446,6 +431,38 @@ export class StandoffEditorBlock extends AbstractBlock {
                 return block;
             }
         };
+    }
+    renderHighlight(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
+        const highlights = properties.map(p => {
+            return drawClippedRectangle(p, {
+                fill: colour || "yellow"
+            });
+        }) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...highlights);
+        block.wrapper.appendChild(frag);
+    }
+    renderRectangle(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
+        const highlights = properties.map(p => {
+            return drawAnimatedSelection(p, {
+                stroke: colour || "red",
+                strokeWidth: "3"
+            });
+        }) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...highlights);
+        block.wrapper.appendChild(frag);
+    }
+    renderSpiky(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
+        const highlights = properties.map(p => {
+            return drawSpikySelection(p, {
+                stroke: colour || "red",
+                strokeWidth: "3"
+            });
+        }) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...highlights);
+        block.wrapper.appendChild(frag);
     }
     getBlockSchemas() {
         const manager = this.manager;
@@ -779,6 +796,53 @@ export class StandoffEditorBlock extends AbstractBlock {
             this.cache.marker.remove();
             this.cache.marker = undefined;
         }
+    }
+    renderUnderlines(type: string, properties: StandoffProperty[], block: StandoffEditorBlock, colour: string, offsetY: number) {
+        const cw = block.cache?.offset?.w || block.container.offsetWidth;
+        const underlines = properties.map(p => {
+            if (p.cache.offsetY == -1) {
+                const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
+                const existingLines = overlaps
+                    .filter(x => x.id != p.id && typeof x.cache?.offsetY != "undefined");
+                const highestY = (_.max(existingLines, x => x.cache.offsetY) as StandoffProperty).cache?.offsetY;
+                if (existingLines.length == 0) {
+                    p.cache.offsetY = 0;
+                } else {
+                    p.cache.offsetY = highestY >= 0 ? highestY + 2 : 0;
+                }
+            }
+            return createUnderline(p, {
+                stroke: colour,
+                containerWidth: cw,
+                offsetY: p.cache.offsetY
+            });
+        }) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...underlines);
+        block.wrapper.appendChild(frag);
+    }
+    renderRainbow(type: string, properties: StandoffProperty[], block: StandoffEditorBlock) {
+        const cw = block.cache?.offset?.w || block.container.offsetWidth;
+        const underlines = properties.map(p => {
+            if (p.cache.offsetY == -1) {
+                const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
+                const existingLines = overlaps
+                    .filter(x => x.id != p.id && typeof x.cache?.offsetY != "undefined");
+                const highestY = (_.max(existingLines, x => x.cache.offsetY) as StandoffProperty).cache?.offsetY;
+                if (existingLines.length == 0) {
+                    p.cache.offsetY = 0;
+                } else {
+                    p.cache.offsetY = highestY >= 0 ? highestY + 2 : 0;
+                }
+            }
+            return createRainbow(p, {
+                containerWidth: cw,
+                offsetY: p.cache.offsetY
+            });
+        }) as SVGElement[];
+        const frag = document.createDocumentFragment();
+        frag.append(...underlines);
+        block.wrapper.appendChild(frag);
     }
     setMarker(anchor: Cell, container?: HTMLElement) {
         const cache = anchor.cache;

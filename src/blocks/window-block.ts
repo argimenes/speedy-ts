@@ -3,6 +3,7 @@ import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../libr
 import { AbstractBlock } from './abstract-block';
 import { updateElement } from '../library/svg';
 import { UniverseBlock } from '../universe-block';
+import { ContextMenuBlock } from './context-menu-block';
 
 type WindowBlockMetadata =  {
     title: string;
@@ -83,7 +84,7 @@ export class WindowBlock extends AbstractBlock {
         };
     }
     destroy() {
-        super.destroy();
+        super.destroy();        
     }
     updatePosition() {
         const pos = this.metadata.position;
@@ -104,13 +105,42 @@ export class WindowBlock extends AbstractBlock {
                 decorate: {
                     blockClass: "block_theme_glass"
                 }
+            },
+            {
+                type: "block/theme/paper",
+                name: "Paper window",
+                decorate: {
+                    blockClass: "block_theme_paper"
+                }
             }
         ]
     }
+    async onContextMenu(e: MouseEvent) {
+        const manager = this.manager;
+        e.preventDefault();
+        const dto = {
+            type: "context-menu-block",
+            metadata: {
+                size: { 
+                    w: 400, h: 200
+                },
+                position: {
+                    x: 123, y: 234
+                }
+            }
+        } as any;
+        const menu = await manager.recursivelyBuildBlock(document.body, dto) as ContextMenuBlock;
+        menu.source = this;
+        manager.registerBlock(menu);
+        manager.container.appendChild(menu.container);
+        manager.setBlockFocus(menu);
+    }
     setupEventHandlers() {
         const self = this;
+        const manager = self.manager;
         const win = this.container;
         const handle = this.header;
+        [handle].forEach(x => x.addEventListener("contextmenu", this.onContextMenu.bind(this)));
         [handle].forEach(x => x.addEventListener('mousedown', (e) => {
             if ((e.target as HTMLElement).contains(win.childNodes[1])) {
                 console.log("click inside window");

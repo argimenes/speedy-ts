@@ -19,6 +19,7 @@ import { ImageBlock } from "../blocks/image-block";
 import { VideoBlock } from "../blocks/video-block";
 import { EmbedDocumentBlock } from "../blocks/embed-document-block";
 import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
+import { ContextMenuBlock } from "../blocks/context-menu-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -475,6 +476,7 @@ const foo = (bar) => {
         const workspace = new UniverseBlock();
         workspace.container = el;
         workspace.addBlockBuilders([
+            ContextMenuBlock.getBlockBuilder(),
             CheckboxBlock.getBlockBuilder(),
             StandoffEditorBlock.getBlockBuilder(),
             CodeMirrorBlock.getBlockBuilder(),
