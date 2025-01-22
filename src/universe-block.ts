@@ -1016,18 +1016,18 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const dto = {
             type: BlockType.WorkspaceBlock,
             children: [
-                // {
-                //     type: BlockType.ImageBackgroundBlock,
-                //     metadata: {
-                //         url: "https://upload.wikimedia.org/wikipedia/commons/c/c5/Aurora_borealis_above_Lyngenfjorden%2C_2012_March_%28cropped%29.jpg"
-                //     }
-                // },
                 {
-                    type: BlockType.VideoBackgroundBlock,
+                    type: BlockType.ImageBackgroundBlock,
                     metadata: {
-                        url: "/video-backgrounds/green-aurora.mp4"
+                        url: "/image-backgrounds/pexels-visit-greenland-108649-360912.jpg"
                     }
-                }
+                },
+                // {
+                //     type: BlockType.VideoBackgroundBlock,
+                //     metadata: {
+                //         url: "/video-backgrounds/green-aurora.mp4"
+                //     }
+                // }
             ]
         };
         const container = document.createElement("DIV") as HTMLDivElement;

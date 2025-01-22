@@ -35,6 +35,7 @@ export class ImageBackgroundBlock extends AbstractBlock {
     }
     constructor(args: IImageBackgroundBlockConstructor ) {
         super(args);
+        this.type = BlockType.ImageBackgroundBlock;
         updateElement(this.container, {
             classList: ["fullscreen-background"]
         });

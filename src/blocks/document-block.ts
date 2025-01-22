@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock, CARET, InputEventSource, InputEvent, RowPosition, Caret, IBindingHandlerArgs, DIRECTION, ISelection, passoverClass, IRange, FindMatch, EventType, BlockState, GUID, StandoffPropertyDto, isStr, Word } from '../library/types';
 import { StandoffEditorBlock } from './standoff-editor-block';
-import { createRainbow, createUnderline, drawAnimatedSelection, drawClippedRectangle, drawSpikySelection, updateElement } from '../library/svg';
+import { drawAnimatedSelection, drawClippedRectangle, drawSpikySelection, updateElement } from '../library/svg';
 import { UniverseBlock } from '../universe-block';
 import { AnnotationPanelBlock } from '../components/annotation-panel';
 import { fetchGet, renderToNode } from '../library/common';
@@ -91,7 +91,11 @@ export class DocumentBlock extends AbstractBlock {
                 if (dto.metadata?.loadFromExternal) {
                     const res = await fetchGet("/api/loadDocumentJson", { folder: dto.metadata.folder, filename: dto.metadata.filename });
                     const json = await res.json();
-                    dto = json.Data.document;
+                    if (!json.Success) {
+                        console.log("DocumentBlock.getBlockBuilder", { container, dto });
+                    } else {
+                        dto = json.Data.document;
+                    }
                 }
                 const document = new DocumentBlock({ ...dto, manager });
                 document.applyBlockPropertyStyling();
@@ -2132,53 +2136,7 @@ export class DocumentBlock extends AbstractBlock {
         doc.generateIndex();
         doc.setFocus();
     }
-    renderUnderlines(type: string, properties: StandoffProperty[], block: StandoffEditorBlock, colour: string, offsetY: number) {
-        const cw = block.cache?.offset?.w || block.container.offsetWidth;
-        const underlines = properties.map(p => {
-            if (p.cache.offsetY == -1) {
-                const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
-                const existingLines = overlaps
-                    .filter(x => x.id != p.id && typeof x.cache?.offsetY != "undefined");
-                const highestY = (_.max(existingLines, x => x.cache.offsetY) as StandoffProperty).cache?.offsetY;
-                if (existingLines.length == 0) {
-                    p.cache.offsetY = 0;
-                } else {
-                    p.cache.offsetY = highestY >= 0 ? highestY + 2 : 0;
-                }
-            }
-            return createUnderline(p, {
-                stroke: colour,
-                containerWidth: cw,
-                offsetY: p.cache.offsetY
-            });
-        }) as SVGElement[];
-        const frag = document.createDocumentFragment();
-        frag.append(...underlines);
-        block.wrapper.appendChild(frag);
-    }
-    renderRainbow(type: string, properties: StandoffProperty[], block: StandoffEditorBlock) {
-        const cw = block.cache?.offset?.w || block.container.offsetWidth;
-        const underlines = properties.map(p => {
-            if (p.cache.offsetY == -1) {
-                const overlaps = block.getEnclosingPropertiesBetweenIndexes(p.start.index, p.end.index);
-                const existingLines = overlaps
-                    .filter(x => x.id != p.id && typeof x.cache?.offsetY != "undefined");
-                const highestY = (_.max(existingLines, x => x.cache.offsetY) as StandoffProperty).cache?.offsetY;
-                if (existingLines.length == 0) {
-                    p.cache.offsetY = 0;
-                } else {
-                    p.cache.offsetY = highestY >= 0 ? highestY + 2 : 0;
-                }
-            }
-            return createRainbow(p, {
-                containerWidth: cw,
-                offsetY: p.cache.offsetY
-            });
-        }) as SVGElement[];
-        const frag = document.createDocumentFragment();
-        frag.append(...underlines);
-        block.wrapper.appendChild(frag);
-    }
+    
     findNearestWord(index: number, words: Word[]) {
         const lastIndex = words.length - 1;
         for (let i = lastIndex; i >= 0; i--) {
@@ -2187,38 +2145,7 @@ export class DocumentBlock extends AbstractBlock {
         }
         return null;
     }
-    renderHighlight(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
-        const highlights = properties.map(p => {
-            return drawClippedRectangle(p, {
-                fill: colour || "yellow"
-            });
-        }) as SVGElement[];
-        const frag = document.createDocumentFragment();
-        frag.append(...highlights);
-        block.wrapper.appendChild(frag);
-    }
-    renderRectangle(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
-        const highlights = properties.map(p => {
-            return drawAnimatedSelection(p, {
-                stroke: colour || "red",
-                strokeWidth: "3"
-            });
-        }) as SVGElement[];
-        const frag = document.createDocumentFragment();
-        frag.append(...highlights);
-        block.wrapper.appendChild(frag);
-    }
-    renderSpiky(properties: StandoffProperty[], block: StandoffEditorBlock, colour: string) {
-        const highlights = properties.map(p => {
-            return drawSpikySelection(p, {
-                stroke: colour || "red",
-                strokeWidth: "3"
-            });
-        }) as SVGElement[];
-        const frag = document.createDocumentFragment();
-        frag.append(...highlights);
-        block.wrapper.appendChild(frag);
-    }
+    
     async undoHistory() {
         const last = this.manager.undoHistory(this.id);
         if (!last) {

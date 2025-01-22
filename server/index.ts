@@ -210,6 +210,7 @@ app.use(express.static('dist'));
 app.use("/templates", express.static('templates'));
 app.use('/uploads', express.static('uploads'));
 app.use('/video-backgrounds', express.static(path.join(__dirname, basePath, 'backgrounds/video')));
+app.use('/image-backgrounds', express.static(path.join(__dirname, basePath, 'backgrounds/images')));
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb'}));
 
@@ -280,8 +281,6 @@ app.get("/api/listFolders", function (req: Request, res: Response) {
   const folders = listFolders();
   res.send({ folders });
 });
-
-
 
 app.post('/api/graph/update-entity-references', async (req: Request, res: Response) => {
   const { filename, nodes, edges } = req.body;
@@ -364,22 +363,28 @@ const loadSubsetOfConcepts = () =>{
 }
 
 app.get('/api/restoreDatabaseJson', async function(req: Request, res: Response) {
-  await restoreDatabase();
-  res.send({
-    Success: true
-  });
+  try {
+    await restoreDatabase();
+    res.send({
+      Success: true
+    });
+  } catch (ex) {
+    console.log('/api/restoreDatabaseJson', { ex });
+    res.send({
+      Success: false
+    }); 
+  }  
 });
 
 app.get('/api/indexAllDocumentsJson', async function(req: Request, res: Response) {
-  const folders = listFolders();
-  for (let i = 0; i < folders.length; i++) {
-    const folder = folders[i];
-    const files = listJsonFiles(folder);
-    for (let j = 0; j < files.length; j++) {
-      let filename = files[j];
-      const filepath = path.join(__dirname, baseDocumentPath, folder, filename);
-      //console.log({ folder, filename, filepath });
-      try {
+  try {
+    const folders = listFolders();
+    for (let i = 0; i < folders.length; i++) {
+      const folder = folders[i];
+      const files = listJsonFiles(folder);
+      for (let j = 0; j < files.length; j++) {
+        let filename = files[j];
+        const filepath = path.join(__dirname, baseDocumentPath, folder, filename);
         const data = fs.readFileSync(filepath, 'utf8');
         const doc = JSON.parse(data) as IBlockDto;
         if (!doc || doc?.type != "main-list-block") {
@@ -387,33 +392,43 @@ app.get('/api/indexAllDocumentsJson', async function(req: Request, res: Response
           continue;
         }
         await saveDocumentIndex(doc);
-      } catch (ex) {
-        console.log({ ex });
       }
     }
-  }
-  res.send({
-    Success: true,
-    Data: {
-      folders
-    }
-  });
+    res.send({
+      Success: true,
+      Data: {
+        folders
+      }
+    });
+  } catch (ex) {
+    console.log('/api/indexAllDocumentsJson', { ex });
+    res.send({
+      Success: false
+    }); 
+  }  
 });
 
 app.get('/api/loadDocumentJson', async function(req: Request, res: Response) {
-  const filename = req.query.filename as string;
-  const folder = (req.query?.folder as string) || "data";
-  const filepath = path.join(__dirname, baseDocumentPath, folder, filename);
-  const data = fs.readFileSync(filepath, 'utf8');
-  const dto = JSON.parse(data) as IBlockDto;
-  dto.metadata = dto.metadata || {};
-  dto.metadata.filename = filename;
-  res.send({
-    Success: true,
-    Data: {
-      document: dto
-    }
-  });
+  try {
+    const filename = req.query.filename as string;
+    const folder = (req.query?.folder as string) || "data";
+    const filepath = path.join(__dirname, baseDocumentPath, folder, filename);
+    const data = fs.readFileSync(filepath, 'utf8');
+    const dto = JSON.parse(data) as IBlockDto;
+    dto.metadata = dto.metadata || {};
+    dto.metadata.filename = filename;
+    res.send({
+      Success: true,
+      Data: {
+        document: dto
+      }
+    });
+  } catch (ex) {
+    console.log('/api/loadDocumentJson', { ex });
+    res.send({
+      Success: false
+    }); 
+  }
 });
 
 type AgentMention = {
@@ -423,6 +438,14 @@ type AgentMention = {
 }
 
 app.get("/api/findAgentsByNameJson", async function(req: Request, res: Response) {
+  try {
+
+  } catch (ex) {
+    console.log({ ex });
+    res.send({
+      Success: false
+    }); 
+  }
   const text = req.query.search as string;
   const byPartial = req.query.byPartial === "true";
   const page: any = req.query.page || 1;
@@ -530,29 +553,39 @@ app.post('/api/getEntitiesJson', async function(req: Request, res: Response) {
 });
 
 app.post('/api/saveWorkspaceJson', async function(req: Request, res: Response) {
-  const json = req.body;
-  const filename = json?.filename + "";
-  const filepath = path.join(__dirname, baseWorkspacesPath, filename);
-  const workspace = JSON.stringify(json.workspace);
-  await fs.writeFile(filepath, workspace, (err) => {
-    console.log('writeFile', { err });
-  });
-  res.send({
-    Success: true
-  });
+  try {
+    const json = req.body;
+    const filename = json?.filename + "";
+    const filepath = path.join(__dirname, baseWorkspacesPath, filename);
+    const workspace = JSON.stringify(json.workspace);
+    await fs.writeFile(filepath, workspace, (err) => {
+      console.log('writeFile', { err });
+    });
+    res.send({
+      Success: true
+    });
+  } catch (ex) {
+    console.log('/api/saveWorkspaceJson', { ex });
+    res.send({ Success: false });
+  }  
 });
 
 app.get('/api/loadWorkspaceJson', async function(req: Request, res: Response) {
-  const filename = req.query.filename + "";
-  const filepath = path.join(__dirname, baseWorkspacesPath, filename);
-  const data = fs.readFileSync(filepath, 'utf8');
-  const ws = JSON.parse(data) as IBlockDto;
-  res.send({
-    Success: true,
-    Data: {
-      workspace: ws
-    }
-  });
+  try {
+    const filename = req.query.filename + "";
+    const filepath = path.join(__dirname, baseWorkspacesPath, filename);
+    const data = fs.readFileSync(filepath, 'utf8');
+    const ws = JSON.parse(data) as IBlockDto;
+    res.send({
+      Success: true,
+      Data: {
+        workspace: ws
+      }
+    });
+  } catch (ex) {
+    console.log('/api/loadWorkspaceJson', { ex });
+    res.send({ Success: false });
+  }
 });
 
 app.post('/api/saveDocumentJson', async function(req: Request, res: Response) {
