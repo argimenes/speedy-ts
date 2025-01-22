@@ -94,12 +94,12 @@ body {
 
   .block-window {
     /* position: relative; */
-    margin-top: 20px;
-    margin-bottom: 40px;
+    /* margin-top: 20px;
+    margin-bottom: 40px; */
     width: 800px;
-    border-radius: 10px;
+    border-radius: 5px;
     padding: 20px 15px;
-    margin: 0 300px;
+    /* margin: 0 300px; */
     line-height: 1.5rem;
     background-color: #efefef;
     z-index: -1;

@@ -118,21 +118,23 @@ export class WindowBlock extends AbstractBlock {
     async onContextMenu(e: MouseEvent) {
         const manager = this.manager;
         e.preventDefault();
+        const rect = this.container.getBoundingClientRect();
+        console.log("onContextMenu", { e, rect });
         const dto = {
             type: "context-menu-block",
             metadata: {
                 size: { 
-                    w: 400, h: 200
+                    w: 200
                 },
                 position: {
-                    x: 123, y: 234
+                    x: e.clientX, y: e.clientY
                 }
             }
         } as any;
         const menu = await manager.recursivelyBuildBlock(document.body, dto) as ContextMenuBlock;
         menu.source = this;
         manager.registerBlock(menu);
-        manager.container.appendChild(menu.container);
+        document.body.appendChild(menu.container);
         manager.setBlockFocus(menu);
     }
     setupEventHandlers() {

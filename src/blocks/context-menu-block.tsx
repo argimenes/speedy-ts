@@ -37,18 +37,18 @@ export class ContextMenuBlock extends AbstractBlock {
         this.container.appendChild(node);
     }
     setupPosition() {
-        const { x, y } = this.metadata.position;
-        const { w, h } = this.metadata.size;
+        const { x, y } = this.metadata?.position || {};
+        const { w, h } = this.metadata?.size || {};
         updateElement(this.container, {
             classList: ["block-window", "context-menu-window"],
             style: {
                 position: "absolute",
-                width: `${w}px`,
-                height: `${h}px`,
                 transform: `translate(${x}px,${y}px)`,
                 "z-index": this.manager.getHighestZIndex()
             }
         });
+        if (w) updateElement(this.container, { style: { width: `${w}px` } });
+        if (h) updateElement(this.container, { style: { height: `${h}px` } });
     }
     static getBlockBuilder() {
         return {
@@ -82,7 +82,7 @@ export class ContextMenuBlock extends AbstractBlock {
         const win = this.source;
         if (theme == "normal") {
             const glass = win.blockProperties.find(x => x.type == "block/theme/glass");
-            if (glass) this.removeBlockProperty(glass);
+            if (glass) win.removeBlockProperty(glass);
             win.addBlockProperties([{ type: "block/theme/paper" }]);
             win.applyBlockPropertyStyling();
         } else if (theme == "glass") {
