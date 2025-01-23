@@ -2,7 +2,7 @@ import { updateElement } from "../library/svg";
 import { BlockType, IAbstractBlockConstructor, IBlock, IBlockDto } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { AbstractBlock } from "./abstract-block";
-import { ShaderMount, meshGradientFragmentShader } from '@paper-design/shaders';
+import { ShaderMount, getShaderColorFromString, meshGradientFragmentShader } from '@paper-design/shaders';
 
 export interface ICanvasBackgroundBlockConstructor extends IAbstractBlockConstructor {
 
@@ -26,17 +26,21 @@ export class CanvasBackgroundBlock extends AbstractBlock {
     }
     createGradient() {
         const shaderParams = {
-            u_color1: [255, 192, 203], // pink
-            u_color2: [255, 255, 255], // white
-            u_color3: [0, 0, 255],     // blue
-            u_color4: [128, 0, 128],   // purple
-            u_speed: 0.25,
-        };
-        const meshGradient = new ShaderMount(this.canvas, meshGradientFragmentShader, shaderParams);        
-        console.log('meshGradient:', meshGradient);
-        console.log('Shader Fragment:', meshGradientFragmentShader);
-        console.log('Canvas Element:', this.canvas);
-        console.log('webgl:', this.canvas.getContext('webgl'));
+            u_color1: getShaderColorFromString("#283BFC"),
+            u_color2: getShaderColorFromString("#FF2828"),
+            u_color3: getShaderColorFromString("#dddddd"),
+            u_color4: getShaderColorFromString("#800080"),
+          };
+          
+          const meshGradient = new ShaderMount(
+            this.canvas,
+            meshGradientFragmentShader,
+            shaderParams,
+            undefined,
+            0.25
+          );
+          
+          meshGradient.setUniforms(shaderParams);
     }
     static getBlockBuilder() {
         return {

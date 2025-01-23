@@ -505,7 +505,7 @@ const foo = (bar) => {
             ImageBackgroundBlock.getBlockBuilder(),
             WorkspaceBlock.getBlockBuilder(),
         ]);
-        workspace.createImageWorkspace().then();
+        workspace.createCanvasWorkspace().then();
         workspace.addDocumentToWorkspace(doc).then();
         props.getInstance(workspace);
         console.log("== GLOBAL ==", { manager: workspace, block: workspace.blocks[0] })
