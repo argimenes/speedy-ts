@@ -1012,7 +1012,23 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             }
         }
     }
-    async createWorkspace() {
+    async createCanvasWorkspace() {
+        const dto = {
+            type: BlockType.WorkspaceBlock,
+            children: [
+                {
+                    type: BlockType.CanvasBackgroundBlock
+                }                
+            ]
+        };
+        const container = document.createElement("DIV") as HTMLDivElement;
+        const workspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
+        this.container.appendChild(workspace.container);
+        this.addBlockTo(this, workspace);
+        this.addParentSiblingRelations(workspace);
+        return workspace;
+    }
+    async createImageWorkspace() {
         const dto = {
             type: BlockType.WorkspaceBlock,
             children: [
@@ -1028,6 +1044,25 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 //         url: "/video-backgrounds/green-aurora.mp4"
                 //     }
                 // }
+            ]
+        };
+        const container = document.createElement("DIV") as HTMLDivElement;
+        const workspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
+        this.container.appendChild(workspace.container);
+        this.addBlockTo(this, workspace);
+        this.addParentSiblingRelations(workspace);
+        return workspace;
+    }
+    async createVideoWorkspace() {
+        const dto = {
+            type: BlockType.WorkspaceBlock,
+            children: [
+                {
+                    type: BlockType.VideoBackgroundBlock,
+                    metadata: {
+                        url: "/video-backgrounds/green-aurora.mp4"
+                    }
+                }
             ]
         };
         const container = document.createElement("DIV") as HTMLDivElement;

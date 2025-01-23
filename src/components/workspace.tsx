@@ -20,6 +20,7 @@ import { VideoBlock } from "../blocks/video-block";
 import { EmbedDocumentBlock } from "../blocks/embed-document-block";
 import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
 import { ContextMenuBlock } from "../blocks/context-menu-block";
+import { CanvasBackgroundBlock } from "../blocks/canvas-background-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -499,11 +500,12 @@ const foo = (bar) => {
             DocumentBlock.getRightMarginBlockBuilder(),
             WindowBlock.getBlockBuilder(),
             DocumentWindowBlock.getBlockBuilder(),
+            CanvasBackgroundBlock.getBlockBuilder(),
             VideoBackgroundBlock.getBlockBuilder(),
             ImageBackgroundBlock.getBlockBuilder(),
             WorkspaceBlock.getBlockBuilder(),
         ]);
-        workspace.createWorkspace().then();
+        workspace.createImageWorkspace().then();
         workspace.addDocumentToWorkspace(doc).then();
         props.getInstance(workspace);
         console.log("== GLOBAL ==", { manager: workspace, block: workspace.blocks[0] })
