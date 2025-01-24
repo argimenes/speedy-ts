@@ -13,7 +13,7 @@ import { SearchEntitiesBlock } from '../components/search-entities';
 import { FindReplaceBlock } from '../components/find-replace';
 import { IframeBlock } from './iframe-block';
 import { ImageBlock } from './image-block';
-import { VideoBlock } from './video-block';
+import { YouTubeVideoBlock } from './youtube-video-block';
 import { IndentedListBlock } from './indented-list-block';
 import { TabBlock } from './tabs-block';
 import { BlockProperty } from '../library/block-property';
@@ -520,11 +520,11 @@ export class DocumentBlock extends AbstractBlock {
     addVideoBlock(anchor: IBlock, url: string) {
         const manager = this.manager;
         const video = manager.createVideoBlock({
-            type: BlockType.VideoBlock,
+            type: BlockType.YouTubeVideoBlock,
             metadata: {
                 url: url
             }
-        }) as VideoBlock;
+        }) as YouTubeVideoBlock;
         video.build();
         this.addBlockAfter(video, anchor);
     }

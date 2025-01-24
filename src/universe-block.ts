@@ -6,7 +6,7 @@ import { IndentedListBlock } from "./blocks/indented-list-block";
 import { TabBlock, TabRowBlock } from "./blocks/tabs-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "./blocks/grid-block";
 import { ImageBlock } from "./blocks/image-block";
-import { VideoBlock } from "./blocks/video-block";
+import { YouTubeVideoBlock } from "./blocks/youtube-video-block";
 import { IframeBlock } from "./blocks/iframe-block";
 import { BlockProperty } from "./library/block-property";
 import { StandoffEditorBlock } from "./blocks/standoff-editor-block";
@@ -27,6 +27,7 @@ import { DocumentWindowBlock } from './blocks/document-window-block';
 import { ImageBackgroundBlock } from './blocks/image-background-block';
 import { VideoBackgroundBlock } from './blocks/video-background-block';
 import { UnknownBlock } from './blocks/unknown-block';
+import { ErrorBlock } from './blocks/error-block';
 
 export type BlockBuilder =
     (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => Promise<IBlock>;
@@ -941,7 +942,12 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
         const item = this.blockBuilders.find(x => x.type == blockDto.type);
         if (item) {
-            return await item.builder(container, blockDto, this);
+            try {
+                return await item.builder(container, blockDto, this);
+            } catch (ex) {
+                console.error("recursivelyBuildBlock", { container, blockDto, ex, manager: this });
+                return await ErrorBlock.getBlockBuilder().builder(container, blockDto, this);
+            }
         }
         return await UnknownBlock.getBlockBuilder().builder(container, blockDto, this);
     }
@@ -1011,6 +1017,25 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 textBlock.moveCaretStart();
             }
         }
+    }
+    async createYouTubeVideoBackgroundWorkspace() {
+        const dto = {
+            type: BlockType.WorkspaceBlock,
+            children: [
+                {
+                    type: BlockType.YouTubeVideoBackgroundBlock,
+                    metadata: {
+                        url: "https://www.youtube.com/watch?v=Zsqep7_9_mw"
+                    }
+                }                
+            ]
+        };
+        const container = document.createElement("DIV") as HTMLDivElement;
+        const workspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
+        this.container.appendChild(workspace.container);
+        this.addBlockTo(this, workspace);
+        this.addParentSiblingRelations(workspace);
+        return workspace;
     }
     async createCanvasWorkspace() {
         const dto = {
@@ -1383,7 +1408,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         return block;
     }
     createVideoBlock(dto?: IBlockDto) {
-        const block = new VideoBlock({
+        const block = new YouTubeVideoBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;

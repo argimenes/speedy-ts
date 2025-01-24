@@ -16,11 +16,12 @@ import { PlainTextBlock } from "../blocks/plain-text-block";
 import { CodeMirrorBlock } from "../blocks/code-mirror-block";
 import { IndentedListBlock } from "../blocks/indented-list-block";
 import { ImageBlock } from "../blocks/image-block";
-import { VideoBlock } from "../blocks/video-block";
+import { YouTubeVideoBlock } from "../blocks/youtube-video-block";
 import { EmbedDocumentBlock } from "../blocks/embed-document-block";
 import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
 import { ContextMenuBlock } from "../blocks/context-menu-block";
 import { CanvasBackgroundBlock } from "../blocks/canvas-background-block";
+import { YouTubeVideoBackgroundBlock } from "../blocks/youtube-video-background-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -102,7 +103,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                     blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
                 },
                 {
-                    type: BlockType.VideoBlock,
+                    type: BlockType.YouTubeVideoBlock,
                     metadata: {
                         url: "https://www.youtube.com/watch?v=fJemjesBMVE"
                     }
@@ -485,7 +486,7 @@ const foo = (bar) => {
             IframeBlock.getBlockBuilder(),
             IndentedListBlock.getBlockBuilder(),
             ImageBlock.getBlockBuilder(),
-            VideoBlock.getBlockBuilder(),
+            YouTubeVideoBlock.getBlockBuilder(),
             EmbedDocumentBlock.getBlockBuilder(),
             TabRowBlock.getBlockBuilder(),
             TabBlock.getBlockBuilder(),
@@ -501,6 +502,7 @@ const foo = (bar) => {
             WindowBlock.getBlockBuilder(),
             DocumentWindowBlock.getBlockBuilder(),
             CanvasBackgroundBlock.getBlockBuilder(),
+            YouTubeVideoBackgroundBlock.getBlockBuilder(),
             VideoBackgroundBlock.getBlockBuilder(),
             ImageBackgroundBlock.getBlockBuilder(),
             WorkspaceBlock.getBlockBuilder(),
