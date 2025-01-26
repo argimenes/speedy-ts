@@ -15,7 +15,7 @@ export class EmbedDocumentBlock extends AbstractBlock {
     }
     static getBlockBuilder() {
         return {
-            type: BlockType.VideoBlock,
+            type: BlockType.YouTubeVideoBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
                 const block = new EmbedDocumentBlock({ manager, ...dto });
                 if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
