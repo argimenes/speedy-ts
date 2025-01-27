@@ -121,7 +121,7 @@ export class WindowBlock extends AbstractBlock {
         const rect = this.container.getBoundingClientRect();
         console.log("onContextMenu", { e, rect });
         const dto = {
-            type: "context-menu-block",
+            type: BlockType.ContextMenuBlock,
             metadata: {
                 size: { 
                     w: 200
@@ -156,14 +156,18 @@ export class WindowBlock extends AbstractBlock {
             pos.y = rect.top;
             size.h = rect.height;
             size.w = rect.width;
-            self.mouseOffsetX = e.clientX;
-            self.mouseOffsetY = e.clientY;
+            self.mouseOffsetX = e.clientX - rect.left;
+            self.mouseOffsetY = e.clientY - rect.top;
             e.preventDefault();
         }));
         [win].forEach(x => x.addEventListener('mouseover', (e) => {
             console.log("mouseover", { e });
             if (!self.isDragging) {
                 console.log("not dragging");
+                return;
+            }
+            if (!win.contains(e.target as HTMLElement)) {
+                self.isDragging = false;
                 return;
             }
             const x = e.clientX - self.mouseOffsetX,
