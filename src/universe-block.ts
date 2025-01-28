@@ -235,6 +235,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }
         return ALLOW;
     }
+    getWorkspace() {
+        return this.blocks[0].blocks[0] as AbstractBlock;
+    }
     async attachEventBindings() {
         document.body.addEventListener("keydown", this.handleKeyboardInputEvents.bind(this));
         document.body.addEventListener("keydown", this.handleOnTextChanged.bind(this));
@@ -553,20 +556,20 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         list.push(this);
         return list;
     }
-    replaceBlockWith(originalBlock: AbstractBlock, replacementBlock: AbstractBlock) {
-        const originalParent = originalBlock.relation.parent as AbstractBlock;
-        replacementBlock.blocks = originalBlock.blocks;
-        replacementBlock.relation.parent = originalBlock.relation.parent;
-        replacementBlock.container.append(...originalBlock.container.childNodes);
-        const i = originalParent.blocks.findIndex(x => x.id == originalBlock.id);
-        originalParent.blocks.splice(i, 1, replacementBlock);
+    replaceBlockWith(original: AbstractBlock, replacement: AbstractBlock) {
+        const originalParent = original.relation.parent as AbstractBlock;
+        replacement.blocks = original.blocks;
+        replacement.relation.parent = original.relation.parent;
+        replacement.container.append(...original.container.childNodes);
+        const i = originalParent.blocks.findIndex(x => x.id == original.id);
+        originalParent.blocks.splice(i, 1, replacement);
         if (i == 0) {
-            originalParent.relation.firstChild = replacementBlock;
+            originalParent.relation.firstChild = replacement;
         }
-        originalParent.container.replaceChild(originalBlock.container, replacementBlock.container);
+        originalParent.container.replaceChild(original.container, replacement.container);
         this.addParentSiblingRelations(originalParent);
-        this.deregisterBlock(originalBlock.id);
-        this.registerBlock(replacementBlock);
+        this.deregisterBlock(original.id);
+        this.registerBlock(replacement);
     }
     deserializeBlock(data: any) {
         switch (data.type) {
@@ -1067,6 +1070,40 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addParentSiblingRelations(workspace);
         return workspace;
     }
+    async switchToVideoWorkspace() {
+        const dto = {
+            type: BlockType.WorkspaceBlock,
+            children: [
+                {
+                    type: BlockType.VideoBackgroundBlock,
+                    metadata: {
+                        url: "/video-backgrounds/green-aurora.mp4"
+                    }
+                }
+            ]
+        };
+        const container = document.createElement("DIV") as HTMLDivElement;
+        const originalWorkspace = this.blocks[0] as AbstractBlock;
+        const videoWorkspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
+        this.replaceBlockWith(originalWorkspace, videoWorkspace);
+    }
+    async switchToImageWorkspace() {
+        const dto = {
+            type: BlockType.WorkspaceBlock,
+            children: [
+                {
+                    type: BlockType.ImageBackgroundBlock,
+                    metadata: {
+                        url: "/image-backgrounds/pexels-visit-greenland-108649-360912.jpg"
+                    }
+                }
+            ]
+        };
+        const container = document.createElement("DIV") as HTMLDivElement;
+        const originalWorkspace = this.blocks[0] as AbstractBlock;
+        const imageWorkspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
+        this.replaceBlockWith(originalWorkspace, imageWorkspace);
+    }
     async createImageWorkspace() {
         const dto = {
             type: BlockType.WorkspaceBlock,
@@ -1076,13 +1113,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                     metadata: {
                         url: "/image-backgrounds/pexels-visit-greenland-108649-360912.jpg"
                     }
-                },
-                // {
-                //     type: BlockType.VideoBackgroundBlock,
-                //     metadata: {
-                //         url: "/video-backgrounds/green-aurora.mp4"
-                //     }
-                // }
+                }
             ]
         };
         const container = document.createElement("DIV") as HTMLDivElement;

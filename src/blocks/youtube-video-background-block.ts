@@ -1,12 +1,14 @@
 import { v4 as uuidv4 } from 'uuid';
 import YouTubePlayer from 'youtube-player';
 import { AbstractBlock } from './abstract-block';
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
+import { IAbstractBlockConstructor, BlockType, IBlockDto, InputEvent, IBlock, IBindingHandlerArgs, InputEventSource, ISetSource } from '../library/types';
 import { Options } from 'youtube-player/dist/types';
 import { UniverseBlock } from '../universe-block';
 import { updateElement } from '../library/svg';
 
-export class YouTubeVideoBackgroundBlock extends AbstractBlock {
+
+
+export class YouTubeVideoBackgroundBlock extends AbstractBlock implements ISetSource {
     iframe: HTMLDivElement;
     player: any;
     constructor(args: IAbstractBlockConstructor) {
@@ -43,6 +45,18 @@ export class YouTubeVideoBackgroundBlock extends AbstractBlock {
                 mute: 0 // unmute
             }
         } as Options);
+        this.inputEvents = this.getInputEvents();
+    }
+    getInputEvents() {
+        const self = this;
+        return [
+            
+        ];
+    }
+    setSource(url: string) {
+        const id = url.split("=")[1].split("&")[0];
+        this.player.loadVideoById(id);
+        this.player.playVideo();
     }
     static getBlockBuilder() {
         return {

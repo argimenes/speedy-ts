@@ -15,6 +15,9 @@ export interface IBlockPropertySchema extends IPropertySchema {
         init: (p: BlockProperty) => void;
     }
 }
+export interface ISetSource {
+    setSource(url: string);
+}
 export interface IMainListBlockDto extends IBlockDto {
 
 }

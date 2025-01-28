@@ -4,7 +4,7 @@ import { GridBlock, GridCellBlock } from "../blocks/grid-block";
 import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
 import { IndentedListBlock } from "../blocks/indented-list-block";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
-import { BlockType, CARET, IAbstractBlockConstructor, IBlock, IBlockDto } from "../library/types";
+import { BlockType, CARET, IAbstractBlockConstructor, IBlock, IBlockDto, ISetSource } from "../library/types";
 import { renderToNode } from "../library/common";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { DocumentBlock } from "../blocks/document-block";
@@ -16,6 +16,7 @@ type Model = {
     folder: string;
     template: string;
     workspace: string;
+    workspaceSourceUrl: string;
 }
 type Resources = {
     folders: string[];
@@ -48,6 +49,11 @@ export class ControlPanelBlock extends AbstractBlock {
             templates: [],
             workspaces: [],
         });
+        const onWorkspaceSourceSubmit = (e: Event) => {
+            e.preventDefault();
+            const workspace = manager.getWorkspace() as any as ISetSource;
+            workspace.setSource(model.workspaceSourceUrl);
+        }
         const onSubmit = (e:Event) => {
             e.preventDefault();
             runCommand();
@@ -421,6 +427,17 @@ export class ControlPanelBlock extends AbstractBlock {
                             }</For>
                         </select>
                         <button class="form-control" onClick={loadSelectedWorkspaceClicked}>Load</button>
+                    </div>
+                    <div class="partition">
+                        <form onSubmit={onWorkspaceSourceSubmit}>
+                            <input
+                                type="text"
+                                value={model.workspaceSourceUrl}
+                                class="form-control"
+                                onInput={(e) => setModel("workspaceSourceUrl", e.currentTarget.value)}
+                            />
+                            <button type="submit" class="btn btn-default">Set</button>
+                        </form>
                     </div>
                 </div>
             )
