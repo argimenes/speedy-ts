@@ -1,5 +1,5 @@
 import { uniqueId } from 'underscore';
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IBindingHandlerArgs, InputEventSource } from '../library/types';
 import { AbstractBlock } from './abstract-block';
 import { updateElement } from '../library/svg';
 import { UniverseBlock } from '../universe-block';
@@ -142,12 +142,87 @@ export class WindowBlock extends AbstractBlock {
         const manager = self.manager;
         const win = this.container;
         const handle = this.header;
+        this.inputEvents = [
+            {
+                mode: 'default',
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: 'ArrowDown'
+                },
+                action: {
+                    name: 'Move window down by 10 pixels',
+                    description: '',
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block as WindowBlock;
+                        if (!block.isDragging) return;
+                        const pos = block.metadata.position;
+                        pos.y += 10;
+                        win.style.transform = `translate(${pos.x}px,${pos.y}px)`;
+                    }
+                }
+            },
+            {
+                mode: 'default',
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: 'ArrowUp'
+                },
+                action: {
+                    name: 'Move window down by 10 pixels',
+                    description: '',
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block as WindowBlock;
+                        if (!block.isDragging) return;
+                        const pos = block.metadata.position;
+                        pos.y -= 10;
+                        win.style.transform = `translate(${pos.x}px,${pos.y}px)`;
+                    }
+                }
+            },
+            {
+                mode: 'default',
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: 'ArrowLeft'
+                },
+                action: {
+                    name: 'Move window left by 10 pixels',
+                    description: '',
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block as WindowBlock;
+                        if (!block.isDragging) return;
+                        const pos = block.metadata.position;
+                        pos.x -= 10;
+                        win.style.transform = `translate(${pos.x}px,${pos.y}px)`;
+                    }
+                }
+            },
+            {
+                mode: 'default',
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: 'ArrowRight'
+                },
+                action: {
+                    name: 'Move window rihgt by 10 pixels',
+                    description: '',
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block as WindowBlock;
+                        if (!block.isDragging) return;
+                        const pos = block.metadata.position;
+                        pos.x += 10;
+                        win.style.transform = `translate(${pos.x}px,${pos.y}px)`;
+                    }
+                }
+            }
+        ];
         [handle].forEach(x => x.addEventListener("contextmenu", this.onContextMenu.bind(this)));
         [handle].forEach(x => x.addEventListener('mousedown', (e) => {
             if ((e.target as HTMLElement).contains(win.childNodes[1])) {
                 console.log("click inside window");
                 return;
             }
+            manager.setBlockFocus(self);
             self.isDragging = true;
             const pos = self.metadata.position;
             const size = self.metadata.size;

@@ -16,7 +16,7 @@ export class YouTubeVideoBackgroundBlock extends AbstractBlock {
         updateElement(this.iframe, {
             style: {
                 position: "fixed", // Use fixed instead of absolute
-                //pointerEvents: "none", // Disables mouse interactions
+                pointerEvents: "none", // Disables mouse interactions
                 top: "0",
                 left: "0",
                 width: "100vw", // Use viewport width
