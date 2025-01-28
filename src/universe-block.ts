@@ -553,7 +553,21 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         list.push(this);
         return list;
     }
-    
+    replaceBlockWith(originalBlock: AbstractBlock, replacementBlock: AbstractBlock) {
+        const originalParent = originalBlock.relation.parent as AbstractBlock;
+        replacementBlock.blocks = originalBlock.blocks;
+        replacementBlock.relation.parent = originalBlock.relation.parent;
+        replacementBlock.container.append(...originalBlock.container.childNodes);
+        const i = originalParent.blocks.findIndex(x => x.id == originalBlock.id);
+        originalParent.blocks.splice(i, 1, replacementBlock);
+        if (i == 0) {
+            originalParent.relation.firstChild = replacementBlock;
+        }
+        originalParent.container.replaceChild(originalBlock.container, replacementBlock.container);
+        this.addParentSiblingRelations(originalParent);
+        this.deregisterBlock(originalBlock.id);
+        this.registerBlock(replacementBlock);
+    }
     deserializeBlock(data: any) {
         switch (data.type) {
             case BlockType.StandoffEditorBlock: {
