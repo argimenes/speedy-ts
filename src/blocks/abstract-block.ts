@@ -308,11 +308,14 @@ export abstract class AbstractBlock implements IBlock {
         const parent = this.relation.parent as AbstractBlock;
         newBlock.blocks = this.blocks;
         newBlock.relation.parent = parent;
-        newBlock.container.append(...this.container.childNodes);
+        while (this.container.firstChild) {
+            newBlock.container.appendChild(this.container.firstChild)
+        }
         this.manager.insertBlockAfter(this, newBlock);
         this.manager.addParentSiblingRelations(parent);
         this.manager.registerBlock(newBlock);
         this.blocks = [];
+        this.container.innerHTML= "";
         this.container.remove();
         parent.blocks.push(newBlock);
     }
