@@ -28,6 +28,7 @@ import { ImageBackgroundBlock } from './blocks/image-background-block';
 import { VideoBackgroundBlock } from './blocks/video-background-block';
 import { UnknownBlock } from './blocks/unknown-block';
 import { ErrorBlock } from './blocks/error-block';
+import { CanvasBackgroundBlock } from './blocks/canvas-background-block';
 
 export type BlockBuilder =
     (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => Promise<IBlock>;
@@ -236,6 +237,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         return ALLOW;
     }
     getWorkspace() {
+        return this.blocks[0] as WorkspaceBlock;
+    }
+    getBackground() {
         return this.blocks[0].blocks[0] as AbstractBlock;
     }
     async attachEventBindings() {
@@ -556,18 +560,27 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         list.push(this);
         return list;
     }
-    replaceBlockWith(original: AbstractBlock, replacement: AbstractBlock) {
-        const originalParent = original.relation.parent as AbstractBlock;
+    toNodeList(array: ChildNode[]) {
+        const fragment = new DocumentFragment();
+        for (const item of array) {
+            fragment.appendChild(item);
+        }
+        return fragment.childNodes;
+    };
+    switchBackground(original: AbstractBlock, replacement: AbstractBlock) {
+        const workspace = this.getWorkspace();
         replacement.blocks = original.blocks;
         replacement.relation.parent = original.relation.parent;
-        replacement.container.append(...original.container.childNodes);
-        const i = originalParent.blocks.findIndex(x => x.id == original.id);
-        originalParent.blocks.splice(i, 1, replacement);
+        const nodes = [...workspace.container.childNodes].filter(x => x != original.container);
+        replacement.container.append(...this.toNodeList(nodes));
+        const i = workspace.blocks.findIndex(x => x.id == original.id);
+        workspace.blocks.splice(i, 1, replacement);
         if (i == 0) {
-            originalParent.relation.firstChild = replacement;
+            workspace.relation.firstChild = replacement;
         }
-        originalParent.container.replaceChild(original.container, replacement.container);
-        this.addParentSiblingRelations(originalParent);
+        original.container.remove();
+        workspace.container.appendChild(replacement.container);
+        this.addParentSiblingRelations(workspace);
         this.deregisterBlock(original.id);
         this.registerBlock(replacement);
     }
@@ -1070,39 +1083,44 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addParentSiblingRelations(workspace);
         return workspace;
     }
-    async switchToVideoWorkspace() {
-        const dto = {
-            type: BlockType.WorkspaceBlock,
-            children: [
-                {
-                    type: BlockType.VideoBackgroundBlock,
-                    metadata: {
-                        url: "/video-backgrounds/green-aurora.mp4"
-                    }
-                }
-            ]
-        };
+    async switchToWebGLBackground() {
+        const originalBackground = this.getBackground();
         const container = document.createElement("DIV") as HTMLDivElement;
-        const originalWorkspace = this.blocks[0] as AbstractBlock;
-        const videoWorkspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
-        this.replaceBlockWith(originalWorkspace, videoWorkspace);
+        const canvasBackground = await this.recursivelyBuildBlock(container, { type: BlockType.CanvasBackgroundBlock }) as AbstractBlock;
+        this.switchBackground(originalBackground, canvasBackground);
     }
-    async switchToImageWorkspace() {
-        const dto = {
-            type: BlockType.WorkspaceBlock,
-            children: [
-                {
-                    type: BlockType.ImageBackgroundBlock,
-                    metadata: {
-                        url: "/image-backgrounds/pexels-visit-greenland-108649-360912.jpg"
-                    }
-                }
-            ]
-        };
+    async switchToYouTubeVideoBackground() {
+        const originalBackground = this.getBackground();
         const container = document.createElement("DIV") as HTMLDivElement;
-        const originalWorkspace = this.blocks[0] as AbstractBlock;
-        const imageWorkspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
-        this.replaceBlockWith(originalWorkspace, imageWorkspace);
+        const videoBackground = await this.recursivelyBuildBlock(container, {
+            type: BlockType.YouTubeVideoBackgroundBlock,
+            metadata: {
+                url: "https://www.youtube.com/watch?v=Zsqep7_9_mw"
+            }
+        }) as AbstractBlock;
+        this.switchBackground(originalBackground, videoBackground);
+    }
+    async switchToVideoBackground() {
+        const originalBackground = this.getBackground();
+        const container = document.createElement("DIV") as HTMLDivElement;
+        const videoBackground = await this.recursivelyBuildBlock(container, {
+            type: BlockType.VideoBackgroundBlock,
+            metadata: {
+                url: "/video-backgrounds/green-aurora.mp4"
+            }
+        }) as AbstractBlock;
+        this.switchBackground(originalBackground, videoBackground);
+    }
+    async switchToImageBackground() {
+        const originalBackground = this.getBackground();
+        const container = document.createElement("DIV") as HTMLDivElement;
+        const videoBackground = await this.recursivelyBuildBlock(container, {
+            type: BlockType.ImageBackgroundBlock,
+            metadata: {
+                url: "/image-backgrounds/pexels-visit-greenland-108649-360912.jpg"
+            }
+        }) as AbstractBlock;
+        this.switchBackground(originalBackground, videoBackground);        
     }
     async createImageWorkspace() {
         const dto = {
@@ -1197,7 +1215,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const container = document.createElement("DIV") as HTMLDivElement;
         const count = this.registeredBlocks.filter(x => x.type == BlockType.DocumentWindowBlock).length;
         const buffer = count * 20;
-        const win = await this.recursivelyBuildBlock(container, {
+        const documentWindow = await this.recursivelyBuildBlock(container, {
             type: BlockType.DocumentWindowBlock,
             metadata: {
                 title: dto.metadata?.filename,
@@ -1217,18 +1235,11 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             ],
             children: [dto]
         }) as WindowBlock;
-        //const doc = await this.recursivelyBuildBlock(win.container, dto) as DocumentBlock;
-        const workspace = this.registeredBlocks.find(x => x.type == BlockType.WorkspaceBlock) as AbstractBlock;
-        const background = workspace.blocks[0];
-        //this.addBlockTo(win, doc);
-        this.addBlockTo(background as AbstractBlock, win);
-        // updateElement(doc.container, {
-        //     classList: ["document-container"]
-        // });
-        workspace.container.appendChild(win.container);
-        this.addParentSiblingRelations(win);
-        this.addParentSiblingRelations(workspace);
-        const doc = win.blocks[0] as DocumentBlock;
+        const workspace = this.getWorkspace();
+        this.addBlockTo(workspace, documentWindow);
+        workspace.container.appendChild(documentWindow.container);
+        this.addParentSiblingRelations(documentWindow);
+        const doc = documentWindow.blocks[0] as DocumentBlock;
         doc.generateIndex();
         doc.setFocus();
         this.takeSnapshot(doc.id);

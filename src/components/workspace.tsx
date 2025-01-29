@@ -507,7 +507,7 @@ const foo = (bar) => {
             ImageBackgroundBlock.getBlockBuilder(),
             WorkspaceBlock.getBlockBuilder(),
         ]);
-        workspace.createYouTubeVideoBackgroundWorkspace().then();
+        workspace.createImageBackgroundBlock();
         workspace.addDocumentToWorkspace(doc).then();
         props.getInstance(workspace);
         console.log("== GLOBAL ==", { manager: workspace, block: workspace.blocks[0] })

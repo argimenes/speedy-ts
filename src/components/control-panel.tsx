@@ -15,6 +15,7 @@ type Model = {
     file: string;
     folder: string;
     template: string;
+    background: string;
     workspace: string;
     workspaceSourceUrl: string;
 }
@@ -23,6 +24,7 @@ type Resources = {
     files: string[];
     templates: string[];
     workspaces: string[];
+    backgrounds: string[];
 }
 export interface IControlPanelBlockConstructor extends IAbstractBlockConstructor {}
 
@@ -48,10 +50,13 @@ export class ControlPanelBlock extends AbstractBlock {
             files: [],
             templates: [],
             workspaces: [],
+            backgrounds: [
+                "YouTube Video", "Video", "Image", "WebGL"
+            ]
         });
         const onWorkspaceSourceSubmit = (e: Event) => {
             e.preventDefault();
-            const workspace = manager.getWorkspace() as any as ISetSource;
+            const workspace = manager.getBackground() as any as ISetSource;
             workspace.setSource(model.workspaceSourceUrl);
         }
         const onSubmit = (e:Event) => {
@@ -125,6 +130,17 @@ export class ControlPanelBlock extends AbstractBlock {
         const loadSelectedTemplateClicked = async (e: Event) => {
             e.preventDefault();
             await loadTemplate([model.template]);
+        }
+        const loadSelectedBackgroundClicked = async (e: Event) => {
+            e.preventDefault();
+            switch (model.background)
+            {
+                case "Image": manager.switchToImageBackground(); break;
+                case "Video": manager.switchToVideoBackground(); break;
+                case "YouTube Video": manager.switchToYouTubeVideoBackground(); break;
+                case "WebGL": manager.switchToWebGLBackground(); break;
+                default: break;
+            }
         }
         const loadSelectedWorkspaceClicked = async (e: Event) => {
             e.preventDefault();
@@ -438,6 +454,16 @@ export class ControlPanelBlock extends AbstractBlock {
                             />
                             <button type="submit" class="btn btn-default">Set</button>
                         </form>
+                    </div>
+                    <div class="partition">
+                        <select value={model.background} onInput={(e) => setModel("background", e.currentTarget.value)}>
+                            <For each={resources.backgrounds}>{(background) =>
+                                <option value={background}>
+                                    {background}
+                                </option>
+                            }</For>
+                        </select>
+                        <button class="form-control" onClick={loadSelectedBackgroundClicked}>Load</button>
                     </div>
                 </div>
             )
