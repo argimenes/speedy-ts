@@ -297,6 +297,24 @@ export abstract class AbstractBlock implements IBlock {
             args.manager.setBlockFocus(parent);
         }
     }
+    toNodeList(array: ChildNode[]) {
+        const fragment = new DocumentFragment();
+        for (const item of array) {
+            fragment.appendChild(item);
+        }
+        return fragment.childNodes;
+    };
+    replaceWith(newBlock: AbstractBlock) {
+        const parent = this.relation.parent as AbstractBlock;
+        newBlock.blocks = this.blocks;
+        newBlock.relation.parent = parent;
+        newBlock.container.append(...this.container.childNodes);
+        this.manager.insertBlockAfter(this, newBlock);
+        this.manager.addParentSiblingRelations(parent);
+        this.manager.registerBlock(newBlock);
+        this.blocks = [];
+        this.destroy();
+    }
     abstract serialize():IBlockDto;
     abstract deserialize(json: any|any[]): IBlock;
     destroy() {

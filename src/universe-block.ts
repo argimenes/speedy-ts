@@ -560,29 +560,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         list.push(this);
         return list;
     }
-    toNodeList(array: ChildNode[]) {
-        const fragment = new DocumentFragment();
-        for (const item of array) {
-            fragment.appendChild(item);
-        }
-        return fragment.childNodes;
-    };
     switchBackground(original: AbstractBlock, replacement: AbstractBlock) {
-        const workspace = this.getWorkspace();
-        replacement.blocks = original.blocks;
-        replacement.relation.parent = original.relation.parent;
-        const nodes = [...workspace.container.childNodes].filter(x => x != original.container);
-        replacement.container.append(...this.toNodeList(nodes));
-        const i = workspace.blocks.findIndex(x => x.id == original.id);
-        workspace.blocks.splice(i, 1, replacement);
-        if (i == 0) {
-            workspace.relation.firstChild = replacement;
-        }
-        original.container.remove();
-        workspace.container.appendChild(replacement.container);
-        this.addParentSiblingRelations(workspace);
-        this.deregisterBlock(original.id);
-        this.registerBlock(replacement);
+        original.replaceWith(replacement);
     }
     deserializeBlock(data: any) {
         switch (data.type) {
@@ -1235,9 +1214,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             ],
             children: [dto]
         }) as WindowBlock;
-        const workspace = this.getWorkspace();
-        this.addBlockTo(workspace, documentWindow);
-        workspace.container.appendChild(documentWindow.container);
+        const background = this.getBackground();
+        this.addBlockTo(background, documentWindow);
+        background.container.appendChild(documentWindow.container);
         this.addParentSiblingRelations(documentWindow);
         const doc = documentWindow.blocks[0] as DocumentBlock;
         doc.generateIndex();
