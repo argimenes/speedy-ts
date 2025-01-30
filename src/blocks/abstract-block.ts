@@ -304,6 +304,9 @@ export abstract class AbstractBlock implements IBlock {
         }
         return fragment.childNodes;
     };
+    newContainer() {
+        return document.createElement("DIV") as HTMLDivElement;
+    }
     replaceWith(newBlock: AbstractBlock) {
         const parent = this.relation.parent as AbstractBlock;
         /**

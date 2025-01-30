@@ -1,7 +1,9 @@
 import { AbstractBlock } from "./abstract-block";
 import { updateElement } from "../library/svg";
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, InputEvent, InputEventSource, IBindingHandlerArgs } from "../library/types";
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, InputEvent, InputEventSource, IBindingHandlerArgs, GUID, CARET } from "../library/types";
 import { UniverseBlock } from "../universe-block";
+import { classList } from "solid-js/web";
+import { StandoffEditorBlock } from "./standoff-editor-block";
 
 export class TabRowBlock extends AbstractBlock {
     header: HTMLDivElement;
@@ -89,6 +91,54 @@ export class TabRowBlock extends AbstractBlock {
             });
             header.appendChild(label);
         });
+        const addNewTabLabel = document.createElement("SPAN") as HTMLSpanElement;
+        updateElement(addNewTabLabel, {
+            innerHTML: "+",
+            classList: ["tab-label"],
+            event: {
+                click: (e) => {
+                    self.createNewTab();
+                }
+            }
+        });
+    }
+    getTab(id: GUID) {
+        return this.getBlock(id) as TabBlock;
+    }
+    async addTab({ tabId, name, copyTextBlockId }: { tabId: string, name: string, copyTextBlockId?: string }) {
+        const tab = this.getTab(tabId);
+        const row = tab.getRow();
+        if (!row) return;
+        const newTab = await this.createNewTab(name);
+        let textBlock: StandoffEditorBlock;
+        if (copyTextBlockId) {
+            const block = this.getBlock(copyTextBlockId) as StandoffEditorBlock;
+            const dto = block.serialize();
+            textBlock = await this.manager.recursivelyBuildBlock(this.newContainer(), dto) as StandoffEditorBlock;
+        } else {
+            textBlock = await this.manager.recursivelyBuildBlock(this.newContainer(), { type: BlockType.StandoffEditorBlock, blockProperties:[ { type: "block/alignment/left" }] }) as StandoffEditorBlock;
+        }
+        textBlock.addEOL();
+        this.manager.addBlockTo(newTab, textBlock);
+        this.manager.addBlockTo(row, newTab);
+        this.manager.addParentSiblingRelations(row);
+        textBlock.relation.parent = newTab;
+        newTab.relation.firstChild = textBlock;
+        tab.relation.next = newTab;
+        newTab.relation.previous = tab;
+        row.renderLabels();
+        newTab.panel.appendChild(textBlock.container);
+        row.container.appendChild(newTab.container);
+        const label = newTab.container.querySelector(".tab-label") as HTMLSpanElement;
+        row.setTabActive(newTab);
+        setTimeout(() => {
+            this.manager.setBlockFocus(textBlock);
+            textBlock.setCaret(0, CARET.LEFT);
+        }, 1);
+        return newTab;
+    }
+    async createNewTab(name: string) {
+        return await this.manager.recursivelyBuildBlock(this.newContainer(), { type: BlockType.TabBlock, metadata: { name: name } }) as TabBlock;
     }
     serialize() {
         return {
@@ -114,6 +164,9 @@ export class TabBlock extends AbstractBlock {
         this.panel.classList.add("tab-panel");
         this.container.appendChild(this.panel);
         this.inputEvents = this.getTabBlockEvents();
+    }
+    getRow() {
+        return this.manager.getParentOfType(this, BlockType.TabRowBlock) as TabRowBlock;
     }
     getTabBlockEvents() {
         const events: InputEvent[] = [
