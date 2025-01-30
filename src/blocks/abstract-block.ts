@@ -306,18 +306,15 @@ export abstract class AbstractBlock implements IBlock {
     };
     replaceWith(newBlock: AbstractBlock) {
         const parent = this.relation.parent as AbstractBlock;
-        newBlock.blocks = this.blocks;
-        newBlock.relation.parent = parent;
-        while (this.container.firstChild) {
-            newBlock.container.appendChild(this.container.firstChild)
-        }
-        this.manager.insertBlockAfter(this, newBlock);
-        this.manager.addParentSiblingRelations(parent);
-        this.manager.registerBlock(newBlock);
-        this.blocks = [];
-        this.container.innerHTML= "";
+        const blockContainers = this.container.querySelectorAll(':scope > .abstract-block');
+        newBlock.blocks = [...this.blocks];
+        newBlock.container.append(...blockContainers);
+        const i = this.manager.getIndexOfBlock(this);
+        parent.blocks.splice(i, 1, newBlock); // replace 'this' with 'newBlock' 
+        this.container.insertAdjacentElement("afterend", newBlock.container);
         this.container.remove();
-        parent.blocks.push(newBlock);
+        this.manager.registerBlock(newBlock);
+        this.manager.addParentSiblingRelations(parent);
     }
     abstract serialize():IBlockDto;
     abstract deserialize(json: any|any[]): IBlock;
