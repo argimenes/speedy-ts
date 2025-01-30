@@ -14,10 +14,16 @@ export class CanvasBackgroundBlock extends AbstractBlock {
         super(args);
         this.type = BlockType.CanvasBackgroundBlock;
         this.canvas = document.createElement("CANVAS") as HTMLCanvasElement;
-        this.canvas.width = window.screen.width;
-        this.canvas.height = window.screen.height;
-        this.canvas.style.width = `${window.screen.width}px`;
-        this.canvas.style.height = `${window.screen.height}px`;
+        updateElement(this.canvas, {
+            style: {
+                position: "fixed",
+                width: `${window.screen.width}px`,
+                height: `${window.screen.height}px`,
+                "z-index": -1
+            }
+        });
+        // this.canvas.width = window.screen.width;
+        // this.canvas.height = window.screen.height;
         this.container.appendChild(this.canvas);
         this.createGradient();
         updateElement(this.container, {
