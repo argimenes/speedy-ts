@@ -306,13 +306,25 @@ export abstract class AbstractBlock implements IBlock {
     };
     replaceWith(newBlock: AbstractBlock) {
         const parent = this.relation.parent as AbstractBlock;
+        /**
+         * Move all first-level Block elements out of this.container into newBlock.container.
+         */
         const blockContainers = this.container.querySelectorAll(':scope > .abstract-block');
         newBlock.blocks = [...this.blocks];
         newBlock.container.append(...blockContainers);
+        /**
+         * Replace this Block in the parents.block array with newBlock.
+         */
         const i = this.manager.getIndexOfBlock(this);
-        parent.blocks.splice(i, 1, newBlock); // replace 'this' with 'newBlock' 
+        parent.blocks.splice(i, 1, newBlock);
+        /**
+         * Drop newBlock next to this.container and remove this.container.
+         */
         this.container.insertAdjacentElement("afterend", newBlock.container);
         this.container.remove();
+        /**
+         * 
+         */
         this.manager.registerBlock(newBlock);
         this.manager.addParentSiblingRelations(parent);
     }
