@@ -876,48 +876,6 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }
         this.addParentSiblingRelations(parent);
     }
-    addTab({ tabId, name, copyTextBlockId }: { tabId: string, name: string, copyTextBlockId?: string }) {
-        const tab = this.getBlock(tabId) as TabBlock;
-        const row = this.getParentOfType(tab, BlockType.TabRowBlock) as TabRowBlock;
-        if (!row) return;
-        const newTab = this.createTabBlock({
-            type: BlockType.TabBlock,
-            metadata: {
-                name: name
-            }
-        }) as TabBlock;
-        let textBlock: StandoffEditorBlock;
-        if (copyTextBlockId) {
-            const block = this.getBlock(copyTextBlockId) as StandoffEditorBlock;
-            const dto = block.serialize();
-            textBlock = this.createStandoffEditorBlock(dto);
-        } else {
-            textBlock = this.createStandoffEditorBlock({
-                type: BlockType.StandoffEditorBlock,
-                blockProperties:[
-                    { type: "block/alignment/left" }
-                ]
-            }) as StandoffEditorBlock;
-        }
-        textBlock.addEOL();
-        this.addBlockTo(newTab, textBlock);
-        this.addBlockTo(row, newTab);
-        this.addParentSiblingRelations(row);
-        textBlock.relation.parent = newTab;
-        newTab.relation.firstChild = textBlock;
-        tab.relation.next = newTab;
-        newTab.relation.previous = tab;
-        row.renderLabels();
-        newTab.panel.appendChild(textBlock.container);
-        row.container.appendChild(newTab.container);
-        const label = newTab.container.querySelector(".tab-label") as HTMLSpanElement;
-        row.setTabActive(newTab);
-        setTimeout(() => {
-            this.setBlockFocus(textBlock);
-            textBlock.setCaret(0, CARET.LEFT);
-        }, 1);
-        return newTab;
-    }
     addParentSiblingRelations<T extends AbstractBlock>(parent: T) {
         parent.blocks.forEach((block, i) => {
             if (i == 0) {

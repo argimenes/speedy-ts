@@ -96,8 +96,8 @@ export class TabRowBlock extends AbstractBlock {
             innerHTML: "+",
             classList: ["tab-label"],
             event: {
-                click: (e) => {
-                    self.createNewTab();
+                click: async (e) => {
+                    const tab = await self.createNewTab(self.labels.length + "");
                 }
             }
         });
