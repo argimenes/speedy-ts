@@ -3,7 +3,8 @@ import { render } from 'solid-js/web';
 import './assets/reset.css'
 import './index.css';
 import './assets/codex.css'
-import App from './App';
+//import App from './App';
+import App2 from './block-tree/app2';
 
 const root = document.getElementById('root');
 
@@ -13,4 +14,4 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-render(() => <App />, root!);
+render(() => <App2 />, root!);
