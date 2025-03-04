@@ -5,5 +5,6 @@ export interface Block {
   id: string;
   type: BlockType;
   content?: string;
+  metadata?: Record<string, any>;
   children?: Block[];
 }

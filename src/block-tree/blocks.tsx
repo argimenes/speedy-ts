@@ -7,6 +7,15 @@ interface BlockProps {
   block: Block;
 }
 
+export const ImageBlock : Component<BlockProps> = (props) => {
+  const actions = useBlockActions();
+  return (
+    <>
+      <img src={props.block.metadata.url} />
+    </>
+  );
+}
+
 export const TextBlock: Component<BlockProps> = (props) => {
   const actions = useBlockActions();
   
