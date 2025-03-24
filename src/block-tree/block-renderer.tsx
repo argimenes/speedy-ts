@@ -19,16 +19,18 @@ export const BlockRenderer: Component<BlockRendererProps> = (props) => {
     <For each={props.blocks}>
       {(block) => (
         <>
-          <Dynamic
-            component={props.components[block.type]}
-            block={block}
-          />
-          {block.children && (
-            <BlockRenderer
-              blocks={block.children}
-              components={props.components}
+          <div>
+            <Dynamic
+              component={props.components[block.type]}
+              block={block}
             />
-          )}
+            {block.children && (
+              <BlockRenderer
+                blocks={block.children}
+                components={props.components}
+              />
+            )}
+          </div>
         </>
       )}
     </For>
