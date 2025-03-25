@@ -19,7 +19,7 @@ export const BlockRenderer: Component<BlockRendererProps> = (props) => {
     <For each={props.blocks}>
       {(block) => (
         <>
-          <div>
+          <div id={block.id} data-type={block.type} data-metadata={JSON.stringify(block.metadata || {})}>
             <Dynamic
               component={props.components[block.type]}
               block={block}

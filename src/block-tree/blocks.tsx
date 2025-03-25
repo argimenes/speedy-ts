@@ -1,5 +1,5 @@
 // Example usage - App.tsx
-import { Component } from 'solid-js';
+import { Component, createSignal } from 'solid-js';
 import { useBlockActions } from './context';
 import { Block } from './types';
 
@@ -15,6 +15,35 @@ export const ImageBlock : Component<BlockProps> = (props) => {
     </>
   );
 }
+
+export const CheckboxTextBlock: Component<BlockProps> = ({ block }) => {
+  const actions = useBlockActions();
+  const toggleCheckboxClicked = () => {
+    actions.updateBlock(block.id, { metadata: { value: !block.metadata.value } });
+  }
+  return (
+    <div>
+      <div style="display: inline-block;"> 
+        <CheckboxBlock block={block} />
+      </div>
+      <div style="display: inline-block;"> 
+        <TextBlock block={block} />
+      </div>
+    </div>
+  );
+};
+
+export const CheckboxBlock: Component<BlockProps> = ({ block }) => {
+  const actions = useBlockActions();
+  const toggleCheckboxClicked = () => {
+    actions.updateBlock(block.id, { metadata: { value: !block.metadata.value } });
+  }
+  return (
+    <div class="checkbox-block">
+      <input type="checkbox" checked={block.metadata.value} onInput={() => toggleCheckboxClicked} />
+    </div>
+  );
+};
 
 export const TextBlock: Component<BlockProps> = (props) => {
   const actions = useBlockActions();

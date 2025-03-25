@@ -6,6 +6,7 @@ export interface BlockActions {
   addBlockAfter: (targetId: string, newBlock: Omit<Block, 'id'>) => string;
   replaceBlock: (targetId: string, newBlock: Omit<Block, 'id'>) => void;
   deleteBlock: (targetId: string) => void;
+  updateBlock: (targetId: string, updates: Partial<Omit<Block, 'id' | 'children'>>) => void;
 }
 
 export function createDocumentStore(initialBlocks: Block[]) {
@@ -95,6 +96,28 @@ export function createDocumentStore(initialBlocks: Block[]) {
       }
 
       setBlocks(blocks => deleteRecursive(blocks));
+    },
+
+    updateBlock(targetId: string, updates: Partial<Omit<Block, 'id' | 'children'>>) {
+      function updateRecursive(blocks: Block[]): Block[] {
+        return blocks.map(block => {
+          if (block.id === targetId) {
+            return {
+              ...block,
+              ...updates
+            };
+          }
+          if (block.children) {
+            return {
+              ...block,
+              children: updateRecursive(block.children)
+            };
+          }
+          return block;
+        });
+      }
+
+      setBlocks(blocks => updateRecursive(blocks));
     }
   };
 
