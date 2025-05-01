@@ -395,3 +395,31 @@ body {
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     border:1px solid rgba(255, 255, 255, 0.18);
   }
+
+
+  /* .minimized-icon {
+    width: 100px;
+    height: 50px;
+    background-color: rgba(0, 0, 0, 0.2);
+    color: white;
+    text-align: center;
+    line-height: 50px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+  } */
+
+  .minimized-icon {
+    width: 50px;               /* Set the size of the icon */
+    height: 100px;
+    background-image: url('/assets/minimized-icon.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    border-radius: 5px;
+    display: inline-block;
+    text-align: center;
+    line-height: 50px;         /* Center the content inside */
+    color: white;        /* Hide any text */
+  }
+  

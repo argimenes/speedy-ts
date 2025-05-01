@@ -209,6 +209,7 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('dist'));
 app.use("/templates", express.static('templates'));
 app.use('/uploads', express.static('uploads'));
+app.use('/assets', express.static('dist/assets'));
 app.use('/video-backgrounds', express.static(path.join(__dirname, basePath, 'backgrounds/video')));
 app.use('/image-backgrounds', express.static(path.join(__dirname, basePath, 'backgrounds/images')));
 app.use(express.json({limit: '50mb'}));

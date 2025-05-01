@@ -4,12 +4,15 @@ interface DraggableWindowOptions {
   onDragEnd?: () => void;
   enableResize?: boolean;
   resizeHandleClass?: string;
+  minimizeDuration?: number;
+  minimizeIconClass?: string;  // Optional: Custom class for minimize icon
 }
 
 export class DraggableWindow {
   private windowEl: HTMLElement;
   private handleEl: HTMLElement;
   private resizeHandleEl?: HTMLElement;
+  private minimizeIconEl?: HTMLElement;  // The minimized window icon
   private options: DraggableWindowOptions;
 
   private isDragging = false;
@@ -39,6 +42,7 @@ export class DraggableWindow {
   private init() {
     this.handleEl.style.cursor = 'grab';
     this.handleEl.addEventListener('pointerdown', this.onPointerDown);
+    this.handleEl.addEventListener('dblclick', this.toggleMinimize);
 
     if (this.options.enableResize) {
       this.addResizeHandle();
@@ -119,38 +123,23 @@ export class DraggableWindow {
     document.addEventListener('pointerup', this.onResizeEnd);
   };
 
-  // private onResizeMove = (e: PointerEvent) => {
-  //   if (!this.isResizing) return;
-
-  //   const dx = e.clientX - this.lastX;
-  //   const dy = e.clientY - this.lastY;
-
-  //   const newWidth = Math.max(100, this.originalWidth + dx);
-  //   const newHeight = Math.max(100, this.originalHeight + dy);
-
-  //   this.windowEl.style.width = `${newWidth}px`;
-  //   this.windowEl.style.height = `${newHeight}px`;
-  // };
-
   private onResizeMove = (e: PointerEvent) => {
     if (!this.isResizing) return;
-  
+
     const dx = e.clientX - this.lastX;
     const dy = e.clientY - this.lastY;
-  
+
     const newWidth = Math.max(100, this.originalWidth + dx);
     const newHeight = Math.max(100, this.originalHeight + dy);
-  
+
     this.windowEl.style.width = `${newWidth}px`;
     this.windowEl.style.height = `${newHeight}px`;
-  
-    // If you have a specific content area to resize:
-    const content = this.windowEl.querySelector('.document-container') as HTMLElement;
+
+    const content = this.windowEl.querySelector('.window-block-content') as HTMLElement;
     if (content) {
       content.style.height = `${newHeight - this.windowEl.querySelector('.window-block-header')!.clientHeight}px`;
     }
   };
-  
 
   private onResizeEnd = () => {
     this.isResizing = false;
@@ -158,23 +147,96 @@ export class DraggableWindow {
     document.removeEventListener('pointerup', this.onResizeEnd);
   };
 
-  public toggleMinimize() {
+  public toggleMinimize = () => {
     if (this.minimized) {
-      this.windowEl.style.transform = this.preMinimizedTransform;
-      this.windowEl.style.display = '';
-      this.minimized = false;
+      this.restoreWindow();
     } else {
-      this.preMinimizedTransform = this.windowEl.style.transform;
-      this.windowEl.style.display = 'none';
-      this.minimized = true;
+      this.minimizeWindow();
     }
+  };
+
+  private minimizeWindow() {
+    if (this.minimized) return;
+  
+    this.minimized = true;
+  
+    // Store the current state of the window for later restoration
+    this.preMinimizedTransform = this.windowEl.style.transform;
+  
+    // Inline SVG for the minimized icon
+    this.minimizeIconEl = document.createElement('div');
+    this.minimizeIconEl.className = this.options.minimizeIconClass || 'minimized-icon';
+    this.minimizeIconEl.style.position = 'absolute';
+    this.minimizeIconEl.style.top = `${this.offsetY + 20}px`;
+    this.minimizeIconEl.style.left = `${this.offsetX + 20}px`;
+    this.minimizeIconEl.style.cursor = 'pointer';
+    // this.minimizeIconEl.innerHTML = `
+    //   <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
+    //     <rect x="0" y="0" width="50" height="50" rx="10" fill="gray"/>
+    //     <text x="25" y="25" font-size="14" text-anchor="middle" alignment-baseline="middle" fill="white">Min</text>
+    //   </svg>
+    // `;
+    document.body.appendChild(this.minimizeIconEl);
+  
+    // When clicked, restore the window
+    this.minimizeIconEl.addEventListener('click', this.restoreWindow);
+  
+    // Hide the original window
+    this.windowEl.style.visibility = 'hidden';
   }
+  
+
+  // private minimizeWindow() {
+  //   if (this.minimized) return;
+
+  //   this.minimized = true;
+
+  //   // Store the current state of the window for later restoration
+  //   this.preMinimizedTransform = this.windowEl.style.transform;
+    
+  //   // Create the minimized icon (you can customize this further)
+  //   this.minimizeIconEl = document.createElement('div');
+  //   this.minimizeIconEl.className = this.options.minimizeIconClass || 'minimized-icon';
+  //   this.minimizeIconEl.textContent = 'Minimized Window';
+  //   this.minimizeIconEl.style.position = 'absolute';
+  //   this.minimizeIconEl.style.top = `${this.offsetY + 20}px`;
+  //   this.minimizeIconEl.style.left = `${this.offsetX + 20}px`;
+  //   this.minimizeIconEl.style.cursor = 'pointer';
+  //   document.body.appendChild(this.minimizeIconEl);
+
+  //   // When clicked, restore the window
+  //   this.minimizeIconEl.addEventListener('click', this.restoreWindow);
+
+  //   // Hide the original window
+  //   this.windowEl.style.visibility = 'hidden';
+  // }
+
+  private restoreWindow = () => {
+    if (!this.minimized) return;
+
+    this.windowEl.style.transition = 'transform 300ms ease-out';
+    this.windowEl.style.transform = this.preMinimizedTransform;
+
+    // Show the window again and remove the minimized icon
+    this.windowEl.style.visibility = 'visible';
+    if (this.minimizeIconEl) {
+      this.minimizeIconEl.remove();
+    }
+
+    this.minimized = false;
+  };
 
   public destroy() {
     this.handleEl.removeEventListener('pointerdown', this.onPointerDown);
+    this.handleEl.removeEventListener('dblclick', this.toggleMinimize);
     this.resizeHandleEl?.removeEventListener('pointerdown', this.onResizeStart);
     this.resizeHandleEl?.remove();
     document.removeEventListener('pointermove', this.onPointerMove);
     document.removeEventListener('pointerup', this.onPointerUp);
+
+    if (this.minimizeIconEl) {
+      this.minimizeIconEl.removeEventListener('click', this.restoreWindow);
+      this.minimizeIconEl.remove();
+    }
   }
 }

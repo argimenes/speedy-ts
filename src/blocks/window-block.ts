@@ -222,11 +222,13 @@ export class WindowBlock extends AbstractBlock {
 
         const dragger = new DraggableWindow(win, handle, {
             enableResize: true,
+            minimizeDuration: 300,  // Optional: Customize minimize animation duration
+            minimizeIconClass: 'minimized-icon',  // Custom class for minimized icon
             onDragStart: () => console.log('Started dragging'),
             onDragMove: (x, y) => console.log(`Dragging to ${x}, ${y}`),
             onDragEnd: () => console.log('Stopped dragging'),
           });
-
+          
 
         // handle.addEventListener('mousedown', (e) => {
         //     e.preventDefault();
