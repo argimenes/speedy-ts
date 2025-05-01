@@ -220,7 +220,12 @@ export class WindowBlock extends AbstractBlock {
         [handle].forEach(x => x.addEventListener("contextmenu", this.onContextMenu.bind(this)));
 
 
-        const draggable = new DraggableWindow(win, handle);
+        const dragger = new DraggableWindow(win, handle, {
+            enableResize: true,
+            onDragStart: () => console.log('Started dragging'),
+            onDragMove: (x, y) => console.log(`Dragging to ${x}, ${y}`),
+            onDragEnd: () => console.log('Stopped dragging'),
+          });
 
 
         // handle.addEventListener('mousedown', (e) => {
