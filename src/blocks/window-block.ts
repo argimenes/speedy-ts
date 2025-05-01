@@ -235,8 +235,8 @@ export class WindowBlock extends AbstractBlock {
             self.mouseOffsetY = e.clientY - rect.top;
             e.preventDefault();
         }));
-        [win].forEach(x => x.addEventListener('mouseover', (e) => {
-            console.log("mouseover", { e });
+        [win].forEach(x => x.addEventListener('mousemove', (e) => {
+            console.log("mousemove", { e });
             if (!self.isDragging) {
                 console.log("not dragging");
                 return;
@@ -252,6 +252,10 @@ export class WindowBlock extends AbstractBlock {
             pos.y = y;
             win.style.transform = `translate(${x}px,${y}px)`;
             console.log({ x, y });
+        }));
+        [win].forEach(x => x.addEventListener('mouseout', (e) => {
+            console.log("mouseup", { e });
+            self.isDragging = false
         }));
         [win].forEach(x => x.addEventListener('mouseup', (e) => {
             console.log("mouseup", { e });
