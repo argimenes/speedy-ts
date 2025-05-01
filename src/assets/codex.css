@@ -369,6 +369,7 @@ body {
     border: 1px solid #ccc;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    will-change: transform;
   }
   .block_theme_glass {
     /* From https://css.glass */
@@ -387,7 +388,8 @@ body {
     border:1px solid rgba(255, 255, 255, 0.18);
   }
   .window-block-header {
-    cursor: move;
     user-select: none;
     background-color: powderblue;
+    cursor: grab;
+    user-select: none;
   } 

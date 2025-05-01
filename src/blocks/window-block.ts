@@ -4,6 +4,7 @@ import { AbstractBlock } from './abstract-block';
 import { updateElement } from '../library/svg';
 import { UniverseBlock } from '../universe-block';
 import { ContextMenuBlock } from './context-menu-block';
+import { DraggableWindow } from '../library/draggable-window';
 
 type WindowBlockMetadata =  {
     title: string;
@@ -217,57 +218,36 @@ export class WindowBlock extends AbstractBlock {
             }
         ];
         [handle].forEach(x => x.addEventListener("contextmenu", this.onContextMenu.bind(this)));
-        [handle].forEach(x => x.addEventListener('mousedown', (e) => {
-            if ((e.target as HTMLElement).contains(win.childNodes[1])) {
-                console.log("click inside window");
-                return;
-            }
-            manager.setBlockFocus(self);
-            self.isDragging = true;
-            const pos = self.metadata.position;
-            const size = self.metadata.size;
-            const rect = win.getBoundingClientRect();
-            pos.x = rect.left;
-            pos.y = rect.top;
-            size.h = rect.height;
-            size.w = rect.width;
-            self.mouseOffsetX = e.clientX - rect.left;
-            self.mouseOffsetY = e.clientY - rect.top;
-            e.preventDefault();
-        }));
-        [win].forEach(x => x.addEventListener('mousemove', (e) => {
-            console.log("mousemove", { e });
-            if (!self.isDragging) {
-                console.log("not dragging");
-                return;
-            }
-            if (!win.contains(e.target as HTMLElement)) {
-                self.isDragging = false;
-                return;
-            }
-            const x = e.clientX - self.mouseOffsetX,
-                  y = e.clientY - self.mouseOffsetY;
-            const pos = self.metadata.position;
-            pos.x = x;
-            pos.y = y;
-            win.style.transform = `translate(${x}px,${y}px)`;
-            console.log({ x, y });
-        }));
-        [win].forEach(x => x.addEventListener('mouseout', (e) => {
-            console.log("mouseup", { e });
-            self.isDragging = false
-        }));
-        [win].forEach(x => x.addEventListener('mouseup', (e) => {
-            console.log("mouseup", { e });
-            self.isDragging = false
-        }));
-        [win].forEach(x => x.addEventListener('mouseleave', (e) => { 
-            console.log("mouseleave", { e });
-            if ((e.target as HTMLElement).contains(win.childNodes[1])) {
-                return;
-            }
-            self.isDragging = false
-        }));
+
+
+        const draggable = new DraggableWindow(win, handle);
+
+
+        // handle.addEventListener('mousedown', (e) => {
+        //     e.preventDefault();
+        
+        //     const startX = e.clientX;
+        //     const startY = e.clientY;
+        //     const rect = win.getBoundingClientRect();
+        //     const offsetX = startX - rect.left;
+        //     const offsetY = startY - rect.top;
+        //     self.isDragging = true;
+        
+        //     function onMouseMove(e) {
+        //         let x = e.clientX - offsetX
+        //         let y = e.clientY - offsetY;
+        //         win.style.transform = `translate(${x}px,${y}px)`;
+        //     }
+        
+        //     function onMouseUp() {
+        //         self.isDragging = false;
+        //         document.removeEventListener('mousemove', onMouseMove);
+        //         document.removeEventListener('mouseup', onMouseUp);
+        //     }
+        
+        //     document.addEventListener('mousemove', onMouseMove);
+        //     document.addEventListener('mouseup', onMouseUp);
+        // });
     }
     private createControls() {
         const win = this.container;
