@@ -422,4 +422,48 @@ body {
     line-height: 50px;         /* Center the content inside */
     color: white;        /* Hide any text */
   }
+  /*
+
+  */
+  .viewport {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    background-color: #f9f9f9;
+    cursor: grab;
+  }
+  
+  .canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: top left;
+    background-size: 50px 50px;
+    background-image: linear-gradient(to right, #eee 1px, transparent 1px),
+                      linear-gradient(to bottom, #eee 1px, transparent 1px);
+  }
+  .minimap {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    z-index: 10;
+    cursor: pointer;
+  }
+    
+  .box.selected {
+    border: 2px solid red;
+  }
+
+  .box {
+    position: absolute;
+    background-color: #4a90e2;
+    padding: 10px;
+    color: white;
+    border-radius: 4px;
+    user-select: none;
+    cursor: move;
+  }
   

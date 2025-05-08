@@ -42,6 +42,7 @@ export interface IStandoffEditorBlockMonitor {
 }
 
 export enum BlockType {
+    CanvasBlock = "canvas-block",
     ContextMenuBlock = "context-menu-block",
     CanvasBackgroundBlock = "canvas-background-block",
     VideoBackgroundBlock = "video-background-block",

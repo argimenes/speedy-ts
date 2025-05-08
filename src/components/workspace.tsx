@@ -98,6 +98,9 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                     }
                 } as IStandoffEditorBlockDto,
                 {
+                    type: BlockType.CanvasBlock
+                },
+                {
                     type: BlockType.StandoffEditorBlock,
                     text: "Video",
                     blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
