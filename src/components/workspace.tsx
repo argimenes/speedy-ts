@@ -22,6 +22,7 @@ import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
 import { ContextMenuBlock } from "../blocks/context-menu-block";
 import { CanvasBackgroundBlock } from "../blocks/canvas-background-block";
 import { YouTubeVideoBackgroundBlock } from "../blocks/youtube-video-background-block";
+import { CanvasBlock } from "../blocks/canvas-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -30,7 +31,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
     const initialise = (el: HTMLDivElement) => {
         const doc: IBlockDto = {
             type: BlockType.DocumentBlock,
-            children: [
+            children: [                
                 {
                     type: BlockType.StandoffEditorBlock,
                     text: "Standoff Property Text Editor",
@@ -97,6 +98,11 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         }
                     }
                 } as IStandoffEditorBlockDto,
+                {
+                    type: BlockType.StandoffEditorBlock,
+                    text: "Canvas",
+                    blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
+                },
                 {
                     type: BlockType.CanvasBlock
                 },
@@ -481,6 +487,7 @@ const foo = (bar) => {
         const workspace = new UniverseBlock();
         workspace.container = el;
         workspace.addBlockBuilders([
+            CanvasBlock.getBlockBuilder(),
             ContextMenuBlock.getBlockBuilder(),
             CheckboxBlock.getBlockBuilder(),
             StandoffEditorBlock.getBlockBuilder(),

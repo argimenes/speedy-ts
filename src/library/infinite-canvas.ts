@@ -17,10 +17,10 @@ export class InfiniteCanvas {
     private selectionBox: HTMLDivElement;
     private selectionStart: { x: number; y: number } | null = null;
   
-    constructor(viewport: HTMLDivElement, canvas: HTMLDivElement) {
+    constructor(viewport: HTMLDivElement, canvas: HTMLDivElement, minimap: HTMLCanvasElement) {
       this.viewport = viewport;
       this.canvas = canvas;
-      this.minimap = document.getElementById('minimap') as HTMLCanvasElement;
+      this.minimap = minimap;
       this.minimapCtx = this.minimap.getContext('2d')!;
   
       this.selectionBox = document.createElement('div');
@@ -193,7 +193,7 @@ export class InfiniteCanvas {
       this.selectedBoxes.clear();
     }
   
-   addBox() {
+   public addBox() {
       const id = `box-${Date.now()}`;
       const box = document.createElement('div');
       box.className = 'box';

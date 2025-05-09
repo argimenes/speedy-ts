@@ -19,7 +19,7 @@ export class CanvasBlock extends AbstractBlock {
     }
     static getBlockBuilder() {
         return {
-            type: BlockType.IFrameBlock,
+            type: BlockType.CanvasBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
                 const block = new CanvasBlock({ manager, ...dto });
                 if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
@@ -42,9 +42,9 @@ export class CanvasBlock extends AbstractBlock {
         updateElement(this.canvas, { classList: ["canvas"] });
         updateElement(this.viewport, { classList: ["viewport"] });
         this.viewport.appendChild(this.canvas);
-        this.container.appendChild(this.minimap);
+        this.viewport.appendChild(this.minimap);
         this.container.appendChild(this.viewport);
-        this.control = new InfiniteCanvas(this.viewport, this.canvas);
+        this.control = new InfiniteCanvas(this.viewport, this.canvas, this.minimap);
         this.control.addBox();
         this.control.addBox();
     }
