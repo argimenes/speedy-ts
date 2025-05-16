@@ -40,7 +40,10 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         { type: "style/rainbow", start: 18, end: 21 },
                         { type: "style/highlighter", start: 5, end: 12 },
                         { type: "style/spiky", start: 15, end: 28 },
-                    ]
+                    ],
+                    metadata: {
+                        
+                    }
                 },
                 {
                     type: BlockType.StandoffEditorBlock,
