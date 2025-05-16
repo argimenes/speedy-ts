@@ -29,6 +29,7 @@ import { VideoBackgroundBlock } from './blocks/video-background-block';
 import { UnknownBlock } from './blocks/unknown-block';
 import { ErrorBlock } from './blocks/error-block';
 import { CanvasBackgroundBlock } from './blocks/canvas-background-block';
+import { BlockMenuBlock } from './components/block-menu';
 
 export type BlockBuilder =
     (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => Promise<IBlock>;
@@ -863,7 +864,37 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addParentSiblingRelations(parent);
         if (!skipIndexation) this.reindexAncestorDocument(parent);
     }
+    async loadBlockMenu(args: IBindingHandlerArgs) {
+        const block = args.block;
+        const menu = new BlockMenuBlock({
+            manager: this.manager,
+            source: block
+        });
+        const node = menu.render();
+        const top = 0;
+        const left = -20;
+        updateElement(node, {
+            style: {
+                top: top + "px",
+                left: left + "px"
+            },
+            classList: [passoverClass]
+        });
+        menu.container.appendChild(node);
+        block.container.appendChild(menu.container);
+        menu.node.focus();
+        // this.manager.registerBlock(menu);
+        // this.manager.setBlockFocus(menu);
+    }
     async buildChildren(parent: AbstractBlock, blockDto: IBlockDto, update?: (b: IBlock) => void) {
+        const self = this;
+        const menu = document.createElement("DIV") as HTMLDivElement;
+        menu.classList.add("block-menu-button");
+        menu.innerHTML = "<button>...</button>";
+        menu.addEventListener("click", () => {
+            self.loadBlockMenu({ block: parent });
+        });
+        parent.container.appendChild(menu);
         if (blockDto.children) {
             const len = blockDto.children.length;
             for (let i = 0; i < len; i++) {

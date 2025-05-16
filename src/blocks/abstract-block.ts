@@ -1,4 +1,4 @@
-–import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import _ from 'underscore';
 import { updateElement } from '../library/svg';
 import { BlockProperty } from '../library/block-property';
@@ -6,7 +6,6 @@ import { KEYS } from '../library/keyboard';
 import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET, UniverseBlockEvent, IBindingHandlerArgs, Caret } from '../library/types';
 import { UniverseBlock } from '../universe-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
-import { BlockMenuBlock } from '../components/block-menu';
 
 const isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
 const isWindows = navigator.platform.toUpperCase().indexOf('WIN')>=0;
@@ -85,28 +84,7 @@ export abstract class AbstractBlock implements IBlock {
             }
         });
     }
-    async loadBlockMenu(args: IBindingHandlerArgs) {
-            const caret = args.caret as Caret;
-            const block = args.block;
-            const menu = new BlockMenuBlock({
-                manager: this.manager,
-                source: block
-            });
-            const node = menu.render();
-            const top = 0;
-            const left = caret.right.cache.offset.x - 10;
-            updateElement(node, {
-                style: {
-                    top: top + "px",
-                    left: left + "px"
-                },
-                classList: [passoverClass]
-            });
-            menu.container.appendChild(node);
-            block.container.appendChild(menu.container);
-            this.manager.registerBlock(menu);
-            this.manager.setBlockFocus(menu);
-        }
+    
     getOrSetOverlay(name: string) {
         const overlay = this.overlays.find(x=> x.name == name);
         if (overlay) return overlay;

@@ -1,6 +1,5 @@
 import { Menubar } from "@kobalte/core/menubar";
 import { IconChevronRight, IconMenu, IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash } from "@tabler/icons-solidjs";
-import "./style.css";
 import { Component } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -97,6 +96,11 @@ interface IBlockMenuBlockConstructor extends IAbstractBlockConstructor {
 }
 
 export class BlockMenuBlock extends AbstractBlock {
+    constructor(args: IBlockMenuBlockConstructor){
+        super(args);
+        this.type = BlockType.BlockMenu;
+        this.node = document.createElement("DIV") as HTMLElement;
+    }
     serialize(): IBlockDto {
         return null;
     }
@@ -104,11 +108,6 @@ export class BlockMenuBlock extends AbstractBlock {
         return null
     }
     node: HTMLElement;
-    constructor(args: IBlockMenuBlockConstructor){
-        super(args);
-        this.type = BlockType.BlockMenu;
-        this.node = document.createElement("DIV") as HTMLElement;
-    }
     render() {
         const jsx = BlockMenu({
             addVideoBlock: () => {
