@@ -20,6 +20,7 @@ import { BlockProperty } from '../library/block-property';
 import BlockVines from '../library/plugins/block-vines';
 import { StandoffProperty } from '../library/standoff-property';
 import { BlockPropertySchemas } from '../properties/block-properties';
+import { BlockMenuBlock } from '../components/block-menu';
 
 const maxHistoryItems = 30;
 export interface IMultiRangeStandoffProperty {
@@ -2153,6 +2154,7 @@ export class DocumentBlock extends AbstractBlock {
         manager.setBlockFocus(cm);
         return cm;
     }
+    
     async loadAnnotationMenu(args: IBindingHandlerArgs) {
         const manager = this.manager;
         const block = args.block as StandoffEditorBlock;

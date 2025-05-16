@@ -1,23 +1,22 @@
 import { Menubar } from "@kobalte/core/menubar";
-import { IconChevronRight, IconCircleDotFilled, IconCheck, IconMenu, IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash } from "@tabler/icons-solidjs";
+import { IconChevronRight, IconMenu, IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash } from "@tabler/icons-solidjs";
 import "./style.css";
 import { Component } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
 import { renderToNode } from "../library/common";
 
-const BlockMenu : Component = (props) => {
-  const addVideoBlock = () => {
-    console.log("addVideoBlock")
-  }
+type Props = {
+    addVideoBlock: () => void;
+    addCanvasBlock: () => void;
+}
+
+const BlockMenu : Component<Props> = (props) => {
   const addImageBlock = () => {
     console.log("addVideoBlock")
   }
   const addHtmlBlock = () => {
     console.log("addHtmlBlock")
-  }
-  const addCanvasBlock = () => {
-    console.log("addCanvasBlock")
   }
   const addTable = (rows: number, cells: number) => {
     console.log("addTable", { rows, cells });
@@ -48,10 +47,10 @@ const BlockMenu : Component = (props) => {
                     <Menubar.Item class="menubar__item" onChange={addImageBlock}>
                       <IconImageInPicture /> Image
                     </Menubar.Item>
-                    <Menubar.Item class="menubar__item" onChange={addVideoBlock}>
+                    <Menubar.Item class="menubar__item" onChange={props.addVideoBlock}>
                         <IconVideo/> Video
                     </Menubar.Item>
-                    <Menubar.Item class="menubar__item" onChange={addCanvasBlock}>
+                    <Menubar.Item class="menubar__item" onChange={props.addCanvasBlock}>
                         <IconRectangle/> Canvas
                     </Menubar.Item>
                     <Menubar.Separator class="menubar__separator" />
@@ -92,9 +91,11 @@ const BlockMenu : Component = (props) => {
   </Menubar>
   );
 }
-interface IBlockMenuBlockConstructor extends IAbstractBlockConstructor {
 
+interface IBlockMenuBlockConstructor extends IAbstractBlockConstructor {
+  source: IBlock;
 }
+
 export class BlockMenuBlock extends AbstractBlock {
     serialize(): IBlockDto {
         return null;
@@ -109,8 +110,18 @@ export class BlockMenuBlock extends AbstractBlock {
         this.node = document.createElement("DIV") as HTMLElement;
     }
     render() {
-        const jsx = BlockMenu({});
+        const jsx = BlockMenu({
+            addVideoBlock: () => {
+                console.log("BlockMenuBlock.addVideoBlock")
+            },
+            addCanvasBlock: () => {
+                console.log("BlockMenuBlock.addCanvasBlock")
+            }
+        });
         const node = this.node = renderToNode(jsx);
         return node;
+    }
+    destroy() {
+        this.node.remove();
     }
 }
