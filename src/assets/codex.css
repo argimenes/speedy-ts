@@ -469,16 +469,3 @@ body {
     cursor: move;
   }
   
-  .block-menu-button {
-  position: relative;
-  left: 0;
-  top: 0;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-.abstract-block:hover > .block-menu-button {
-  opacity: 1;
-  pointer-events: auto;
-}

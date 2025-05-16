@@ -910,14 +910,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const item = this.blockBuilders.find(x => x.type == blockDto.type);
         if (item) {
             try {
-                //block-menu-button
-                const builder =  await item.builder(container, blockDto, this);
-                const blockMenu = document.createElement("DIV") as HTMLDivElement;
-                blockMenu.classList.add("block-menu-button");
-                blockMenu.innerHTML = "<button onClick='alert(`block menu clicked`)'>...</button>";
-                builder.container.insertAdjacentElement("beforebegin", blockMenu);
-                builder.container.appendChild(blockMenu);
-                return builder;
+                return await item.builder(container, blockDto, this);
             } catch (ex) {
                 console.error("recursivelyBuildBlock", { container, blockDto, ex, manager: this });
                 return await ErrorBlock.getBlockBuilder().builder(container, blockDto, this);
