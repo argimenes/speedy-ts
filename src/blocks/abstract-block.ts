@@ -24,6 +24,7 @@ export abstract class AbstractBlock implements IBlock {
     inputEvents: InputEvent[];
     inputActions: InputAction[];
     modes: string[];
+    suppressEventHandlers: boolean;
     blockProperties: BlockProperty[];
     blockSchemas: IBlockPropertySchema[];
     container: HTMLElement;

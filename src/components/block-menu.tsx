@@ -4,6 +4,7 @@ import { Component } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
 import { renderToNode } from "../library/common";
+import "../assets/kobalte.css";
 
 type Props = {
     addVideoBlock: () => void;
@@ -40,16 +41,16 @@ const BlockMenu : Component<Props> = (props) => {
                     <Menubar.Item class="menubar__item">
                       <IconFileText /> Text
                     </Menubar.Item>
-                    <Menubar.Item class="menubar__item" onChange={addHtmlBlock}>
+                    <Menubar.Item class="menubar__item" onClick={addHtmlBlock}>
                       <IconHtml /> HTML
                     </Menubar.Item>
-                    <Menubar.Item class="menubar__item" onChange={addImageBlock}>
+                    <Menubar.Item class="menubar__item" onClick={addImageBlock}>
                       <IconImageInPicture /> Image
                     </Menubar.Item>
-                    <Menubar.Item class="menubar__item" onChange={props.addVideoBlock}>
+                    <Menubar.Item class="menubar__item" onClick={props.addVideoBlock}>
                         <IconVideo/> Video
                     </Menubar.Item>
-                    <Menubar.Item class="menubar__item" onChange={props.addCanvasBlock}>
+                    <Menubar.Item class="menubar__item" onClick={props.addCanvasBlock}>
                         <IconRectangle/> Canvas
                     </Menubar.Item>
                     <Menubar.Separator class="menubar__separator" />
@@ -62,16 +63,16 @@ const BlockMenu : Component<Props> = (props) => {
                         </Menubar.SubTrigger>
                         <Menubar.Portal>
                             <Menubar.SubContent class="menubar__sub-content">
-                                <Menubar.Item class="menubar__item" onChange={() => addTable(1, 2)}>
+                                <Menubar.Item class="menubar__item" onClick={() => addTable(1, 2)}>
                                     <IconFileText /> 1 x 2
                                 </Menubar.Item>
-                                <Menubar.Item class="menubar__item" onChange={() => addTable(1, 3)}>
+                                <Menubar.Item class="menubar__item" onClick={() => addTable(1, 3)}>
                                     <IconFileText /> 1 x 3
                                 </Menubar.Item>
-                                <Menubar.Item class="menubar__item" onChange={() => addTable(2, 2)}>
+                                <Menubar.Item class="menubar__item" onClick={() => addTable(2, 2)}>
                                     <IconFileText /> 2 x 2
                                 </Menubar.Item>
-                                <Menubar.Item class="menubar__item" onChange={() => addTable(2, 3)}>
+                                <Menubar.Item class="menubar__item" onClick={() => addTable(2, 3)}>
                                     <IconFileText /> 2 x 3
                                 </Menubar.Item>
                             </Menubar.SubContent>
@@ -99,6 +100,7 @@ export class BlockMenuBlock extends AbstractBlock {
     constructor(args: IBlockMenuBlockConstructor){
         super(args);
         this.type = BlockType.BlockMenu;
+        this.suppressEventHandlers = true;
         this.node = document.createElement("DIV") as HTMLElement;
     }
     serialize(): IBlockDto {

@@ -135,6 +135,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             console.log("Could not find a container parent.")
             return;
         }
+        if ((parentBlock as AbstractBlock).suppressEventHandlers) {
+            console.log("Skipping this block.")
+            return;
+        }
         const input = this.toMouseInput(e);
         this.setBlockFocus(parentBlock);
         if (parentBlock.type == BlockType.StandoffEditorBlock) {

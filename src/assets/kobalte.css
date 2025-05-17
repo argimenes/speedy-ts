@@ -1,0 +1,195 @@
+.popover__trigger {
+  appearance: none;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  width: auto;
+  outline: none;
+  border-radius: 6px;
+  padding: 0 16px;
+  background-color: hsl(200 98% 39%);
+  color: white;
+  font-size: 16px;
+  line-height: 0;
+  transition: 250ms background-color;
+}
+.popover__trigger:hover {
+  background-color: hsl(201 96% 32%);
+}
+.popover__trigger:focus-visible {
+  outline: 2px solid hsl(200 98% 39%);
+  outline-offset: 2px;
+}
+.popover__trigger:active {
+  background-color: hsl(201 90% 27%);
+}
+.popover__content {
+  z-index: 50;
+  max-width: min(calc(100vw - 16px), 380px);
+  border: 1px solid hsl(240 5% 84%);
+  border-radius: 6px;
+  padding: 12px;
+  background-color: white;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+.popover__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.popover__close-button {
+  height: 16px;
+  width: 16px;
+  color: hsl(240 5% 34%);
+}
+.popover__title {
+  font-size: 16px;
+  font-weight: 500;
+  color: hsl(240 6% 10%);
+}
+.popover__description {
+  font-size: 14px;
+  color: hsl(240 5% 26%);
+}
+
+.menubar__root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.menubar__trigger {
+  appearance: none;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  width: auto;
+  outline: none;
+  padding: 0 16px;
+  background-color: #f6f6f7;
+  color: hsl(240 4% 16%);
+  font-size: 16px;
+  gap: 8px;
+  line-height: 0;
+  transition: 250ms background-color;
+}
+.menubar__trigger[data-highlighted="true"] {
+  background-color: hsl(200 98% 39%);
+  color: white;
+}
+.menubar__trigger:first-child {
+  border-radius: 4px 0 0 4px;
+}
+.menubar__trigger:last-child {
+  border-left: 2px dashed hsl(240 4% 46%);
+  border-radius: 0 4px 4px 0;
+}
+.menubar__content,
+.menubar__sub-content {
+  min-width: 220px;
+  padding: 8px;
+  background-color: white;
+  border-radius: 6px;
+  border: 1px solid hsl(240 6% 90%);
+  box-shadow:
+  0 4px 6px -1px rgb(0 0 0 / 0.1),
+  0 2px 4px -2px rgb(0 0 0 / 0.1);
+  outline: none;
+  transform-origin: var(--kb-menu-content-transform-origin);
+  animation: contentHide 250ms ease-in forwards;
+}
+.menubar__content[data-expanded],
+.menubar__sub-content[data-expanded] {
+  animation: contentShow 250ms ease-out;
+}
+.menubar__item,
+.menubar__checkbox-item,
+.menubar__radio-item,
+.menubar__sub-trigger {
+  font-size: 16px;
+  line-height: 1;
+  color: hsl(240 4% 16%);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 8px 0 24px;
+  position: relative;
+  user-select: none;
+  outline: none;
+}
+.menubar__sub-trigger[data-expanded] {
+  background-color: hsl(204 94% 94%);
+  color: hsl(201 96% 32%);
+}
+.menubar__item[data-disabled],
+.menubar__checkbox-item[data-disabled],
+.menubar__radio-item[data-disabled],
+.menubar__sub-trigger[data-disabled] {
+  color: hsl(240 5% 65%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.menubar__item[data-highlighted],
+.menubar__checkbox-item[data-highlighted],
+.menubar__radio-item[data-highlighted],
+.menubar__sub-trigger[data-highlighted] {
+  outline: none;
+  background-color: hsl(200 98% 39%);
+  color: white;
+}
+.menubar__group-label {
+  padding: 0 24px;
+  font-size: 14px;
+  line-height: 32px;
+  color: hsl(240 4% 46%);
+}
+.menubar__separator {
+  height: 1px;
+  border-top: 1px solid hsl(240 6% 90%);
+  margin: 6px;
+}
+.menubar__item-indicator {
+  position: absolute;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.menubar__item-right-slot {
+  margin-left: auto;
+  padding-left: 20px;
+  font-size: 14px;
+  color: hsl(240 4% 46%);
+}
+[data-highlighted] > .menubar__item-right-slot {
+  color: white;
+}
+[data-disabled] .menubar__item-right-slot {
+  color: hsl(240 5% 65%);
+  opacity: 0.5;
+}
+@keyframes contentShow {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes contentHide {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
