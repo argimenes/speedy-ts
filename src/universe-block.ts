@@ -10,7 +10,7 @@ import { YouTubeVideoBlock } from "./blocks/youtube-video-block";
 import { IframeBlock } from "./blocks/iframe-block";
 import { BlockProperty } from "./library/block-property";
 import { StandoffEditorBlock } from "./blocks/standoff-editor-block";
-import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IUniverseBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType, passoverClass, isStr, DocumentHistory } from "./library/types";
+import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IUniverseBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType, passoverClass, isStr, DocumentHistory, IMenuButtonBindingHandlerArgs } from "./library/types";
 import { PlainTextBlock } from "./blocks/plain-text-block";
 import { EmbedDocumentBlock } from "./blocks/embed-document-block";
 import { fetchGet } from "./library/common";
@@ -30,6 +30,7 @@ import { UnknownBlock } from './blocks/unknown-block';
 import { ErrorBlock } from './blocks/error-block';
 import { CanvasBackgroundBlock } from './blocks/canvas-background-block';
 import { BlockMenuBlock } from './components/block-menu';
+import { posix } from 'path';
 
 export type BlockBuilder =
     (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => Promise<IBlock>;
@@ -868,24 +869,24 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addParentSiblingRelations(parent);
         if (!skipIndexation) this.reindexAncestorDocument(parent);
     }
-    async loadBlockMenu(args: IBindingHandlerArgs) {
+    async loadBlockMenu(args: IMenuButtonBindingHandlerArgs) {
+        const menuButton = args.menuNode;
         const block = args.block;
         const menu = new BlockMenuBlock({
             manager: this.manager,
             source: block
         });
         const node = menu.render();
-        const top = 0;
-        const left = -20;
         updateElement(node, {
             style: {
-                top: top + "px",
-                left: left + "px"
+                width: "auto",
+                height: "auto"
             },
             classList: [passoverClass]
         });
         menu.container.appendChild(node);
-        block.container.appendChild(menu.container);
+        menuButton.replaceChild(node, menuButton.childNodes[0]);
+        //block.container.parentNode.appendChild(menu.container);
         menu.node.focus();
         // this.manager.registerBlock(menu);
         // this.manager.setBlockFocus(menu);
@@ -896,7 +897,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         menu.classList.add("block-menu-button");
         menu.innerHTML = "<button>...</button>";
         menu.addEventListener("click", () => {
-            self.loadBlockMenu({ block: parent });
+            self.loadBlockMenu({ block: parent, menuNode: menu });
         });
         parent.container.appendChild(menu);
         if (blockDto.children) {

@@ -528,6 +528,7 @@ export class DocumentBlock extends AbstractBlock {
         }) as YouTubeVideoBlock;
         video.build();
         this.addBlockAfter(video, anchor);
+        return video;
     }
     addIFrameBlock(anchor: IBlock, url: string) {
         const manager = this.manager;

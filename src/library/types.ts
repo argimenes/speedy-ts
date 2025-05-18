@@ -140,6 +140,9 @@ export interface IBindingHandlerArgs {
     selection?: IRange;
     e?: Event;
 }
+export interface IMenuButtonBindingHandlerArgs extends IBindingHandlerArgs {
+    menuNode: HTMLDivElement;
+}
 export interface IPlainTextBindingHandlerArgs {
     block: IBlock;
     caret: CaretAnchor;

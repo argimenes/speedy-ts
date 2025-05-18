@@ -5,18 +5,20 @@ import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
 import { renderToNode } from "../library/common";
 import "../assets/kobalte.css";
+import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
+import { DocumentBlock } from "../blocks/document-block";
 
 type Props = {
+    source: IBlock;
     addVideoBlock: () => void;
+    addHtmlBlock: () => void;
     addCanvasBlock: () => void;
+    addTableBlock: (rows: number, cells: number) => void;
 }
 
 const BlockMenu : Component<Props> = (props) => {
   const addImageBlock = () => {
     console.log("addVideoBlock")
-  }
-  const addHtmlBlock = () => {
-    console.log("addHtmlBlock")
   }
   const addTable = (rows: number, cells: number) => {
     console.log("addTable", { rows, cells });
@@ -41,7 +43,7 @@ const BlockMenu : Component<Props> = (props) => {
                     <Menubar.Item class="menubar__item">
                       <IconFileText /> Text
                     </Menubar.Item>
-                    <Menubar.Item class="menubar__item" onClick={addHtmlBlock}>
+                    <Menubar.Item class="menubar__item" onClick={props.addHtmlBlock}>
                       <IconHtml /> HTML
                     </Menubar.Item>
                     <Menubar.Item class="menubar__item" onClick={addImageBlock}>
@@ -63,16 +65,16 @@ const BlockMenu : Component<Props> = (props) => {
                         </Menubar.SubTrigger>
                         <Menubar.Portal>
                             <Menubar.SubContent class="menubar__sub-content">
-                                <Menubar.Item class="menubar__item" onClick={() => addTable(1, 2)}>
+                                <Menubar.Item class="menubar__item" onClick={() => props.addTableBlock(1, 2)}>
                                     <IconFileText /> 1 x 2
                                 </Menubar.Item>
-                                <Menubar.Item class="menubar__item" onClick={() => addTable(1, 3)}>
+                                <Menubar.Item class="menubar__item" onClick={() => props.addTableBlock(1, 3)}>
                                     <IconFileText /> 1 x 3
                                 </Menubar.Item>
-                                <Menubar.Item class="menubar__item" onClick={() => addTable(2, 2)}>
+                                <Menubar.Item class="menubar__item" onClick={() => props.addTableBlock(2, 2)}>
                                     <IconFileText /> 2 x 2
                                 </Menubar.Item>
-                                <Menubar.Item class="menubar__item" onClick={() => addTable(2, 3)}>
+                                <Menubar.Item class="menubar__item" onClick={() => props.addTableBlock(2, 3)}>
                                     <IconFileText /> 2 x 3
                                 </Menubar.Item>
                             </Menubar.SubContent>
@@ -97,10 +99,13 @@ interface IBlockMenuBlockConstructor extends IAbstractBlockConstructor {
 }
 
 export class BlockMenuBlock extends AbstractBlock {
+  source: IBlock;
     constructor(args: IBlockMenuBlockConstructor){
         super(args);
+        this.manager = args.manager;
         this.type = BlockType.BlockMenu;
         this.suppressEventHandlers = true;
+        this.source = args.source;
         this.node = document.createElement("DIV") as HTMLElement;
     }
     serialize(): IBlockDto {
@@ -111,12 +116,27 @@ export class BlockMenuBlock extends AbstractBlock {
     }
     node: HTMLElement;
     render() {
+      const manager = this.manager;
+      const source = this.source;
+      const doc = manager.getParentOfType(source, BlockType.DocumentBlock) as DocumentBlock;
         const jsx = BlockMenu({
+          source: this.source,
+            addHtmlBlock: () => {
+              const cm = doc.addCodeMirrorBlock(source);
+              manager.setBlockFocus(cm);
+            },
             addVideoBlock: () => {
-                console.log("BlockMenuBlock.addVideoBlock")
+                const url = prompt("Url");
+                const v = doc.addVideoBlock(source, url);
+                manager.setBlockFocus(v);
             },
             addCanvasBlock: () => {
                 console.log("BlockMenuBlock.addCanvasBlock")
+            },
+            addTableBlock: (cells: number, rows: number) => {
+              const table = doc.createTable(rows, cells);
+              manager.insertBlockAfter(source, table);
+              manager.setBlockFocus(table.blocks[0].blocks[0]);
             }
         });
         const node = this.node = renderToNode(jsx);
