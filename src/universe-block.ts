@@ -492,6 +492,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                     }
                 }
             }
+            
         ]
         return events;
     }
@@ -869,37 +870,32 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addParentSiblingRelations(parent);
         if (!skipIndexation) this.reindexAncestorDocument(parent);
     }
-    async loadBlockMenu(args: IMenuButtonBindingHandlerArgs) {
-        const menuButton = args.menuNode;
+    async loadBlockMenu(args: IBindingHandlerArgs) {
         const block = args.block;
         const menu = new BlockMenuBlock({
+            contextMenuEvent: args.e as MouseEvent,
             manager: this.manager,
             source: block
         });
+        const rect = block.container.getBoundingClientRect();
         const node = menu.render();
-        updateElement(node, {
+        updateElement(menu.container, {
             style: {
+                position: "fixed",
+                top: rect.top + "px",
+                left: rect.width + "px",
                 width: "auto",
                 height: "auto"
             },
             classList: [passoverClass]
         });
         menu.container.appendChild(node);
-        menuButton.replaceChild(node, menuButton.childNodes[0]);
-        //block.container.parentNode.appendChild(menu.container);
+        document.body.appendChild(menu.container);
         menu.node.focus();
         // this.manager.registerBlock(menu);
         // this.manager.setBlockFocus(menu);
     }
     async buildChildren(parent: AbstractBlock, blockDto: IBlockDto, update?: (b: IBlock) => void) {
-        const self = this;
-        const menu = document.createElement("DIV") as HTMLDivElement;
-        menu.classList.add("block-menu-button");
-        menu.innerHTML = "<button>...</button>";
-        menu.addEventListener("click", () => {
-            self.loadBlockMenu({ block: parent, menuNode: menu });
-        });
-        parent.container.appendChild(menu);
         if (blockDto.children) {
             const len = blockDto.children.length;
             for (let i = 0; i < len; i++) {

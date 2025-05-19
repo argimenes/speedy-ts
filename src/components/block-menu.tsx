@@ -1,109 +1,72 @@
-import { Menubar } from "@kobalte/core/menubar";
-import { IconChevronRight, IconMenu, IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash } from "@tabler/icons-solidjs";
-import { Component } from "solid-js";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash } from "@tabler/icons-solidjs";
+import { Component, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
 import { renderToNode } from "../library/common";
-import "../assets/kobalte.css";
-import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { DocumentBlock } from "../blocks/document-block";
+import { Menu, useContextMenu, Item, Separator, Submenu } from "solid-contextmenu";
+import "../assets/context-menu.css";
 
 type Props = {
+    contextMenuEvent: MouseEvent;
     source: IBlock;
     addVideoBlock: () => void;
     addHtmlBlock: () => void;
     addCanvasBlock: () => void;
-    addTableBlock: (rows: number, cells: number) => void;
+    addGridBlock: (rows: number, cells: number) => void;
 }
 
 const BlockMenu : Component<Props> = (props) => {
-  const addImageBlock = () => {
-    console.log("addVideoBlock")
-  }
-  const addTable = (rows: number, cells: number) => {
-    console.log("addTable", { rows, cells });
-  }
+  const menuId = "context-menu-" + props.source.id;
+  const { show } = useContextMenu({ id: menuId });
+  onMount(() => {
+    show(props.contextMenuEvent);
+  });
   return (
-      <Menubar class="menubar__root">
-        <Menubar.Menu>
-          <Menubar.Trigger class="menubar__trigger">
-            <IconMenu />
-          </Menubar.Trigger>
-          <Menubar.Portal>
-            <Menubar.Content class="menubar__content">
-              <Menubar.Sub overlap gutter={4} shift={-8}>
-                <Menubar.SubTrigger class="menubar__sub-trigger">
-                  Add Block
-                  <div class="menubar__item-right-slot">
-                    <IconChevronRight width={20} height={20} />
-                  </div>
-                </Menubar.SubTrigger>
-                <Menubar.Portal>
-                  <Menubar.SubContent class="menubar__sub-content">
-                    <Menubar.Item class="menubar__item">
-                      <IconFileText /> Text
-                    </Menubar.Item>
-                    <Menubar.Item class="menubar__item" onClick={props.addHtmlBlock}>
-                      <IconHtml /> HTML
-                    </Menubar.Item>
-                    <Menubar.Item class="menubar__item" onClick={addImageBlock}>
-                      <IconImageInPicture /> Image
-                    </Menubar.Item>
-                    <Menubar.Item class="menubar__item" onClick={props.addVideoBlock}>
-                        <IconVideo/> Video
-                    </Menubar.Item>
-                    <Menubar.Item class="menubar__item" onClick={props.addCanvasBlock}>
-                        <IconRectangle/> Canvas
-                    </Menubar.Item>
-                    <Menubar.Separator class="menubar__separator" />
-                    <Menubar.Sub overlap gutter={4} shift={-8}>
-                        <Menubar.SubTrigger class="menubar__sub-trigger">
-                            Table
-                            <div class="menubar__item-right-slot">
-                                <IconChevronRight width={20} height={20} />
-                            </div>
-                        </Menubar.SubTrigger>
-                        <Menubar.Portal>
-                            <Menubar.SubContent class="menubar__sub-content">
-                                <Menubar.Item class="menubar__item" onClick={() => props.addTableBlock(1, 2)}>
-                                    <IconFileText /> 1 x 2
-                                </Menubar.Item>
-                                <Menubar.Item class="menubar__item" onClick={() => props.addTableBlock(1, 3)}>
-                                    <IconFileText /> 1 x 3
-                                </Menubar.Item>
-                                <Menubar.Item class="menubar__item" onClick={() => props.addTableBlock(2, 2)}>
-                                    <IconFileText /> 2 x 2
-                                </Menubar.Item>
-                                <Menubar.Item class="menubar__item" onClick={() => props.addTableBlock(2, 3)}>
-                                    <IconFileText /> 2 x 3
-                                </Menubar.Item>
-                            </Menubar.SubContent>
-                        </Menubar.Portal>
-                    </Menubar.Sub>
-                  </Menubar.SubContent>
-                </Menubar.Portal>
-              </Menubar.Sub>
-              <Menubar.Separator class="menubar__separator" />
-              <Menubar.Item class="menubar__item">
-                <IconTrash /> Delete Block
-            </Menubar.Item>
-        </Menubar.Content>
-      </Menubar.Portal>
-    </Menubar.Menu>
-  </Menubar>
+    <>
+      <Menu id={menuId}>
+        <Submenu label="Add Block">
+          <Item onClick={() => alert("Add Text")}><IconFileText /> Text</Item>
+          <Item onClick={props.addHtmlBlock}><IconHtml /> HTML</Item>
+          <Item onClick={() => alert("Add Image")}><IconImageInPicture /> Image</Item>
+          <Item onClick={props.addVideoBlock}><IconVideo/> Video</Item>
+          <Item onClick={props.addCanvasBlock}><IconRectangle/> Canvas</Item>
+          <Separator />
+          <Submenu label="Add Grid">
+            <Item onClick={() => props.addGridBlock(1, 2)}>
+                <IconFileText /> 1 x 2
+            </Item>
+            <Item onClick={() => props.addGridBlock(1, 3)}>
+                <IconFileText /> 1 x 3
+            </Item>
+            <Item onClick={() => props.addGridBlock(2, 2)}>
+                <IconFileText /> 2 x 2
+            </Item>
+            <Item onClick={() => props.addGridBlock(2, 3)}>
+                <IconFileText /> 2 x 3
+            </Item>
+          </Submenu>
+        </Submenu>
+        <Separator />
+        <Item onClick={() => alert("Delete Block")}><IconTrash /> Delete Block</Item>
+      </Menu>
+  </>
   );
 }
 
 interface IBlockMenuBlockConstructor extends IAbstractBlockConstructor {
   source: IBlock;
+  contextMenuEvent: MouseEvent;
 }
 
 export class BlockMenuBlock extends AbstractBlock {
+  contextMenuEvent: MouseEvent;
   source: IBlock;
     constructor(args: IBlockMenuBlockConstructor){
         super(args);
         this.manager = args.manager;
         this.type = BlockType.BlockMenu;
+        this.contextMenuEvent = args.contextMenuEvent;
         this.suppressEventHandlers = true;
         this.source = args.source;
         this.node = document.createElement("DIV") as HTMLElement;
@@ -120,6 +83,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const source = this.source;
       const doc = manager.getParentOfType(source, BlockType.DocumentBlock) as DocumentBlock;
         const jsx = BlockMenu({
+          contextMenuEvent: this.contextMenuEvent,
           source: this.source,
             addHtmlBlock: () => {
               const cm = doc.addCodeMirrorBlock(source);
@@ -133,10 +97,10 @@ export class BlockMenuBlock extends AbstractBlock {
             addCanvasBlock: () => {
                 console.log("BlockMenuBlock.addCanvasBlock")
             },
-            addTableBlock: (cells: number, rows: number) => {
-              const table = doc.createTable(rows, cells);
-              manager.insertBlockAfter(source, table);
-              manager.setBlockFocus(table.blocks[0].blocks[0]);
+            addGridBlock: (cells: number, rows: number) => {
+              const grid = doc.createGrid(rows, cells);
+              manager.insertBlockAfter(source, grid);
+              manager.setBlockFocus(grid.blocks[0].blocks[0]);
             }
         });
         const node = this.node = renderToNode(jsx);

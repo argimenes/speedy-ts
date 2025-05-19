@@ -818,11 +818,27 @@ export class DocumentBlock extends AbstractBlock {
                     match: "contextmenu"
                 },
                 action: {
-                    name: "Monitor panel",
+                    name: "Context Menu.",
                     description: "",
-                    handler: this.loadAnnotationMenu.bind(this)
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        const manager = block.manager as UniverseBlock;
+                        manager.loadBlockMenu(args);
+                    }
                 }
             },
+            // {
+            //     mode: "default",
+            //     trigger: {
+            //         source: InputEventSource.Custom,
+            //         match: "contextmenu"
+            //     },
+            //     action: {
+            //         name: "Monitor panel",
+            //         description: "",
+            //         handler: this.loadAnnotationMenu.bind(this)
+            //     }
+            // },
             {
                 mode: "default",
                 trigger: {
