@@ -814,8 +814,8 @@ export class DocumentBlock extends AbstractBlock {
             {
                 mode: "default",
                 trigger: {
-                    source: InputEventSource.Custom,
-                    match: "contextmenu"
+                    source: InputEventSource.Keyboard,
+                    match: "Meta-M"
                 },
                 action: {
                     name: "Context Menu.",
