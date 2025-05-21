@@ -1,15 +1,15 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3 } from "@tabler/icons-solidjs";
 import { Component, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
 import { renderToNode } from "../library/common";
 import { DocumentBlock } from "../blocks/document-block";
-import "../assets/context-menu.css";
-import { ContextMenu, ContextMenuAPI } from "./context-menu";
-
+import { ContextMenu2 } from "./context-menu-2";
 
 type Props = {
-    contextMenuEvent: MouseEvent;
+    visible: boolean;
+    coords: { x: number; y: number };
+    onClose: () => void;
     source: IBlock;
     addVideoBlock: () => void;
     addHtmlBlock: () => void;
@@ -18,65 +18,42 @@ type Props = {
 }
 
 const BlockMenu : Component<Props> = (props) => {
-  
   onMount(() => {
-    const items = [
-      {
-        label: "Add Block",
-        children: [
-          { label: "Text", onClick: () => alert("New text") },
-          { label: "Video", onClick: () => alert("New video") },
-          { label: "Image", onClick: () => alert("New image") },
-          { label: "Canvas", onClick: () => alert("New canvas") },
-          {
-            label: "Add Grid",
-            icon: "",
-            children: [
-              { label: "1 x 1", onClick: () => alert("1 x 1") },
-              { label: "1 x 2", onClick: () => alert("1 x 2") },
-              { label: "1 x 3", onClick: () => alert("1 x 3") },
-              { label: "2 x 1", onClick: () => alert("2 x 1") },
-              { label: "2 x 2", onClick: () => alert("2 x 2") },
-              { label: "2 x 3", onClick: () => alert("2 x 3") },
-            ]
-          }
-        ]
-      },
-      {
-        label: "Delete Block",
-        icon: "",
-        onClick: () => alert("Delete block")
-      }
-     ];
-      ContextMenuAPI.show(props.contextMenuEvent.clientX, props.contextMenuEvent.clientY);
+    
   })
   return (
     <>
-     <ContextMenu items={[
+     <ContextMenu2
+      position={props.coords}
+      onClose={props.onClose}
+      visible={props.visible}
+      items={[
       {
+        type: "item", 
         label: "Add Block",
         children: [
-          { label: "Text", onClick: () => alert("New text") },
-          { label: "Video", onClick: () => alert("New video") },
-          { label: "Image", onClick: () => alert("New image") },
-          { label: "Canvas", onClick: () => alert("New canvas") },
+          { type:"item", icon: <IconFileText/>, label: "Text", onClick: () => alert("New text") },
+          { type:"item", label: "Video", icon: <IconVideo />, onClick: () => alert("New video") },
+          { type:"item", label: "Image", onClick: () => alert("New image") },
+          { type:"item", label: "Canvas", onClick: () => alert("New canvas") },
           {
-            label: "Add Grid",
-            icon: "",
+            type: "item", label: "Add Grid",
+            icon: <IconGrid3x3 />,
             children: [
-              { label: "1 x 1", onClick: () => alert("1 x 1") },
-              { label: "1 x 2", onClick: () => alert("1 x 2") },
-              { label: "1 x 3", onClick: () => alert("1 x 3") },
-              { label: "2 x 1", onClick: () => alert("2 x 1") },
-              { label: "2 x 2", onClick: () => alert("2 x 2") },
-              { label: "2 x 3", onClick: () => alert("2 x 3") },
+              { type: "item", label: "1 x 1", onClick: () => alert("1 x 1") },
+              { type: "item", label: "1 x 2", onClick: () => alert("1 x 2") },
+              { type: "item", label: "1 x 3", onClick: () => alert("1 x 3") },
+              { type: "item", label: "2 x 1", onClick: () => alert("2 x 1") },
+              { type: "item", label: "2 x 2", onClick: () => alert("2 x 2") },
+              { type: "item", label: "2 x 3", onClick: () => alert("2 x 3") },
             ]
           }
         ]
       },
       {
+        type: "item", 
         label: "Delete Block",
-        icon: "",
+        icon: <IconTrash />,
         onClick: () => alert("Delete block")
       }
      ]} />
@@ -112,8 +89,10 @@ export class BlockMenuBlock extends AbstractBlock {
       const manager = this.manager;
       const source = this.source;
       const doc = manager.getParentOfType(source, BlockType.DocumentBlock) as DocumentBlock;
-        const jsx = BlockMenu({
-          contextMenuEvent: this.contextMenuEvent,
+      const jsx = BlockMenu({
+          visible: true,
+          coords: { x: 0, y: 0 },
+          onClose: () => { alert("context menu closed") },
           source: this.source,
             addHtmlBlock: () => {
               const cm = doc.addCodeMirrorBlock(source);

@@ -2,11 +2,18 @@ import { JSX } from "solid-js";
 import { render } from "solid-js/web";
 const cache = {};
 
-export const renderToNode = (jsx: JSX.Element) => {
+export const renderToNode2 = (jsx: JSX.Element) => {
     const node = document.createElement("DIV");
     render(() => jsx, node);
     return node;
 };
+export const renderToNode = (jsx: JSX.Element): HTMLElement => {
+  const container = document.createElement("div");
+  render(() => jsx, container);
+  const rendered = container.firstElementChild as HTMLElement;
+  return rendered ?? container; // fallback
+};
+
 export const fetchGetCache = async (url: string, params: any) => {
     const key = url + "?" + toQueryString(params);
     if (cache[key]) {
