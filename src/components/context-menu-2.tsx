@@ -35,7 +35,7 @@ export const ContextMenu2: Component<ContextMenuProps> = (props) => {
         }}
       >
         <For each={props.items}>
-          {(item) => <MenuItem item={item} onClose={props.onClose} />}
+          {(item) => <MenuItem item={item} level={1} onClose={props.onClose} />}
         </For>
       </div>
     </Show>

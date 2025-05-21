@@ -19,6 +19,7 @@ export type ContextMenuItem = MenuItemType | SeparatorType;
 
 type MenuItemProps = {
   item: ContextMenuItem;
+  level: number;
   onClose: () => void;
 };
 
@@ -74,6 +75,7 @@ export const MenuItem: Component<MenuItemProps> = (props) => {
       <Show when={open() && item.children}>
         <div
           class="absolute top-0 left-full ml-1 bg-white border border-gray-200 shadow-lg rounded-md min-w-[200px] z-50"
+          style={{ "left": (props.level * 100) + "px"}}
           onMouseEnter={() => clearTimeout(closeTimeout)}
           onMouseLeave={() => {
             closeTimeout = window.setTimeout(() => {
@@ -82,7 +84,7 @@ export const MenuItem: Component<MenuItemProps> = (props) => {
           }}
         >
           <For each={item.children}>
-            {(child) => <MenuItem item={child} onClose={props.onClose} />}
+            {(child) => <MenuItem item={child} level={props.level + 1} onClose={props.onClose} />}
           </For>
         </div>
       </Show>
