@@ -73,7 +73,7 @@ export const MenuItem: Component<MenuItemProps> = (props) => {
 
       <Show when={open() && item.children}>
         <div
-          class="absolute top-0 left-full ml-1 bg-white border border-gray-200 shadow-lg rounded-md min-w-[200px] z-50"
+          class="left-full ml-1 bg-white border border-gray-200 shadow-lg rounded-md min-w-[200px] z-50"
           onMouseEnter={() => clearTimeout(closeTimeout)}
           onMouseLeave={() => {
             closeTimeout = window.setTimeout(() => {
@@ -133,7 +133,7 @@ export const ContextMenu2 : Component<ContextMenuProps> = (props) => {
 
               return (
                   <div
-                    class="context-menu-container fixed z-50 bg-white border border-gray-300 shadow-xl rounded-md min-w-[200px] text-sm">
+                    class="context-menu-container z-50 bg-white border border-gray-300 shadow-xl rounded-md min-w-[200px] text-sm">
                     <MenuItem item={item} onClose={props.onClose} />
                   </div>
               );
