@@ -31,6 +31,7 @@ import { ErrorBlock } from './blocks/error-block';
 import { CanvasBackgroundBlock } from './blocks/canvas-background-block';
 import { BlockMenuBlock } from './components/block-menu';
 import { posix } from 'path';
+import { CanvasBlock } from './blocks/canvas-block';
 
 export type BlockBuilder =
     (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => Promise<IBlock>;
@@ -1424,6 +1425,16 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     createIFrameBlock(dto?: IBlockDto) {
         const block = new IframeBlock({
+            manager: this
+        });
+        if (dto?.metadata) block.metadata = dto.metadata;
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+        block.applyBlockPropertyStyling();
+        this.addBlockTo(this, block);
+        return block;
+    }
+    createCanvasBlock(dto?: IBlockDto) {
+        const block = new CanvasBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;

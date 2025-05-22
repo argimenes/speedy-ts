@@ -21,6 +21,7 @@ import BlockVines from '../library/plugins/block-vines';
 import { StandoffProperty } from '../library/standoff-property';
 import { BlockPropertySchemas } from '../properties/block-properties';
 import { BlockMenuBlock } from '../components/block-menu';
+import { CanvasBlock } from './canvas-block';
 
 const maxHistoryItems = 30;
 export interface IMultiRangeStandoffProperty {
@@ -529,6 +530,15 @@ export class DocumentBlock extends AbstractBlock {
         video.build();
         this.addBlockAfter(video, anchor);
         return video;
+    }
+    addCanvasBlock(anchor: IBlock) {
+        const manager = this.manager;
+        const canvas = manager.createCanvasBlock({
+            type: BlockType.CanvasBlock
+        }) as CanvasBlock;
+        canvas.build();
+        this.addBlockAfter(canvas, anchor);
+        return canvas;
     }
     addIFrameBlock(anchor: IBlock, url: string) {
         const manager = this.manager;

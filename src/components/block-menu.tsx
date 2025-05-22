@@ -1,16 +1,19 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus } from "@tabler/icons-solidjs";
 import { Component, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
 import { renderToNode } from "../library/common";
 import { DocumentBlock } from "../blocks/document-block";
 import { ContextMenu2 } from "./context-menu-2";
+import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
+import { GridBlock, GridCellBlock, GridRowBlock } from "../blocks/grid-block";
 
 type Props = {
     visible: boolean;
     coords: { x: number; y: number };
     onClose: () => void;
     source: IBlock;
+    deleteBlock: () => void;
     addVideoBlock: () => void;
     addImageBlock: () => void;
     addHtmlBlock: () => void;
@@ -30,6 +33,7 @@ const BlockMenu : Component<Props> = (props) => {
       {
         type: "item", 
         label: "Add Block",
+        icon: <IconPlus />,
         children: [
           {
             type:"item",
@@ -53,11 +57,11 @@ const BlockMenu : Component<Props> = (props) => {
             icon: <IconGrid3x3 />,
             children: [
               { type: "item", label: "1 x 1", onClick: () => { props.addGridBlock(1, 1) } },
-              { type: "item", label: "1 x 2", onClick: () => props.addGridBlock(1, 2) },
-              { type: "item", label: "1 x 3", onClick: () => props.addGridBlock(1, 3) },
-              { type: "item", label: "2 x 1", onClick: () => props.addGridBlock(2, 1) },
-              { type: "item", label: "2 x 2", onClick: () => props.addGridBlock(2, 2) },
-              { type: "item", label: "2 x 3", onClick: () => props.addGridBlock(2, 3) },
+              { type: "item", label: "1 x 2", onClick: () => { props.addGridBlock(1, 2) } },
+              { type: "item", label: "1 x 3", onClick: () => { props.addGridBlock(1, 3) } },
+              { type: "item", label: "2 x 1", onClick: () => { props.addGridBlock(2, 1) } },
+              { type: "item", label: "2 x 2", onClick: () => { props.addGridBlock(2, 2) } },
+              { type: "item", label: "2 x 3", onClick: () => { props.addGridBlock(2, 3) } },
             ]
           }
         ]
@@ -66,7 +70,7 @@ const BlockMenu : Component<Props> = (props) => {
         type: "item", 
         label: "Delete Block",
         icon: <IconTrash />,
-        onClick: () => alert("Delete block")
+        onClick: () => { props.deleteBlock() }
       }
      ]} />
   </>
@@ -110,6 +114,9 @@ export class BlockMenuBlock extends AbstractBlock {
             self.destroy();
           },
           source: this.source,
+            deleteBlock: () => {
+              doc.deleteBlock(source.id);
+            },
             addHtmlBlock: () => {
               console.log("addHtmlBlock");
               const cm = doc.addCodeMirrorBlock(source);
@@ -128,12 +135,16 @@ export class BlockMenuBlock extends AbstractBlock {
                 manager.setBlockFocus(v);
             },
             addCanvasBlock: () => {
-              console.log("addCanvasBlock");
+              doc.addCanvasBlock(source);
             },
-            addGridBlock: (cells: number, rows: number) => {
-              console.log("addGridBlock", { cells, rows });
-              const grid = doc.createGrid(rows, cells);
-              manager.insertBlockAfter(source, grid);
+            addGridBlock: (rows: number, cells: number) => {
+              const grid = doc.createGrid(rows, cells) as GridBlock;
+              doc.addBlockAfter(grid, source);
+              const firstRow = grid.blocks[0] as GridRowBlock;
+              const firstCell = firstRow.blocks[0] as GridCellBlock;
+              const firstTextBlock = firstCell.blocks[0] as StandoffEditorBlock;
+              manager.setBlockFocus(firstTextBlock);
+              firstTextBlock.moveCaretStart();
             }
         });
         const node = this.node = renderToNode(jsx);
