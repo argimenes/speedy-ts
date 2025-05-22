@@ -53,10 +53,12 @@ export const MenuItem: Component<MenuItemProps> = (props) => {
           "flex items-center justify-between px-3 py-2 hover:bg-gray-100 cursor-pointer transition-all whitespace-nowrap",
           item.disabled && "opacity-50 pointer-events-none"
         )}
-        onClick={() => {
+        onClick={(e) => {
+          console.log("onClick", { e });
           if (!item.disabled && item.onClick) {
             item.onClick();
-            props.onClose();
+            // Defer closing the menu so handler finishes first
+            //setTimeout(() => props.onClose(), 100);
           }
         }}
       >
@@ -75,7 +77,7 @@ export const MenuItem: Component<MenuItemProps> = (props) => {
       <Show when={open() && item.children}>
         <div
           class="absolute top-0 left-full ml-1 bg-white border border-gray-200 shadow-lg rounded-md min-w-[200px] z-50"
-          style={{ "left": (props.level * 100) + "px"}}
+          //style={{ "left": (props.level * 200) + "px", "z-index": 50 + props.level, "height": "auto" }}
           onMouseEnter={() => clearTimeout(closeTimeout)}
           onMouseLeave={() => {
             closeTimeout = window.setTimeout(() => {

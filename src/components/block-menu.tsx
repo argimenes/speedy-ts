@@ -19,9 +19,7 @@ type Props = {
 }
 
 const BlockMenu : Component<Props> = (props) => {
-  onMount(() => {
-    
-  })
+  
   return (
     <>
      <ContextMenu2
@@ -33,15 +31,28 @@ const BlockMenu : Component<Props> = (props) => {
         type: "item", 
         label: "Add Block",
         children: [
-          { type:"item", icon: <IconFileText/>, label: "Text", onClick: () => props.addHtmlBlock() },
-          { type:"item", label: "Video", icon: <IconVideo />, onClick: () => props.addVideoBlock() },
-          { type:"item", label: "Image", icon: <IconImageInPicture />, onClick: () => props.addImageBlock() },
-          { type:"item", label: "Canvas", icon: <IconRectangleVertical />, onClick: () => props.addCanvasBlock() },
+          {
+            type:"item",
+            icon: <IconFileText/>,
+            label: "Text",
+            onClick: () => {
+              console.log("item.onClick - Text");
+              props.addHtmlBlock();
+            }
+          },
+          {
+            type:"item", label: "Video", icon: <IconVideo />, onClick: () => {
+              console.log("item.onClick - Video");
+              props.addVideoBlock();
+           }
+          },
+          { type:"item", label: "Image", icon: <IconImageInPicture />, onClick: () => { props.addImageBlock() } },
+          { type:"item", label: "Canvas", icon: <IconRectangleVertical />, onClick: () => { props.addCanvasBlock() } },
           {
             type: "item", label: "Add Grid",
             icon: <IconGrid3x3 />,
             children: [
-              { type: "item", label: "1 x 1", onClick: () => props.addGridBlock(1, 1) },
+              { type: "item", label: "1 x 1", onClick: () => { props.addGridBlock(1, 1) } },
               { type: "item", label: "1 x 2", onClick: () => props.addGridBlock(1, 2) },
               { type: "item", label: "1 x 3", onClick: () => props.addGridBlock(1, 3) },
               { type: "item", label: "2 x 1", onClick: () => props.addGridBlock(2, 1) },
@@ -87,32 +98,40 @@ export class BlockMenuBlock extends AbstractBlock {
     }
     node: HTMLElement;
     render() {
+      const self = this;
       const manager = this.manager;
       const source = this.source;
       const doc = manager.getParentOfType(source, BlockType.DocumentBlock) as DocumentBlock;
       const jsx = BlockMenu({
           visible: true,
           coords: { x: 0, y: 0 },
-          onClose: () => { alert("context menu closed") },
+          onClose: () => {
+            console.log("onClose");
+            self.destroy();
+          },
           source: this.source,
             addHtmlBlock: () => {
+              console.log("addHtmlBlock");
               const cm = doc.addCodeMirrorBlock(source);
               manager.setBlockFocus(cm);
             },
             addImageBlock: () => {
+               console.log("addImageBlock");
                 const url = prompt("Url");
                 const v = doc.addImageBlock(source, url);
                 manager.setBlockFocus(v);
             },
             addVideoBlock: () => {
+              console.log("addVideoBlock");
                 const url = prompt("Url");
                 const v = doc.addVideoBlock(source, url);
                 manager.setBlockFocus(v);
             },
             addCanvasBlock: () => {
-                alert("BlockMenuBlock.addCanvasBlock")
+              console.log("addCanvasBlock");
             },
             addGridBlock: (cells: number, rows: number) => {
+              console.log("addGridBlock", { cells, rows });
               const grid = doc.createGrid(rows, cells);
               manager.insertBlockAfter(source, grid);
             }

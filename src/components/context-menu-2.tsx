@@ -10,7 +10,14 @@ interface ContextMenuProps {
 }
 
 export const ContextMenu2: Component<ContextMenuProps> = (props) => {
-  const handleClickOutside = () => props.onClose();
+  let menuRef: HTMLDivElement | undefined;
+
+  const handleClickOutside = (e: MouseEvent) => {
+    if (menuRef && !menuRef.contains(e.target as Node)) {
+      console.log("handleClickOutside", { e });
+      props.onClose();
+    }
+  };
 
   createEffect(() => {
     if (props.visible) {
@@ -27,7 +34,8 @@ export const ContextMenu2: Component<ContextMenuProps> = (props) => {
   return (
     <Show when={props.visible}>
       <div
-        class="absolute z-50 bg-white shadow-lg rounded-md border border-gray-200 text-sm overflow-hidden"
+        ref={menuRef}
+        class="absolute z-50 bg-white shadow-lg rounded-md border border-gray-200 text-sm overflow-visible"
         style={{
           top: `${props.position.y}px`,
           left: `${props.position.x}px`,
