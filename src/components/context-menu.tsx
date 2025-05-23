@@ -1,274 +1,143 @@
-// ContextMenu.tsx
-import { createSignal, createEffect, Show, For, onCleanup, JSX } from "solid-js";
-import { Portal } from "solid-js/web";
+import { Component, For, JSX, Show, createEffect, createSignal, onCleanup } from "solid-js";
+import clsx from "clsx";
 
-export type MenuItemProps = {
-  label: string;
-  icon?: string;
-  onClick?: () => void;
-  disabled?: boolean;
-  children?: MenuItemProps[];
-};
+interface ContextMenuProps {
+  visible: boolean;
+  position: { x: number; y: number };
+  onClose: () => void;
+  items: ContextMenuItem[];
+}
 
-export type ContextMenuProps = {
-  items: MenuItemProps[];
-  onClose?: () => void;
-};
+export const ContextMenu: Component<ContextMenuProps> = (props) => {
+  let menuRef: HTMLDivElement | undefined;
 
-// Create a global store for managing context menu state
-const [isOpen, setIsOpen] = createSignal(false);
-const [position, setPosition] = createSignal({ x: 0, y: 0 });
-const [menuItems, setMenuItems] = createSignal<MenuItemProps[]>([]);
-const [activeSubmenuPath, setActiveSubmenuPath] = createSignal<number[]>([]);
-
-// Public API for controlling the context menu from outside
-export const ContextMenuAPI = {
-  show: (x: number, y: number) => {
-    setPosition({ x, y });
-    setActiveSubmenuPath([]);
-    setIsOpen(true);
-  },
-  hide: () => {
-    setIsOpen(false);
-    setActiveSubmenuPath([]);
-  },
-  isOpen
-};
-
-const MenuItem = (props: {
-  item: MenuItemProps;
-  path: number[];
-}) => {
-  const [isHovered, setIsHovered] = createSignal(false);
-  const hasSubmenu = () => props.item.children && props.item.children.length > 0;
-  
-  const isSubmenuActive = () => {
-    const activePath = activeSubmenuPath();
-    if (activePath.length <= props.path.length) return false;
-    
-    // Check if this item's path is a prefix of the active submenu path
-    return props.path.every((value, index) => value === activePath[index]);
-  };
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-    
-    if (hasSubmenu()) {
-      setActiveSubmenuPath(props.path);
-    }
-  };
-
-  const handleClick = (e: MouseEvent) => {
-    e.stopPropagation();
-    
-    if (props.item.disabled) return;
-    
-    if (!hasSubmenu() && props.item.onClick) {
-      props.item.onClick();
-      ContextMenuAPI.hide();
-    }
-  };
-
-  return (
-    <div 
-      class={`flex items-center px-4 py-2 text-sm cursor-pointer relative ${
-        props.item.disabled ? "text-gray-400 cursor-not-allowed" : "hover:bg-gray-100"
-      }`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={handleClick}
-    >
-      {props.item.icon && (
-        <span class="mr-2 text-gray-500">
-          {props.item.icon}
-        </span>
-      )}
-      <span class="flex-grow">{props.item.label}</span>
-      {hasSubmenu() && (
-        <span class="ml-2">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M6 12L10 8L6 4"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </span>
-      )}
-      
-      <Show when={hasSubmenu() && isSubmenuActive()}>
-        <SubMenu 
-          items={props.item.children || []}
-          parentPath={props.path}
-        />
-      </Show>
-    </div>
-  );
-};
-
-const SubMenu = (props: {
-  items: MenuItemProps[];
-  parentPath: number[];
-}) => {
-  return (
-    <div
-      class="absolute left-full top-0 mt-0 bg-white rounded shadow-lg border border-gray-200 min-w-max py-1 z-10"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <For each={props.items}>
-        {(item, index) => (
-          <MenuItem
-            item={item}
-            path={[...props.parentPath, index()]}
-          />
-        )}
-      </For>
-    </div>
-  );
-};
-
-export const ContextMenu = (props: ContextMenuProps) => {
-  // Close menu when clicking outside
-  const handleGlobalClick = () => {
-    ContextMenuAPI.hide();
-    props.onClose?.();
-  };
-
-  // Handle escape key to close menu
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
-      ContextMenuAPI.hide();
-      props.onClose?.();
+  const handleClickOutside = (e: MouseEvent) => {
+    if (menuRef && !menuRef.contains(e.target as Node)) {
+      console.log("handleClickOutside", { e });
+      props.onClose();
     }
   };
 
   createEffect(() => {
-    if (isOpen()) {
-      document.addEventListener("click", handleGlobalClick);
-      document.addEventListener("keydown", handleKeyDown);
-      
-      onCleanup(() => {
-        document.removeEventListener("click", handleGlobalClick);
-        document.removeEventListener("keydown", handleKeyDown);
-      });
+    if (props.visible) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
     }
   });
 
+  onCleanup(() => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  });
+
   return (
-    <Show when={isOpen()}>
-      <Portal>
-        <div
-          class="fixed z-50"
-          style={{
-            top: `${position().y}px`,
-            left: `${position().x}px`,
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div class="bg-white rounded shadow-lg border border-gray-200 min-w-max py-1">
-            <For each={menuItems()}>
-              {(item, index) => (
-                <MenuItem 
-                  item={item}
-                  path={[index()]} 
-                />
-              )}
-            </For>
-          </div>
-        </div>
-      </Portal>
+    <Show when={props.visible}>
+      <div
+        ref={menuRef}
+        class="absolute z-50 bg-white shadow-lg rounded-md border border-gray-200 text-sm overflow-visible"
+        style={{
+          top: `${props.position.y}px`,
+          left: `${props.position.x}px`,
+          "min-width": "200px",
+        }}
+      >
+        <For each={props.items}>
+          {(item) => <MenuItem item={item} level={1} onClose={props.onClose} />}
+        </For>
+      </div>
     </Show>
   );
 };
 
-// Usage example component
-export const ContextMenuExample = () => {
-  const handleRightClick = (e: MouseEvent) => {
-    e.preventDefault();
-    
-    const items = [
-      {
-        label: "New",
-        icon: "📄",
-        children: [
-          { label: "File", onClick: () => console.log("New file") },
-          { label: "Folder", onClick: () => console.log("New folder") }
-        ]
-      },
-      {
-        label: "Open",
-        icon: "📂",
-        onClick: () => console.log("Open clicked")
-      },
-      {
-        label: "Save",
-        icon: "💾",
-        onClick: () => console.log("Save clicked")
-      },
-      { 
-        label: "Disabled Item", 
-        disabled: true 
-      },
-      { 
-        label: "Share",
-        icon: "🔗",
-        children: [
-          { label: "Twitter", onClick: () => console.log("Twitter") },
-          { label: "Facebook", onClick: () => console.log("Facebook") },
-          {
-            label: "More Options",
-            children: [
-              { label: "LinkedIn", onClick: () => console.log("LinkedIn") },
-              { label: "Email", onClick: () => console.log("Email") }
-            ]
-          }
-        ]
-      }
-    ];
-    
-    ContextMenuAPI.show(e.clientX, e.clientY, items);
-  };
+type MenuItemType = {
+  type: "item";
+  label: string;
+  icon?: JSX.Element;
+  shortcut?: string;
+  disabled?: boolean;
+  onClick?: () => void;
+  children?: MenuItemType[];
+};
 
-  const handleCustomShowClick = () => {
-    // Example of programmatically showing the context menu
-    const items = [
-      { label: "Custom Option 1", onClick: () => console.log("Custom 1") },
-      { label: "Custom Option 2", onClick: () => console.log("Custom 2") }
-    ];
-    
-    // Show in the middle of the screen as an example
-    const x = window.innerWidth / 2;
-    const y = window.innerHeight / 2;
-    
-    ContextMenuAPI.show(x, y, items);
-  };
+type SeparatorType = {
+  type: "separator";
+};
+
+export type ContextMenuItem = MenuItemType | SeparatorType;
+
+type MenuItemProps = {
+  item: ContextMenuItem;
+  level: number;
+  onClose: () => void;
+};
+
+export const MenuItem: Component<MenuItemProps> = (props) => {
+  const [open, setOpen] = createSignal(false);
+  let closeTimeout: number;
+
+  if (props.item.type === "separator") {
+    return <div class="my-1 border-t border-gray-200" />;
+  }
+
+  const item = props.item;
 
   return (
-    <div class="flex flex-col gap-4 items-center justify-center h-screen">
-      <div 
-        class="bg-gray-100 p-8 rounded border border-gray-300 text-center"
-        onContextMenu={handleRightClick}
+    <div
+      class="relative"
+      onMouseEnter={() => {
+        if (!item.disabled) {
+          clearTimeout(closeTimeout);
+          setOpen(true);
+        }
+      }}
+      onMouseLeave={() => {
+        closeTimeout = window.setTimeout(() => {
+          setOpen(false);
+        }, 300);
+      }}
+    >
+      <div
+        class={clsx(
+          "flex items-center justify-between px-3 py-2 hover:bg-gray-100 cursor-pointer transition-all whitespace-nowrap",
+          item.disabled && "opacity-50 pointer-events-none"
+        )}
+        onClick={(e) => {
+          console.log("onClick", { e });
+          if (!item.disabled && item.onClick) {
+            item.onClick();
+            // Defer closing the menu so handler finishes first
+            //setTimeout(() => props.onClose(), 100);
+          }
+        }}
       >
-        Right-click here to show the context menu
+        <div class="flex items-center gap-2">
+          {item.icon && <span>{item.icon}</span>}
+          <span>{item.label}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          {item.shortcut && (
+            <span class="text-xs text-gray-500">{item.shortcut}</span>
+          )}
+          {item.children && <span class="text-gray-400">▶</span>}
+        </div>
       </div>
-      
-      <button
-        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        onClick={handleCustomShowClick}
-      >
-        Show Custom Context Menu
-      </button>
-      
-      {/* The ContextMenu component is used once in the app */}
-      <ContextMenu items={[]} />
+
+      <Show when={open() && item.children}>
+        <div
+          class="absolute top-0 left-full ml-1 bg-white border border-gray-200 shadow-lg rounded-md min-w-[200px] z-50"
+          //style={{ "left": (props.level * 200) + "px", "z-index": 50 + props.level, "height": "auto" }}
+          onMouseEnter={() => clearTimeout(closeTimeout)}
+          onMouseLeave={() => {
+            closeTimeout = window.setTimeout(() => {
+              setOpen(false);
+            }, 300);
+          }}
+        >
+          <For each={item.children}>
+            {(child) => <MenuItem item={child} level={props.level + 1} onClose={props.onClose} />}
+          </For>
+        </div>
+      </Show>
     </div>
   );
 };

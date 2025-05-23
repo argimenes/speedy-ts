@@ -4,7 +4,7 @@ import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
 import { renderToNode } from "../library/common";
 import { DocumentBlock } from "../blocks/document-block";
-import { ContextMenu2 } from "./context-menu-2";
+import { ContextMenu } from "./context-menu";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "../blocks/grid-block";
 
@@ -25,7 +25,7 @@ const BlockMenu : Component<Props> = (props) => {
   
   return (
     <>
-     <ContextMenu2
+     <ContextMenu
       position={props.coords}
       onClose={props.onClose}
       visible={props.visible}
