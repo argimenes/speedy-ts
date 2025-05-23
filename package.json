@@ -51,6 +51,7 @@
     "surrealdb": "^1.1.0",
     "underscore": "^1.13.6",
     "url": "^0.11.3",
+    "url-regex-safe": "^4.0.0",
     "uuid": "^9.0.1",
     "youtube-player": "^5.6.0"
   },

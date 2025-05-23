@@ -3,6 +3,7 @@ import { Cell } from "./cell";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { BlockPropertyDto, BlockType, Caret, CARET, IBindingHandlerArgs, IPropertySchema, IRange, StandoffPropertyDto } from "./types";
 import { DocumentBlock } from "../blocks/document-block";
+import urlRegex from 'url-regex-safe';
 
 export interface ITextProcessorConstructor {
     editor: StandoffEditorBlock;
@@ -277,6 +278,24 @@ export class TextProcessor {
                         start: match.start, end: match.end
                     }]);
                     block.applyStandoffPropertyStyling();
+                }
+            },
+            {
+                //pattern: "/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=[\w-]+(?:[&=%\w-]*)?|youtu\.be\/[\w-]+)/",
+                pattern: urlRegex(),
+                type: "",
+                process: async (args: ITextPatternRecogniserHandler) => {
+                    const { match, block } = args;
+                    const manager = args.block.manager;
+                    const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+                    if (!doc) return;
+                    const url = args.text.substring(match.start, match.end);
+                    doc.addVideoBlock(block, url);
+                    if (match.start == 0) {
+                        doc.deleteBlock(block.id);
+                    } else {
+                        block.removeCellsAtIndex(match.start, match.end - match.start - 1)
+                    }
                 }
             },
             {

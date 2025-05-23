@@ -2228,8 +2228,8 @@ export class DocumentBlock extends AbstractBlock {
     async handlePaste(args: IBindingHandlerArgs) {
         //document.body.focus();
         const manager = this.manager;
-        const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
+        const caret = (args.caret || block.getCaret()) as Caret;
         const e = args.e as ClipboardEvent;
         const clipboardData = e.clipboardData as DataTransfer; // || window.clipboardData;
         const json = clipboardData.getData('application/json');
