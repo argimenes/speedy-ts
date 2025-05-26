@@ -576,6 +576,7 @@ export class DocumentBlock extends AbstractBlock {
         const manager = this.manager;
         this.triggerBeforeChange();
         parent.blocks.push(block);
+        block.relation.parent = parent;
         manager.registerBlock(block);
         manager.generatePreviousNextRelations(parent);
         if (!skipIndexation) manager.reindexAncestorDocument(parent);

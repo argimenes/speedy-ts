@@ -1,4 +1,4 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode } from "@tabler/icons-solidjs";
 import { Component, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -92,18 +92,12 @@ export class BlockMenuBlock extends AbstractBlock {
           label: "Add Block",
           icon: <IconPlus />,
           children: [
+              { type:"item", icon: <IconCode/>, label: "Code", onClick: () => self.addHtmlBlock() },
+              { type:"item", label: "Video", icon: <IconVideo />, onClick: () => self.addVideoBlock() },
+              { type:"item", label: "Image", icon: <IconImageInPicture />, onClick: () => self.addImageBlock() },
+              { type:"item", label: "Canvas", icon: <IconRectangleVertical />, onClick: () => self.addCanvasBlock() },
               {
-                type:"item",
-                icon: <IconFileText/>,
-                label: "Text",
-                onClick: self.addHtmlBlock
-              },
-              { type:"item", label: "Video", icon: <IconVideo />, onClick: self.addVideoBlock },
-              { type:"item", label: "Image", icon: <IconImageInPicture />, onClick: self.addImageBlock },
-              { type:"item", label: "Canvas", icon: <IconRectangleVertical />, onClick: self.addCanvasBlock },
-              {
-                type: "item", label: "Add Grid",
-                icon: <IconGrid3x3 />,
+                type: "item", label: "Add Grid", icon: <IconGrid3x3 />,
                 children: [
                   { type: "item", label: "1 x 1", onClick: () => { self.addGridBlock(1, 1) } },
                   { type: "item", label: "1 x 2", onClick: () => { self.addGridBlock(1, 2) } },
@@ -119,7 +113,7 @@ export class BlockMenuBlock extends AbstractBlock {
             type: "item", 
             label: "Delete Block",
             icon: <IconTrash />,
-            onClick: self.deleteBlock
+            onClick: () => self.deleteBlock()
         });
       const jsx = BlockMenu({
           items: items,
