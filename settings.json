@@ -1,0 +1,11 @@
+{
+  "db": {
+    "storagePath": "./data/surreal.db",
+    "namespace": "codex-ns",
+    "database": "codex-db",
+    "auth": {
+      "username": "root",
+      "password": "root"
+    }
+  }
+}

@@ -1,12 +1,14 @@
-import express, { type Request, type Response } from "express";
+import fs from "fs";
 import path from "path";
+import express, { type Request, type Response } from "express";
 import multer, { type FileFilterCallback } from 'multer';
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
-import fs from "fs";
-import { RecordId, Surreal } from "surrealdb";
 import type { IBlockDto, StandoffEditorBlockDto, BlockType, IndexedBlock } from "./types";
-//import { BlockType } from "./types";
+import { RecordId, Surreal } from "surrealdb";
+import { surrealdbNodeEngines } from '@surrealdb/node';
+
+
 let db: Surreal | undefined;
 
 const basePath = "../../../codex-data";
@@ -27,12 +29,24 @@ interface GraphData {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Load the settings.json file
+const settingsPath = path.join(__dirname, '../../settings.json');
+const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+
 export async function initDb(): Promise<Surreal | undefined> {
   if (db) return db;
-  db = new Surreal();
+  db = new Surreal({
+    engines: surrealdbNodeEngines()
+  });
   try {
-      await db.connect("http://127.0.0.1:8000/rpc", {
-        namespace: "codex-ns", database: "codex-db",
+    // await db.signin({
+    //   scope: 'admin',
+    //   user: 'root',
+    //   pass: 'root',
+    // });
+      await db.connect('surrealkv://C:/Users/iiand/Documents/Projects/speedy-ts/data/surreal.db', {
+        namespace: "codex-ns",
+        database: "codex-db",
         auth: {
           username: "root",
           password: "root"
