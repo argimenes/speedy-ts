@@ -21,6 +21,9 @@ export class GridBlock extends AbstractBlock {
             }
         };
     }
+    getFirstCell() {
+        return this.blocks?.[0].blocks?.[0] as GridCellBlock;
+    }
     serialize() {
         return {
             id: this.id,
@@ -60,6 +63,21 @@ export class GridRowBlock extends AbstractBlock {
                 return block;
             }
         };
+    }
+    getGrid() {
+        return this.relation.parent as GridBlock;
+    }
+    getPrevious() {
+        const grid = this.getGrid();
+        const i = grid.blocks.findIndex(x => x.id == this.id);
+        if (i == 0) return null;
+        return grid.blocks[i-1] as GridRowBlock;
+    }
+    getNext() {
+        const grid = this.getGrid();
+        const i = grid.blocks.findIndex(x => x.id == this.id);
+        if (i == grid.blocks.length - 1) return null;
+        return grid.blocks[i+1] as GridRowBlock;
     }
     serialize() {
         return {
@@ -125,6 +143,38 @@ export class GridCellBlock extends AbstractBlock {
                 return block;
             }
         };
+    }
+    getRow() {
+        return this.relation.parent as GridRowBlock;
+    }
+    getCellIndex() {
+        const i = this.getRow().blocks.findIndex(x => x.id == this.id);
+        return i;
+    }
+    getAboveCell() {
+        const i = this.getCellIndex();
+        const row = this.getRow().getPrevious();
+        return row?.blocks?.[i] as GridCellBlock;
+    }
+    getBelowCell() {
+        const i = this.getCellIndex();
+        const row = this.getRow().getNext();
+        return row?.blocks?.[i] as GridCellBlock;
+    }
+    getPreviousCell() {
+        const temp = this.relation.parent.blocks;
+        const i = temp.findIndex(x => x.id == this.id);
+        if (i == 0) return null;
+        return temp[i-1] as GridCellBlock;
+    }
+    getNextCell() {
+        const temp = this.relation.parent.blocks;
+        const i = temp.findIndex(x => x.id == this.id);
+        if (i == temp.length - 1) return null;
+        return temp[i+1] as GridCellBlock;
+    }
+    getGrid() {
+        return this.relation.parent?.relation?.parent as GridBlock;
     }
     handleArrowDown(args: IArrowNavigation) {
         if (this.relation.firstChild) {
