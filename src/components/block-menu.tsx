@@ -1,5 +1,5 @@
 import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode } from "@tabler/icons-solidjs";
-import { Component, onMount } from "solid-js";
+import { Component, onCleanup, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
 import { renderToNode } from "../library/common";
@@ -84,6 +84,15 @@ export class BlockMenuBlock extends AbstractBlock {
         this.manager.setBlockFocus(firstTextBlock);
         firstTextBlock.moveCaretStart();
     }
+    splitBlock(block: IBlock) {
+      console.log("Split into two, put source on the left");
+    }
+    moveCellLeft(block: GridCellBlock) {
+        
+    }
+    moveCellRight(block: GridCellBlock) {
+      
+    }
     render() {
       const self = this;
       const items = [];
@@ -115,6 +124,14 @@ export class BlockMenuBlock extends AbstractBlock {
             icon: <IconTrash />,
             onClick: () => self.deleteBlock()
         });
+      const cellParent = this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
+      if (cellParent) {
+        items.push({
+          type: "item",
+          label: "Split Block",
+          onClick: () => { self.splitBlock(self.source); }
+        });
+      }
       const jsx = BlockMenu({
           items: items,
           visible: true,

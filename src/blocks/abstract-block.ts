@@ -85,7 +85,6 @@ export abstract class AbstractBlock implements IBlock {
             }
         });
     }
-    
     getOrSetOverlay(name: string) {
         const overlay = this.overlays.find(x=> x.name == name);
         if (overlay) return overlay;

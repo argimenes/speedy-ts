@@ -144,6 +144,16 @@ export class GridCellBlock extends AbstractBlock {
             }
         };
     }
+    moveCellLeft() {
+        const left = this.getPreviousCell();
+        if (!left) return;
+        const row = this.getRow();
+    }
+    moveCellRight() {
+        const right = this.getNextCell();
+        if (!right) return;
+        const row = this.getRow();
+    }
     getRow() {
         return this.relation.parent as GridRowBlock;
     }
