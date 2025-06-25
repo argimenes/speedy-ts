@@ -478,7 +478,7 @@ export class DocumentBlock extends AbstractBlock {
         target.applyStandoffPropertyStyling();
         this.deleteBlock(sourceId);
     }
-    splitBlock(blockId: GUID, ci: number) {
+    splitTextBlock(blockId: GUID, ci: number) {
         const manager = this.manager;
         console.log("splitBlock", { blockId, ci });
         const block = this.getBlock(blockId) as StandoffEditorBlock;
@@ -2341,7 +2341,7 @@ export class DocumentBlock extends AbstractBlock {
         const isInside = !atStart && !atEnd;
         if (isInside) {
             const ci = caret.left?.index as number;
-            const split = this.splitBlock(textBlock.id, ci + 1);
+            const split = this.splitTextBlock(textBlock.id, ci + 1);
             manager.setBlockFocus(split);
             split.moveCaretStart();
             return;

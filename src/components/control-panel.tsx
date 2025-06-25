@@ -281,7 +281,7 @@ export class ControlPanelBlock extends AbstractBlock {
             if (!block) return;
             const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
             const caret = block.lastCaret;
-            doc.splitBlock(block.id, caret.index || 0);
+            doc.splitTextBlock(block.id, caret.index || 0);
         }
         const swapGridCells = () => {
             const block = manager?.getBlockInFocus() as IBlock;

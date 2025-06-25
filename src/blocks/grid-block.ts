@@ -105,6 +105,13 @@ export class GridRowBlock extends AbstractBlock {
             }
         }
     }
+    swapCells(left: GridCellBlock, right: GridCellBlock) {
+        const row = this;
+        const li = row.blocks.findIndex(x => x.id == left.id), ri = row.blocks.findIndex(x => x.id == right.id);
+        row.blocks[ri] = left;
+        row.blocks[li] = right;
+        left.container.insertAdjacentElement("beforebegin", right.container);
+    }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
     }
@@ -153,6 +160,10 @@ export class GridCellBlock extends AbstractBlock {
         const right = this.getNextCell();
         if (!right) return;
         const row = this.getRow();
+    }
+    swapWith(cell: GridCellBlock) {
+        const row = this.getRow();
+        row.swapCells(this, cell);
     }
     getRow() {
         return this.relation.parent as GridRowBlock;

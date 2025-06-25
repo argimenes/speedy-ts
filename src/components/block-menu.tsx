@@ -1,4 +1,4 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit } from "@tabler/icons-solidjs";
 import { Component, onCleanup, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -84,8 +84,12 @@ export class BlockMenuBlock extends AbstractBlock {
         this.manager.setBlockFocus(firstTextBlock);
         firstTextBlock.moveCaretStart();
     }
-    splitBlock(block: IBlock) {
-      console.log("Split into two, put source on the left");
+    splitBlock() {
+      const grid = this.doc.createGrid(1, 2) as GridBlock;
+      this.doc.addBlockAfter(grid, this.source);
+      const firstCell = grid.blocks[0].blocks[0] as GridCellBlock;
+      const firstCellText = firstCell.blocks[0] as StandoffEditorBlock;
+      firstCellText.replaceWith(this.source as AbstractBlock);
     }
     moveCellLeft(block: GridCellBlock) {
         
@@ -117,6 +121,12 @@ export class BlockMenuBlock extends AbstractBlock {
                 ]
               }
             ]
+        },
+        {
+            type: "item", 
+            label: "Split block into 1 x 2 grid",
+            icon: <IconArrowsSplit />,
+            onClick: () => self.splitBlock()
         },
         {
             type: "item", 
