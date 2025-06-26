@@ -1,4 +1,4 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight } from "@tabler/icons-solidjs";
 import { Component, onCleanup, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -91,16 +91,24 @@ export class BlockMenuBlock extends AbstractBlock {
       const firstCellText = firstCell.blocks[0] as StandoffEditorBlock;
       firstCellText.replaceWith(this.source as AbstractBlock);
     }
-    moveCellLeft(block: GridCellBlock) {
-        
+    moveCellLeft() {
+        const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
+        cell.moveCellLeft();
     }
-    moveCellRight(block: GridCellBlock) {
-      
+    moveCellRight() {
+      const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
+      cell.moveCellRight();
     }
     render() {
       const self = this;
       const items = [];
-      items.push({
+      const itemDeleteBlock= {
+          type: "item", 
+          label: "Delete Block",
+          icon: <IconTrash />,
+          onClick: () => self.deleteBlock()
+      };
+      const itemAddBlock = {
           type: "item", 
           label: "Add Block",
           icon: <IconPlus />,
@@ -121,27 +129,29 @@ export class BlockMenuBlock extends AbstractBlock {
                 ]
               }
             ]
-        },
-        {
-            type: "item", 
-            label: "Split block into 1 x 2 grid",
+      };
+      const itemSplitBlock = {
+            label: "Split",
             icon: <IconArrowsSplit />,
             onClick: () => self.splitBlock()
-        },
-        {
-            type: "item", 
-            label: "Delete Block",
-            icon: <IconTrash />,
-            onClick: () => self.deleteBlock()
-        });
-      const cellParent = this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
-      if (cellParent) {
-        items.push({
-          type: "item",
-          label: "Split Block",
-          onClick: () => { self.splitBlock(self.source); }
-        });
+      };
+      const itemMoveCellLeft = {
+            label: "Move Left",
+            icon: <IconSwipeLeft />,
+            onClick: () => self.moveCellLeft()
+      };
+      const itemMoveCellRight = {
+            label: "Move Right",
+            icon: <IconSwipeRight />,
+            onClick: () => self.moveCellRight()
+      };
+      items.push(itemAddBlock, itemSplitBlock);
+      const insideCellBlock = !!this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
+      if (insideCellBlock) {
+          items.push(itemMoveCellLeft, itemMoveCellRight);
       }
+      items.push( itemDeleteBlock);
+      
       const jsx = BlockMenu({
           items: items,
           visible: true,

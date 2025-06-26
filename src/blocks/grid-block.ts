@@ -111,6 +111,7 @@ export class GridRowBlock extends AbstractBlock {
         row.blocks[ri] = left;
         row.blocks[li] = right;
         left.container.insertAdjacentElement("beforebegin", right.container);
+        this.manager.generatePreviousNextRelations(row);
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
@@ -155,11 +156,13 @@ export class GridCellBlock extends AbstractBlock {
         const left = this.getPreviousCell();
         if (!left) return;
         const row = this.getRow();
+        row.swapCells(left, this);
     }
     moveCellRight() {
         const right = this.getNextCell();
         if (!right) return;
         const row = this.getRow();
+        row.swapCells(right, this);
     }
     swapWith(cell: GridCellBlock) {
         const row = this.getRow();
