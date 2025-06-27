@@ -105,12 +105,17 @@ export class GridRowBlock extends AbstractBlock {
             }
         }
     }
-    swapCells(left: GridCellBlock, right: GridCellBlock) {
+    swapCells(a: GridCellBlock, b: GridCellBlock) {
         const row = this;
-        const li = row.blocks.findIndex(x => x.id == left.id), ri = row.blocks.findIndex(x => x.id == right.id);
-        row.blocks[ri] = left;
-        row.blocks[li] = right;
-        left.container.insertAdjacentElement("beforebegin", right.container);
+        const li = row.blocks.findIndex(x => x.id == a.id), ri = row.blocks.findIndex(x => x.id == b.id);
+        row.blocks[ri] = a;
+        row.blocks[li] = b;
+        const isOnLeft = a.container.nextElementSibling == b.container;
+        if (isOnLeft) {
+            a.container.insertAdjacentElement("beforebegin", b.container);
+        } else {
+            b.container.insertAdjacentElement("beforebegin", a.container);
+        }
         this.manager.generatePreviousNextRelations(row);
     }
     deserialize(json: any): IBlock {
@@ -151,6 +156,34 @@ export class GridCellBlock extends AbstractBlock {
                 return block;
             }
         };
+    }
+    mergeLeft() {
+        const left = this.getPreviousCell();
+        if (!left) return;
+        const row = this.getRow();
+        // Append the children onto the left block.
+        left.blocks.push(...this.blocks);
+        // Move all child nodes
+        while (this.container.firstChild) {
+            left.container.appendChild(this.container.firstChild);
+        }
+        this.manager.addParentSiblingRelations(row);
+        this.relation = {};
+        this.container.remove();
+    }
+    mergeRight() {
+        const right = this.getNextCell();
+        if (!right) return;
+        const row = this.getRow();
+        // Append the children onto the left block.
+        right.blocks.push(...this.blocks);
+        // Move all child nodes
+        while (this.container.firstChild) {
+            right.container.appendChild(this.container.firstChild);
+        }
+        this.manager.addParentSiblingRelations(row);
+        this.relation = {};
+        this.container.remove();
     }
     moveCellLeft() {
         const left = this.getPreviousCell();

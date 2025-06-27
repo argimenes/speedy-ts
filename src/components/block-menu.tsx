@@ -1,4 +1,4 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge } from "@tabler/icons-solidjs";
 import { Component, onCleanup, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -91,6 +91,14 @@ export class BlockMenuBlock extends AbstractBlock {
       const firstCellText = firstCell.blocks[0] as StandoffEditorBlock;
       firstCellText.replaceWith(this.source as AbstractBlock);
     }
+    mergeLeft() {
+      const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
+      cell.mergeLeft();
+    }
+    mergeRight() {
+      const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
+      cell.mergeRight();
+    }
     moveCellLeft() {
         const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
         cell.moveCellLeft();
@@ -131,24 +139,35 @@ export class BlockMenuBlock extends AbstractBlock {
             ]
       };
       const itemSplitBlock = {
-            label: "Split",
+            label: "Split block",
             icon: <IconArrowsSplit />,
             onClick: () => self.splitBlock()
       };
+      const itemMergeBlockLeft = {
+            label: "Merge block left",
+            icon: <IconGitMerge />,
+            onClick: () => self.mergeLeft()
+      };
+      const itemMergeBlockRight = {
+            label: "Merge block right",
+            icon: <IconGitMerge />,
+            onClick: () => self.mergeRight()
+      };
       const itemMoveCellLeft = {
-            label: "Move Left",
+            label: "Move block left",
             icon: <IconSwipeLeft />,
             onClick: () => self.moveCellLeft()
       };
       const itemMoveCellRight = {
-            label: "Move Right",
+            label: "Move block right",
             icon: <IconSwipeRight />,
             onClick: () => self.moveCellRight()
       };
+      const hr = { type: "separator" };
       items.push(itemAddBlock, itemSplitBlock);
       const insideCellBlock = !!this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
       if (insideCellBlock) {
-          items.push(itemMoveCellLeft, itemMoveCellRight);
+          items.push(itemMergeBlockLeft, itemMergeBlockRight, hr, itemMoveCellLeft, itemMoveCellRight);
       }
       items.push( itemDeleteBlock);
       
