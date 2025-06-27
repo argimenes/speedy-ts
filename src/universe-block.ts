@@ -868,7 +868,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     addBlockTo(parent: AbstractBlock, block: IBlock, skipIndexation?: boolean) {
         parent.blocks.push(block);
         this.registerBlock(block);
-        this.addParentSiblingRelations(parent);
+        this.generateParentSiblingRelations(parent);
         if (!skipIndexation) this.reindexAncestorDocument(parent);
     }
     async loadBlockMenu(args: IBindingHandlerArgs) {
@@ -907,9 +907,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 update && update(block);
             }
         }
-        this.addParentSiblingRelations(parent);
+        this.generateParentSiblingRelations(parent);
     }
-    addParentSiblingRelations<T extends AbstractBlock>(parent: T) {
+    generateParentSiblingRelations<T extends AbstractBlock>(parent: T) {
         parent.blocks.forEach((block, i) => {
             if (i == 0) {
                 block.relation.parent = parent;
@@ -1034,7 +1034,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const workspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
         this.container.appendChild(workspace.container);
         this.addBlockTo(this, workspace);
-        this.addParentSiblingRelations(workspace);
+        this.generateParentSiblingRelations(workspace);
         return workspace;
     }
     async createCanvasWorkspace() {
@@ -1050,7 +1050,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const workspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
         this.container.appendChild(workspace.container);
         this.addBlockTo(this, workspace);
-        this.addParentSiblingRelations(workspace);
+        this.generateParentSiblingRelations(workspace);
         return workspace;
     }
     async switchToWebGLBackground() {
@@ -1108,7 +1108,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const workspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
         this.container.appendChild(workspace.container);
         this.addBlockTo(this, workspace);
-        this.addParentSiblingRelations(workspace);
+        this.generateParentSiblingRelations(workspace);
         return workspace;
     }
     async createVideoWorkspace() {
@@ -1127,7 +1127,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const workspace = await this.recursivelyBuildBlock(container, dto) as WorkspaceBlock;
         this.container.appendChild(workspace.container);
         this.addBlockTo(this, workspace);
-        this.addParentSiblingRelations(workspace);
+        this.generateParentSiblingRelations(workspace);
         return workspace;
     }
     async loadWorkspace(filename: string = null) {
@@ -1143,7 +1143,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const dto = json.Data.workspace;
         const workspace = await this.recursivelyBuildBlock(this.container, dto);
         this.addBlockTo(this, workspace);
-        this.addParentSiblingRelations(this);
+        this.generateParentSiblingRelations(this);
         setTimeout(() => {
             manager.registeredBlocks
                 .filter(x => x.type == BlockType.DocumentBlock)
@@ -1208,7 +1208,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const background = this.getBackground();
         this.addBlockTo(background, documentWindow);
         background.container.appendChild(documentWindow.container);
-        this.addParentSiblingRelations(documentWindow);
+        this.generateParentSiblingRelations(documentWindow);
         const doc = documentWindow.blocks[0] as DocumentBlock;
         doc.generateIndex();
         doc.setFocus();

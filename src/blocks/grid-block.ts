@@ -2,6 +2,7 @@ import { AbstractBlock } from "./abstract-block";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { updateElement } from "../library/svg";
+import { DocumentBlock } from "./document-block";
 
 export class GridBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
@@ -20,6 +21,16 @@ export class GridBlock extends AbstractBlock {
                 return block;
             }
         };
+    }
+    destructure() {
+        /**
+         * Explode the GridCellBlock contents back into the Document
+         * and destroy the Grid structure itself.
+         */
+    }
+    totalCells() {
+         const cells = this.blocks.map(x => x.blocks).flat();
+         return cells.length;
     }
     getFirstCell() {
         return this.blocks?.[0].blocks?.[0] as GridCellBlock;
@@ -157,33 +168,43 @@ export class GridCellBlock extends AbstractBlock {
             }
         };
     }
+    setWidth(width: string) {
+        this.metadata.width = width;
+        updateElement(this.container, {
+            style: {
+                width: width
+            }
+        });
+    }
     mergeLeft() {
-        const left = this.getPreviousCell();
-        if (!left) return;
-        const row = this.getRow();
-        // Append the children onto the left block.
-        left.blocks.push(...this.blocks);
-        // Move all child nodes
-        while (this.container.firstChild) {
-            left.container.appendChild(this.container.firstChild);
+        this.merge(this, this.getPreviousCell());
+    }
+    merge(source: GridCellBlock, target: GridCellBlock) {
+        if (!source || !target) return;
+        const row = source.getRow();
+        const grid = row.getGrid();
+        const doc = this.manager.getParentOfType(source, BlockType.DocumentBlock) as DocumentBlock;
+        const totalCells = grid.totalCells();
+        if (totalCells > 2) {
+            // Merge the two Cells together
+            this.moveBlocksAndContainers(source, target);
+            this.manager.generateParentSiblingRelations(row);
+            this.manager.removeBlockFrom(row, source);
+            target.setWidth("auto");
+            source.container.remove();
+        } else {
+            // Destructure the Grid itself
+            grid.destructure();
         }
-        this.manager.addParentSiblingRelations(row);
-        this.relation = {};
-        this.container.remove();
+    }
+    moveBlocksAndContainers(source: IBlock, target: IBlock) {
+        target.blocks.push(...source.blocks);
+        while (source.container.firstChild) {
+            target.container.appendChild(source.container.firstChild);
+        }
     }
     mergeRight() {
-        const right = this.getNextCell();
-        if (!right) return;
-        const row = this.getRow();
-        // Append the children onto the left block.
-        right.blocks.push(...this.blocks);
-        // Move all child nodes
-        while (this.container.firstChild) {
-            right.container.appendChild(this.container.firstChild);
-        }
-        this.manager.addParentSiblingRelations(row);
-        this.relation = {};
-        this.container.remove();
+        this.merge(this, this.getNextCell());
     }
     moveCellLeft() {
         const left = this.getPreviousCell();

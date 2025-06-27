@@ -121,7 +121,7 @@ export class TabRowBlock extends AbstractBlock {
         textBlock.addEOL();
         this.manager.addBlockTo(newTab, textBlock);
         this.manager.addBlockTo(row, newTab);
-        this.manager.addParentSiblingRelations(row);
+        this.manager.generateParentSiblingRelations(row);
         textBlock.relation.parent = newTab;
         newTab.relation.firstChild = textBlock;
         tab.relation.next = newTab;

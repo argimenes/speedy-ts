@@ -330,7 +330,7 @@ export abstract class AbstractBlock implements IBlock {
          * Do the house keeping.
          */
         this.manager.registerBlock(newBlock);
-        this.manager.addParentSiblingRelations(parent);
+        this.manager.generateParentSiblingRelations(parent);
     }
     abstract serialize():IBlockDto;
     abstract deserialize(json: any|any[]): IBlock;

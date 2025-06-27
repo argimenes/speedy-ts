@@ -385,10 +385,10 @@ export class DocumentBlock extends AbstractBlock {
         cell2.blocks = [block];
         row.blocks = [cell1, cell2];
         grid.blocks = [row];
-        manager.addParentSiblingRelations(cell1);
-        manager.addParentSiblingRelations(cell2);
-        manager.addParentSiblingRelations(row);
-        manager.addParentSiblingRelations(grid);
+        manager.generateParentSiblingRelations(cell1);
+        manager.generateParentSiblingRelations(cell2);
+        manager.generateParentSiblingRelations(row);
+        manager.generateParentSiblingRelations(grid);
         if (previous) {
             previous.relation.next = grid;
             grid.relation.previous = previous;
@@ -437,10 +437,10 @@ export class DocumentBlock extends AbstractBlock {
         cell2.blocks = [image];
         row.blocks = [cell1, cell2];
         grid.blocks = [row];
-        manager.addParentSiblingRelations(cell1);
-        manager.addParentSiblingRelations(cell2);
-        manager.addParentSiblingRelations(row);
-        manager.addParentSiblingRelations(grid);
+        manager.generateParentSiblingRelations(cell1);
+        manager.generateParentSiblingRelations(cell2);
+        manager.generateParentSiblingRelations(row);
+        manager.generateParentSiblingRelations(grid);
         if (previous) {
             previous.relation.next = grid;
             grid.relation.previous = previous;
@@ -612,8 +612,8 @@ export class DocumentBlock extends AbstractBlock {
             }
         });
         manager.reindexAncestorDocument(root);
-        manager.addParentSiblingRelations(checkbox);
-        manager.addParentSiblingRelations(parent);
+        manager.generateParentSiblingRelations(checkbox);
+        manager.generateParentSiblingRelations(parent);
     }
     moveBlockUp(block: IBlock) {
         const manager = this.manager;
@@ -2103,7 +2103,7 @@ export class DocumentBlock extends AbstractBlock {
         this.destroy();
         const doc = await manager.recursivelyBuildBlock(parent.container, dto) as DocumentBlock;
         manager.addBlockTo(parent, doc);
-        manager.addParentSiblingRelations(parent);
+        manager.generateParentSiblingRelations(parent);
         doc.generateIndex();
         doc.setFocus();
     }
@@ -2170,14 +2170,14 @@ export class DocumentBlock extends AbstractBlock {
             }
         });
         this.addBlockAfter(manager, sibling);
-        manager.addParentSiblingRelations(parent);
+        manager.generateParentSiblingRelations(parent);
         manager.setBlockFocus(manager.blocks[0]);
     }
     addCodeMirrorBlock(sibling: IBlock) {
         const manager = this.manager;
         const parent = manager.getParent(sibling) as AbstractBlock;
         const cm = manager.createCodeMirrorBlock();
-        manager.addParentSiblingRelations(parent);
+        manager.generateParentSiblingRelations(parent);
         this.addBlockAfter(cm, sibling);
         manager.setBlockFocus(cm);
         return cm;
