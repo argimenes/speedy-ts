@@ -195,18 +195,11 @@ export class GridCellBlock extends AbstractBlock {
         const row = source.getRow();
         const grid = row.getGrid();
         const doc = this.manager.getParentOfType(source, BlockType.DocumentBlock) as DocumentBlock;
-        const totalCells = grid.totalCells();
-        if (totalCells > 2) {
-            // Merge the two Cells together
-            this.moveBlocksAndContainers(source, target);
-            this.manager.removeBlockFrom(row, source);
-            this.manager.generateParentSiblingRelations(row);
-            target.setWidth("auto");
-            source.container.remove();
-        } else {
-            // Destructure the Grid itself
-            grid.destructure();
-        }
+        this.moveBlocksAndContainers(source, target);
+        this.manager.removeBlockFrom(row, source);
+        this.manager.generateParentSiblingRelations(row);
+        target.setWidth("auto");
+        source.container.remove();
     }
     moveBlocksAndContainers(source: IBlock, target: IBlock) {
         target.blocks.push(...source.blocks);

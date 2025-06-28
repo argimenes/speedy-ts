@@ -315,7 +315,7 @@ export abstract class AbstractBlock implements IBlock {
         const parent = this.relation.parent as AbstractBlock;
         if (!parent) return;
         const i = parent.blocks.findIndex(x => x.id == this.id);
-        parent.blocks.splice(i, 0, ...this.blocks);
+        parent.blocks.splice(i, 1, ...this.blocks);
         const previousElement = this.container.previousElementSibling;
         const nextElement = this.container.nextElementSibling;
         const parentElement = this.container.parentElement;
@@ -324,7 +324,7 @@ export abstract class AbstractBlock implements IBlock {
             fragment.appendChild(this.container.firstChild);
         }
         if (previousElement) {
-            parentElement.insertBefore(fragment, previousElement);
+            parentElement.insertBefore(fragment, this.container);
         } else if (nextElement) {
             parentElement.insertBefore(fragment, nextElement);
         } else {

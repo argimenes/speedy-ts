@@ -1,4 +1,4 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop } from "@tabler/icons-solidjs";
 import { Component, onCleanup, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -84,6 +84,10 @@ export class BlockMenuBlock extends AbstractBlock {
         this.manager.setBlockFocus(firstTextBlock);
         firstTextBlock.moveCaretStart();
     }
+    destructureGrid() {
+      const grid = this.manager.getParentOfType(this.source, BlockType.GridBlock) as GridBlock;
+      grid.destructure();
+    }
     splitBlock() {
       const grid = this.doc.createGrid(1, 2) as GridBlock;
       this.doc.addBlockAfter(grid, this.source);
@@ -143,6 +147,11 @@ export class BlockMenuBlock extends AbstractBlock {
             icon: <IconArrowsSplit />,
             onClick: () => self.splitBlock()
       };
+      const itemDestructureGrid= {
+            label: "Destructure block",
+            icon: <IconStackPop />,
+            onClick: () => self.destructureGrid()
+      };
       const itemMergeBlockLeft = {
             label: "Merge block left",
             icon: <IconGitMerge />,
@@ -167,7 +176,9 @@ export class BlockMenuBlock extends AbstractBlock {
       items.push(itemAddBlock, itemSplitBlock);
       const insideCellBlock = !!this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
       if (insideCellBlock) {
-          items.push(itemMergeBlockLeft, itemMergeBlockRight, hr, itemMoveCellLeft, itemMoveCellRight);
+          items.push(itemDestructureGrid, hr,
+            itemMergeBlockLeft, itemMergeBlockRight, hr,
+            itemMoveCellLeft, itemMoveCellRight);
       }
       items.push( itemDeleteBlock);
       
