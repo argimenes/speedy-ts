@@ -27,6 +27,17 @@ export class GridBlock extends AbstractBlock {
          * Explode the GridCellBlock contents back into the Document
          * and destroy the Grid structure itself.
          */
+        const parent = this.relation.parent as AbstractBlock;
+        const doc = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+        const rows = this.blocks as GridRowBlock[];
+        rows.reverse().forEach(row => {
+            let cells = row.blocks as GridCellBlock[];
+            cells.reverse().forEach(cell => cell.dissolve());
+            row.dissolve();
+        });
+        this.dissolve();
+        this.manager.generateParentSiblingRelations(parent);
+        doc.generateIndex();
     }
     totalCells() {
          const cells = this.blocks.map(x => x.blocks).flat();
@@ -188,8 +199,8 @@ export class GridCellBlock extends AbstractBlock {
         if (totalCells > 2) {
             // Merge the two Cells together
             this.moveBlocksAndContainers(source, target);
-            this.manager.generateParentSiblingRelations(row);
             this.manager.removeBlockFrom(row, source);
+            this.manager.generateParentSiblingRelations(row);
             target.setWidth("auto");
             source.container.remove();
         } else {

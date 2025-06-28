@@ -308,6 +308,32 @@ export abstract class AbstractBlock implements IBlock {
     newContainer() {
         return document.createElement("DIV") as HTMLDivElement;
     }
+    dissolve() {
+        /**
+         * Destroy the block but first disgorge all of its child blocks.
+         */
+        const parent = this.relation.parent as AbstractBlock;
+        if (!parent) return;
+        const i = parent.blocks.findIndex(x => x.id == this.id);
+        parent.blocks.splice(i, 0, ...this.blocks);
+        const previousElement = this.container.previousElementSibling;
+        const nextElement = this.container.nextElementSibling;
+        const parentElement = this.container.parentElement;
+        const fragment = document.createDocumentFragment();
+        while (this.container.firstChild) {
+            fragment.appendChild(this.container.firstChild);
+        }
+        if (previousElement) {
+            parentElement.insertBefore(fragment, previousElement);
+        } else if (nextElement) {
+            parentElement.insertBefore(fragment, nextElement);
+        } else {
+            parentElement.appendChild(fragment);
+        }
+        this.manager.removeBlockFrom(parent, this);
+        this.container.remove();
+        this.manager.generateParentSiblingRelations(parent);
+    }
     replaceWith(newBlock: AbstractBlock) {
         const parent = this.relation.parent as AbstractBlock;
         /**
