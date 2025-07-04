@@ -4,6 +4,7 @@ import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, InputEvent, In
 import { UniverseBlock } from "../universe-block";
 import { classList } from "solid-js/web";
 import { StandoffEditorBlock } from "./standoff-editor-block";
+import { DocumentBlock } from "./document-block";
 
 export class TabRowBlock extends AbstractBlock {
     header: HTMLDivElement;
@@ -36,6 +37,19 @@ export class TabRowBlock extends AbstractBlock {
             }
         ]
         return events;
+    }
+    destructure() {
+        /**
+         * Explode the TabBlock contents back into the Document
+         * and destroy the TabRow structure itself.
+         */
+        const parent = this.relation.parent as AbstractBlock;
+        const doc = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+        const tabs = this.blocks as TabBlock[];
+        tabs.reverse().forEach(tab => tab.explode());
+        this.explode();
+        this.manager.generateParentSiblingRelations(parent);
+        doc.generateIndex();
     }
     static getBlockBuilder() {
         return {
@@ -121,11 +135,10 @@ export class TabRowBlock extends AbstractBlock {
         textBlock.addEOL();
         this.manager.addBlockTo(newTab, textBlock);
         this.manager.addBlockTo(row, newTab);
-        this.manager.generateParentSiblingRelations(row);
         textBlock.relation.parent = newTab;
-        newTab.relation.firstChild = textBlock;
         tab.relation.next = newTab;
         newTab.relation.previous = tab;
+        this.manager.generateParentSiblingRelations(row);
         row.renderLabels();
         newTab.panel.appendChild(textBlock.container);
         row.container.appendChild(newTab.container);

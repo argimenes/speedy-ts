@@ -7,6 +7,7 @@ import { DocumentBlock } from "../blocks/document-block";
 import { ContextMenu, ContextMenuItem } from "./context-menu";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "../blocks/grid-block";
+import { TabRowBlock } from "../blocks/tabs-block";
 
 type Props = {
     items: ContextMenuItem[];
@@ -88,6 +89,10 @@ export class BlockMenuBlock extends AbstractBlock {
       const grid = this.manager.getParentOfType(this.source, BlockType.GridBlock) as GridBlock;
       grid.destructure();
     }
+    destructureTabs() {
+      const tabRow = this.manager.getParentOfType(this.source, BlockType.TabRowBlock) as TabRowBlock;
+      tabRow.destructure();
+    }
     splitBlock() {
       const grid = this.doc.createGrid(1, 2) as GridBlock;
       this.doc.addBlockAfter(grid, this.source);
@@ -152,6 +157,11 @@ export class BlockMenuBlock extends AbstractBlock {
             icon: <IconStackPop />,
             onClick: () => self.destructureGrid()
       };
+      const itemDestructureTabs= {
+            label: "Destructure tabs",
+            icon: <IconStackPop />,
+            onClick: () => self.destructureTabs()
+      };
       const itemMergeBlockLeft = {
             label: "Merge block left",
             icon: <IconGitMerge />,
@@ -179,6 +189,10 @@ export class BlockMenuBlock extends AbstractBlock {
           items.push(itemDestructureGrid, hr,
             itemMergeBlockLeft, itemMergeBlockRight, hr,
             itemMoveCellLeft, itemMoveCellRight);
+      }
+      const insideTabRowBlock = !!this.manager.getParentOfType(this.source, BlockType.TabBlock);
+      if (insideTabRowBlock) {
+        items.push(itemDestructureTabs, hr)
       }
       items.push( itemDeleteBlock);
       
