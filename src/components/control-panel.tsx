@@ -256,7 +256,8 @@ export class ControlPanelBlock extends AbstractBlock {
             if (!block) return;
             const tab = manager?.getParent(block) as TabBlock;
             if (!tab || tab.type != BlockType.TabBlock) return;
-            manager?.addTab({ tabId: tab.id, name });
+            let row = tab.getRow();
+            row.addTab({ tabId: tab.id, name });
         }
         const collapse = (name: string) => {
             const block = manager?.getBlockInFocus() as IndentedListBlock;

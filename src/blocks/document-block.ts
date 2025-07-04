@@ -1392,9 +1392,9 @@ export class DocumentBlock extends AbstractBlock {
                     match: "Control-B"
                 },
                 action: {
-                    name: "Blur",
-                    description: "Blurs text",
-                    handler: this.applyBlurToText.bind(this)
+                    name: "Bold",
+                    description: "Bolds text",
+                    handler: this.applyBoldToText.bind(this)
                 }
             },
             {
@@ -1465,8 +1465,9 @@ export class DocumentBlock extends AbstractBlock {
                         const parent = manager.getParent(block) as IBlock;
                         if (!parent) return;
                         if (parent.type == BlockType.TabBlock) {
-                            const previous = parent.relation.previous;
-                            manager.addTab({ tabId: parent.id, name: "...", copyTextBlockId: block.id });
+                            let tab = parent as TabBlock;
+                            let row = tab.getRow();
+                            row.addTab({ tabId: parent.id, name: "...", copyTextBlockId: block.id });
                         } else {
                             _this.convertBlockToTab(block.id);
                         }
@@ -1566,7 +1567,7 @@ export class DocumentBlock extends AbstractBlock {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Alt-T"
+                    match: ["Mac:Option-T","Windows:Alt-T"]
                 },
                 action: {
                     name: "To tab/add tab",
@@ -1690,10 +1691,12 @@ export class DocumentBlock extends AbstractBlock {
         const parent = manager.getParent(block) as IBlock;
         if (!parent) return;
         if (parent.type == BlockType.TabBlock) {
+            let tab = parent as TabBlock;
+            let row = tab.getRow();
             const previousTabName = parent.metadata.name || "";
             const [parsed, tabNum] = manager.tryParseInt(previousTabName);
             const newTabName = parsed ? ((tabNum as number) + 1) + "" : "...";
-            manager.addTab({ tabId: parent.id, name: newTabName });
+            row.addTab({ tabId: parent.id, name: newTabName });
         } else {
             this.convertBlockToTab(block.id);
         }
@@ -2399,16 +2402,11 @@ export class DocumentBlock extends AbstractBlock {
             next.relation.previous = tabRow;
             tabRow.relation.next = next;
         }
-        const _parent = block.relation.parent;
-        if (_parent) {
-            _parent.relation.firstChild = tabRow;
-            tabRow.relation.parent = _parent;
-        }
-        tabRow.relation.firstChild = tab;
-        tab.relation.parent = tabRow;
         delete block.relation.previous;
-        tab.relation.firstChild = block;
         block.relation.parent = tab;
+        tab.relation.parent = tabRow;
+        tabRow.relation.parent = parent;
+        manager.generateParentSiblingRelations(parent);
         /**
          * Sort out all the tab panel stuff, rendering the label, etc.
          */

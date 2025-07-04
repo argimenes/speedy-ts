@@ -308,7 +308,7 @@ export abstract class AbstractBlock implements IBlock {
     newContainer() {
         return document.createElement("DIV") as HTMLDivElement;
     }
-    dissolve() {
+    explode() {
         /**
          * Destroy the block but first disgorge all of its child blocks.
          */

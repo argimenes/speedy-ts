@@ -32,10 +32,10 @@ export class GridBlock extends AbstractBlock {
         const rows = this.blocks as GridRowBlock[];
         rows.reverse().forEach(row => {
             let cells = row.blocks as GridCellBlock[];
-            cells.reverse().forEach(cell => cell.dissolve());
-            row.dissolve();
+            cells.reverse().forEach(cell => cell.explode());
+            row.explode();
         });
-        this.dissolve();
+        this.explode();
         this.manager.generateParentSiblingRelations(parent);
         doc.generateIndex();
     }
