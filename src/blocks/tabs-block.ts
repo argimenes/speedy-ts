@@ -228,6 +228,18 @@ export class TabBlock extends AbstractBlock {
     setName(name: string) {
         this.metadata.name = name;
     }
+    moveRight() {
+        alert("moveRight: Not Implemented")
+    }
+    moveLeft() {
+        alert("moveLeft: Not Implemented")
+    }
+    mergeLeft() {
+        alert("mergeLeft: Not Implemented")
+    }
+    mergeRight() {
+        alert("mergeRight: Not Implemented")
+    }
     setActive() {
         this.metadata.active = true;
         updateElement(this.container, {

@@ -8,6 +8,7 @@ export class GridBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.GridBlock;
+        this.container.classList.add("grid-block");
     }
     static getBlockBuilder() {
         return {
@@ -32,7 +33,10 @@ export class GridBlock extends AbstractBlock {
         const rows = this.blocks as GridRowBlock[];
         rows.reverse().forEach(row => {
             let cells = row.blocks as GridCellBlock[];
-            cells.reverse().forEach(cell => cell.explode());
+            cells.reverse().forEach(cell => {
+                cell.removeStyling();
+                cell.explode();
+            });
             row.explode();
         });
         this.explode();
@@ -45,6 +49,13 @@ export class GridBlock extends AbstractBlock {
     }
     getFirstCell() {
         return this.blocks?.[0].blocks?.[0] as GridCellBlock;
+    }
+    insertRowAfter(row: GridRowBlock) {
+        const i = this.blocks.findIndex(x => x.id == row.id);
+        /**
+         * Insert a new GridRow after position 'i'.
+         */
+        alert("insertRowAfter: Not Implemented");
     }
     serialize() {
         return {
@@ -63,6 +74,7 @@ export class GridBlock extends AbstractBlock {
 export class GridRowBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
+        this.container.classList.add("grid-row-block");
         this.type = BlockType.GridRowBlock;
     }
     static getBlockBuilder() {
@@ -85,6 +97,10 @@ export class GridRowBlock extends AbstractBlock {
                 return block;
             }
         };
+    }
+    insertRowAfter() {
+        const grid = this.getGrid();
+        grid.insertRowAfter(this);
     }
     getGrid() {
         return this.relation.parent as GridBlock;
@@ -151,7 +167,7 @@ export class GridRowBlock extends AbstractBlock {
 export class GridCellBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
-        this.container.classList.add("grid-cell");
+        this.container.classList.add("grid-cell-block", "grid-cell");
         this.type = BlockType.GridCellBlock;
     }
     static getBlockBuilder() {
@@ -178,6 +194,10 @@ export class GridCellBlock extends AbstractBlock {
                 return block;
             }
         };
+    }
+    removeStyling() {
+        this.container.classList.remove("grid-cell");
+        this.setWidth("auto");
     }
     setWidth(width: string) {
         this.metadata.width = width;

@@ -1,4 +1,4 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit } from "@tabler/icons-solidjs";
 import { Component, onCleanup, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -7,7 +7,7 @@ import { DocumentBlock } from "../blocks/document-block";
 import { ContextMenu, ContextMenuItem } from "./context-menu";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "../blocks/grid-block";
-import { TabRowBlock } from "../blocks/tabs-block";
+import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
 
 type Props = {
     items: ContextMenuItem[];
@@ -93,12 +93,15 @@ export class BlockMenuBlock extends AbstractBlock {
       const tabRow = this.manager.getParentOfType(this.source, BlockType.TabRowBlock) as TabRowBlock;
       tabRow.destructure();
     }
-    splitBlock() {
+    convertToGrid() {
       const grid = this.doc.createGrid(1, 2) as GridBlock;
       this.doc.addBlockAfter(grid, this.source);
       const firstCell = grid.blocks[0].blocks[0] as GridCellBlock;
       const firstCellText = firstCell.blocks[0] as StandoffEditorBlock;
       firstCellText.replaceWith(this.source as AbstractBlock);
+    }
+    convertToTab() {
+      this.doc.convertBlockToTab(this.source.id);
     }
     mergeLeft() {
       const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
@@ -112,9 +115,26 @@ export class BlockMenuBlock extends AbstractBlock {
         const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
         cell.moveCellLeft();
     }
+    renameTab() {
+      const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
+      const name = prompt("Name: ");
+      tab.setName(name);
+    }
+    addGridRow() {
+      const row = this.manager.getParentOfType(this.source, BlockType.GridRowBlock) as GridRowBlock;
+      row.insertRowAfter();
+    }
     moveCellRight() {
       const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
       cell.moveCellRight();
+    }
+    moveTabLeft() {
+      const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
+      tab.moveLeft();
+    }
+    moveTabRight() {
+      const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
+      tab.moveRight();
     }
     render() {
       const self = this;
@@ -125,7 +145,7 @@ export class BlockMenuBlock extends AbstractBlock {
           icon: <IconTrash />,
           onClick: () => self.deleteBlock()
       };
-      const itemAddBlock = {
+      const itemAdd = {
           type: "item", 
           label: "Add Block",
           icon: <IconPlus />,
@@ -147,13 +167,18 @@ export class BlockMenuBlock extends AbstractBlock {
               }
             ]
       };
-      const itemSplitBlock = {
-            label: "Split block",
+      const itemConvertToGrid = {
+            label: "Convert to grid (1 x 2)",
             icon: <IconArrowsSplit />,
-            onClick: () => self.splitBlock()
+            onClick: () => self.convertToGrid()
+      };
+      const itemConvertToTab = {
+            label: "Convert to tab",
+            icon: <IconArrowsSplit />,
+            onClick: () => self.convertToGrid()
       };
       const itemDestructureGrid= {
-            label: "Destructure block",
+            label: "Destructure grid",
             icon: <IconStackPop />,
             onClick: () => self.destructureGrid()
       };
@@ -162,39 +187,94 @@ export class BlockMenuBlock extends AbstractBlock {
             icon: <IconStackPop />,
             onClick: () => self.destructureTabs()
       };
-      const itemMergeBlockLeft = {
-            label: "Merge block left",
+      const itemMergeCellLeft = {
+            label: "Merge cell left",
             icon: <IconGitMerge />,
             onClick: () => self.mergeLeft()
       };
-      const itemMergeBlockRight = {
-            label: "Merge block right",
+      const itemMergeCellRight = {
+            label: "Merge cell right",
             icon: <IconGitMerge />,
             onClick: () => self.mergeRight()
       };
       const itemMoveCellLeft = {
-            label: "Move block left",
+            label: "Move cell left",
             icon: <IconSwipeLeft />,
             onClick: () => self.moveCellLeft()
       };
       const itemMoveCellRight = {
-            label: "Move block right",
+            label: "Move cell right",
             icon: <IconSwipeRight />,
             onClick: () => self.moveCellRight()
       };
       const hr = { type: "separator" };
-      items.push(itemAddBlock, itemSplitBlock);
+      const itemMergeTabLeft = {
+            label: "Merge tab left",
+            icon: <IconGitMerge />,
+            onClick: () => self.mergeLeft()
+      };
+      const itemMergeTabRight = {
+            label: "Merge tab right",
+            icon: <IconGitMerge />,
+            onClick: () => self.mergeRight()
+      };
+      const itemMoveTabLeft = {
+            label: "Move tab left",
+            icon: <IconSwipeLeft />,
+            onClick: () => self.moveCellLeft()
+      };
+      const itemMoveTabRight = {
+            label: "Move tab right",
+            icon: <IconSwipeRight />,
+            onClick: () => self.moveCellRight()
+      };
+      const itemRenameTab = {
+            label: "Rename tab",
+            icon: <IconEdit />,
+            onClick: () => self.renameTab()
+      };
+      const itemAddTabBlock = {
+            label: "Add tab",
+            icon: <IconPlus />,
+            onClick: () => self.moveCellRight()
+      };
+      const itemAddGridRow = {
+            label: "Add row",
+            icon: <IconPlus />,
+            onClick: () => self.addGridRow()
+      };
+      const itemGridsMenu = {
+        type: "item",
+        label: "Grids",
+        children: [
+          itemAddGridRow, itemDestructureGrid, hr,
+          itemMergeCellLeft, itemMergeCellRight, hr,
+          itemMoveCellLeft, itemMoveCellRight
+        ]
+      };
+      const itemTabsMenu = {
+        type: "item",
+        label: "Tabs",
+        children: [
+          itemAddTabBlock, itemRenameTab, itemDestructureTabs, hr,
+          itemMergeTabLeft, itemMergeTabRight, hr,
+          itemMoveTabLeft, itemMoveTabRight
+        ]
+      };
+      items.push(
+        itemAdd,
+        itemConvertToTab,
+        itemConvertToGrid
+      );
       const insideCellBlock = !!this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
       if (insideCellBlock) {
-          items.push(itemDestructureGrid, hr,
-            itemMergeBlockLeft, itemMergeBlockRight, hr,
-            itemMoveCellLeft, itemMoveCellRight);
+          items.push(itemGridsMenu);
       }
-      const insideTabRowBlock = !!this.manager.getParentOfType(this.source, BlockType.TabBlock);
-      if (insideTabRowBlock) {
-        items.push(itemDestructureTabs, hr)
+      const insideTabBlock = !!this.manager.getParentOfType(this.source, BlockType.TabBlock);
+      if (insideTabBlock) {
+        items.push(itemTabsMenu)
       }
-      items.push( itemDeleteBlock);
+      items.push(itemDeleteBlock);
       
       const jsx = BlockMenu({
           items: items,

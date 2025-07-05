@@ -1321,7 +1321,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         });
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlockTo(this, block);
+        //this.addBlockTo(this, block);
         return block;
     }
     createGridRowBlock(dto?: IBlockDto) {
@@ -1332,7 +1332,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (dto?.metadata) block.metadata = dto.metadata;
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlockTo(this, block);
+        //this.addBlockTo(this, block);
         return block;
     }
     createPlainTextBlock(dto?: IPlainTextBlockDto) {
@@ -1345,7 +1345,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         block.setEvents(events);
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlockTo(this, block);
+        //this.addBlockTo(this, block);
         return block;
     }
     createTableBlock(dto?: IBlockDto) {
@@ -1356,7 +1356,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (dto?.metadata) block.metadata = dto.metadata;
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlockTo(this, block);
+        //this.addBlockTo(this, block);
         return block;
     }
     createTableRowBlock(dto?: IBlockDto) {
@@ -1367,7 +1367,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (dto?.metadata) block.metadata = dto.metadata;
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlockTo(this, block);
+        //this.addBlockTo(this, block);
         return block;
     }
     createTableCellBlock(dto?: IBlockDto) {
@@ -1378,7 +1378,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (dto?.metadata) block.metadata = dto.metadata;
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlockTo(this, block);
+        //this.addBlockTo(this, block);
         return block;
     }
     createGridBlock(dto?: IBlockDto) {
@@ -1389,7 +1389,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (dto?.metadata) block.metadata = dto.metadata;
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlockTo(this, block);
+        //this.addBlockTo(this, block);
         return block;
     }
     createTabRowBlock(dto?: IBlockDto) {
@@ -1420,7 +1420,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (dto?.metadata) block.metadata = dto.metadata;
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlockTo(this, block);
+        //this.addBlockTo(this, block);
         return block;
     }
     createIFrameBlock(dto?: IBlockDto) {
@@ -1430,7 +1430,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (dto?.metadata) block.metadata = dto.metadata;
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
-        this.addBlockTo(this, block);
+        //this.addBlockTo(this, block);
         return block;
     }
     createCanvasBlock(dto?: IBlockDto) {
