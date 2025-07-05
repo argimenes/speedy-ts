@@ -94,11 +94,14 @@ export class BlockMenuBlock extends AbstractBlock {
       tabRow.destructure();
     }
     convertToGrid() {
+      const parent = this.source.relation.parent as AbstractBlock;
       const grid = this.doc.createGrid(1, 2) as GridBlock;
       this.doc.addBlockAfter(grid, this.source);
       const firstCell = grid.blocks[0].blocks[0] as GridCellBlock;
       const firstCellText = firstCell.blocks[0] as StandoffEditorBlock;
       firstCellText.replaceWith(this.source as AbstractBlock);
+      this.manager.generateParentSiblingRelations(parent);
+      this.doc.generateIndex();
     }
     convertToTab() {
       this.doc.convertBlockToTab(this.source.id);

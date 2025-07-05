@@ -8,7 +8,7 @@ export class GridBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.GridBlock;
-        this.container.classList.add("grid-block");
+        this.container.classList.add(this.type);
     }
     static getBlockBuilder() {
         return {
@@ -31,9 +31,9 @@ export class GridBlock extends AbstractBlock {
         const parent = this.relation.parent as AbstractBlock;
         const doc = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
         const rows = this.blocks as GridRowBlock[];
-        rows.reverse().forEach(row => {
+        [...rows].reverse().forEach(row => {
             let cells = row.blocks as GridCellBlock[];
-            cells.reverse().forEach(cell => {
+            [...cells].reverse().forEach(cell => {
                 cell.removeStyling();
                 cell.explode();
             });
