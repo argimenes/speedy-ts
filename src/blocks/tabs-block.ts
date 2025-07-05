@@ -2,7 +2,6 @@ import { AbstractBlock } from "./abstract-block";
 import { updateElement } from "../library/svg";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, InputEvent, InputEventSource, IBindingHandlerArgs, GUID, CARET } from "../library/types";
 import { UniverseBlock } from "../universe-block";
-import { classList } from "solid-js/web";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { DocumentBlock } from "./document-block";
 
@@ -38,6 +37,7 @@ export class TabRowBlock extends AbstractBlock {
         ]
         return events;
     }
+   
     destructure() {
         /**
          * Explode the TabBlock contents back into the Document
@@ -46,7 +46,9 @@ export class TabRowBlock extends AbstractBlock {
         const parent = this.relation.parent as AbstractBlock;
         const doc = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
         const tabs = this.blocks as TabBlock[];
-        tabs.reverse().forEach(tab => tab.explode());
+        [...tabs].reverse().forEach(tab => {
+            tab.explode();
+        });
         this.explode();
         this.manager.generateParentSiblingRelations(parent);
         doc.generateIndex();
@@ -177,6 +179,27 @@ export class TabBlock extends AbstractBlock {
         this.panel.classList.add("tab-panel");
         this.container.appendChild(this.panel);
         this.inputEvents = this.getTabBlockEvents();
+    }
+    override explode() {
+        /**
+         * Destroy the block but first disgorge all of its child blocks.
+         */
+        const parent = this.relation.parent as AbstractBlock;
+        if (!parent) return;
+        const i = parent.blocks.findIndex(x => x.id == this.id);
+        parent.blocks.splice(i, 1, ...this.blocks);
+        const parentElement = this.container.parentElement;
+        const fragment = document.createDocumentFragment();
+        while (this.panel.firstChild) {
+            fragment.appendChild(this.panel.firstChild);
+        }
+        if (parentElement) {
+            parentElement.insertBefore(fragment, this.container);
+            this.container.remove();
+        }
+        this.manager.deregisterBlock(this.id);
+        this.manager.generateParentSiblingRelations(parent);
+        this.manager.reindexAncestorDocument(parent);
     }
     getRow() {
         return this.manager.getParentOfType(this, BlockType.TabRowBlock) as TabRowBlock;
