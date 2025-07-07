@@ -1,4 +1,4 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList } from "@tabler/icons-solidjs";
 import { Component, onCleanup, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -8,6 +8,7 @@ import { ContextMenu, ContextMenuItem } from "./context-menu";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "../blocks/grid-block";
 import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
+import { IndentedListBlock } from "../blocks/indented-list-block";
 
 type Props = {
     items: ContextMenuItem[];
@@ -93,6 +94,10 @@ export class BlockMenuBlock extends AbstractBlock {
       const tabRow = this.manager.getParentOfType(this.source, BlockType.TabRowBlock) as TabRowBlock;
       tabRow.destructure();
     }
+    destructureList() {
+      const listItem = this.manager.getParentOfType(this.source, BlockType.IndentedListBlock) as IndentedListBlock;
+      listItem.destructure();
+    }
     convertToGrid() {
       const parent = this.source.relation.parent as AbstractBlock;
       const grid = this.doc.createGrid(1, 2) as GridBlock;
@@ -102,6 +107,9 @@ export class BlockMenuBlock extends AbstractBlock {
       firstCellText.replaceWith(this.source as AbstractBlock);
       this.manager.generateParentSiblingRelations(parent);
       this.manager.reindexAncestorDocument(parent);
+    }
+    async convertToList() {
+      await this.doc.indentBlock({ block: this.source })
     }
     convertToTab() {
       this.doc.convertBlockToTab(this.source.id);
@@ -184,7 +192,12 @@ export class BlockMenuBlock extends AbstractBlock {
             icon: <IconArrowsSplit />,
             onClick: () => self.convertToTab()
       };
-      const itemDestructureGrid= {
+      const itemConvertToIndentedList = {
+            label: "Convert to list",
+            icon: <IconList />,
+            onClick: () => self.convertToList()
+      };
+      const itemDestructureGrid = {
             label: "Destructure grid",
             icon: <IconStackPop />,
             onClick: () => self.destructureGrid()
@@ -193,6 +206,11 @@ export class BlockMenuBlock extends AbstractBlock {
             label: "Destructure tabs",
             icon: <IconStackPop />,
             onClick: () => self.destructureTabs()
+      };
+      const itemDestructureIndentedList = {
+            label: "Destructure list",
+            icon: <IconStackPop />,
+            onClick: () => self.destructureList()
       };
       const itemMergeCellLeft = {
             label: "Merge cell left",
@@ -268,18 +286,31 @@ export class BlockMenuBlock extends AbstractBlock {
           itemMoveTabLeft, itemMoveTabRight
         ]
       };
-      const insideCellBlock = !!this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
-      const insideTabBlock = !!this.manager.getParentOfType(this.source, BlockType.TabBlock);
+      const itemIndentedListMenu = {
+        type: "item",
+        label: "List",
+        children: [
+          itemDestructureIndentedList
+        ]
+      };
+      const insideGrid = !!this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
+      const insideTabs = !!this.manager.getParentOfType(this.source, BlockType.TabBlock);
+      const insideIndentedList = !!this.manager.getParentOfType(this.source, BlockType.IndentedListBlock);
       items.push(itemAdd);
-      if (!insideTabBlock) {
+      if (!insideTabs) {
         items.push(itemConvertToTab);
       } else {
         items.push(itemTabsMenu)
       }
-      if (!insideCellBlock) {
+      if (!insideGrid) {
         items.push(itemConvertToGrid);
       } else {
           items.push(itemGridsMenu);
+      }
+      if (!insideIndentedList) {
+        items.push(itemConvertToIndentedList);
+      } else {
+        items.push(itemIndentedListMenu);
       }
       items.push(itemDeleteBlock);
       

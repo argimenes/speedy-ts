@@ -2,6 +2,7 @@ import { AbstractBlock } from "./abstract-block";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { updateElement } from "../library/svg";
+import { DocumentBlock } from "./document-block";
 
 export class IndentedListBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
@@ -26,6 +27,21 @@ export class IndentedListBlock extends AbstractBlock {
                 return block;
             }
         };
+    }
+    destructure() {
+        /**
+         * Explode the GridCellBlock contents back into the Document
+         * and destroy the Grid structure itself.
+         */
+        const items = this.blocks as IndentedListBlock[];
+        [...items].reverse().forEach(item => {
+            let children = item.blocks.filter(x => x.type == BlockType.IndentedListBlock) as IndentedListBlock[];
+            [...children].reverse().forEach(c => {
+                c.destructure();
+            });
+            item.explode();
+        });
+        this.explode();
     }
     serialize() {
         return {
