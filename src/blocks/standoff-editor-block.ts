@@ -97,22 +97,22 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.standoffProperties = [];
         this.selections = [];
         this.inputEvents = [
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Custom,
-                    match: "contextmenu"
-                },
-                action: {
-                    name: "Context Menu.",
-                    description: "",
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const block = args.block;
-                        const manager = block.manager as UniverseBlock;
-                        manager.loadBlockMenu(args);
-                    }
-                }
-            }
+            // {
+            //     mode: "default",
+            //     trigger: {
+            //         source: InputEventSource.Custom,
+            //         match: "contextmenu"
+            //     },
+            //     action: {
+            //         name: "Context Menu.",
+            //         description: "",
+            //         handler: async (args: IBindingHandlerArgs) => {
+            //             const block = args.block;
+            //             const manager = block.manager as UniverseBlock;
+            //             manager.loadBlockMenu(args);
+            //         }
+            //     }
+            // }
         ];
         this.setSchemas(this.getStandoffSchemas());
         this.setBlockSchemas(this.getBlockSchemas());

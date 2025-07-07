@@ -268,18 +268,18 @@ export class BlockMenuBlock extends AbstractBlock {
           itemMoveTabLeft, itemMoveTabRight
         ]
       };
-      items.push(
-        itemAdd,
-        itemConvertToTab,
-        itemConvertToGrid
-      );
       const insideCellBlock = !!this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
-      if (insideCellBlock) {
-          items.push(itemGridsMenu);
-      }
       const insideTabBlock = !!this.manager.getParentOfType(this.source, BlockType.TabBlock);
-      if (insideTabBlock) {
+      items.push(itemAdd);
+      if (!insideTabBlock) {
+        items.push(itemConvertToTab);
+      } else {
         items.push(itemTabsMenu)
+      }
+      if (!insideCellBlock) {
+        items.push(itemConvertToGrid);
+      } else {
+          items.push(itemGridsMenu);
       }
       items.push(itemDeleteBlock);
       
