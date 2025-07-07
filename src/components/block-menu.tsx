@@ -178,7 +178,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const itemConvertToTab = {
             label: "Convert to tab",
             icon: <IconArrowsSplit />,
-            onClick: () => self.convertToGrid()
+            onClick: () => self.convertToTab()
       };
       const itemDestructureGrid= {
             label: "Destructure grid",

@@ -39,19 +39,12 @@ export class TabRowBlock extends AbstractBlock {
     }
    
     destructure() {
-        /**
-         * Explode the TabBlock contents back into the Document
-         * and destroy the TabRow structure itself.
-         */
-        const parent = this.relation.parent as AbstractBlock;
-        const doc = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
         const tabs = this.blocks as TabBlock[];
+        this.header.remove();
         [...tabs].reverse().forEach(tab => {
             tab.explode();
         });
         this.explode();
-        this.manager.generateParentSiblingRelations(parent);
-        doc.generateIndex();
     }
     static getBlockBuilder() {
         return {

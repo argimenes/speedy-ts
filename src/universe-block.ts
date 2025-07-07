@@ -911,10 +911,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     generateParentSiblingRelations<T extends AbstractBlock>(parent: T) {
         parent.blocks.forEach((block, i) => {
-            if (i == 0) {
-                block.relation.parent = parent;
-                parent.relation.firstChild = block;
-            }
+            block.relation.parent = parent;
             if (i > 0) {
                 let previous = parent.blocks[i - 1];
                 block.relation.previous = previous;
@@ -1733,8 +1730,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }
     }
     reindexAncestorDocument(descendant: IBlock) {
-        const root = this.getParentOfType(descendant, BlockType.DocumentBlock) as DocumentBlock;
-        if (root) {
+        const root = (this.getParentOfType(descendant, BlockType.DocumentBlock) as DocumentBlock) || descendant as DocumentBlock;
+        if (root?.type == BlockType.DocumentBlock) {
             root.generateIndex();
         }
     }
