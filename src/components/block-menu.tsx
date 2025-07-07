@@ -101,7 +101,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const firstCellText = firstCell.blocks[0] as StandoffEditorBlock;
       firstCellText.replaceWith(this.source as AbstractBlock);
       this.manager.generateParentSiblingRelations(parent);
-      this.doc.generateIndex();
+      this.manager.reindexAncestorDocument(parent);
     }
     convertToTab() {
       this.doc.convertBlockToTab(this.source.id);

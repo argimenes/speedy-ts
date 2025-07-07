@@ -1563,18 +1563,18 @@ export class DocumentBlock extends AbstractBlock {
                     handler: this.handleFind.bind(this)
                 }
             },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
-                    match: ["Mac:Option-T","Windows:Alt-T"]
-                },
-                action: {
-                    name: "To tab/add tab",
-                    description: "Either wraps the text in a new tab, or creates a new tab",
-                    handler: this.handleCreateNewTab.bind(this)
-                }
-            },
+            // {
+            //     mode: "default",
+            //     trigger: {
+            //         source: InputEventSource.Keyboard,
+            //         match: ["Mac:Option-T","Windows:Alt-T"]
+            //     },
+            //     action: {
+            //         name: "To tab/add tab",
+            //         description: "Either wraps the text in a new tab, or creates a new tab",
+            //         handler: this.handleCreateNewTab.bind(this)
+            //     }
+            // },
             {
                 mode: "default",
                 trigger: {
