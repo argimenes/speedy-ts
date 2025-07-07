@@ -41,7 +41,7 @@ export class GridBlock extends AbstractBlock {
         });
         this.explode();
         this.manager.generateParentSiblingRelations(parent);
-        doc.generateIndex();
+        this.manager.reindexAncestorDocument(parent);
     }
     totalCells() {
          const cells = this.blocks.map(x => x.blocks).flat();

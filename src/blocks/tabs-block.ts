@@ -114,9 +114,13 @@ export class TabRowBlock extends AbstractBlock {
     getTab(id: GUID) {
         return this.getBlock(id) as TabBlock;
     }
-    async addTab({ tabId, name, copyTextBlockId }: { tabId: string, name: string, copyTextBlockId?: string }) {
-        const tab = this.getTab(tabId);
-        const row = tab.getRow();
+    async appendTab() {
+        const lastTab = this.blocks.at(-1) as TabBlock;
+        await this.addTab({ previousTabId: lastTab.id, name: (this.blocks.length + 1) + "" });
+    }
+    async addTab({ previousTabId, name, copyTextBlockId }: { previousTabId: string, name: string, copyTextBlockId?: string }) {
+        const previousTab = this.getTab(previousTabId);
+        const row = previousTab.getRow();
         if (!row) return;
         const newTab = await this.createNewTab(name);
         let textBlock: StandoffEditorBlock;
@@ -131,8 +135,8 @@ export class TabRowBlock extends AbstractBlock {
         this.manager.addBlockTo(newTab, textBlock);
         this.manager.addBlockTo(row, newTab);
         textBlock.relation.parent = newTab;
-        tab.relation.next = newTab;
-        newTab.relation.previous = tab;
+        previousTab.relation.next = newTab;
+        newTab.relation.previous = previousTab;
         this.manager.generateParentSiblingRelations(row);
         row.renderLabels();
         newTab.panel.appendChild(textBlock.container);
@@ -243,6 +247,7 @@ export class TabBlock extends AbstractBlock {
     }
     setName(name: string) {
         this.metadata.name = name;
+        this.getRow().renderLabels();
     }
     moveRight() {
         alert("moveRight: Not Implemented")

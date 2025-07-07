@@ -118,6 +118,10 @@ export class BlockMenuBlock extends AbstractBlock {
         const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
         cell.moveCellLeft();
     }
+    async addTab() {
+      const row = this.manager.getParentOfType(this.source, BlockType.TabRowBlock) as TabRowBlock;
+      await row.appendTab();
+    }
     renameTab() {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
       const name = prompt("Name: ");
@@ -239,7 +243,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const itemAddTabBlock = {
             label: "Add tab",
             icon: <IconPlus />,
-            onClick: () => self.moveCellRight()
+            onClick: () => self.addTab()
       };
       const itemAddGridRow = {
             label: "Add row",

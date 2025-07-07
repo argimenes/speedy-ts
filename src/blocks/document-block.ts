@@ -1693,10 +1693,11 @@ export class DocumentBlock extends AbstractBlock {
         if (parent.type == BlockType.TabBlock) {
             let tab = parent as TabBlock;
             let row = tab.getRow();
-            const previousTabName = parent.metadata.name || "";
-            const [parsed, tabNum] = manager.tryParseInt(previousTabName);
-            const newTabName = parsed ? ((tabNum as number) + 1) + "" : "...";
-            row.addTab({ tabId: parent.id, name: newTabName });
+            // const previousTabName = parent.metadata.name || "";
+            // const [parsed, tabNum] = manager.tryParseInt(previousTabName);
+            // const newTabName = parsed ? ((tabNum as number) + 1) + "" : "...";
+            // row.addTab({ previousTabId: parent.id, name: newTabName });
+            await row.appendTab();
         } else {
             this.convertBlockToTab(block.id);
         }
