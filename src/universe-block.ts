@@ -289,14 +289,14 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const blocks = this.getAncestors(focusedBlock);
         for (let i = 0; i < blocks.length; i++) {
             const block = blocks[i] as StandoffEditorBlock;
-            const isStandoffBlock = block.type == BlockType.StandoffEditorBlock;
+            const isStandoffBlock = focusedBlock.type == BlockType.StandoffEditorBlock;
             const customEvents = block.inputEvents.filter(x => x.trigger.source == source);
             const found = customEvents.find(x => x.trigger.match == match);
             if (found) {
                 if (preventDefault) e.preventDefault();
                 if (isStandoffBlock) {
-                    const caret = block.getCaret() as Caret;
-                    const selection = block.getSelection() as IRange;
+                    const caret = focusedBlock.getCaret() as Caret;
+                    const selection = focusedBlock.getSelection() as IRange;
                     await found.action.handler({ block: focusedBlock, caret, e, selection });
                     return;
                 }

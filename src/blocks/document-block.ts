@@ -1401,7 +1401,7 @@ export class DocumentBlock extends AbstractBlock {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Control-T"
+                    match: ["Control-T", "Windows:Alt-T"]
                 },
                 action: {
                     name: "To tab/add tab",
