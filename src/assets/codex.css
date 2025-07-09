@@ -110,7 +110,8 @@ body {
     /* max-height: 600px; */
     padding: 0 20px;
     flex: 1;  /* Allow content to grow and fill remaining space */
-    padding: 10px;
+    padding-left: 250px;
+    padding-right: 250px;
   }
 
   .block_marginalia_left { 
