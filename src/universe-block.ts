@@ -731,18 +731,18 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     stageRightMarginBlock(rightMargin: DocumentBlock, mainBlock: IBlock) {
         updateElement(mainBlock.container, {
             style: {
-                //position: "relative"
+                position: "relative"
             }
         });
-        // updateElement(rightMargin.container, {
-        //     style: {
-        //         position: "absolute",
-        //         top: 0,
-        //         width: "200px",
-        //         "max-width": "200px",
-        //         right: "-250px"
-        //     }
-        // });
+        updateElement(rightMargin.container, {
+            style: {
+                position: "absolute",
+                top: 0,
+                width: "200px",
+                "max-width": "200px",
+                right: "-250px"
+            }
+        });
         const hand = document.createElement("SPAN") as HTMLSpanElement;
         hand.innerHTML = "☜";
         updateElement(hand, {
@@ -758,18 +758,18 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     stageLeftMarginBlock(leftMargin: DocumentBlock, mainBlock: IBlock) {
         updateElement(mainBlock.container, {
             style: {
-                //position: "relative"
+                position: "relative"
             }
         });
-        // updateElement(leftMargin.container, {
-        //     style: {
-        //         position: "absolute",
-        //         top: 0,
-        //         width: "200px",
-        //         "max-width": "200px",
-        //         left: "-250px",
-        //     }
-        // });
+        updateElement(leftMargin.container, {
+            style: {
+                position: "absolute",
+                top: 0,
+                width: "200px",
+                "max-width": "200px",
+                left: "-250px",
+            }
+        });
         const hand = document.createElement("SPAN") as HTMLSpanElement;
         hand.innerHTML = "☞";
         updateElement(hand, {
@@ -940,7 +940,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const item = this.blockBuilders.find(x => x.type == blockDto.type);
         if (item) {
             try {
-                return await item.builder(container, blockDto, this);
+                const newBlock = await item.builder(container, blockDto, this);
+                await this.handleBuildingMarginBlocks(newBlock, blockDto);
+                return newBlock;
             } catch (ex) {
                 console.error("recursivelyBuildBlock", { container, blockDto, ex, manager: this });
                 return await ErrorBlock.getBlockBuilder().builder(container, blockDto, this);
