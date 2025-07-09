@@ -77,7 +77,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.history = {};
         this.registeredBlocks = [this];
         this.attachEventBindings();
-        this.setupControlPanel();
+        //this.setupControlPanel();
         this.blockEvents = {};
         this.state = BlockState.initalised;
         this.blockBuilders = [];

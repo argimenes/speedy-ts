@@ -37,7 +37,14 @@ export class TabRowBlock extends AbstractBlock {
         ]
         return events;
     }
-   
+    deleteTab(tab: TabBlock) {
+        const parent = this;
+        this.manager.removeBlockFrom(parent, tab);
+        tab.destroy();
+        this.renderLabels();
+        const last = this.blocks.length - 1;
+        this.setTabActive(this.blocks[last] as TabBlock);
+    }
     destructure() {
         const tabs = this.blocks as TabBlock[];
         this.header.remove();
@@ -288,6 +295,9 @@ export class TabBlock extends AbstractBlock {
     }
     deserialize(json: any): IBlock {
         return this;
+    }
+    deleteTab() {
+        this.getRow().deleteTab(this);
     }
     destroy(): void {
         this.container.innerHTML = "";
