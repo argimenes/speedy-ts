@@ -267,7 +267,7 @@ export class BlockMenuBlock extends AbstractBlock {
             icon: <IconPlus />,
             onClick: () => self.addTab()
       };
-      const itemDeleteTabBlock = {
+      const itemDeleteTab = {
             label: "Delete tab",
             icon: <IconTrash />,
             onClick: () => self.deleteTab()
@@ -290,7 +290,7 @@ export class BlockMenuBlock extends AbstractBlock {
         type: "item",
         label: "Tabs",
         children: [
-          itemAddTabBlock, itemDeleteTabBlock, itemRenameTab, itemDestructureTabs, hr,
+          itemAddTabBlock, itemDeleteTab, itemRenameTab, itemDestructureTabs, hr,
           itemMergeTabLeft, itemMergeTabRight, hr,
           itemMoveTabLeft, itemMoveTabRight
         ]
