@@ -65,7 +65,7 @@ export class DocumentBlock extends AbstractBlock {
                 const block = new DocumentBlock({ ...dto, manager });
                 block.addBlockProperties([ { type: "block/marginalia/right" }, { type: "block/alignment/right" } ]);
                 block.applyBlockPropertyStyling();
-                updateElement(block.container, { classList: ["document-container"] });
+                // updateElement(block.container, { classList: ["document-container"] });
                 await manager.buildChildren(block, dto);
                 container.appendChild(block.container);
                 return block;
@@ -84,7 +84,7 @@ export class DocumentBlock extends AbstractBlock {
                 const block = new DocumentBlock({ ...dto, manager });
                 block.addBlockProperties([ { type: "block/marginalia/left" } ]);
                 block.applyBlockPropertyStyling();
-                updateElement(block.container, { classList: ["document-container"] });
+                // updateElement(block.container, { classList: ["document-container"] });
                 await manager.buildChildren(block, dto);
                 container.appendChild(block.container);
                 return block;

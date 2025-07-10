@@ -104,13 +104,14 @@ body {
   .document-container {
     overflow-x: auto;
     overflow-y: scroll;
-    width: 800px;
+    min-width: 800px;
+    width: 1200px;
     height: 600px;
     /* max-height: 600px; */
     padding: 0 20px;
     flex: 1;  /* Allow content to grow and fill remaining space */
-    overflow: auto;  /* Add scroll if content overflows */
-    padding: 10px;
+    padding-left: 250px;
+    padding-right: 250px;
   }
 
   .block_marginalia_left { 
