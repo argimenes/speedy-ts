@@ -230,6 +230,22 @@ export class GridCellBlock extends AbstractBlock {
     mergeRight() {
         this.merge(this, this.getNextCell());
     }
+    moveCellUp() {
+        const row = this.getRow();
+        const aboveRow = row.relation.previous;
+        if (!aboveRow) return;
+        const cellIndex = row.blocks.findIndex(x => x.id == this.id);
+        const aboveCell = aboveRow.blocks[cellIndex] as GridCellBlock;
+        row.swapCells(aboveCell, this);
+    }
+    moveCellDown() {
+        const row = this.getRow();
+        const belowRow = row.relation.next;
+        if (!belowRow) return;
+        const cellIndex = row.blocks.findIndex(x => x.id == this.id);
+        const belowCell = belowRow.blocks[cellIndex] as GridCellBlock;
+        row.swapCells(belowCell, this);
+    }
     moveCellLeft() {
         const left = this.getPreviousCell();
         if (!left) return;

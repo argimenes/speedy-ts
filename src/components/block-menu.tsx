@@ -1,4 +1,4 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp } from "@tabler/icons-solidjs";
 import { Component, onCleanup, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -122,6 +122,14 @@ export class BlockMenuBlock extends AbstractBlock {
       const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
       cell.mergeRight();
     }
+    moveCellUp() {
+        const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
+        cell.moveCellUp();
+    }
+    moveCellDown() {
+        const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
+        cell.moveCellDown();
+    }
     moveCellLeft() {
         const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
         cell.moveCellLeft();
@@ -231,6 +239,16 @@ export class BlockMenuBlock extends AbstractBlock {
             icon: <IconSwipeLeft />,
             onClick: () => self.moveCellLeft()
       };
+      const itemMoveCellDown = {
+            label: "Move cell down",
+            icon: <IconHomeDown />,
+            onClick: () => self.moveCellDown()
+      };
+      const itemMoveCellUp = {
+            label: "Move cell up",
+            icon: <IconHomeUp />,
+            onClick: () => self.moveCellUp()
+      };
       const itemMoveCellRight = {
             label: "Move cell right",
             icon: <IconSwipeRight />,
@@ -283,7 +301,8 @@ export class BlockMenuBlock extends AbstractBlock {
         children: [
           itemAddGridRow, itemDestructureGrid, hr,
           itemMergeCellLeft, itemMergeCellRight, hr,
-          itemMoveCellLeft, itemMoveCellRight
+          itemMoveCellLeft, itemMoveCellRight,
+          itemMoveCellUp, itemMoveCellDown,
         ]
       };
       const itemTabsMenu = {

@@ -2022,24 +2022,50 @@ export class DocumentBlock extends AbstractBlock {
          * a StandoffEditorBlock to it.
          */
         if (!rightMargin) {
-            rightMargin = manager.createRightMarginBlock();
-            manager.registerBlock(rightMargin);
-            const child = manager.createStandoffEditorBlock();
-            child.addEOL();
-            child.addBlockProperties([ { type: "block/alignment/left" }, { type: "block/font/size/three-quarters" } ]);
-            child.applyBlockPropertyStyling();
-            rightMargin.relation.marginParent = block;
-            block.relation.rightMargin = rightMargin;
-            rightMargin.relation.firstChild = child;
-            child.relation.parent = rightMargin;
-            manager.addBlockTo(rightMargin, child);
-            rightMargin.container.appendChild(child.container);
-            manager.stageRightMarginBlock(rightMargin, block);
-            block.container.appendChild(rightMargin.container);
+            this.manager.handleBuildingMarginBlocks(block, {
+                relation: {
+                    rightMargin: {
+                        type: BlockType.RightMarginBlock,
+                        blockProperties: [
+                            { type: "block/marginalia/right" }
+                        ],
+                        children: [
+                            {
+                                type: BlockType.StandoffEditorBlock,
+                                blockProperties: [
+                                    { type: "block/alignment/right" }, { type: "block/font/size/three-quarters" }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            });
+            rightMargin = block.relation.rightMargin as DocumentBlock;
+            const textBlock = rightMargin.blocks[0] as StandoffEditorBlock;
             setTimeout(() => {
-                manager.setBlockFocus(child);
-                child.moveCaretStart();
-            }, 1);
+                manager.setBlockFocus(textBlock);
+                textBlock.moveCaretStart();
+            }, 100);
+            // rightMargin = manager.createRightMarginBlock();
+            // manager.registerBlock(rightMargin);
+            // const textBlock = manager.createStandoffEditorBlock();
+            // textBlock.addEOL();
+            // textBlock.addBlockProperties([
+            //     { type: "block/marginalia/right" }, { type: "block/alignment/right" }, { type: "block/font/size/three-quarters" }
+            // ]);
+            // textBlock.applyBlockPropertyStyling();
+            // rightMargin.relation.marginParent = block;
+            // block.relation.rightMargin = rightMargin;
+            // rightMargin.relation.firstChild = textBlock;
+            // textBlock.relation.parent = rightMargin;
+            // manager.addBlockTo(rightMargin, textBlock);
+            // rightMargin.container.appendChild(textBlock.container);
+            // manager.stageRightMarginBlock(rightMargin, block);
+            // block.container.appendChild(rightMargin.container);
+            // setTimeout(() => {
+            //     manager.setBlockFocus(textBlock);
+            //     textBlock.moveCaretStart();
+            // }, 1);
             return;
         } else {
             const child = rightMargin.relation.firstChild as StandoffEditorBlock;
