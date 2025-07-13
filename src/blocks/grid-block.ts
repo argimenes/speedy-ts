@@ -144,7 +144,6 @@ export class GridRowBlock extends AbstractBlock {
         }
     }
     swapCells(a: GridCellBlock, b: GridCellBlock) {
-        const row = this;
         const aRow = a.getRow();
         const bRow = b.getRow();
         const ai = aRow.blocks.findIndex(x => x.id == a.id), bi = bRow.blocks.findIndex(x => x.id == b.id);
@@ -158,12 +157,6 @@ export class GridRowBlock extends AbstractBlock {
         bTempNode.insertAdjacentElement("beforebegin", a.container);
         aTempNode.remove();
         bTempNode.remove();
-        // const isOnLeft = a.container.nextElementSibling == b.container;
-        // if (isOnLeft) {
-        //     a.container.insertAdjacentElement("beforebegin", b.container);
-        // } else {
-        //     b.container.insertAdjacentElement("beforebegin", a.container);
-        // }
         this.manager.generatePreviousNextRelations(aRow);
         this.manager.generatePreviousNextRelations(bRow);
     }
