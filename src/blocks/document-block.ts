@@ -2046,34 +2046,13 @@ export class DocumentBlock extends AbstractBlock {
                 manager.setBlockFocus(textBlock);
                 textBlock.moveCaretStart();
             }, 100);
-            // rightMargin = manager.createRightMarginBlock();
-            // manager.registerBlock(rightMargin);
-            // const textBlock = manager.createStandoffEditorBlock();
-            // textBlock.addEOL();
-            // textBlock.addBlockProperties([
-            //     { type: "block/marginalia/right" }, { type: "block/alignment/right" }, { type: "block/font/size/three-quarters" }
-            // ]);
-            // textBlock.applyBlockPropertyStyling();
-            // rightMargin.relation.marginParent = block;
-            // block.relation.rightMargin = rightMargin;
-            // rightMargin.relation.firstChild = textBlock;
-            // textBlock.relation.parent = rightMargin;
-            // manager.addBlockTo(rightMargin, textBlock);
-            // rightMargin.container.appendChild(textBlock.container);
-            // manager.stageRightMarginBlock(rightMargin, block);
-            // block.container.appendChild(rightMargin.container);
-            // setTimeout(() => {
-            //     manager.setBlockFocus(textBlock);
-            //     textBlock.moveCaretStart();
-            // }, 1);
             return;
-        } else {
-            const child = rightMargin.relation.firstChild as StandoffEditorBlock;
-            setTimeout(() => {
-                manager.setBlockFocus(child);
-                child.moveCaretStart();
-            }, 1);
         }
+        const textBlock = rightMargin.blocks[0] as StandoffEditorBlock;
+        setTimeout(() => {
+            manager.setBlockFocus(textBlock);
+            textBlock.moveCaretStart();
+        }, 1);
     }
     async handleCreateLeftMargin(args: IBindingHandlerArgs){
         const block = args.block as StandoffEditorBlock;
@@ -2084,32 +2063,31 @@ export class DocumentBlock extends AbstractBlock {
          * a StandoffEditorBlock to it.
          */
         if (!leftMargin) {
-            leftMargin = manager.createLeftMarginBlock();
-            const child = manager.createStandoffEditorBlock();
-            child.addEOL();
-            child.addBlockProperties([ { type: "block/alignment/left" }, { type: "block/font/size/three-quarters" } ]);
-            child.applyBlockPropertyStyling();
-            leftMargin.relation.marginParent = block;
-            block.relation.leftMargin = leftMargin;
-            leftMargin.relation.firstChild = child;
-            child.relation.parent = leftMargin;
-            manager.addBlockTo(leftMargin, child);
-            manager.registerBlock(leftMargin);
-            leftMargin.container.appendChild(child.container);
-            manager.stageLeftMarginBlock(leftMargin, block);
-            block.container.appendChild(leftMargin.container);
-            setTimeout(() => {
-                manager.setBlockFocus(child);
-                child.moveCaretStart();
-            }, 1);
-            return;
-        } else {
-            const child = leftMargin.relation.firstChild as StandoffEditorBlock;
-            setTimeout(() => {
-                manager.setBlockFocus(child);
-                child.moveCaretStart();
-            }, 1);
+            this.manager.handleBuildingMarginBlocks(block, {
+                relation: {
+                    leftMargin: {
+                        type: BlockType.LeftMarginBlock,
+                        blockProperties: [
+                            { type: "block/marginalia/left" }
+                        ],
+                        children: [
+                            {
+                                type: BlockType.StandoffEditorBlock,
+                                blockProperties: [
+                                    { type: "block/alignment/left" }, { type: "block/font/size/three-quarters" }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            });
+            leftMargin = block.relation.leftMargin as DocumentBlock;
         }
+        const textBlock = leftMargin.blocks[0] as StandoffEditorBlock;
+        setTimeout(() => {
+            manager.setBlockFocus(textBlock);
+            textBlock.moveCaretStart();
+        }, 100);
     }
     async redoHistory() {
         const history = this.getHistory();
