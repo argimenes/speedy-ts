@@ -2017,6 +2017,7 @@ export class DocumentBlock extends AbstractBlock {
         const block = args.block as StandoffEditorBlock;
         const manager = block.manager as UniverseBlock;
         let rightMargin = block.relation.rightMargin as DocumentBlock;
+        block.clearSelection();
         /**
          * If there is no LeftMarginBlock already then create one and add
          * a StandoffEditorBlock to it.
@@ -2050,14 +2051,15 @@ export class DocumentBlock extends AbstractBlock {
         }
         const textBlock = rightMargin.blocks[0] as StandoffEditorBlock;
         setTimeout(() => {
-            manager.setBlockFocus(textBlock);
             textBlock.moveCaretStart();
+            manager.setBlockFocus(textBlock);
         }, 1);
     }
     async handleCreateLeftMargin(args: IBindingHandlerArgs){
         const block = args.block as StandoffEditorBlock;
         const manager = block.manager as UniverseBlock;
         let leftMargin = block.relation.leftMargin as DocumentBlock;
+        block.clearSelection();
         /**
          * If there is no LeftMarginBlock already then create one and add
          * a StandoffEditorBlock to it.
@@ -2085,8 +2087,8 @@ export class DocumentBlock extends AbstractBlock {
         }
         const textBlock = leftMargin.blocks[0] as StandoffEditorBlock;
         setTimeout(() => {
-            manager.setBlockFocus(textBlock);
             textBlock.moveCaretStart();
+            manager.setBlockFocus(textBlock);
         }, 100);
     }
     async redoHistory() {
