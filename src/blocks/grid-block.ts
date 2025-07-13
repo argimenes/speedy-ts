@@ -145,16 +145,27 @@ export class GridRowBlock extends AbstractBlock {
     }
     swapCells(a: GridCellBlock, b: GridCellBlock) {
         const row = this;
-        const li = row.blocks.findIndex(x => x.id == a.id), ri = row.blocks.findIndex(x => x.id == b.id);
-        row.blocks[ri] = a;
-        row.blocks[li] = b;
-        const isOnLeft = a.container.nextElementSibling == b.container;
-        if (isOnLeft) {
-            a.container.insertAdjacentElement("beforebegin", b.container);
-        } else {
-            b.container.insertAdjacentElement("beforebegin", a.container);
-        }
-        this.manager.generatePreviousNextRelations(row);
+        const aRow = a.getRow();
+        const bRow = b.getRow();
+        const ai = aRow.blocks.findIndex(x => x.id == a.id), bi = bRow.blocks.findIndex(x => x.id == b.id);
+        const aTempNode = document.createElement("DIV");
+        const bTempNode = document.createElement("DIV");
+        a.container.insertAdjacentElement("beforebegin", aTempNode);
+        b.container.insertAdjacentElement("beforebegin", bTempNode);
+        bRow.blocks[bi] = a;
+        aRow.blocks[ai] = b;
+        aTempNode.insertAdjacentElement("beforebegin", b.container);
+        bTempNode.insertAdjacentElement("beforebegin", a.container);
+        aTempNode.remove();
+        bTempNode.remove();
+        // const isOnLeft = a.container.nextElementSibling == b.container;
+        // if (isOnLeft) {
+        //     a.container.insertAdjacentElement("beforebegin", b.container);
+        // } else {
+        //     b.container.insertAdjacentElement("beforebegin", a.container);
+        // }
+        this.manager.generatePreviousNextRelations(aRow);
+        this.manager.generatePreviousNextRelations(bRow);
     }
     deserialize(json: any): IBlock {
         throw new Error("Method not implemented.");
