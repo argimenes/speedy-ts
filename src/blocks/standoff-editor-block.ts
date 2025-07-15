@@ -1761,6 +1761,9 @@ export class StandoffEditorBlock extends AbstractBlock {
             selection.addRange(range);
         }
     }
+    toggleStandoffPropertyMode(type: string) {
+
+    }
     createStandoffProperty(type: string, range: IRange) {
         this.triggerBeforeChange();
         const schema = this.schemas.find(x => x.type == type) as IStandoffPropertySchema;
