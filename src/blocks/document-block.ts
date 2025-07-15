@@ -69,6 +69,17 @@ export class DocumentBlock extends AbstractBlock {
         }
         this.applyStandoffProperty(tb, type);
     }
+    applyBlockStyle(type:string, remove?: string[]) {
+        const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        if (remove) {
+            const removeProps = tb.blockProperties.filter(x => remove.some(x2 => x.type == x2));
+            removeProps?.length && removeProps.forEach(tb.removeBlockProperty);
+        }
+        tb.addBlockProperties([{ type }]);
+    }
     applyStandoffProperty(block: StandoffEditorBlock, type: string) {
         const selection = block.getSelection();
         if (selection) {
