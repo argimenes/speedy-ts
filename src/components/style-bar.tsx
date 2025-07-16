@@ -55,8 +55,10 @@ export class StyleBarBlock extends AbstractBlock {
     document: DocumentBlock;
     constructor(args: IStyleBarBlockConstructor) {
         super(args);
+        this.suppressEventHandlers = true;
         this.document = args.document;
         this.render();
+        this.manager.registerBlock(this);
     }
     applyStyle(name: string) {
         this.document.applyStyle(name);
