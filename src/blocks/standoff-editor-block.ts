@@ -486,6 +486,38 @@ export class StandoffEditorBlock extends AbstractBlock {
         const manager = this.manager;
         return [
             {
+                type: "block/text-size/h1",
+                name: "H1",
+                description: "",
+                decorate: {
+                    blockClass: "block_text-size_h1"
+                }
+            },
+            {
+                type: "block/text-size/h2",
+                name: "H2",
+                description: "",
+                decorate: {
+                    blockClass: "block_text-size_h2"
+                }
+            },
+            {
+                type: "block/text-size/h3",
+                name: "H3",
+                description: "",
+                decorate: {
+                    blockClass: "block_text-size_h3"
+                }
+            },
+            {
+                type: "block/text-size/h4",
+                name: "H4",
+                description: "",
+                decorate: {
+                    blockClass: "block_text-size_h4"
+                }
+            },
+            {
                 type: "block/vines",
                 name: "Block vines",
                 event: {

@@ -77,6 +77,20 @@ body {
     z-index: -1;  /* This ensures other content appears above it */
   }
 
+.block_text-size_h1 {
+  font-size: 4rem;
+}
+.block_text-size_h2 {
+  font-size: 3rem;
+}
+.block_text-size_h3 {
+  font-size: 2rem;
+}
+.block_text-size_h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
   .abstract-block {
     /* z-index: -1; */
     line-height: 1.5rem;
@@ -112,6 +126,7 @@ body {
     flex: 1;  /* Allow content to grow and fill remaining space */
     padding-left: 250px;
     padding-right: 250px;
+    padding-top: 1.5rem;
   }
 
   .block_marginalia_left { 
@@ -483,4 +498,13 @@ body {
 .abstract-block:hover > .block-menu-button {
   opacity: 1;
   pointer-events: auto;
+}
+.style-bar_block {
+  position: fixed;
+  top: 20px;
+  left: 0;
+  z-index: 101;
+  background-color: #fff;
+  width: 100%;
+  height: 1.5rem;
 }

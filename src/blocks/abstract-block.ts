@@ -98,8 +98,9 @@ export abstract class AbstractBlock implements IBlock {
     removeBlockProperty(prop: BlockProperty) {
         prop.removeStyling();
         const bi = this.blockProperties.findIndex(x => x.id == prop.id);
+        if (bi < 0) return;
         this.blockProperties.splice(bi, 1);
-        if (!this.blockProperties) this.blockProperties = [];
+        if (!this.blockProperties?.length) this.blockProperties = [];
         prop.isDeleted = true;
     }
     addOverlay(name: string) {
@@ -228,6 +229,7 @@ export abstract class AbstractBlock implements IBlock {
                 schema: self.blockSchemas.find(x2 => x2.type == x.type) as IBlockPropertySchema
             }),
         );
+        this.blockProperties = this.blockProperties || [];
         this.blockProperties.push(...props);
     }
     applyBlockPropertyStyling() {

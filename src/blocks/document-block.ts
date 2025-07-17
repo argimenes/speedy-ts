@@ -69,6 +69,15 @@ export class DocumentBlock extends AbstractBlock {
         }
         this.applyStandoffProperty(tb, type);
     }
+    clearFormatting() {
+        const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        tb.blockProperties.forEach(p => tb.removeBlockProperty(p));
+        tb.standoffProperties.forEach(sp => sp.destroy());
+        tb.updateRenderers();
+    }
     applyBlockStyle(type:string, remove?: string[]) {
         const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
         if (tb.type != BlockType.StandoffEditorBlock) {
@@ -76,9 +85,13 @@ export class DocumentBlock extends AbstractBlock {
         }
         if (remove) {
             const removeProps = tb.blockProperties.filter(x => remove.some(x2 => x.type == x2));
-            removeProps?.length && removeProps.forEach(tb.removeBlockProperty);
+            removeProps?.length && removeProps.forEach((p) => {
+                tb.removeBlockProperty(p);
+            });
         }
         tb.addBlockProperties([{ type }]);
+        tb.applyBlockPropertyStyling();
+        tb.updateRenderers();
     }
     applyStandoffProperty(block: StandoffEditorBlock, type: string) {
         const selection = block.getSelection();
@@ -203,6 +216,38 @@ export class DocumentBlock extends AbstractBlock {
                 name: "Top margin - 40",
                 decorate: {
                     blockClass: "block_margin_top_40px"
+                }
+            },
+            {
+                type: "block/text-size/h1",
+                name: "H1",
+                description: "",
+                decorate: {
+                    blockClass: "block_text-size_h1"
+                }
+            },
+            {
+                type: "block/text-size/h2",
+                name: "H2",
+                description: "",
+                decorate: {
+                    blockClass: "block_text-size_h2"
+                }
+            },
+            {
+                type: "block/text-size/h3",
+                name: "H3",
+                description: "",
+                decorate: {
+                    blockClass: "block_text-size_h3"
+                }
+            },
+            {
+                type: "block/text-size/h4",
+                name: "H4",
+                description: "",
+                decorate: {
+                    blockClass: "block_text-size_h4"
                 }
             },
             {
