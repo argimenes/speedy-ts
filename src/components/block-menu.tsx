@@ -327,7 +327,7 @@ export class BlockMenuBlock extends AbstractBlock {
             onClick: () => self.addGridRow()
       };
       const itemWindowThemesMenu = {
-            label: "Window Theme",
+            label: "Themes",
             icon: <IconWindow />,
             children: [
               itemSetWindowThemeToGlass,
@@ -363,7 +363,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const insideGrid = !!this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
       const insideTabs = !!this.manager.getParentOfType(this.source, BlockType.TabBlock);
       const insideIndentedList = !!this.manager.getParentOfType(this.source, BlockType.IndentedListBlock);
-      items.push(itemWindowThemesMenu);
+      
       items.push(itemAdd);
       if (!insideTabs) {
         items.push(itemConvertToTab);
@@ -381,7 +381,7 @@ export class BlockMenuBlock extends AbstractBlock {
         items.push(itemIndentedListMenu);
       }
       items.push(itemDeleteBlock);
-      
+      items.push(itemWindowThemesMenu);
       const jsx = BlockMenu({
           items: items,
           visible: true,
