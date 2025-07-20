@@ -183,6 +183,7 @@ export interface IKeyboardInput {
     //function: boolean;
     key: string;
     keyCode: number;
+    leftClick: boolean;
 }
 export interface IMouseInput {
     platform: Platform;

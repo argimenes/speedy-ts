@@ -39,7 +39,7 @@ export type BlockBuilder =
 export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     lastFocus?: IBlock;
     focus?: IBlock;
-    selections: IBlockSelection[];
+    selections: GUID[];
     commits: Commit[];
     pointer: number;
     direction: PointerDirection;
@@ -244,6 +244,34 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     getBackground() {
         return this.blocks[0].blocks[0] as AbstractBlock;
+    }
+    deactivateBlockSelection(blockId: GUID) {
+        const block = this.getBlock(blockId);
+        block.container.classList.remove("block-selection");
+    }
+    activateBlockSelection(blockId: GUID) {
+        const block = this.getBlock(blockId);
+        block.container.classList.add("block-selection");
+    }
+    hasSelections() {
+        return this.selections?.length > 0;
+    }
+    toggleBlockSelection(blockId: GUID) {
+        if (this.selections.some(x => x == blockId)) {
+            this.selections = this.selections.filter(x => x != blockId);
+            this.deactivateBlockSelection(blockId);
+            return;
+        }
+        this.selections.push(blockId);
+        this.activateBlockSelection(blockId);
+    }
+    deleteSelections() {
+        const self = this;
+        this.selections.forEach(id => {
+            let block = self.getBlock(id);
+            block.destroy();
+        });
+        this.selections = [];
     }
     async attachEventBindings() {
         document.body.addEventListener("keydown", this.handleKeyboardInputEvents.bind(this));

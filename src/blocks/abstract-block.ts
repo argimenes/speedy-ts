@@ -151,6 +151,7 @@ export abstract class AbstractBlock implements IBlock {
             const parts = _match.split("-"), len = parts.length;
             chord.key = parts[len-1];
         }
+        chord.leftClick = (_match.indexOf("CLICKLEFT") >= 0);
         // console.log("toChord", { match, chord, platform });
         return chord;
     }
@@ -166,6 +167,7 @@ export abstract class AbstractBlock implements IBlock {
         if (input.shift != trigger.shift) return false;
         if (input.control != trigger.control) return false;
         if (input.key?.toUpperCase() != trigger.key?.toUpperCase()) return false;
+        if (input.leftClick != trigger.leftClick) return false;
         return true;
     }
     protected getFirstMatchingInputEvent(input: IKeyboardInput) {

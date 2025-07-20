@@ -951,18 +951,22 @@ export class DocumentBlock extends AbstractBlock {
                     }
                 }
             },
-            // {
-            //     mode: "default",
-            //     trigger: {
-            //         source: InputEventSource.Custom,
-            //         match: "contextmenu"
-            //     },
-            //     action: {
-            //         name: "Monitor panel",
-            //         description: "",
-            //         handler: this.loadAnnotationMenu.bind(this)
-            //     }
-            // },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Mouse,
+                    match: "Shift-ClickLeft"
+                },
+                action: {
+                    name: "Block selection",
+                    description: "Toggles selection of a block; handles multiple block selections.",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        const manager = block.manager as UniverseBlock;
+                        manager.loadBlockMenu(args);
+                    }
+                }
+            },
             {
                 mode: "default",
                 trigger: {
@@ -2011,6 +2015,10 @@ export class DocumentBlock extends AbstractBlock {
         const manager = this.manager;
         const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
+        if (manager.hasSelections()) {
+            manager.deleteSelections();
+            return;
+        }
         const selection = block.getSelection();
         if (selection) {
             const len = (selection.end.index - selection.start.index) + 1;
