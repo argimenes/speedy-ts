@@ -91,7 +91,7 @@ export class DocumentBlock extends AbstractBlock {
         }
         tb.addBlockProperties([{ type }]);
         tb.applyBlockPropertyStyling();
-        tb.updateRenderers();
+        tb.updateView();
     }
     applyStandoffProperty(block: StandoffEditorBlock, type: string) {
         const selection = block.getSelection();
