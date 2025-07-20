@@ -62,6 +62,38 @@ export class DocumentBlock extends AbstractBlock {
         this.setupSubscriptions();
         
     }
+    selectBackgroundColour() {
+        const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        const colour = prompt("Colour: ");
+        const selection = tb.getSelection();
+        const type = {
+            type: "text/background-colour",
+            value: colour,
+            start: selection.start.index,
+            end: selection.end.index
+        } as StandoffPropertyDto;
+        tb.addStandoffPropertiesDto([type]);
+        tb.applyStandoffPropertyStyling();
+    }
+    selectFontColour() {
+        const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        const colour = prompt("Colour: ");
+        const selection = tb.getSelection();
+        const type = {
+            type: "text/colour",
+            value: colour,
+            start: selection.start.index,
+            end: selection.end.index
+        } as StandoffPropertyDto;
+        tb.addStandoffPropertiesDto([type]);
+        tb.applyStandoffPropertyStyling();
+    }
     applyStyle(type: string) {
         const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
         if (tb.type != BlockType.StandoffEditorBlock) {
@@ -76,7 +108,7 @@ export class DocumentBlock extends AbstractBlock {
         }
         tb.blockProperties.forEach(p => tb.removeBlockProperty(p));
         tb.standoffProperties.forEach(sp => sp.destroy());
-        tb.updateRenderers();
+        tb.updateView();
     }
     applyBlockStyle(type:string, remove?: string[]) {
         const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;

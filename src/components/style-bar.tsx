@@ -3,7 +3,7 @@ import { AbstractBlock } from "../blocks/abstract-block";
 import { renderToNode } from "../library/common";
 import { IAbstractBlockConstructor, IBlockDto, IBlock } from "../library/types";
 import { DocumentBlock } from "../blocks/document-block";
-import { IconAlignCenter, IconAlignJustified, IconAlignLeft, IconAlignRight, IconBold, IconClearFormatting, IconH1, IconH2, IconH3, IconH4, IconItalic, IconSeparatorVertical } from "@tabler/icons-solidjs";
+import { IconAlignCenter, IconAlignJustified, IconAlignLeft, IconAlignRight, IconBold, IconClearFormatting, IconColorPicker, IconH1, IconH2, IconH3, IconH4, IconItalic, IconSeparatorVertical } from "@tabler/icons-solidjs";
 
 export interface IStyleBarBlockConstructor extends IAbstractBlockConstructor {
     document: DocumentBlock;
@@ -57,6 +57,14 @@ export const StyleBar : Component<Props> = (props) => {
         e.preventDefault();
         props.block.clearFormatting();
     };
+    const onFontColourClicked = (e: Event) => {
+        e.preventDefault();
+        props.block.selectFontColour();
+    }
+    const onBackgroundColourClicked = (e: Event) => {
+        e.preventDefault();
+        props.block.selectBackgroundColour();
+    }
     return (
         <>
             <div class="style-bar_block">
@@ -73,6 +81,8 @@ export const StyleBar : Component<Props> = (props) => {
                 <button onClick={onH3Clicked} class="btn btn-default btn-sm"><IconH3 /></button>
                 <button onClick={onH4Clicked} class="btn btn-default btn-sm"><IconH4 /></button>
                 <span style="margin: 0 10;">|</span>
+                <button onClick={onFontColourClicked} class="btn btn-default btn-sm">Font</button>
+                <button onClick={onBackgroundColourClicked} class="btn btn-default btn-sm">Background</button>
                 <button onClick={onClearFormattingClicked} class="btn btn-default btn-sm"><IconClearFormatting /></button>
             </div>
         </>
@@ -87,6 +97,12 @@ export class StyleBarBlock extends AbstractBlock {
         this.document = args.document;
         this.render();
         this.manager.registerBlock(this);
+    }
+    selectBackgroundColour() {
+        this.document.selectBackgroundColour();
+    }
+    selectFontColour() {
+        this.document.selectFontColour();
     }
     applyStyle(name: string) {
         this.document.applyStyle(name);

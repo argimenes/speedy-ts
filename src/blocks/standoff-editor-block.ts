@@ -121,6 +121,68 @@ export class StandoffEditorBlock extends AbstractBlock {
         const self = this;
         return [
             {
+                type: "text/background-colour",
+                event: {
+                    onInit: async (p: StandoffProperty) => {
+                        const cells = p.getCells();
+                        cells.forEach(c => c.element.style.backgroundColor = p.value);
+                    },
+                    onUpdate: async (p: StandoffProperty) => {
+                        const cells = p.getCells();
+                        cells.forEach(c => c.element.style.backgroundColor = p.value);
+                    },
+                    onDestroy: async (p: StandoffProperty) => {
+                        const cells = p.getCells();
+                        cells.forEach(c => c.element.style.backgroundColor = "unset");
+                    }
+                },
+                render: {
+                    destroy: ({ properties }) => {
+                        properties.forEach(p => {
+                            const cells = p.getCells();
+                            cells.forEach(c => c.element.style.backgroundColor = "unset");
+                        });
+                    },
+                    update: ({ properties }) => {
+                        properties.forEach(p => {
+                            const cells = p.getCells();
+                            cells.forEach(c => c.element.style.backgroundColor = p.value);
+                        });
+                    }
+                }
+            },
+            {
+                type: "text/colour",
+                event: {
+                    onInit: async (p: StandoffProperty) => {
+                        const cells = p.getCells();
+                        cells.forEach(c => c.element.style.color = p.value);
+                    },
+                    onUpdate: async (p: StandoffProperty) => {
+                        const cells = p.getCells();
+                        cells.forEach(c => c.element.style.color = p.value);
+                    },
+                    onDestroy: async (p: StandoffProperty) => {
+                        const cells = p.getCells();
+                        cells.forEach(c => c.element.style.color = "unset");
+                    }
+                },
+                render: {
+                    destroy: ({ properties }) => {
+                        properties.forEach(p => {
+                            const cells = p.getCells();
+                            cells.forEach(c => c.element.style.color = "unset");
+                        });
+                    },
+                    update: ({ properties }) => {
+                        properties.forEach(p => {
+                            const cells = p.getCells();
+                            cells.forEach(c => c.element.style.color = p.value);
+                        });
+                    }
+                }
+            },
+            {
                 type: "cell/micro-document",
                 name: "Cell-sized document",
                 description: "",
@@ -414,7 +476,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                 name: "Rectangle",
                 render: {
                     destroy: ({ properties }) => {
-                        properties.forEach(p => p.cache.highlight?.remove())
+                        properties.forEach(p => p.cache.svg?.remove())
                     },
                     update: (args) => {
                         self.renderRectangle(args.properties, args.block, "red");
@@ -426,7 +488,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                 name: "Spiky",
                 render: {
                     destroy: ({ properties }) => {
-                        properties.forEach(p => p.cache.highlight?.remove())
+                        properties.forEach(p => p.cache.svg?.remove())
                     },
                     update: (args) => {
                         self.renderSpiky(args.properties, args.block, "red");
