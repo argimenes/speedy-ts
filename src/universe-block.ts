@@ -1071,7 +1071,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const videoBackground = await this.recursivelyBuildBlock(container, {
             type: BlockType.VideoBackgroundBlock,
             metadata: {
-                url: "/video-backgrounds/green-aurora.mp4"
+                //url: "/video-backgrounds/green-aurora.mp4"
+                url: "/video-backgrounds/rain.mp4"
             }
         }) as AbstractBlock;
         this.switchBackground(originalBackground, videoBackground);
