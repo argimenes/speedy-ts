@@ -52,6 +52,7 @@ export abstract class AbstractBlock implements IBlock {
                 id: this.id
             }
         });
+        this.container.dataset.blockId = this.id;
         this.commitHandler = () => { };
         this.metadata = args.metadata || {};
         this.blockProperties = [];

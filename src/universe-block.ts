@@ -119,13 +119,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.container.remove();
     }
     findNearestBlockByElement(el: HTMLElement) {
-        let current = el;
-        while (current) {
-            let match = this.registeredBlocks.find(x=> x.container == current);
-            if (match) return match;
-            current = current.parentElement as HTMLElement;
-        }
-        return null;
+        const blockId = el.closest('[data-block-id]')?.dataset.blockId;
+        const match = this.registeredBlocks.find(x=> x.id == blockId);
+        return match;
     }
     async handleMouseInputEvents(e: MouseEvent) {
         console.log("handleMouseInputEvents", { manager: this, e });
