@@ -3,7 +3,7 @@ import _ from 'underscore';
 import { updateElement } from '../library/svg';
 import { BlockProperty } from '../library/block-property';
 import { KEYS } from '../library/keyboard';
-import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IKeyboardInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET, UniverseBlockEvent, IBindingHandlerArgs, Caret } from '../library/types';
+import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET, UniverseBlockEvent, IBindingHandlerArgs, Caret } from '../library/types';
 import { UniverseBlock } from '../universe-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
 
@@ -20,7 +20,7 @@ export abstract class AbstractBlock implements IBlock {
      * This will keep track of the last couple of key-combinations entered. The main purpose
      * is for triggering two-part bindings, such as 'CTRL-K, CTRL-D'.
      */
-    inputBuffer: IKeyboardInput[];
+    inputBuffer: IInput[];
     inputEvents: InputEvent[];
     inputActions: InputAction[];
     modes: string[];
@@ -133,9 +133,10 @@ export abstract class AbstractBlock implements IBlock {
         const code = KEYS[name].find(x => x.platform == Platform.Windows)?.code as number;
         return code;
     }
-    protected toChord(match: string) {
-        let chord: IKeyboardInput = {} as any;
+    protected toChord(match: string, source: InputEventSource = InputEventSource.Keyboard) {
+        let chord: IInput = {} as any;
         const _match = match.toUpperCase();
+        chord.source = source;
         if ((_match.indexOf(":") >= 0)) {
             chord.platform = (_match.indexOf("MAC") >= 0) ? Platform.Mac : Platform.Windows;
         } else {
@@ -151,14 +152,14 @@ export abstract class AbstractBlock implements IBlock {
             const parts = _match.split("-"), len = parts.length;
             chord.key = parts[len-1];
         }
-        chord.leftClick = (_match.indexOf("CLICKLEFT") >= 0);
+        chord.leftButton = (_match.indexOf("CLICKLEFT") >= 0);
+        chord.rightButton = (_match.indexOf("CLICKRIGHT") >= 0);
         // console.log("toChord", { match, chord, platform });
         return chord;
     }
-    protected compareChords(input: IKeyboardInput, trigger: IKeyboardInput) {
+    protected compareChords(input: IInput, trigger: IInput) {
         if (trigger.key.startsWith("'")) {
             const key = trigger.key.substring(1,2);
-            // console.log("compareChords", { input, trigger, key })
             if (input.key?.toUpperCase() == key.toUpperCase()) return true;
         }
         if (input.platform != trigger.platform) return false;
@@ -166,14 +167,19 @@ export abstract class AbstractBlock implements IBlock {
         if (input.option != trigger.option) return false;
         if (input.shift != trigger.shift) return false;
         if (input.control != trigger.control) return false;
-        if (input.key?.toUpperCase() != trigger.key?.toUpperCase()) return false;
-        if (input.leftClick != trigger.leftClick) return false;
+        if (trigger.source == InputEventSource.Keyboard) {
+            if (input.key?.toUpperCase() != trigger.key?.toUpperCase()) return false;
+        }
+        if (trigger.source == InputEventSource.Mouse) {
+            if (input.leftButton !== trigger.leftButton) return false;
+            if (input.rightButton !== trigger.rightButton) return false;
+        }
         return true;
     }
-    protected getFirstMatchingInputEvent(input: IKeyboardInput) {
+    protected getFirstMatchingInputEvent(input: IInput, source: InputEventSource = InputEventSource.Keyboard) {
         // console.log("getFirstMatchingInputEvent", { input });
         const self = this;
-        const modeEvents = _.groupBy(this.inputEvents.filter(x => x.trigger.source == InputEventSource.Keyboard), x => x.mode);
+        const modeEvents = _.groupBy(this.inputEvents.filter(x => x.trigger.source == source), x => x.mode);
         const maxIndex = this.modes.length -1;
         for (let i = maxIndex; i >= 0; i--) {
             let mode = this.modes[i];
@@ -182,11 +188,11 @@ export abstract class AbstractBlock implements IBlock {
             // console.log("getFirstMatchingInputEvent", { events });
             let match = events.find(x => {
                 if (Array.isArray(x.trigger.match)) {
-                    const triggers = (x.trigger.match as string[]).map(m => self.toChord(m));
+                    const triggers = (x.trigger.match as string[]).map(m => self.toChord(m, source));
                     const found = triggers.some(t => self.compareChords(input, t));
                     return found;
                 } else {
-                    let trigger = self.toChord(x.trigger.match as string);
+                    let trigger = self.toChord(x.trigger.match as string, source);
                     const found = self.compareChords(input, trigger);
                     return found;
                 }
@@ -197,6 +203,7 @@ export abstract class AbstractBlock implements IBlock {
     }
     protected toMouseInput(e: MouseEvent): IMouseInput {
         const input: IMouseInput = {
+            source: InputEventSource.Mouse,
             platform,
             shift: e.shiftKey,
             control: e.ctrlKey,
@@ -207,8 +214,9 @@ export abstract class AbstractBlock implements IBlock {
         };
         return input;
     }
-    protected toKeyboardInput(e: KeyboardEvent): IKeyboardInput {
-        const input: IKeyboardInput = {
+    protected toKeyboardInput(e: KeyboardEvent): IInput {
+        const input: IInput = {
+            source: InputEventSource.Keyboard,
             platform,
             shift: e.shiftKey,
             control: e.ctrlKey,

@@ -174,7 +174,8 @@ export type BlockPropertyDto = {
     value?: string
     metadata?: Record<string, any>;
 }
-export interface IKeyboardInput {
+export interface IInput {
+    source: InputEventSource;
     platform: Platform;
     control: boolean;
     shift: boolean;
@@ -183,9 +184,11 @@ export interface IKeyboardInput {
     //function: boolean;
     key: string;
     keyCode: number;
-    leftClick: boolean;
+    leftButton?: boolean;
+    rightButton?: boolean;
 }
 export interface IMouseInput {
+    source: InputEventSource;
     platform: Platform;
     control: boolean;
     shift: boolean;

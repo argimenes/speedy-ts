@@ -5,7 +5,7 @@ import { StandoffProperty } from "../library/standoff-property";
 import { AbstractBlock } from "./abstract-block";
 import { Cell, Row } from "../library/cell";
 import { KEYS } from "../library/keyboard";
-import { BlockType, ICoordOffsets, IKeyboardInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation, FindMatch, isStr, IBlockDto } from "../library/types";
+import { BlockType, ICoordOffsets, IInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation, FindMatch, isStr, IBlockDto } from "../library/types";
 import { DocumentBlock } from "./document-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 import BlockVines from "../library/plugins/block-vines";
@@ -1009,7 +1009,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         cell.element?.classList.add("line-break");
         return cell;
     }
-    addToInputBuffer(key: IKeyboardInput) {
+    addToInputBuffer(key: IInput) {
         if (this.inputBuffer.length <= 1) {
             this.inputBuffer.push(key);
             return;
@@ -1108,7 +1108,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         const end = this.getCellFromNode(range?.endContainer as CellNode);
         return { start, end } as IRange;
     }
-    insertCharacterAtCaret(input: IKeyboardInput) {
+    insertCharacterAtCaret(input: IInput) {
         const caret = this.getCaret();
         if (!caret) return;
         const selection = this.getSelection();

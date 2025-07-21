@@ -955,7 +955,7 @@ export class DocumentBlock extends AbstractBlock {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Mouse,
-                    match: "Shift-ClickLeft"
+                    match: "Control-ClickLeft"
                 },
                 action: {
                     name: "Block selection",
@@ -963,7 +963,7 @@ export class DocumentBlock extends AbstractBlock {
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block;
                         const manager = block.manager as UniverseBlock;
-                        manager.loadBlockMenu(args);
+                        manager.toggleBlockSelection(block.id);
                     }
                 }
             },

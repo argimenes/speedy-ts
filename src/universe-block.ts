@@ -154,7 +154,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         for (let i = 0; i < blocks.length; i++) {
             const b = blocks[i];
             if (!(b as any).getFirstMatchingInputEvent) continue;
-            const match = (b as any).getFirstMatchingInputEvent(input);
+            const match = (b as any).getFirstMatchingInputEvent(input, InputEventSource.Mouse);
             if (match) {
                 const args = {
                     block: parentBlock,
