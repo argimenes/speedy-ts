@@ -1,4 +1,4 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow } from "@tabler/icons-solidjs";
 import { Component, onCleanup, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -9,6 +9,7 @@ import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "../blocks/grid-block";
 import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
 import { IndentedListBlock } from "../blocks/indented-list-block";
+import { DocumentWindowBlock } from "../blocks/document-window-block";
 
 type Props = {
     items: ContextMenuItem[];
@@ -159,6 +160,28 @@ export class BlockMenuBlock extends AbstractBlock {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
       tab.moveLeft();
     }
+    switchThemeTo(theme: string) {
+        const win = this.manager.getParentOfType(this.source, BlockType.DocumentWindowBlock) as DocumentWindowBlock;
+        if (theme == "normal") {
+            const glass = win.blockProperties.find(x => x.type == "block/theme/glass");
+            if (glass) win.removeBlockProperty(glass);
+            win.addBlockProperties([{ type: "block/theme/paper" }]);
+            win.applyBlockPropertyStyling();
+        } else if (theme == "glass") {
+            const paper = win.blockProperties.find(x => x.type == "block/theme/paper");
+            if (paper) win.removeBlockProperty(paper);
+            win.addBlockProperties([{ type: "block/theme/glass" }]);
+            win.applyBlockPropertyStyling();
+        } else {
+            // do nothing
+        }
+    }
+    setWindowThemeToGlass() {
+      this.switchThemeTo("glass");
+    }
+    setWindowThemeToDefault() {
+      this.switchThemeTo("normal");
+    }
     moveTabRight() {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
       tab.moveRight();
@@ -193,6 +216,14 @@ export class BlockMenuBlock extends AbstractBlock {
                 ]
               }
             ]
+      };
+      const itemSetWindowThemeToGlass = {
+            label: "Glass",
+            onClick: () => self.setWindowThemeToGlass()
+      };
+      const itemSetWindowThemeToDefault = {
+            label: "Default",
+            onClick: () => self.setWindowThemeToDefault()
       };
       const itemConvertToGrid = {
             label: "Convert to grid (1 x 2)",
@@ -295,6 +326,14 @@ export class BlockMenuBlock extends AbstractBlock {
             icon: <IconPlus />,
             onClick: () => self.addGridRow()
       };
+      const itemWindowThemesMenu = {
+            label: "Themes",
+            icon: <IconWindow />,
+            children: [
+              itemSetWindowThemeToGlass,
+              itemSetWindowThemeToDefault
+            ]
+      };
       const itemGridsMenu = {
         type: "item",
         label: "Grids",
@@ -324,6 +363,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const insideGrid = !!this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
       const insideTabs = !!this.manager.getParentOfType(this.source, BlockType.TabBlock);
       const insideIndentedList = !!this.manager.getParentOfType(this.source, BlockType.IndentedListBlock);
+      
       items.push(itemAdd);
       if (!insideTabs) {
         items.push(itemConvertToTab);
@@ -341,7 +381,7 @@ export class BlockMenuBlock extends AbstractBlock {
         items.push(itemIndentedListMenu);
       }
       items.push(itemDeleteBlock);
-      
+      items.push(itemWindowThemesMenu);
       const jsx = BlockMenu({
           items: items,
           visible: true,

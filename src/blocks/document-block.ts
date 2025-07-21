@@ -62,12 +62,53 @@ export class DocumentBlock extends AbstractBlock {
         this.setupSubscriptions();
         
     }
+    selectBackgroundColour() {
+        const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        const colour = prompt("Colour: ");
+        const selection = tb.getSelection();
+        const type = {
+            type: "text/background-colour",
+            value: colour,
+            start: selection.start.index,
+            end: selection.end.index
+        } as StandoffPropertyDto;
+        tb.addStandoffPropertiesDto([type]);
+        tb.applyStandoffPropertyStyling();
+    }
+    selectFontColour() {
+        const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        const colour = prompt("Colour: ");
+        const selection = tb.getSelection();
+        const type = {
+            type: "text/colour",
+            value: colour,
+            start: selection.start.index,
+            end: selection.end.index
+        } as StandoffPropertyDto;
+        tb.addStandoffPropertiesDto([type]);
+        tb.applyStandoffPropertyStyling();
+    }
     applyStyle(type: string) {
         const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
         if (tb.type != BlockType.StandoffEditorBlock) {
             return;
         }
         this.applyStandoffProperty(tb, type);
+    }
+    clearFormatting() {
+        const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        tb.blockProperties.forEach(p => tb.removeBlockProperty(p));
+        tb.standoffProperties.forEach(sp => sp.destroy());
+        tb.updateView();
     }
     applyBlockStyle(type:string, remove?: string[]) {
         const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
@@ -76,9 +117,13 @@ export class DocumentBlock extends AbstractBlock {
         }
         if (remove) {
             const removeProps = tb.blockProperties.filter(x => remove.some(x2 => x.type == x2));
-            removeProps?.length && removeProps.forEach(tb.removeBlockProperty);
+            removeProps?.length && removeProps.forEach((p) => {
+                tb.removeBlockProperty(p);
+            });
         }
         tb.addBlockProperties([{ type }]);
+        tb.applyBlockPropertyStyling();
+        tb.updateView();
     }
     applyStandoffProperty(block: StandoffEditorBlock, type: string) {
         const selection = block.getSelection();
@@ -203,6 +248,38 @@ export class DocumentBlock extends AbstractBlock {
                 name: "Top margin - 40",
                 decorate: {
                     blockClass: "block_margin_top_40px"
+                }
+            },
+            {
+                type: "block/text-size/h1",
+                name: "H1",
+                description: "",
+                decorate: {
+                    blockClass: "block_text-size_h1"
+                }
+            },
+            {
+                type: "block/text-size/h2",
+                name: "H2",
+                description: "",
+                decorate: {
+                    blockClass: "block_text-size_h2"
+                }
+            },
+            {
+                type: "block/text-size/h3",
+                name: "H3",
+                description: "",
+                decorate: {
+                    blockClass: "block_text-size_h3"
+                }
+            },
+            {
+                type: "block/text-size/h4",
+                name: "H4",
+                description: "",
+                decorate: {
+                    blockClass: "block_text-size_h4"
                 }
             },
             {
@@ -874,18 +951,22 @@ export class DocumentBlock extends AbstractBlock {
                     }
                 }
             },
-            // {
-            //     mode: "default",
-            //     trigger: {
-            //         source: InputEventSource.Custom,
-            //         match: "contextmenu"
-            //     },
-            //     action: {
-            //         name: "Monitor panel",
-            //         description: "",
-            //         handler: this.loadAnnotationMenu.bind(this)
-            //     }
-            // },
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Mouse,
+                    match: "Shift-ClickLeft"
+                },
+                action: {
+                    name: "Block selection",
+                    description: "Toggles selection of a block; handles multiple block selections.",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        const manager = block.manager as UniverseBlock;
+                        manager.loadBlockMenu(args);
+                    }
+                }
+            },
             {
                 mode: "default",
                 trigger: {
@@ -1934,6 +2015,10 @@ export class DocumentBlock extends AbstractBlock {
         const manager = this.manager;
         const caret = args.caret as Caret;
         const block = args.block as StandoffEditorBlock;
+        if (manager.hasSelections()) {
+            manager.deleteSelections();
+            return;
+        }
         const selection = block.getSelection();
         if (selection) {
             const len = (selection.end.index - selection.start.index) + 1;

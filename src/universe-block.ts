@@ -39,7 +39,7 @@ export type BlockBuilder =
 export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     lastFocus?: IBlock;
     focus?: IBlock;
-    selections: IBlockSelection[];
+    selections: GUID[];
     commits: Commit[];
     pointer: number;
     direction: PointerDirection;
@@ -119,13 +119,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.container.remove();
     }
     findNearestBlockByElement(el: HTMLElement) {
-        let current = el;
-        while (current) {
-            let match = this.registeredBlocks.find(x=> x.container == current);
-            if (match) return match;
-            current = current.parentElement as HTMLElement;
-        }
-        return null;
+        const blockId = el.closest('[data-block-id]')?.dataset.blockId;
+        const match = this.registeredBlocks.find(x=> x.id == blockId);
+        return match;
     }
     async handleMouseInputEvents(e: MouseEvent) {
         console.log("handleMouseInputEvents", { manager: this, e });
@@ -248,6 +244,34 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     getBackground() {
         return this.blocks[0].blocks[0] as AbstractBlock;
+    }
+    deactivateBlockSelection(blockId: GUID) {
+        const block = this.getBlock(blockId);
+        block.container.classList.remove("block-selection");
+    }
+    activateBlockSelection(blockId: GUID) {
+        const block = this.getBlock(blockId);
+        block.container.classList.add("block-selection");
+    }
+    hasSelections() {
+        return this.selections?.length > 0;
+    }
+    toggleBlockSelection(blockId: GUID) {
+        if (this.selections.some(x => x == blockId)) {
+            this.selections = this.selections.filter(x => x != blockId);
+            this.deactivateBlockSelection(blockId);
+            return;
+        }
+        this.selections.push(blockId);
+        this.activateBlockSelection(blockId);
+    }
+    deleteSelections() {
+        const self = this;
+        this.selections.forEach(id => {
+            let block = self.getBlock(id);
+            block.destroy();
+        });
+        this.selections = [];
     }
     async attachEventBindings() {
         document.body.addEventListener("keydown", this.handleKeyboardInputEvents.bind(this));
@@ -1075,7 +1099,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const videoBackground = await this.recursivelyBuildBlock(container, {
             type: BlockType.VideoBackgroundBlock,
             metadata: {
-                url: "/video-backgrounds/green-aurora.mp4"
+                //url: "/video-backgrounds/green-aurora.mp4"
+                url: "/video-backgrounds/rain.mp4"
             }
         }) as AbstractBlock;
         this.switchBackground(originalBackground, videoBackground);

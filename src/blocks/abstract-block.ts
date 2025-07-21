@@ -52,6 +52,7 @@ export abstract class AbstractBlock implements IBlock {
                 id: this.id
             }
         });
+        this.container.dataset.blockId = this.id;
         this.commitHandler = () => { };
         this.metadata = args.metadata || {};
         this.blockProperties = [];
@@ -98,8 +99,9 @@ export abstract class AbstractBlock implements IBlock {
     removeBlockProperty(prop: BlockProperty) {
         prop.removeStyling();
         const bi = this.blockProperties.findIndex(x => x.id == prop.id);
+        if (bi < 0) return;
         this.blockProperties.splice(bi, 1);
-        if (!this.blockProperties) this.blockProperties = [];
+        if (!this.blockProperties?.length) this.blockProperties = [];
         prop.isDeleted = true;
     }
     addOverlay(name: string) {
@@ -149,6 +151,7 @@ export abstract class AbstractBlock implements IBlock {
             const parts = _match.split("-"), len = parts.length;
             chord.key = parts[len-1];
         }
+        chord.leftClick = (_match.indexOf("CLICKLEFT") >= 0);
         // console.log("toChord", { match, chord, platform });
         return chord;
     }
@@ -164,6 +167,7 @@ export abstract class AbstractBlock implements IBlock {
         if (input.shift != trigger.shift) return false;
         if (input.control != trigger.control) return false;
         if (input.key?.toUpperCase() != trigger.key?.toUpperCase()) return false;
+        if (input.leftClick != trigger.leftClick) return false;
         return true;
     }
     protected getFirstMatchingInputEvent(input: IKeyboardInput) {
@@ -228,6 +232,7 @@ export abstract class AbstractBlock implements IBlock {
                 schema: self.blockSchemas.find(x2 => x2.type == x.type) as IBlockPropertySchema
             }),
         );
+        this.blockProperties = this.blockProperties || [];
         this.blockProperties.push(...props);
     }
     applyBlockPropertyStyling() {
