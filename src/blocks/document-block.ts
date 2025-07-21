@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { AbstractBlock } from './abstract-block';
-import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock, CARET, InputEventSource, InputEvent, RowPosition, Caret, IBindingHandlerArgs, DIRECTION, ISelection, passoverClass, IRange, FindMatch, EventType, BlockState, GUID, StandoffPropertyDto, isStr, Word } from '../library/types';
+import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock, CARET, InputEventSource, InputEvent, RowPosition, Caret, IBindingHandlerArgs, DIRECTION, ISelection, passoverClass, IRange, FindMatch, EventType, BlockState, GUID, StandoffPropertyDto, isStr, Word, BlockPropertyDto } from '../library/types';
 import { StandoffEditorBlock } from './standoff-editor-block';
 import { drawAnimatedSelection, drawClippedRectangle, drawSpikySelection, updateElement } from '../library/svg';
 import { UniverseBlock } from '../universe-block';
@@ -60,7 +60,48 @@ export class DocumentBlock extends AbstractBlock {
         this.inputEvents = this.getInputEvents();
         this.setBlockSchemas(this.getBlockSchemas());
         this.setupSubscriptions();
-        
+    }
+    addOrDecreaseIndentBlockProperty() {
+        const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        const indent = tb.blockProperties.find(x => x.type == "block/indent");
+        if (indent) {
+            const value = parseInt(indent.value);
+            const newValue = value - 1;
+            indent.value = newValue + "";
+            tb.applyBlockPropertyStyling();
+            tb.updateView();
+            return;
+        }
+        const type = {
+            type: "block/indent",
+            value: "0",
+        } as BlockPropertyDto;
+        tb.addBlockProperties([type]);
+        tb.applyBlockPropertyStyling();
+        tb.updateView();
+    }
+    addOrIncreaseIndentBlockProperty() {
+        const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        const indent = tb.blockProperties.find(x => x.type == "block/indent");
+        if (indent) {
+            indent.value = (parseInt(indent.value) + 1) + "";
+            tb.applyBlockPropertyStyling();
+            tb.updateView();
+            return;
+        }
+        const type = {
+            type: "block/indent",
+            value: "1",
+        } as BlockPropertyDto;
+        tb.addBlockProperties([type]);
+        tb.applyBlockPropertyStyling();
+        tb.updateView();
     }
     selectBackgroundColour() {
         const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;

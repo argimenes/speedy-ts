@@ -126,14 +126,6 @@ export class StandoffEditorBlock extends AbstractBlock {
                     onInit: async (p: StandoffProperty) => {
                         const cells = p.getCells();
                         cells.forEach(c => c.element.style.backgroundColor = p.value);
-                    },
-                    onUpdate: async (p: StandoffProperty) => {
-                        const cells = p.getCells();
-                        cells.forEach(c => c.element.style.backgroundColor = p.value);
-                    },
-                    onDestroy: async (p: StandoffProperty) => {
-                        const cells = p.getCells();
-                        cells.forEach(c => c.element.style.backgroundColor = "unset");
                     }
                 },
                 render: {
@@ -547,6 +539,22 @@ export class StandoffEditorBlock extends AbstractBlock {
     getBlockSchemas() {
         const manager = this.manager;
         return [
+            {
+                type: "block/indent",
+                event: {
+                    onInit: async (p: BlockProperty) => {
+                        p.block.container.style.marginLeft = (parseInt(p.value) * 20) + "px";
+                    }
+                },
+                render: {
+                    destroy: async (p: BlockProperty) => {
+                        p.block.container.style.marginLeft = "unset";
+                    },
+                    update: async (p: BlockProperty) => {
+                        p.block.container.style.marginLeft = (parseInt(p.value) * 20) + "px";
+                    }
+                }
+            },
             {
                 type: "block/text-size/h1",
                 name: "H1",

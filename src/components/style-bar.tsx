@@ -3,7 +3,7 @@ import { AbstractBlock } from "../blocks/abstract-block";
 import { renderToNode } from "../library/common";
 import { IAbstractBlockConstructor, IBlockDto, IBlock } from "../library/types";
 import { DocumentBlock } from "../blocks/document-block";
-import { IconAlignCenter, IconAlignJustified, IconAlignLeft, IconAlignRight, IconBold, IconClearFormatting, IconColorPicker, IconH1, IconH2, IconH3, IconH4, IconItalic, IconSeparatorVertical } from "@tabler/icons-solidjs";
+import { IconAlignCenter, IconAlignJustified, IconAlignLeft, IconAlignRight, IconBold, IconClearFormatting, IconColorPicker, IconH1, IconH2, IconH3, IconH4, IconIndentDecrease, IconIndentIncrease, IconItalic, IconSeparatorVertical } from "@tabler/icons-solidjs";
 
 export interface IStyleBarBlockConstructor extends IAbstractBlockConstructor {
     document: DocumentBlock;
@@ -65,6 +65,14 @@ export const StyleBar : Component<Props> = (props) => {
         e.preventDefault();
         props.block.selectBackgroundColour();
     }
+    const onAddOrIncreaseIndentClicked = (e: Event) => {
+        e.preventDefault();
+        props.block.addOrIncreaseIndent();
+    }
+    const onAddOrDecreaseIndentClicked = (e: Event) => {
+        e.preventDefault();
+        props.block.addOrDecreaseIndent();
+    }
     return (
         <>
             <div class="style-bar_block">
@@ -83,6 +91,8 @@ export const StyleBar : Component<Props> = (props) => {
                 <span style="margin: 0 10;">|</span>
                 <button onClick={onFontColourClicked} class="btn btn-default btn-sm">Font</button>
                 <button onClick={onBackgroundColourClicked} class="btn btn-default btn-sm">Background</button>
+                <button onClick={onAddOrIncreaseIndentClicked} class="btn btn-default btn-sm"><IconIndentIncrease /></button>
+                <button onClick={onAddOrDecreaseIndentClicked} class="btn btn-default btn-sm"><IconIndentDecrease /></button>
                 <button onClick={onClearFormattingClicked} class="btn btn-default btn-sm"><IconClearFormatting /></button>
             </div>
         </>
@@ -103,6 +113,12 @@ export class StyleBarBlock extends AbstractBlock {
     }
     selectFontColour() {
         this.document.selectFontColour();
+    }
+    addOrDecreaseIndent() {
+        this.document.addOrDecreaseIndentBlockProperty();
+    }
+    addOrIncreaseIndent() {
+        this.document.addOrIncreaseIndentBlockProperty();
     }
     applyStyle(name: string) {
         this.document.applyStyle(name);

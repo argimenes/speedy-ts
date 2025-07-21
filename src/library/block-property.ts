@@ -23,9 +23,9 @@ export class BlockProperty {
         this.metadata = metadata || {};
         this.onInit();
     }
-    onInit() {
+    async onInit() {
         if (this.schema?.event?.onInit) {
-            this.schema?.event?.onInit(this);
+            await this.schema?.event?.onInit(this);
         }
     }
     serialize() {
@@ -39,9 +39,14 @@ export class BlockProperty {
     }
     applyStyling() {
         const schema = this.schema;
-        if (!this.styled && schema?.decorate?.blockClass) {
-            this.block.container.classList.add(schema.decorate.blockClass);
-            this.styled = true;
+        if (!this.styled) {
+            if (schema?.decorate?.blockClass) {
+                this.block.container.classList.add(schema.decorate.blockClass);
+                this.styled = true;
+            }
+            if (schema?.render?.update) {
+                schema.render.update(this);
+            }
         }
     }
     removeStyling() {
@@ -49,6 +54,9 @@ export class BlockProperty {
         if (schema?.decorate?.blockClass) {
             this.block.container.classList.remove(schema.decorate.blockClass);
             this.styled = false;
+        }
+        if (schema?.render?.destroy) {
+            schema.render.destroy(this);
         }
     }    
 }

@@ -12,7 +12,11 @@ export interface IBlockPropertySchema extends IPropertySchema {
         blockClass?: string;
     }
     animation?: {
-        init: (p: BlockProperty) => void;
+        init: (p: BlockProperty) => Promise<void>;
+    }
+    render?: {
+        update: (p: BlockProperty) => Promise<void>;
+        destroy: (p: BlockProperty) => Promise<void>;
     }
 }
 export interface ISetSource {
