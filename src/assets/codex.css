@@ -396,7 +396,13 @@ body {
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     border:1px solid rgba(255, 255, 255, 0.18);
   }
-
+.stylebar_block {
+    position: fixed;
+    background-color: #fff;
+    z-index: 100;
+    width: 100%;
+    left: 0;
+} 
 
   /* .minimized-icon {
     width: 100px;

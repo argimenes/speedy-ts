@@ -39,7 +39,7 @@ export const StyleBar : Component<Props> = (props) => {
     };
     return (
         <>
-            <div>
+            <div class="stylebar_block">
                 <button onClick={onBoldClicked} class="btn btn-default btn-sm"><IconBold /></button>
                 <button onClick={onItalicsClicked} class="btn btn-default btn-sm"><IconItalic /></button>
                 <button onClick={onAlignLeftClicked} class="btn btn-default btn-sm"><IconAlignLeft /></button>
