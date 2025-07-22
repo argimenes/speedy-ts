@@ -1,4 +1,4 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate } from "@tabler/icons-solidjs";
 import { Component, onCleanup, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -186,202 +186,258 @@ export class BlockMenuBlock extends AbstractBlock {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
       tab.moveRight();
     }
+    setBackgroundImage(url: string) {
+      this.manager.createImageBackgroundBlock({ });
+    }
+    setBackgroundVideo(url: string) {
+      this.manager.createVideoBackgroundBlock({ });
+    }
+    setBackgroundYouTubeVideo(url: string) {
+      this.manager.createYouTubeVideoBackgroundWorkspace();
+    }
+    setBackgroundWebGLComponent(component: string) {
+      this.manager.switchToWebGLBackground();
+    }
     render() {
       const self = this;
       const items = [];
-      const itemDeleteBlock= {
-          type: "item", 
-          label: "Delete Block",
-          icon: <IconTrash />,
-          onClick: () => self.deleteBlock()
-      };
-      const itemAdd = {
-          type: "item", 
-          label: "Add Block",
-          icon: <IconPlus />,
-          children: [
-              { type:"item", icon: <IconCode/>, label: "Code", onClick: () => self.addHtmlBlock() },
-              { type:"item", label: "Video", icon: <IconVideo />, onClick: () => self.addVideoBlock() },
-              { type:"item", label: "Image", icon: <IconImageInPicture />, onClick: () => self.addImageBlock() },
-              { type:"item", label: "Canvas", icon: <IconRectangleVertical />, onClick: () => self.addCanvasBlock() },
-              {
-                type: "item", label: "Add Grid", icon: <IconGrid3x3 />,
-                children: [
-                  { type: "item", label: "1 x 1", onClick: () => { self.addGridBlock(1, 1) } },
-                  { type: "item", label: "1 x 2", onClick: () => { self.addGridBlock(1, 2) } },
-                  { type: "item", label: "1 x 3", onClick: () => { self.addGridBlock(1, 3) } },
-                  { type: "item", label: "2 x 1", onClick: () => { self.addGridBlock(2, 1) } },
-                  { type: "item", label: "2 x 2", onClick: () => { self.addGridBlock(2, 2) } },
-                  { type: "item", label: "2 x 3", onClick: () => { self.addGridBlock(2, 3) } },
-                ]
-              }
-            ]
-      };
-      const itemSetWindowThemeToGlass = {
-            label: "Glass",
-            onClick: () => self.setWindowThemeToGlass()
-      };
-      const itemSetWindowThemeToDefault = {
-            label: "Default",
-            onClick: () => self.setWindowThemeToDefault()
-      };
-      const itemConvertToGrid = {
-            label: "Convert to grid (1 x 2)",
-            icon: <IconArrowsSplit />,
-            onClick: () => self.convertToGrid()
-      };
-      const itemConvertToTab = {
-            label: "Convert to tab",
-            icon: <IconArrowsSplit />,
-            onClick: () => self.convertToTab()
-      };
-      const itemConvertToIndentedList = {
-            label: "Convert to list",
-            icon: <IconList />,
-            onClick: () => self.convertToList()
-      };
-      const itemDestructureGrid = {
-            label: "Destructure grid",
-            icon: <IconStackPop />,
-            onClick: () => self.destructureGrid()
-      };
-      const itemDestructureTabs= {
-            label: "Destructure tabs",
-            icon: <IconStackPop />,
-            onClick: () => self.destructureTabs()
-      };
-      const itemDestructureIndentedList = {
-            label: "Destructure list",
-            icon: <IconStackPop />,
-            onClick: () => self.destructureList()
-      };
-      const itemMergeCellLeft = {
-            label: "Merge cell left",
-            icon: <IconGitMerge />,
-            onClick: () => self.mergeLeft()
-      };
-      const itemMergeCellRight = {
-            label: "Merge cell right",
-            icon: <IconGitMerge />,
-            onClick: () => self.mergeRight()
-      };
-      const itemMoveCellLeft = {
-            label: "Move cell left",
-            icon: <IconSwipeLeft />,
-            onClick: () => self.moveCellLeft()
-      };
-      const itemMoveCellDown = {
-            label: "Move cell down",
-            icon: <IconHomeDown />,
-            onClick: () => self.moveCellDown()
-      };
-      const itemMoveCellUp = {
-            label: "Move cell up",
-            icon: <IconHomeUp />,
-            onClick: () => self.moveCellUp()
-      };
-      const itemMoveCellRight = {
-            label: "Move cell right",
-            icon: <IconSwipeRight />,
-            onClick: () => self.moveCellRight()
-      };
       const hr = { type: "separator" };
-      const itemMergeTabLeft = {
-            label: "Merge tab left",
-            icon: <IconGitMerge />,
-            onClick: () => self.mergeLeft()
-      };
-      const itemMergeTabRight = {
-            label: "Merge tab right",
-            icon: <IconGitMerge />,
-            onClick: () => self.mergeRight()
-      };
-      const itemMoveTabLeft = {
-            label: "Move tab left",
-            icon: <IconSwipeLeft />,
-            onClick: () => self.moveCellLeft()
-      };
-      const itemMoveTabRight = {
-            label: "Move tab right",
-            icon: <IconSwipeRight />,
-            onClick: () => self.moveCellRight()
-      };
-      const itemRenameTab = {
-            label: "Rename tab",
-            icon: <IconEdit />,
-            onClick: () => self.renameTab()
-      };
-      const itemAddTabBlock = {
-            label: "Add tab",
-            icon: <IconPlus />,
-            onClick: () => self.addTab()
-      };
-      const itemDeleteTab = {
-            label: "Delete tab",
-            icon: <IconTrash />,
-            onClick: () => self.deleteTab()
-      };
-      const itemAddGridRow = {
-            label: "Add row",
-            icon: <IconPlus />,
-            onClick: () => self.addGridRow()
-      };
-      const itemWindowThemesMenu = {
-            label: "Themes",
-            icon: <IconWindow />,
-            children: [
-              itemSetWindowThemeToGlass,
-              itemSetWindowThemeToDefault
-            ]
-      };
-      const itemGridsMenu = {
-        type: "item",
-        label: "Grids",
-        children: [
-          itemAddGridRow, itemDestructureGrid, hr,
-          itemMergeCellLeft, itemMergeCellRight, hr,
-          itemMoveCellLeft, itemMoveCellRight,
-          itemMoveCellUp, itemMoveCellDown,
-        ]
-      };
-      const itemTabsMenu = {
-        type: "item",
-        label: "Tabs",
-        children: [
-          itemAddTabBlock, itemDeleteTab, itemRenameTab, itemDestructureTabs, hr,
-          itemMergeTabLeft, itemMergeTabRight, hr,
-          itemMoveTabLeft, itemMoveTabRight
-        ]
-      };
-      const itemIndentedListMenu = {
-        type: "item",
-        label: "List",
-        children: [
-          itemDestructureIndentedList
-        ]
-      };
+      
       const insideGrid = !!this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
       const insideTabs = !!this.manager.getParentOfType(this.source, BlockType.TabBlock);
       const insideIndentedList = !!this.manager.getParentOfType(this.source, BlockType.IndentedListBlock);
-      
-      items.push(itemAdd);
-      if (!insideTabs) {
-        items.push(itemConvertToTab);
-      } else {
-        items.push(itemTabsMenu)
+      const isBackground = this.source.type.indexOf("Background") >= 0;
+      const insideDocument = !!this.manager.getParentOfType(this.source, BlockType.DocumentBlock);
+
+      if (insideDocument) {
+        const itemDeleteBlock= {
+            type: "item", 
+            label: "Delete Block",
+            icon: <IconTrash />,
+            onClick: () => self.deleteBlock()
+        };
+        const itemAdd = {
+            type: "item", 
+            label: "Add Block",
+            icon: <IconPlus />,
+            children: [
+                { type:"item", icon: <IconCode/>, label: "Code", onClick: () => self.addHtmlBlock() },
+                { type:"item", label: "Video", icon: <IconVideo />, onClick: () => self.addVideoBlock() },
+                { type:"item", label: "Image", icon: <IconImageInPicture />, onClick: () => self.addImageBlock() },
+                { type:"item", label: "Canvas", icon: <IconRectangleVertical />, onClick: () => self.addCanvasBlock() },
+                {
+                  type: "item", label: "Add Grid", icon: <IconGrid3x3 />,
+                  children: [
+                    { type: "item", label: "1 x 1", onClick: () => { self.addGridBlock(1, 1) } },
+                    { type: "item", label: "1 x 2", onClick: () => { self.addGridBlock(1, 2) } },
+                    { type: "item", label: "1 x 3", onClick: () => { self.addGridBlock(1, 3) } },
+                    { type: "item", label: "2 x 1", onClick: () => { self.addGridBlock(2, 1) } },
+                    { type: "item", label: "2 x 2", onClick: () => { self.addGridBlock(2, 2) } },
+                    { type: "item", label: "2 x 3", onClick: () => { self.addGridBlock(2, 3) } },
+                  ]
+                }
+              ]
+        };
+        const itemSetWindowThemeToGlass = {
+              label: "Glass",
+              onClick: () => self.setWindowThemeToGlass()
+        };
+        const itemSetWindowThemeToDefault = {
+              label: "Default",
+              onClick: () => self.setWindowThemeToDefault()
+        };
+        const itemConvertToGrid = {
+              label: "Convert to grid (1 x 2)",
+              icon: <IconArrowsSplit />,
+              onClick: () => self.convertToGrid()
+        };
+        const itemConvertToTab = {
+              label: "Convert to tab",
+              icon: <IconArrowsSplit />,
+              onClick: () => self.convertToTab()
+        };
+        const itemConvertToIndentedList = {
+              label: "Convert to list",
+              icon: <IconList />,
+              onClick: () => self.convertToList()
+        };
+        const itemDestructureGrid = {
+              label: "Destructure grid",
+              icon: <IconStackPop />,
+              onClick: () => self.destructureGrid()
+        };
+        const itemDestructureTabs= {
+              label: "Destructure tabs",
+              icon: <IconStackPop />,
+              onClick: () => self.destructureTabs()
+        };
+        const itemDestructureIndentedList = {
+              label: "Destructure list",
+              icon: <IconStackPop />,
+              onClick: () => self.destructureList()
+        };
+        const itemMergeCellLeft = {
+              label: "Merge cell left",
+              icon: <IconGitMerge />,
+              onClick: () => self.mergeLeft()
+        };
+        const itemMergeCellRight = {
+              label: "Merge cell right",
+              icon: <IconGitMerge />,
+              onClick: () => self.mergeRight()
+        };
+        const itemMoveCellLeft = {
+              label: "Move cell left",
+              icon: <IconSwipeLeft />,
+              onClick: () => self.moveCellLeft()
+        };
+        const itemMoveCellDown = {
+              label: "Move cell down",
+              icon: <IconHomeDown />,
+              onClick: () => self.moveCellDown()
+        };
+        const itemMoveCellUp = {
+              label: "Move cell up",
+              icon: <IconHomeUp />,
+              onClick: () => self.moveCellUp()
+        };
+        const itemMoveCellRight = {
+              label: "Move cell right",
+              icon: <IconSwipeRight />,
+              onClick: () => self.moveCellRight()
+        };
+        
+        const itemMergeTabLeft = {
+              label: "Merge tab left",
+              icon: <IconGitMerge />,
+              onClick: () => self.mergeLeft()
+        };
+        const itemMergeTabRight = {
+              label: "Merge tab right",
+              icon: <IconGitMerge />,
+              onClick: () => self.mergeRight()
+        };
+        const itemMoveTabLeft = {
+              label: "Move tab left",
+              icon: <IconSwipeLeft />,
+              onClick: () => self.moveCellLeft()
+        };
+        const itemMoveTabRight = {
+              label: "Move tab right",
+              icon: <IconSwipeRight />,
+              onClick: () => self.moveCellRight()
+        };
+        const itemRenameTab = {
+              label: "Rename tab",
+              icon: <IconEdit />,
+              onClick: () => self.renameTab()
+        };
+        const itemAddTabBlock = {
+              label: "Add tab",
+              icon: <IconPlus />,
+              onClick: () => self.addTab()
+        };
+        const itemDeleteTab = {
+              label: "Delete tab",
+              icon: <IconTrash />,
+              onClick: () => self.deleteTab()
+        };
+        const itemAddGridRow = {
+              label: "Add row",
+              icon: <IconPlus />,
+              onClick: () => self.addGridRow()
+        };
+        const itemWindowThemesMenu = {
+              label: "Themes",
+              icon: <IconWindow />,
+              children: [
+                itemSetWindowThemeToGlass,
+                itemSetWindowThemeToDefault
+              ]
+        };
+        const itemGridsMenu = {
+          type: "item",
+          label: "Grids",
+          children: [
+            itemAddGridRow, itemDestructureGrid, hr,
+            itemMergeCellLeft, itemMergeCellRight, hr,
+            itemMoveCellLeft, itemMoveCellRight,
+            itemMoveCellUp, itemMoveCellDown,
+          ]
+        };
+        const itemTabsMenu = {
+          type: "item",
+          label: "Tabs",
+          children: [
+            itemAddTabBlock, itemDeleteTab, itemRenameTab, itemDestructureTabs, hr,
+            itemMergeTabLeft, itemMergeTabRight, hr,
+            itemMoveTabLeft, itemMoveTabRight
+          ]
+        };
+        const itemIndentedListMenu = {
+          type: "item",
+          label: "List",
+          children: [
+            itemDestructureIndentedList
+          ]
+        };
+        items.push(itemAdd);
+        if (!insideTabs) {
+          items.push(itemConvertToTab);
+        } else {
+          items.push(itemTabsMenu)
+        }
+        if (!insideGrid) {
+          items.push(itemConvertToGrid);
+        } else {
+            items.push(itemGridsMenu);
+        }
+        if (!insideIndentedList) {
+          items.push(itemConvertToIndentedList);
+        } else {
+          items.push(itemIndentedListMenu);
+        }
+        items.push(itemDeleteBlock);
+        items.push(itemWindowThemesMenu);
       }
-      if (!insideGrid) {
-        items.push(itemConvertToGrid);
-      } else {
-          items.push(itemGridsMenu);
+
+      if (isBackground) {
+        const itemBackgroundMenu = {
+              label: "Background",
+              icon: <IconBackground />,
+              children: [
+                {
+                      label: "Image",
+                      icon: <IconImageInPicture />,
+                      children: [
+                        { label: "Green Aurora", onClick: () => self.setBackgroundImage("") }
+                      ]
+                },
+                {
+                      label: "Video",
+                      icon: <IconVideo />,
+                      children: [
+                        { label: "Rain", onClick: () => self.setBackgroundVideo("rain.mp4") }
+                      ]
+                },
+                {
+                      label: "YouTube",
+                      icon: <IconBrandYoutube />,
+                      children: [
+                        { label: "Scottish Mountain Stream", onClick: () => self.setBackgroundYouTubeVideo("Scottish Mountain Stream") }
+                      ]
+                },
+                {
+                      label: "WebGL",
+                      icon: <Icon3dRotate />,
+                      children: [
+                        { label: "Colour Cycling", onClick: () => self.setBackgroundWebGLComponent("Colour Cycling") }
+                      ]
+                }
+              ]
+        };
       }
-      if (!insideIndentedList) {
-        items.push(itemConvertToIndentedList);
-      } else {
-        items.push(itemIndentedListMenu);
-      }
-      items.push(itemDeleteBlock);
-      items.push(itemWindowThemesMenu);
+
       const jsx = BlockMenu({
           items: items,
           visible: true,
