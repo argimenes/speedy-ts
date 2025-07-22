@@ -187,13 +187,13 @@ export class BlockMenuBlock extends AbstractBlock {
       tab.moveRight();
     }
     setBackgroundImage(url: string) {
-      this.manager.createImageBackgroundBlock({ });
+      this.manager.switchToImageBackground();
     }
     setBackgroundVideo(url: string) {
-      this.manager.createVideoBackgroundBlock({ });
+      this.manager.switchToVideoBackground();
     }
     setBackgroundYouTubeVideo(url: string) {
-      this.manager.createYouTubeVideoBackgroundWorkspace();
+      this.manager.switchToYouTubeVideoBackground();
     }
     setBackgroundWebGLComponent(component: string) {
       this.manager.switchToWebGLBackground();
@@ -206,7 +206,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const insideGrid = !!this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
       const insideTabs = !!this.manager.getParentOfType(this.source, BlockType.TabBlock);
       const insideIndentedList = !!this.manager.getParentOfType(this.source, BlockType.IndentedListBlock);
-      const isBackground = this.source.type.indexOf("Background") >= 0;
+      const isBackground = this.source.type.toLowerCase().indexOf("background") >= 0;
       const insideDocument = !!this.manager.getParentOfType(this.source, BlockType.DocumentBlock);
 
       if (insideDocument) {
@@ -403,39 +403,37 @@ export class BlockMenuBlock extends AbstractBlock {
 
       if (isBackground) {
         const itemBackgroundMenu = {
+              type: "item",
               label: "Background",
               icon: <IconBackground />,
               children: [
                 {
+                      type: "item",
                       label: "Image",
                       icon: <IconImageInPicture />,
-                      children: [
-                        { label: "Green Aurora", onClick: () => self.setBackgroundImage("") }
-                      ]
+                      onClick: () => self.setBackgroundImage("")
                 },
                 {
+                      type: "item",
                       label: "Video",
                       icon: <IconVideo />,
-                      children: [
-                        { label: "Rain", onClick: () => self.setBackgroundVideo("rain.mp4") }
-                      ]
+                      onClick: () => self.setBackgroundVideo("rain.mp4")
                 },
                 {
+                    type: "item",
                       label: "YouTube",
                       icon: <IconBrandYoutube />,
-                      children: [
-                        { label: "Scottish Mountain Stream", onClick: () => self.setBackgroundYouTubeVideo("Scottish Mountain Stream") }
-                      ]
+                      onClick: () => self.setBackgroundYouTubeVideo("Scottish Mountain Stream")
                 },
                 {
+                  type: "item",
                       label: "WebGL",
                       icon: <Icon3dRotate />,
-                      children: [
-                        { label: "Colour Cycling", onClick: () => self.setBackgroundWebGLComponent("Colour Cycling") }
-                      ]
+                      onClick: () => self.setBackgroundWebGLComponent("Colour Cycling")
                 }
               ]
         };
+        items.push(itemBackgroundMenu);
       }
 
       const jsx = BlockMenu({

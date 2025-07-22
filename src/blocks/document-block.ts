@@ -976,22 +976,22 @@ export class DocumentBlock extends AbstractBlock {
                     }
                 }
             },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Custom,
-                    match: "contextmenu"
-                },
-                action: {
-                    name: "Context Menu.",
-                    description: "",
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const block = args.block;
-                        const manager = block.manager as UniverseBlock;
-                        manager.loadBlockMenu(args);
-                    }
-                }
-            },
+            // {
+            //     mode: "default",
+            //     trigger: {
+            //         source: InputEventSource.Custom,
+            //         match: "contextmenu"
+            //     },
+            //     action: {
+            //         name: "Context Menu.",
+            //         description: "",
+            //         handler: async (args: IBindingHandlerArgs) => {
+            //             const block = args.block;
+            //             const manager = block.manager as UniverseBlock;
+            //             manager.loadBlockMenu(args);
+            //         }
+            //     }
+            // },
             {
                 mode: "default",
                 trigger: {

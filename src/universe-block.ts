@@ -309,7 +309,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         await this.handleCustomEvent(e, InputEventSource.Custom, "onTextChanged", false);
     }
     async handleCustomEvent(e: Event, source: InputEventSource, match: string, preventDefault: boolean = true) {
-        const focusedBlock = this.getBlockInFocus() as StandoffEditorBlock;
+        const ALLOW = true, FORBID = false;
+        const focusedBlock = this.getBlockFromElement(e.target as HTMLElement);
+        // const focusedBlock = this.getBlockInFocus() as StandoffEditorBlock;
         const blocks = this.getAncestors(focusedBlock);
         for (let i = 0; i < blocks.length; i++) {
             const block = blocks[i] as StandoffEditorBlock;
@@ -319,14 +321,17 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             if (found) {
                 if (preventDefault) e.preventDefault();
                 if (isStandoffBlock) {
-                    const caret = focusedBlock.getCaret() as Caret;
-                    const selection = focusedBlock.getSelection() as IRange;
+                    const tb = focusedBlock as StandoffEditorBlock;
+                    const caret = tb.getCaret() as Caret;
+                    const selection = tb.getSelection() as IRange;
                     await found.action.handler({ block: focusedBlock, caret, e, selection });
-                    return;
+                } else {
+                    await found.action.handler({ block: focusedBlock, e });
                 }
-                await found.action.handler({ block: focusedBlock, e });
+                return FORBID;
             }
         }
+        return ALLOW;
     }
     getPlainTextInputEvents():InputEvent[] {
         const self = this;
@@ -524,6 +529,22 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     getInputEvents() {
         const _this = this;
         const events: InputEvent[] = [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Custom,
+                    match: "contextmenu"
+                },
+                action: {
+                    name: "Context Menu.",
+                    description: "",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        const manager = block.manager as UniverseBlock;
+                        manager.loadBlockMenu(args);
+                    }
+                }
+            },
             {
                 mode: "default",
                 trigger: {
@@ -902,13 +923,13 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             manager: this.manager,
             source: block
         });
-        const rect = block.container.getBoundingClientRect();
+        const e = args.e as MouseEvent;
         const node = menu.render();
         updateElement(menu.container, {
             style: {
                 position: "fixed",
-                top: rect.top + "px",
-                left: rect.width + "px",
+                top: e.screenY + "px",
+                left: e.screenX + "px",
                 width: "auto",
                 height: "auto"
             },
