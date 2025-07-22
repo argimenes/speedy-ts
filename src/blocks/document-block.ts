@@ -151,18 +151,27 @@ export class DocumentBlock extends AbstractBlock {
         tb.standoffProperties.forEach(sp => sp.destroy());
         tb.updateView();
     }
-    applyBlockStyle(type:string, remove?: string[]) {
+    addOrEditBlockStyle(type:string, value?: string) {
         const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
         if (tb.type != BlockType.StandoffEditorBlock) {
             return;
         }
-        if (remove) {
-            const removeProps = tb.blockProperties.filter(x => remove.some(x2 => x.type == x2));
-            removeProps?.length && removeProps.forEach((p) => {
-                tb.removeBlockProperty(p);
-            });
+        const blockProp = tb.blockProperties.find(x => x.type == type);
+        if (blockProp) {
+            blockProp.value = value;
+            blockProp.applyStyling();
+        } else {
+            tb.addBlockProperties([{ type, value }]);
+            tb.applyBlockPropertyStyling();
         }
-        tb.addBlockProperties([{ type }]);
+        tb.updateView();
+    }
+    applyBlockStyle(type:string, value?: string) {
+        const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        tb.addBlockProperties([{ type, value }]);
         tb.applyBlockPropertyStyling();
         tb.updateView();
     }
@@ -184,7 +193,7 @@ export class DocumentBlock extends AbstractBlock {
                     dto = json.Data.document;
                 }
                 const block = new DocumentBlock({ ...dto, manager });
-                block.addBlockProperties([ { type: "block/marginalia/right" }, { type: "block/alignment/right" } ]);
+                block.addBlockProperties([ { type: "block/marginalia/right" }, { type: "block/alignment", value: "right" } ]);
                 block.applyBlockPropertyStyling();
                 // updateElement(block.container, { classList: ["document-container"] });
                 await manager.buildChildren(block, dto);
@@ -324,35 +333,19 @@ export class DocumentBlock extends AbstractBlock {
                 }
             },
             {
-                type: "block/alignment/right",
-                name: "Right Alignment",
-                description: "Align text in the block to the right.",
-                decorate: {
-                    blockClass: "block_alignment_right"
-                }
-            },
-            {
-                type: "block/alignment/center",
-                name: "Centre Alignment",
-                description: "Align text in the block to the middle.",
-                decorate: {
-                    blockClass: "block_alignment_centre"
-                }
-            },
-            {
-                type: "block/alignment/left",
-                name: "Left Alignment",
-                description: "Align text in the block to the left",
-                decorate: {
-                    blockClass: "block_alignment_left"
-                }
-            },
-            {
-                type: "block/alignment/justify",
-                name: "Justified Alignment",
-                description: "Justifies the alignment of the text.",
-                decorate: {
-                    blockClass: "block_alignment_justify"
+                type: "block/indent",
+                event: {
+                    onInit: async (p: BlockProperty) => {
+                        p.block.container.style.marginLeft = (parseInt(p.value) * 20) + "px";
+                    }
+                },
+                render: {
+                    destroy: async (p: BlockProperty) => {
+                        p.block.container.style.marginLeft = "unset";
+                    },
+                    update: async (p: BlockProperty) => {
+                        p.block.container.style.marginLeft = (parseInt(p.value) * 20) + "px";
+                    }
                 }
             },
             {
@@ -1675,7 +1668,7 @@ export class DocumentBlock extends AbstractBlock {
                             .blockProperties
                             .filter((x) => x.type.indexOf("block/alignment/") >= 0);
                         if (props.length) props.forEach(p => p.block?.removeBlockProperty(p));
-                        block.addBlockProperties([ { type: "block/alignment/right" } ]);
+                        block.addBlockProperties([ { type: "block/alignment", value: "right" } ]);
                         block.applyBlockPropertyStyling();
                         block.updateView();
                     }
@@ -2196,7 +2189,7 @@ export class DocumentBlock extends AbstractBlock {
                             {
                                 type: BlockType.StandoffEditorBlock,
                                 blockProperties: [
-                                    { type: "block/alignment/right" }, { type: "block/font/size/three-quarters" }
+                                    { type: "block/alignment", value: "right" }, { type: "block/font/size/three-quarters" }
                                 ]
                             }
                         ]
@@ -2238,7 +2231,7 @@ export class DocumentBlock extends AbstractBlock {
                             {
                                 type: BlockType.StandoffEditorBlock,
                                 blockProperties: [
-                                    { type: "block/alignment/left" }, { type: "block/font/size/three-quarters" }
+                                    { type: "block/alignment", value: "left" }, { type: "block/font/size/three-quarters" }
                                 ]
                             }
                         ]

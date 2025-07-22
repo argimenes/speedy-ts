@@ -540,18 +540,34 @@ export class StandoffEditorBlock extends AbstractBlock {
         const manager = this.manager;
         return [
             {
-                type: "block/indent",
+                type: "block/alignment",
+                name: "Block Alignment",
+                description: "Align text to: left; right; center; justify.",
                 event: {
                     onInit: async (p: BlockProperty) => {
-                        p.block.container.style.marginLeft = (parseInt(p.value) * 20) + "px";
+                        const value = p.value || "unset";
+                        updateElement(p.block.container, {
+                            style: {
+                                "text-align": value
+                            }
+                        });
                     }
                 },
                 render: {
                     destroy: async (p: BlockProperty) => {
-                        p.block.container.style.marginLeft = "unset";
+                        updateElement(p.block.container, {
+                            style: {
+                                "text-align": "unset"
+                            }
+                        });
                     },
                     update: async (p: BlockProperty) => {
-                        p.block.container.style.marginLeft = (parseInt(p.value) * 20) + "px";
+                        const value = p.value || "left";
+                        updateElement(p.block.container, {
+                            style: {
+                                "text-align": value
+                            }
+                        });
                     }
                 }
             },

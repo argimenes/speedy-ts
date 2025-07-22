@@ -23,35 +23,35 @@ export const StyleBar : Component<Props> = (props) => {
     };
     const onAlignLeftClicked = (e: Event) => {
         e.preventDefault();
-        props.block.applyBlockStyle("block/alignment/left", ["block/alignment/right","block/alignment/center","block/alignment/justify"]);
+        props.block.addOrEditBlockStyle("block/alignment", "left");
     };
     const onAlignRightClicked = (e: Event) => {
         e.preventDefault();
-        props.block.applyBlockStyle("block/alignment/right", ["block/alignment/left","block/alignment/center","block/alignment/justify"]);
+        props.block.addOrEditBlockStyle("block/alignment", "right");
     };
     const onAlignCenterClicked = (e: Event) => {
         e.preventDefault();
-        props.block.applyBlockStyle("block/alignment/center", ["block/alignment/left","block/alignment/right","block/alignment/justify"]);
+        props.block.addOrEditBlockStyle("block/alignment", "center");
     };
     const onAlignJustifyClicked = (e: Event) => {
         e.preventDefault();
-        props.block.applyBlockStyle("block/alignment/justify", ["block/alignment/left","block/alignment/right","block/alignment/center"]);
+        props.block.addOrEditBlockStyle("block/alignment", "justify");
     };
     const onH1Clicked = (e: Event) => {
         e.preventDefault();
-        props.block.applyBlockStyle("block/text-size/h1");
+        props.block.addOrEditBlockStyle("block/text-size/h1");
     };
     const onH2Clicked = (e: Event) => {
         e.preventDefault();
-        props.block.applyBlockStyle("block/text-size/h2");
+        props.block.addOrEditBlockStyle("block/text-size/h2");
     };
     const onH3Clicked = (e: Event) => {
         e.preventDefault();
-        props.block.applyBlockStyle("block/text-size/h3");
+        props.block.addOrEditBlockStyle("block/text-size/h3");
     };
     const onH4Clicked = (e: Event) => {
         e.preventDefault();
-        props.block.applyBlockStyle("block/text-size/h4");
+        props.block.addOrEditBlockStyle("block/text-size/h4");
     };
     const onClearFormattingClicked = (e: Event) => {
         e.preventDefault();
@@ -123,8 +123,8 @@ export class StyleBarBlock extends AbstractBlock {
     applyStyle(name: string) {
         this.document.applyStyle(name);
     }
-    applyBlockStyle(name: string, remove?: string[]) {
-        this.document.applyBlockStyle(name, remove);
+    addOrEditBlockStyle(name: string, value?: string) {
+        this.document.addOrEditBlockStyle(name, value);
     }
     clearFormatting() {
         this.document.clearFormatting();

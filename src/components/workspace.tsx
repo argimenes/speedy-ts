@@ -58,7 +58,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         { type: "style/rectangle", start: 20, end: 32 },
                     ],
                     blockProperties: [
-                        { type: "block/alignment/left" }
+                        { type: "block/alignment", value: "left" }
                     ],
                     relation: {
                         leftMargin: {
@@ -67,7 +67,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                 {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Left margin note 1.",
-                                    blockProperties: [ { type: "block/alignment/left" }, { type: "block/font/size/three-quarters" }]
+                                    blockProperties: [ { type: "block/alignment", value: "left" }, { type: "block/font/size/three-quarters" }]
                                 } as IStandoffEditorBlockDto
                             ]
                         }
@@ -81,7 +81,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         { type: "style/bold", start: 10, end: 16 }
                     ],
                     blockProperties: [
-                        { type: "block/alignment/right" }
+                        { type: "block/alignment", value: "right" }
                     ],
                     relation: {
                         rightMargin: {
@@ -90,12 +90,12 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                 {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Right margin note 2a.",
-                                    blockProperties: [ { type: "block/alignment/right" }, { type: "block/font/size/three-quarters" }]
+                                    blockProperties: [ { type: "block/alignment", value: "right" }, { type: "block/font/size/three-quarters" }]
                                 } as IStandoffEditorBlockDto,
                                 {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Right margin note 2b.",
-                                    blockProperties: [ { type: "block/alignment/right" }, { type: "block/font/size/three-quarters" }]
+                                    blockProperties: [ { type: "block/alignment", value: "right" }, { type: "block/font/size/three-quarters" }]
                                 } as IStandoffEditorBlockDto
                             ]
                         }
