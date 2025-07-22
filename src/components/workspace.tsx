@@ -35,7 +35,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                 {
                     type: BlockType.StandoffEditorBlock,
                     text: "Standoff Property Text Editor",
-                    blockProperties: [ { type: "block/font/size/h3" }],
+                    blockProperties: [ { type: "block/font/size", value: "h3" }],
                     standoffProperties: [
                         { type: "style/rainbow", start: 18, end: 21 },
                         { type: "style/highlighter", start: 5, end: 12 },
@@ -67,7 +67,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                 {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Left margin note 1.",
-                                    blockProperties: [ { type: "block/alignment", value: "left" }, { type: "block/font/size/three-quarters" }]
+                                    blockProperties: [ { type: "block/alignment", value: "left" }, { type: "block/font/size", value: "three-quarters" }]
                                 } as IStandoffEditorBlockDto
                             ]
                         }
@@ -90,12 +90,12 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                 {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Right margin note 2a.",
-                                    blockProperties: [ { type: "block/alignment", value: "right" }, { type: "block/font/size/three-quarters" }]
+                                    blockProperties: [ { type: "block/alignment", value: "right" }, { type: "block/font/size", value: "three-quarters" }]
                                 } as IStandoffEditorBlockDto,
                                 {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Right margin note 2b.",
-                                    blockProperties: [ { type: "block/alignment", value: "right" }, { type: "block/font/size/three-quarters" }]
+                                    blockProperties: [ { type: "block/alignment", value: "right" }, { type: "block/font/size", value: "three-quarters" }]
                                 } as IStandoffEditorBlockDto
                             ]
                         }
@@ -104,7 +104,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                 {
                     type: BlockType.StandoffEditorBlock,
                     text: "Canvas",
-                    blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
+                    blockProperties: [ { type: "block/font/size", value: "h3" }, { type: "block/margin/top/40px" }]
                 },
                 {
                     type: BlockType.CanvasBlock
@@ -112,7 +112,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                 {
                     type: BlockType.StandoffEditorBlock,
                     text: "Video",
-                    blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
+                    blockProperties: [ { type: "block/font/size", value: "h3" }, { type: "block/margin/top/40px" }]
                 },
                 {
                     type: BlockType.YouTubeVideoBlock,
@@ -123,7 +123,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                 {
                     type: BlockType.StandoffEditorBlock,
                     text: "Other Text Editors",
-                    blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
+                    blockProperties: [ { type: "block/font/size", value: "h3" }, { type: "block/margin/top/40px" }]
                 },
                 {
                     type: BlockType.GridBlock,
@@ -166,7 +166,7 @@ const foo = (bar) => {
                 {
                     type: BlockType.StandoffEditorBlock,
                     text: "Nested Lists",
-                    blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
+                    blockProperties: [ { type: "block/font/size", value: "h3" }, { type: "block/margin/top/40px" }]
                 },
                 {
                     type: BlockType.IndentedListBlock,
@@ -174,7 +174,7 @@ const foo = (bar) => {
                         {
                             type: BlockType.StandoffEditorBlock,
                             text: "List item 1",
-                            blockProperties: [ { type: "block/alignment/left" }],
+                            blockProperties: [ { type: "block/alignment", value: "left" }],
                             children: [
                                 {
                                     type: BlockType.IndentedListBlock,
@@ -182,12 +182,12 @@ const foo = (bar) => {
                                         {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "List item 1.1",
-                                            blockProperties: [ { type: "block/alignment/left" }]
+                                            blockProperties: [ { type: "block/alignment", value: "left" }]
                                         } as IStandoffEditorBlockDto,
                                         {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "List item 1.2",
-                                            blockProperties: [ { type: "block/alignment/left" }]
+                                            blockProperties: [ { type: "block/alignment", value: "left" }]
                                         } as IStandoffEditorBlockDto
                                     ]
                                 }
@@ -228,13 +228,13 @@ const foo = (bar) => {
                         { type: "codex/block-reference", start: 10, end: 28, value: "abd-def-ghi-321" }
                     ],
                     blockProperties: [
-                        { type: "block/alignment/centre" }
+                        { type: "block/alignment", value: "center" }
                     ]
                 } as IStandoffEditorBlockDto,
                 {
                     type: BlockType.StandoffEditorBlock,
                     text: "Tabs",
-                    blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
+                    blockProperties: [ { type: "block/font/size", value: "h3" }, { type: "block/margin/top/40px" }]
                 },
                 {
                     type: BlockType.TabRowBlock,
@@ -249,14 +249,14 @@ const foo = (bar) => {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Line 1",
                                     blockProperties: [
-                                        { type: "block/alignment/left" }
+                                        { type: "block/alignment", value: "left" }
                                     ]
                                 } as IStandoffEditorBlockDto,
                                 {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Line 2",
                                     blockProperties: [
-                                        { type: "block/alignment/left" }
+                                        { type: "block/alignment", value: "left" }
                                     ]
                                 } as IStandoffEditorBlockDto
                             ]
@@ -271,14 +271,14 @@ const foo = (bar) => {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Line 3",
                                     blockProperties: [
-                                        { type: "block/alignment/left" }
+                                        { type: "block/alignment", value: "left" }
                                     ]
                                 } as IStandoffEditorBlockDto,
                                 {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Line 4",
                                     blockProperties: [
-                                        { type: "block/alignment/left" }
+                                        { type: "block/alignment", value: "left" }
                                     ]
                                 } as IStandoffEditorBlockDto
                             ]
@@ -299,14 +299,14 @@ const foo = (bar) => {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Line 5",
                                     blockProperties: [
-                                        { type: "block/alignment/left" }
+                                        { type: "block/alignment", value: "left" }
                                     ]
                                 } as IStandoffEditorBlockDto,
                                 {
                                     type: BlockType.StandoffEditorBlock,
                                     text: "Line 6",
                                     blockProperties: [
-                                        { type: "block/alignment/left" }
+                                        { type: "block/alignment", value: "left" }
                                     ]
                                 } as IStandoffEditorBlockDto
                             ]
@@ -414,7 +414,7 @@ const foo = (bar) => {
                 {
                     type: BlockType.StandoffEditorBlock,
                     text: "Tables",
-                    blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
+                    blockProperties: [ { type: "block/font/size", value: "h3" }, { type: "block/margin/top/40px" }]
                 },
                 {
                     type: BlockType.TableBlock,

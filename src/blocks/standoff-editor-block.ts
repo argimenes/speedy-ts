@@ -659,12 +659,42 @@ export class StandoffEditorBlock extends AbstractBlock {
             },
             {
                 type: "block/font/size",
-                name: "Specified size",
+                name: "Specified font size",
+                library: {
+                    toSize: ( value: string ) => {
+                        if (value == "h1") return "3.5rem";
+                        if (value == "h2") return "3rem";
+                        if (value == "h3") return "2.5rem";
+                        if (value == "h4") return "2rem";
+                        if (value == "normal") return "1rem";
+                        if (value == "three-quarters") return "0.75rem";
+                        if (value == "half") return "0.5rem";
+                        return "1rem";
+                    }
+                },
                 event: {
-                    onInit: (p: BlockProperty) => {
+                    onInit: async (p: BlockProperty) => {
+                        const value = p.schema.library.toSize(p.value);
                         updateElement(p.block.container, {
                             style: {
-                                "font-size": p.value
+                                "font-size": value
+                            }
+                        });
+                    }
+                },
+                render: {
+                    destroy: async (p: BlockProperty) => {
+                        updateElement(p.block.container, {
+                            style: {
+                                "font-size": "unset"
+                            }
+                        });
+                    },
+                    update: async (p: BlockProperty) => {
+                        const value = p.schema.library.toSize(p.value);
+                        updateElement(p.block.container, {
+                            style: {
+                                "font-size": value
                             }
                         });
                     }

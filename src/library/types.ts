@@ -8,6 +8,7 @@ export type GUID = string;
 export interface IBlockPropertySchema extends IPropertySchema {
     type: string;
     event?: Record<string, BlockBindingHandler>;
+    library?: Record<string, any>;
     decorate?: {
         blockClass?: string;
     }
