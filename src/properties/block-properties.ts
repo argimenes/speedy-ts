@@ -77,7 +77,8 @@ export const BlockPropertySchemas = {
                 const value = p.schema.library.toSize(p.value);
                 updateElement(p.block.container, {
                     style: {
-                        "font-size": value
+                        "font-size": value,
+                        "line-height": value
                     }
                 });
             }
@@ -86,7 +87,8 @@ export const BlockPropertySchemas = {
             destroy: async (p: BlockProperty) => {
                 updateElement(p.block.container, {
                     style: {
-                        "font-size": "unset"
+                        "font-size": "unset",
+                        "line-height": "unset"
                     }
                 });
             },
@@ -94,7 +96,8 @@ export const BlockPropertySchemas = {
                 const value = p.schema.library.toSize(p.value);
                 updateElement(p.block.container, {
                     style: {
-                        "font-size": value
+                        "font-size": value,
+                        "line-height": value
                     }
                 });
             }

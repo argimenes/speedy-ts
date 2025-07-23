@@ -39,19 +39,19 @@ export const StyleBar : Component<Props> = (props) => {
     };
     const onH1Clicked = (e: Event) => {
         e.preventDefault();
-        props.block.addOrEditBlockStyle("block/text-size/h1");
+        props.block.addOrEditBlockStyle("block/font/size", "h1");
     };
     const onH2Clicked = (e: Event) => {
         e.preventDefault();
-        props.block.addOrEditBlockStyle("block/text-size/h2");
+        props.block.addOrEditBlockStyle("block/font/size", "h2");
     };
     const onH3Clicked = (e: Event) => {
         e.preventDefault();
-        props.block.addOrEditBlockStyle("block/text-size/h3");
+        props.block.addOrEditBlockStyle("block/font/size", "h3");
     };
     const onH4Clicked = (e: Event) => {
         e.preventDefault();
-        props.block.addOrEditBlockStyle("block/text-size/h4");
+        props.block.addOrEditBlockStyle("block/font/size", "h4");
     };
     const onClearFormattingClicked = (e: Event) => {
         e.preventDefault();

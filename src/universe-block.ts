@@ -311,6 +311,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     async handleCustomEvent(e: Event, source: InputEventSource, match: string, preventDefault: boolean = true) {
         const ALLOW = true, FORBID = false;
         const focusedBlock = this.getBlockFromElement(e.target as HTMLElement);
+        if (!focusedBlock) {
+            console.error("handleCustomEvent", { e, source, match, preventDefault });
+            return;
+        }
         // const focusedBlock = this.getBlockInFocus() as StandoffEditorBlock;
         const blocks = this.getAncestors(focusedBlock);
         for (let i = 0; i < blocks.length; i++) {
