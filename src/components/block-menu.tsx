@@ -112,6 +112,9 @@ export class BlockMenuBlock extends AbstractBlock {
     async convertToList() {
       await this.doc.indentBlock({ block: this.source })
     }
+    convertToPage() {
+      this.doc.convertBlockToTab(this.doc.id);
+    }
     convertToTab() {
       this.doc.convertBlockToTab(this.source.id);
     }
@@ -251,6 +254,11 @@ export class BlockMenuBlock extends AbstractBlock {
               icon: <IconArrowsSplit />,
               onClick: () => self.convertToGrid()
         };
+        const itemConvertToPage = {
+              label: "Convert to page",
+              icon: <IconArrowsSplit />,
+              onClick: () => self.convertToPage()
+        };
         const itemConvertToTab = {
               label: "Convert to tab",
               icon: <IconArrowsSplit />,
@@ -382,6 +390,7 @@ export class BlockMenuBlock extends AbstractBlock {
           ]
         };
         items.push(itemAdd);
+        items.push(itemConvertToPage);
         if (!insideTabs) {
           items.push(itemConvertToTab);
         } else {
