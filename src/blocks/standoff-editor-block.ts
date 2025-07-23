@@ -11,6 +11,7 @@ import { TabBlock, TabRowBlock } from "./tabs-block";
 import BlockVines from "../library/plugins/block-vines";
 import { UniverseBlock } from "../universe-block";
 import { ClockPlugin } from "../library/plugins/clock";
+import { BlockPropertySchemas } from "../properties/block-properties";
 
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     const map = new Map();
@@ -539,70 +540,7 @@ export class StandoffEditorBlock extends AbstractBlock {
     getBlockSchemas() {
         const manager = this.manager;
         return [
-            {
-                type: "block/alignment",
-                name: "Block Alignment",
-                description: "Align text to: left; right; center; justify.",
-                event: {
-                    onInit: async (p: BlockProperty) => {
-                        const value = p.value || "unset";
-                        updateElement(p.block.container, {
-                            style: {
-                                "text-align": value
-                            }
-                        });
-                    }
-                },
-                render: {
-                    destroy: async (p: BlockProperty) => {
-                        updateElement(p.block.container, {
-                            style: {
-                                "text-align": "unset"
-                            }
-                        });
-                    },
-                    update: async (p: BlockProperty) => {
-                        const value = p.value || "left";
-                        updateElement(p.block.container, {
-                            style: {
-                                "text-align": value
-                            }
-                        });
-                    }
-                }
-            },
-            {
-                type: "block/text-size/h1",
-                name: "H1",
-                description: "",
-                decorate: {
-                    blockClass: "block_text-size_h1"
-                }
-            },
-            {
-                type: "block/text-size/h2",
-                name: "H2",
-                description: "",
-                decorate: {
-                    blockClass: "block_text-size_h2"
-                }
-            },
-            {
-                type: "block/text-size/h3",
-                name: "H3",
-                description: "",
-                decorate: {
-                    blockClass: "block_text-size_h3"
-                }
-            },
-            {
-                type: "block/text-size/h4",
-                name: "H4",
-                description: "",
-                decorate: {
-                    blockClass: "block_text-size_h4"
-                }
-            },
+            ...BlockPropertySchemas.getStandoffBlockProperties(),
             {
                 type: "block/vines",
                 name: "Block vines",
@@ -655,63 +593,6 @@ export class StandoffEditorBlock extends AbstractBlock {
                         });
                         }
                     }
-                }
-            },
-            {
-                type: "block/font/size",
-                name: "Specified font size",
-                library: {
-                    toSize: ( value: string ) => {
-                        if (value == "h1") return "3.5rem";
-                        if (value == "h2") return "3rem";
-                        if (value == "h3") return "2.5rem";
-                        if (value == "h4") return "2rem";
-                        if (value == "normal") return "1rem";
-                        if (value == "three-quarters") return "0.75rem";
-                        if (value == "half") return "0.5rem";
-                        return "1rem";
-                    }
-                },
-                event: {
-                    onInit: async (p: BlockProperty) => {
-                        const value = p.schema.library.toSize(p.value);
-                        updateElement(p.block.container, {
-                            style: {
-                                "font-size": value
-                            }
-                        });
-                    }
-                },
-                render: {
-                    destroy: async (p: BlockProperty) => {
-                        updateElement(p.block.container, {
-                            style: {
-                                "font-size": "unset"
-                            }
-                        });
-                    },
-                    update: async (p: BlockProperty) => {
-                        const value = p.schema.library.toSize(p.value);
-                        updateElement(p.block.container, {
-                            style: {
-                                "font-size": value
-                            }
-                        });
-                    }
-                }
-            },
-            {
-                type: "block/font/size/half",
-                name: "Half-sized font",
-                decorate: {
-                    blockClass: "font_size_half"
-                }
-            },
-            {
-                type: "block/font/size/three-quarters",
-                name: "3/4 the regular font size",
-                decorate: {
-                    blockClass: "block_font-size_three-quarters"
                 }
             },
             {
