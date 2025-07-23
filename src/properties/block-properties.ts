@@ -29,16 +29,6 @@ export const BlockPropertySchemas = {
         type: "block/alignment",
         name: "Block Alignment",
         description: "Align text to: left; right; center; justify.",
-        event: {
-            onInit: async (p: BlockProperty) => {
-                const value = p.value || "unset";
-                updateElement(p.block.container, {
-                    style: {
-                        "text-align": value
-                    }
-                });
-            }
-        },
         render: {
             destroy: async (p: BlockProperty) => {
                 updateElement(p.block.container, {
@@ -72,17 +62,6 @@ export const BlockPropertySchemas = {
                 return "1rem";
             }
         },
-        event: {
-            onInit: async (p: BlockProperty) => {
-                const value = p.schema.library.toSize(p.value);
-                updateElement(p.block.container, {
-                    style: {
-                        "font-size": value,
-                        "line-height": value
-                    }
-                });
-            }
-        },
         render: {
             destroy: async (p: BlockProperty) => {
                 updateElement(p.block.container, {
@@ -105,11 +84,6 @@ export const BlockPropertySchemas = {
     },
     blockIndent: {
         type: "block/indent",
-        event: {
-            onInit: async (p: BlockProperty) => {
-                p.block.container.style.marginLeft = (parseInt(p.value) * 20) + "px";
-            }
-        },
         render: {
             destroy: async (p: BlockProperty) => {
                 p.block.container.style.marginLeft = "unset";
