@@ -48,11 +48,11 @@ export abstract class AbstractBlock implements IBlock {
         this.container = args?.container || document.createElement("DIV") as HTMLDivElement;
         updateElement(this.container, {
             classList: ["abstract-block"],
-            attribute: {
-                id: this.id
+            dataset: {
+                "blockId": this.id,
+                "blockType": args.type || "client-block"
             }
         });
-        this.container.dataset.blockId = this.id;
         this.commitHandler = () => { };
         this.metadata = args.metadata || {};
         this.blockProperties = [];

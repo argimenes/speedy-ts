@@ -1,4 +1,4 @@
-import { uniqueId } from 'underscore';
+import { v4 as uuidv4 } from 'uuid';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IBindingHandlerArgs, InputEventSource } from '../library/types';
 import { AbstractBlock } from './abstract-block';
 import { updateElement } from '../library/svg';
@@ -58,12 +58,13 @@ export class WindowBlock extends AbstractBlock {
         this.onClose = args.onClose;
         this.isDragging = false;
         this.header = document.createElement("DIV") as HTMLDivElement;
-        this.header.setAttribute("id", uniqueId());
+        this.header.setAttribute("id", uuidv4());
         this.header.classList.add("window-block-header");
         const controls = this.createControls();
         this.header.appendChild(controls);
         this.container.appendChild(this.header);
         this.container.classList.add("window-block");
+        this.container.dataset.blockType = BlockType.WindowBlock;
         this.state = "normal";
         this.blockSchemas = this.getBlockSchemas();
         this.setupEventHandlers();

@@ -1,7 +1,7 @@
 import { Component } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { renderToNode } from "../library/common";
-import { IAbstractBlockConstructor, IBlockDto, IBlock } from "../library/types";
+import { IAbstractBlockConstructor, IBlockDto, IBlock, BlockType } from "../library/types";
 import { DocumentBlock } from "../blocks/document-block";
 import { IconAlignCenter, IconAlignJustified, IconAlignLeft, IconAlignRight, IconBold, IconClearFormatting, IconColorPicker, IconH1, IconH2, IconH3, IconH4, IconIndentDecrease, IconIndentIncrease, IconItalic, IconRotateClockwise, IconRotateClockwise2, IconSeparatorVertical } from "@tabler/icons-solidjs";
 
@@ -151,6 +151,7 @@ export class StyleBarBlock extends AbstractBlock {
     render() {
         const node = renderToNode(StyleBar({ block: this }));
         this.container.appendChild(node);
+        this.container.dataset.blockType = "style-bar-block";
     }
     serialize(): IBlockDto {
         throw new Error('Method not implemented.');

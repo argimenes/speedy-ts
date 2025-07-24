@@ -1,6 +1,8 @@
+import { StyleBar, StyleBarBlock } from "../components/style-bar";
 import { BlockType, IBlockDto } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { AbstractBlock } from "./abstract-block";
+import { DocumentBlock } from "./document-block";
 import { IWindowBlockConstructor, WindowBlock } from "./window-block";
 
 export interface IDocumentWindowBlockConstructor extends IWindowBlockConstructor {
@@ -9,6 +11,7 @@ export interface IDocumentWindowBlockConstructor extends IWindowBlockConstructor
 
 export class DocumentWindowBlock extends WindowBlock
 {
+    styleBar: StyleBarBlock;
     constructor(args: IDocumentWindowBlockConstructor)
     {
         args = {
@@ -20,6 +23,7 @@ export class DocumentWindowBlock extends WindowBlock
         super(args);
         this.type = BlockType.DocumentWindowBlock;
         this.blockSchemas = this.getBlockSchemas();
+        this.styleBar = new StyleBarBlock({ manager: this.manager });
     }
     static getBlockBuilder() {
         return {
@@ -35,6 +39,8 @@ export class DocumentWindowBlock extends WindowBlock
                 await manager.buildChildren(block, dto, (child) => {
                     block.container.appendChild(child.container);
                 });
+                block.styleBar.document = block.blocks[0] as DocumentBlock;
+                container.appendChild(block.styleBar.container);
                 container.appendChild(block.container);
                 return block;
             }

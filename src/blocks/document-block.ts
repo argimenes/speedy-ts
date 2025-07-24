@@ -45,17 +45,17 @@ export class DocumentBlock extends AbstractBlock {
     index: IndexedBlock[];
     textProcessor: TextProcessor;
     state: string;
-    styleBar: StyleBarBlock;
+    //styleBar: StyleBarBlock;
     constructor(args: IDocumentBlockConstructor) {
         super(args);
         this.type = BlockType.DocumentBlock;
         this.state = BlockState.initalising;
         this.metadata = args.metadata || {};
         this.index = [];
-        this.styleBar = new StyleBarBlock({
-            manager: this.manager,
-            document: this
-        });
+        // this.styleBar = new StyleBarBlock({
+        //     manager: this.manager,
+        //     document: this
+        // });
         this.textProcessor = new TextProcessor();
         this.inputEvents = this.getInputEvents();
         this.setBlockSchemas(this.getBlockSchemas());
@@ -281,7 +281,7 @@ export class DocumentBlock extends AbstractBlock {
                 const document = new DocumentBlock({ ...dto, manager });
                 document.applyBlockPropertyStyling();
                 updateElement(document.container, { classList: ["document-container"] });
-                document.container.appendChild(document.styleBar.container);
+                //document.container.appendChild(document.styleBar.container);
                 await manager.buildChildren(document, dto);
                 container.appendChild(document.container);
                 return document;
