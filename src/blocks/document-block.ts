@@ -61,6 +61,52 @@ export class DocumentBlock extends AbstractBlock {
         this.setBlockSchemas(this.getBlockSchemas());
         this.setupSubscriptions();
     }
+    turnLeftRotateBlockProperty() {
+        const block = this.manager.getBlockInFocus();
+        if (!block) {
+            return;
+        }
+        const rotate = block.blockProperties.find(x => x.type == "block/rotate");
+        if (rotate) {
+            const value = parseInt(rotate.value);
+            let newValue = value - 45;
+            if (newValue < 0) {
+                newValue = 360 - 45;
+            }
+            rotate.value = newValue + "";
+            block.applyBlockPropertyStyling();
+            return;
+        }
+        const type = {
+            type: "block/rotate",
+            value: "-45",
+        } as BlockPropertyDto;
+        block.addBlockProperties([type]);
+        block.applyBlockPropertyStyling();
+    }
+    turnRightRotateBlockProperty() {
+        const block = this.manager.getBlockInFocus();
+        if (!block) {
+            return;
+        }
+        const rotate = block.blockProperties.find(x => x.type == "block/rotate");
+        if (rotate) {
+            const value = parseInt(rotate.value);
+            let newValue = value + 45;
+            if (newValue > 360) {
+                newValue = 45;
+            }
+            rotate.value = newValue + "";
+            block.applyBlockPropertyStyling();
+            return;
+        }
+        const type = {
+            type: "block/rotate",
+            value: "45",
+        } as BlockPropertyDto;
+        block.addBlockProperties([type]);
+        block.applyBlockPropertyStyling();
+    }
     addOrDecreaseIndentBlockProperty() {
         const tb = this.manager.getBlockInFocus() as StandoffEditorBlock;
         if (tb.type != BlockType.StandoffEditorBlock) {
@@ -195,7 +241,6 @@ export class DocumentBlock extends AbstractBlock {
                 const block = new DocumentBlock({ ...dto, manager });
                 block.addBlockProperties([ { type: "block/marginalia/right" }, { type: "block/alignment", value: "right" } ]);
                 block.applyBlockPropertyStyling();
-                // updateElement(block.container, { classList: ["document-container"] });
                 await manager.buildChildren(block, dto);
                 container.appendChild(block.container);
                 return block;
@@ -214,7 +259,6 @@ export class DocumentBlock extends AbstractBlock {
                 const block = new DocumentBlock({ ...dto, manager });
                 block.addBlockProperties([ { type: "block/marginalia/left" } ]);
                 block.applyBlockPropertyStyling();
-                // updateElement(block.container, { classList: ["document-container"] });
                 await manager.buildChildren(block, dto);
                 container.appendChild(block.container);
                 return block;

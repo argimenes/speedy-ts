@@ -5,6 +5,7 @@ import { isStr } from "../library/types";
 export const BlockPropertySchemas = {
     getDocumentBlockProperties() {
         return [
+            BlockPropertySchemas.blockRotate,
             BlockPropertySchemas.blockIndent,
             BlockPropertySchemas.blockAlignment,
             BlockPropertySchemas.blockPosition,
@@ -16,6 +17,7 @@ export const BlockPropertySchemas = {
     },
     getStandoffBlockProperties() {
         return [
+            BlockPropertySchemas.blockRotate,
             BlockPropertySchemas.blockIndent,
             BlockPropertySchemas.blockAlignment,
             BlockPropertySchemas.blockPosition,
@@ -24,6 +26,30 @@ export const BlockPropertySchemas = {
             BlockPropertySchemas.blockFontSizeHalf,
             BlockPropertySchemas.blockFontSizeThreeQuarters
         ];
+    },
+    blockRotate: {
+        type: "block/rotate",
+        name: "Block Rotation",
+        description: "Rotate block.",
+        render: {
+            destroy: async (p: BlockProperty) => {
+                updateElement(p.block.container, {
+                    style: {
+                        "transform": `rotate(0)`,
+                        "transform-origin": "unset"
+                    }
+                });
+            },
+            update: async (p: BlockProperty) => {
+                const value = p.value || "0";
+                updateElement(p.block.container, {
+                    style: {
+                        "transform": `rotate(${value}deg)`,
+                        "transform-origin": "center"
+                    }
+                });
+            }
+        }
     },
     blockAlignment: {
         type: "block/alignment",

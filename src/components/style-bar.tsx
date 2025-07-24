@@ -3,7 +3,7 @@ import { AbstractBlock } from "../blocks/abstract-block";
 import { renderToNode } from "../library/common";
 import { IAbstractBlockConstructor, IBlockDto, IBlock } from "../library/types";
 import { DocumentBlock } from "../blocks/document-block";
-import { IconAlignCenter, IconAlignJustified, IconAlignLeft, IconAlignRight, IconBold, IconClearFormatting, IconColorPicker, IconH1, IconH2, IconH3, IconH4, IconIndentDecrease, IconIndentIncrease, IconItalic, IconSeparatorVertical } from "@tabler/icons-solidjs";
+import { IconAlignCenter, IconAlignJustified, IconAlignLeft, IconAlignRight, IconBold, IconClearFormatting, IconColorPicker, IconH1, IconH2, IconH3, IconH4, IconIndentDecrease, IconIndentIncrease, IconItalic, IconRotateClockwise, IconRotateClockwise2, IconSeparatorVertical } from "@tabler/icons-solidjs";
 
 export interface IStyleBarBlockConstructor extends IAbstractBlockConstructor {
     document: DocumentBlock;
@@ -73,6 +73,14 @@ export const StyleBar : Component<Props> = (props) => {
         e.preventDefault();
         props.block.addOrDecreaseIndent();
     }
+    const onRotateRightClicked = (e: Event) => {
+        e.preventDefault();
+        props.block.rotateRight();
+    }
+    const onRotateLeftClicked = (e: Event) => {
+        e.preventDefault();
+        props.block.rotateLeft();
+    }
     return (
         <>
             <div class="style-bar_block">
@@ -91,8 +99,13 @@ export const StyleBar : Component<Props> = (props) => {
                 <span style="margin: 0 10;">|</span>
                 <button onClick={onFontColourClicked} class="btn btn-default btn-sm">Font</button>
                 <button onClick={onBackgroundColourClicked} class="btn btn-default btn-sm">Background</button>
+                <span style="margin: 0 10;">|</span>
                 <button onClick={onAddOrIncreaseIndentClicked} class="btn btn-default btn-sm"><IconIndentIncrease /></button>
                 <button onClick={onAddOrDecreaseIndentClicked} class="btn btn-default btn-sm"><IconIndentDecrease /></button>
+                <span style="margin: 0 10;">|</span>
+                <button onClick={onRotateRightClicked} class="btn btn-default btn-sm"><IconRotateClockwise /></button>
+                <button onClick={onRotateLeftClicked} class="btn btn-default btn-sm"><IconRotateClockwise2 /></button>
+                <span style="margin: 0 10;">|</span>
                 <button onClick={onClearFormattingClicked} class="btn btn-default btn-sm"><IconClearFormatting /></button>
             </div>
         </>
@@ -113,6 +126,12 @@ export class StyleBarBlock extends AbstractBlock {
     }
     selectFontColour() {
         this.document.selectFontColour();
+    }
+    rotateRight() {
+        this.document.turnRightRotateBlockProperty();
+    }
+    rotateLeft() {
+        this.document.turnLeftRotateBlockProperty();
     }
     addOrDecreaseIndent() {
         this.document.addOrDecreaseIndentBlockProperty();
