@@ -10,6 +10,7 @@ import { GridBlock, GridCellBlock, GridRowBlock } from "../blocks/grid-block";
 import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
 import { IndentedListBlock } from "../blocks/indented-list-block";
 import { DocumentWindowBlock } from "../blocks/document-window-block";
+import { updateElement } from "../library/svg";
 
 type Props = {
     items: ContextMenuItem[];
@@ -113,7 +114,12 @@ export class BlockMenuBlock extends AbstractBlock {
       await this.doc.indentBlock({ block: this.source })
     }
     convertToPage() {
-      this.doc.convertBlockToTab(this.doc.id);
+      const page = this.doc.convertBlockToTab(this.doc.id);
+      updateElement(page.container, {
+        style: {
+          "margin-top": "30px"
+        }
+      });
     }
     convertToTab() {
       this.doc.convertBlockToTab(this.source.id);

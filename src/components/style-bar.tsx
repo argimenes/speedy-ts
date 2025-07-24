@@ -6,7 +6,7 @@ import { DocumentBlock } from "../blocks/document-block";
 import { IconAlignCenter, IconAlignJustified, IconAlignLeft, IconAlignRight, IconBold, IconClearFormatting, IconColorPicker, IconH1, IconH2, IconH3, IconH4, IconIndentDecrease, IconIndentIncrease, IconItalic, IconSeparatorVertical } from "@tabler/icons-solidjs";
 
 export interface IStyleBarBlockConstructor extends IAbstractBlockConstructor {
-    document: DocumentBlock;
+    document?: DocumentBlock;
 }
 
 type Props = {
