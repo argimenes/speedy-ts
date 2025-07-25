@@ -29,20 +29,21 @@ export class DocumentWindowBlock extends WindowBlock
         return {
             type: BlockType.DocumentWindowBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
-                const block = new DocumentWindowBlock({
+                const dcw = new DocumentWindowBlock({
                     ...dto,
                     manager,
                     onClose: async (b) => b.destroy()
                 });
-                block.addBlockProperties(dto.blockProperties);
-                block.applyBlockPropertyStyling();
-                await manager.buildChildren(block, dto, (child) => {
-                    block.container.appendChild(child.container);
+                dcw.addBlockProperties(dto.blockProperties);
+                dcw.applyBlockPropertyStyling();
+                dcw.container.appendChild(dcw.styleBar.container);
+                await manager.buildChildren(dcw, dto, (child) => {
+                    dcw.container.appendChild(child.container);
                 });
-                block.styleBar.document = block.blocks[0] as DocumentBlock;
-                container.appendChild(block.styleBar.container);
-                container.appendChild(block.container);
-                return block;
+                dcw.styleBar.document = dcw.blocks[0] as DocumentBlock;
+                
+                container.appendChild(dcw.container);
+                return dcw;
             }
         };
     }

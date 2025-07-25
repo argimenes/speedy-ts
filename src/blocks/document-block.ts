@@ -2628,6 +2628,7 @@ export class DocumentBlock extends AbstractBlock {
                 const caret = _block.lastCaret;
                 _block.setCaret(caret.index, CARET.LEFT);
             }
+            return tabRow;
     }
     setFocus() {
         const manager = this.manager;

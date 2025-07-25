@@ -117,7 +117,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const page = this.doc.convertBlockToTab(this.doc.id);
       updateElement(page.container, {
         style: {
-          "margin-top": "30px"
+          "margin-top": "1rem"
         }
       });
     }
