@@ -171,13 +171,17 @@ export class BlockMenuBlock extends AbstractBlock {
       let filename = this.doc.metadata.filename;
       let folder = this.doc.metadata.folder;
       if (!filename) filename = prompt("Filename?");
-      await this.manager.saveServerDocument(this.doc.id, filename, folder)
+      const win = this.manager.getParentOfType(this.source, BlockType.DocumentWindowBlock);
+      const block = win.blocks[0];
+      await this.manager.saveServerDocument(block.id, filename, "uploads")
     }
     async renameDocument() {
       alert("Rename is not implemented");
     }
     duplicateDocument() {
-      const dto = this.doc.serialize();
+      const win = this.manager.getParentOfType(this.source, BlockType.DocumentWindowBlock);
+      const block = win.blocks[0];
+      const dto = block.serialize();
       this.manager.addDocumentToWorkspace(dto);
     }
     addGridRow() {
