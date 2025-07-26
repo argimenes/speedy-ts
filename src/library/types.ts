@@ -63,6 +63,8 @@ export enum BlockType {
     IndentedListBlock = "indented-list-block",
     TabRowBlock = "tab-row-block",
     TabBlock = "tab-block",
+    DocumentTabRowBlock = "document-tab-row-block",
+    DocumentTabBlock = "document-tab-block",
     TableBlock = "table-block",
     TableRowBlock = "table-row-block",
     TableCellBlock = "table-cell-block",

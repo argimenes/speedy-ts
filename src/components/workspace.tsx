@@ -23,6 +23,7 @@ import { ContextMenuBlock } from "../blocks/context-menu-block";
 import { CanvasBackgroundBlock } from "../blocks/canvas-background-block";
 import { YouTubeVideoBackgroundBlock } from "../blocks/youtube-video-background-block";
 import { CanvasBlock } from "../blocks/canvas-block";
+import { DocumentTabRowBlock, DocumentTabBlock } from "../blocks/document-tabs-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -503,6 +504,8 @@ const foo = (bar) => {
             EmbedDocumentBlock.getBlockBuilder(),
             TabRowBlock.getBlockBuilder(),
             TabBlock.getBlockBuilder(),
+            DocumentTabRowBlock.getBlockBuilder(),
+            DocumentTabBlock.getBlockBuilder(),
             TableBlock.getBlockBuilder(),
             TableRowBlock.getBlockBuilder(),
             TableCellBlock.getBlockBuilder(),

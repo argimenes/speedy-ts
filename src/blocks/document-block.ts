@@ -24,6 +24,7 @@ import { BlockMenuBlock } from '../components/block-menu';
 import { CanvasBlock } from './canvas-block';
 import { Component } from 'solid-js';
 import { StyleBarBlock } from '../components/style-bar';
+import { DocumentTabBlock } from './document-tabs-block';
 
 const maxHistoryItems = 30;
 export interface IMultiRangeStandoffProperty {
@@ -2629,6 +2630,54 @@ export class DocumentBlock extends AbstractBlock {
                 _block.setCaret(caret.index, CARET.LEFT);
             }
             return tabRow;
+    }
+    convertToDocumentTab(blockId: GUID) {
+        const manager = this.manager;
+        const _block = this.manager.getBlock(blockId) as StandoffEditorBlock;
+        const doc = this.manager.getParentOfType(_block, BlockType.DocumentBlock) as DocumentBlock;
+        if (!doc) return;
+        const tabRow = manager.createDocumentTabRowBlock();
+        const tab = manager.createDocumentTabBlock({
+            type: BlockType.DocumentTabBlock,
+            metadata: {
+                name: "Page 1"
+            }
+        });
+        const parent = manager.getParent(doc) as AbstractBlock;
+        const bi = parent.blocks.findIndex(x=> x.id == doc.id);
+        this.removeBlockAt(parent, bi);
+        this.addBlockTo(tab, doc);
+        this.addBlockTo(tabRow, tab);
+        this.insertBlockAt(parent, tabRow, bi);
+        tabRow.renderLabels();
+        (tabRow.blocks[0] as DocumentTabBlock)?.setActive();
+        const previous = doc.relation.previous;
+        if (previous) {
+            previous.relation.next = tabRow;
+            tabRow.relation.previous = previous;
+        }
+        const next = doc.relation.next;
+        if (next) {
+            next.relation.previous = tabRow;
+            tabRow.relation.next = next;
+        }
+        delete doc.relation.previous;
+        doc.relation.parent = tab;
+        tab.relation.parent = tabRow;
+        tabRow.relation.parent = parent;
+        manager.generateParentSiblingRelations(parent);
+        /**
+         * Sort out all the tab panel stuff, rendering the label, etc.
+         */
+        doc.container.insertAdjacentElement("afterend", tabRow.container);
+        tabRow.container.appendChild(tab.container);
+        tab.panel.appendChild(doc.container);
+        manager.setBlockFocus(doc);
+        if (_block.type == BlockType.StandoffEditorBlock) {
+            const caret = _block.lastCaret;
+            _block.setCaret(caret.index, CARET.LEFT);
+        }
+        return tabRow;
     }
     setFocus() {
         const manager = this.manager;

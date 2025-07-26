@@ -114,7 +114,7 @@ export class BlockMenuBlock extends AbstractBlock {
       await this.doc.indentBlock({ block: this.source })
     }
     convertToPage() {
-      const page = this.doc.convertBlockToTab(this.doc.id);
+      const page = this.doc.convertToDocumentTab(this.source.id);
       updateElement(page.container, {
         style: {
           "margin-top": "1rem"

@@ -32,6 +32,7 @@ import { CanvasBackgroundBlock } from './blocks/canvas-background-block';
 import { BlockMenuBlock } from './components/block-menu';
 import { posix } from 'path';
 import { CanvasBlock } from './blocks/canvas-block';
+import { DocumentTabBlock, DocumentTabRowBlock } from './blocks/document-tabs-block';
 
 export type BlockBuilder =
     (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => Promise<IBlock>;
@@ -507,6 +508,28 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             }
         };
         animate();
+    }
+    getDocumentTabBlockEvents() {
+        const events: InputEvent[] = [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Mouse,
+                    match: "click"
+                },
+                action: {
+                    name: "Set focus to the current block.",
+                    description: "",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        const manager = block.manager as UniverseBlock;
+                        manager.setBlockFocus(block);
+                    }
+                }
+            }
+            
+        ]
+        return events;
     }
     getTabBlockEvents() {
         const events: InputEvent[] = [
@@ -1339,6 +1362,17 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         block.applyBlockPropertyStyling();
         return block;
     }
+    createDocumentTabBlock(dto?: IBlockDto){
+        const inputEvents = this.getDocumentTabBlockEvents();
+        const block = new DocumentTabBlock({
+            manager: this
+        });
+        block.inputEvents = inputEvents;
+        if (dto?.metadata) block.metadata = dto.metadata;
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+        block.applyBlockPropertyStyling();
+        return block;
+    }
     createTabBlock(dto?: IBlockDto){
         const inputEvents = this.getTabBlockEvents();
         const block = new TabBlock({
@@ -1439,6 +1473,17 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
         block.applyBlockPropertyStyling();
         //this.addBlockTo(this, block);
+        return block;
+    }
+    createDocumentTabRowBlock(dto?: IBlockDto) {
+        const inputEvents = this.getDocumentTabBlockEvents();
+        const block = new DocumentTabRowBlock({
+            manager: this
+        });
+        if (dto?.metadata) block.metadata = dto.metadata;
+        block.inputEvents = inputEvents;
+        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+        block.applyBlockPropertyStyling();
         return block;
     }
     createTabRowBlock(dto?: IBlockDto) {

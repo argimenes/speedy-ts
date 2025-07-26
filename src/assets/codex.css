@@ -164,16 +164,7 @@ body {
     background-color: blue;
     color: #fff;
   }
-  .tab-panel {
-    display: none;
-  }
-  .active {
-    display: inline;
-  }
-  .tab {
-    /* border: 1px solid #ccc; */
-    box-shadow: 2px 2px 2px #fbfbfb;
-  }
+  
   .btn {
     margin: 0 3px; 
   }
@@ -188,14 +179,7 @@ body {
       margin-bottom: 5px;
     }
   }
-  .tab-label {
-    display: inline;
-    color: #333;
-    padding: 5px;
-    font-size: 0.75rem; 
-    background-color: #fff;
 
-  }
   .text-highlight {
     background-color: yellow;
   }
@@ -226,10 +210,64 @@ body {
     border: 1px solid #ccc;
     margin: 2px;
   }
+
+/**
+
+TABS
+
+**/
+.tab-label {
+    display: inline;
+    color: #333;
+    padding: 5px;
+    font-size: 0.75rem; 
+    background-color: #fff;
+}
 .tab-label.active {
     color: #333;
     background-color: #f9f9f9;
-  }
+}
+.tab-panel {
+    display: none;
+}
+.active {
+    display: inline;
+}
+.tab {
+    box-shadow: 2px 2px 2px #fbfbfb;
+}
+
+/**
+
+DOCUMENT TABS (PAGES)
+
+**/
+.document-tab-label {
+    display: inline;
+    color: #333;
+    padding: 5px;
+    font-size: 0.75rem; 
+    background-color: #fff;
+}
+.document-tab-label.active {
+    color: #333;
+    background-color: #f9f9f9;
+}
+.document-tab-panel {
+    display: none;
+}
+.active {
+    display: inline;
+}
+.document-tab {
+    box-shadow: 2px 2px 2px #fbfbfb;
+}
+  /**
+
+  FONT SIZES
+
+  **/
+
   .block_font-size_h1 {
     font-size: 4rem;
     line-height: 4.25rem;
