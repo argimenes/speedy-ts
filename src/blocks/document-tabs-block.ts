@@ -69,6 +69,7 @@ export class DocumentTabRowBlock extends AbstractBlock {
                 } else {
                     block.setTabActive(block.blocks[0] as DocumentTabBlock);
                 }
+                block.container.classList.add("document-row");
                 container.appendChild(block.container);
                 return block;
             }
