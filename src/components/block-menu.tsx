@@ -11,6 +11,7 @@ import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
 import { IndentedListBlock } from "../blocks/indented-list-block";
 import { DocumentWindowBlock } from "../blocks/document-window-block";
 import { updateElement } from "../library/svg";
+import { DocumentTabBlock, DocumentTabRowBlock } from "../blocks/document-tabs-block";
 
 type Props = {
     items: ContextMenuItem[];
@@ -115,11 +116,7 @@ export class BlockMenuBlock extends AbstractBlock {
     }
     convertToPage() {
       const page = this.doc.convertToDocumentTab(this.source.id);
-      updateElement(page.container, {
-        style: {
-          "margin-top": "1rem"
-        }
-      });
+      page.container.classList.add("document-row");
     }
     convertToTab() {
       this.doc.convertBlockToTab(this.source.id);
@@ -144,6 +141,19 @@ export class BlockMenuBlock extends AbstractBlock {
         const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
         cell.moveCellLeft();
     }
+    deletePage() {
+      const tab = this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock) as DocumentTabBlock;
+      tab.deleteTab();
+    }
+    async addPage() {
+      const row = this.manager.getParentOfType(this.source, BlockType.DocumentTabRowBlock) as DocumentTabRowBlock;
+      await row.appendTab();
+    }
+    renamePage() {
+      const tab = this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock) as DocumentTabBlock;
+      const name = prompt("Title?");
+      tab.setName(name);
+    }
     deleteTab() {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
       tab.deleteTab();
@@ -164,6 +174,14 @@ export class BlockMenuBlock extends AbstractBlock {
     moveCellRight() {
       const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
       cell.moveCellRight();
+    }
+    movePageRight() {
+      const tab = this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock) as DocumentTabBlock;
+      tab.moveRight();
+    }
+    movePageLeft() {
+      const tab = this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock) as DocumentTabBlock;
+      tab.moveLeft();
     }
     moveTabLeft() {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
@@ -214,6 +232,7 @@ export class BlockMenuBlock extends AbstractBlock {
       
       const insideGrid = !!this.manager.getParentOfType(this.source, BlockType.GridCellBlock);
       const insideTabs = !!this.manager.getParentOfType(this.source, BlockType.TabBlock);
+      const insidePage = !!this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock);
       const insideIndentedList = !!this.manager.getParentOfType(this.source, BlockType.IndentedListBlock);
       const isBackground = this.source.type.toLowerCase().indexOf("background") >= 0;
       const insideDocument = !!this.manager.getParentOfType(this.source, BlockType.DocumentBlock);
@@ -356,6 +375,37 @@ export class BlockMenuBlock extends AbstractBlock {
               icon: <IconTrash />,
               onClick: () => self.deleteTab()
         };
+        /**
+         * Document Tabs (Pages)
+         */
+        const itemMovePageLeft = {
+              label: "Move page left",
+              icon: <IconSwipeLeft />,
+              onClick: () => self.movePageLeft()
+        };
+        const itemMovePageRight = {
+              label: "Move page right",
+              icon: <IconSwipeRight />,
+              onClick: () => self.movePageRight()
+        };
+        const itemRenamePage = {
+              label: "Rename page",
+              icon: <IconEdit />,
+              onClick: () => self.renamePage()
+        };
+        const itemAddPage = {
+              label: "Add page",
+              icon: <IconPlus />,
+              onClick: () => self.addPage()
+        };
+        const itemDeletePage = {
+              label: "Delete page",
+              icon: <IconTrash />,
+              onClick: () => self.deletePage()
+        };
+        /**
+         * Grids
+         */
         const itemAddGridRow = {
               label: "Add row",
               icon: <IconPlus />,
@@ -383,9 +433,19 @@ export class BlockMenuBlock extends AbstractBlock {
           type: "item",
           label: "Tabs",
           children: [
-            itemAddTabBlock, itemDeleteTab, itemRenameTab, itemDestructureTabs, hr,
+            itemAddTabBlock, itemRenameTab, itemDestructureTabs, hr,
             itemMergeTabLeft, itemMergeTabRight, hr,
-            itemMoveTabLeft, itemMoveTabRight
+            itemMoveTabLeft, itemMoveTabRight, hr,
+            itemDeleteTab
+          ]
+        };
+        const itemPagesMenu = {
+          type: "item",
+          label: "Pages",
+          children: [
+            itemAddPage, itemRenamePage, hr,
+            itemMovePageLeft, itemMovePageRight, hr,
+            itemDeletePage
           ]
         };
         const itemIndentedListMenu = {
@@ -396,11 +456,21 @@ export class BlockMenuBlock extends AbstractBlock {
           ]
         };
         items.push(itemAdd);
-        items.push(itemConvertToPage);
+        /**
+         * Tabs
+         */
         if (!insideTabs) {
           items.push(itemConvertToTab);
         } else {
           items.push(itemTabsMenu)
+        }
+        /**
+         * Pages
+         */
+        if (!insidePage) {
+          items.push(itemConvertToPage);
+        } else {
+          items.push(itemPagesMenu)
         }
         if (!insideGrid) {
           items.push(itemConvertToGrid);

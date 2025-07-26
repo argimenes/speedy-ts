@@ -124,7 +124,7 @@ export class DocumentTabRowBlock extends AbstractBlock {
     }
     async appendTab() {
         const lastTab = this.blocks.at(-1) as DocumentTabBlock;
-        await this.addTab({ previousTabId: lastTab.id, name: (this.blocks.length + 1) + "" });
+        await this.addTab({ previousTabId: lastTab.id, name: "Page " + (this.blocks.length + 1) + "" });
     }
     async addTab({ previousTabId, name }: { previousTabId: string, name: string }) {
         const previousTab = this.getTab(previousTabId);
