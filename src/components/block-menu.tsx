@@ -1,4 +1,4 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy } from "@tabler/icons-solidjs";
 import { Component, onCleanup, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -166,6 +166,19 @@ export class BlockMenuBlock extends AbstractBlock {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
       const name = prompt("Name: ");
       tab.setName(name);
+    }
+    async saveDocument() {
+      let filename = this.doc.metadata.filename;
+      let folder = this.doc.metadata.folder;
+      if (!filename) filename = prompt("Filename?");
+      await this.manager.saveServerDocument(this.doc.id, filename, folder)
+    }
+    async renameDocument() {
+      alert("Rename is not implemented");
+    }
+    duplicateDocument() {
+      const dto = this.doc.serialize();
+      this.manager.addDocumentToWorkspace(dto);
     }
     addGridRow() {
       const row = this.manager.getParentOfType(this.source, BlockType.GridRowBlock) as GridRowBlock;
@@ -411,6 +424,24 @@ export class BlockMenuBlock extends AbstractBlock {
               icon: <IconPlus />,
               onClick: () => self.addGridRow()
         };
+        /**
+         * File
+         */
+        const itemSave = {
+              label: "Save",
+              icon: <IconDisc />,
+              onClick: () => self.saveDocument()
+        };
+        const itemRename = {
+              label: "Rename",
+              icon: <IconPencil />,
+              onClick: () => self.renameDocument()
+        };
+        const itemDuplicate = {
+              label: "Duplicate",
+              icon: <IconCopy />,
+              onClick: () => self.duplicateDocument()
+        };
         const itemWindowThemesMenu = {
               label: "Themes",
               icon: <IconWindow />,
@@ -418,6 +449,13 @@ export class BlockMenuBlock extends AbstractBlock {
                 itemSetWindowThemeToGlass,
                 itemSetWindowThemeToDefault
               ]
+        };
+        const itemFileMenu = {
+          type: "item",
+          label: "File",
+          children: [
+            itemSave, itemDuplicate, itemRename
+          ]
         };
         const itemGridsMenu = {
           type: "item",
@@ -456,6 +494,7 @@ export class BlockMenuBlock extends AbstractBlock {
           ]
         };
         items.push(itemAdd);
+        items.push(itemFileMenu);
         /**
          * Tabs
          */

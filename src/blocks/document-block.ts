@@ -2633,8 +2633,8 @@ export class DocumentBlock extends AbstractBlock {
     }
     convertToDocumentTab(blockId: GUID) {
         const manager = this.manager;
-        const _block = this.manager.getBlock(blockId) as StandoffEditorBlock;
-        const doc = this.manager.getParentOfType(_block, BlockType.DocumentBlock) as DocumentBlock;
+        const block = this.manager.getBlock(blockId) as StandoffEditorBlock;
+        const doc = this.manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
         if (!doc) return;
         const tabRow = manager.createDocumentTabRowBlock();
         const tab = manager.createDocumentTabBlock({
@@ -2673,9 +2673,9 @@ export class DocumentBlock extends AbstractBlock {
         tabRow.container.appendChild(tab.container);
         tab.panel.appendChild(doc.container);
         manager.setBlockFocus(doc);
-        if (_block.type == BlockType.StandoffEditorBlock) {
-            const caret = _block.lastCaret;
-            _block.setCaret(caret.index, CARET.LEFT);
+        if (block.type == BlockType.StandoffEditorBlock) {
+            const caret = block.lastCaret;
+            block.setCaret(caret.index, CARET.LEFT);
         }
         return tabRow;
     }
