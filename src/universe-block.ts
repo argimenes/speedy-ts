@@ -120,15 +120,31 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.container.remove();
     }
     findNearestBlockByElement(el: HTMLElement) {
-        const blockId = el.closest('[data-block-id]')?.dataset.blockId;
-        const match = this.registeredBlocks.find(x=> x.id == blockId);
-        return match;
+        let current = el;
+        while (current) {
+            let match = this.registeredBlocks.find(x=> x.container == current);
+            if (match) return match;
+            current = current.parentElement as HTMLElement;
+        }
+        return null;
+        /**
+            const blockId = el.closest('[data-block-id]')?.dataset.blockId;
+            const match = this.registeredBlocks.find(x=> x.id == blockId);
+            return match;
+         */
     }
     async handleMouseInputEvents(e: MouseEvent) {
         console.log("handleMouseInputEvents", { manager: this, e });
         if (!this.container.contains(e.target as HTMLElement)) {
             return;
         }
+
+        const blockEl = (e.target as HTMLElement).closest("[data-block-id]") as HTMLElement | null;
+        if (blockEl) {
+            console.log("block-id from DOM:", blockEl.dataset.blockId);
+            console.log("block DOM is inside active tab?", !!blockEl.closest(".tab.active"));
+        }
+
         const parentBlock = this.findNearestBlockByElement(e.target as HTMLElement);
         if (!parentBlock) {
             console.log("Could not find a container parent.")
@@ -201,7 +217,14 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             }
         }
         if (!focusedBlock.container.contains(e.target as HTMLElement)) {
-            console.log("handleKeyboardInputEvents", { message: "Input received from outside of @focusedBlock", focusedBlock, target: e.target });
+            console.log("handleKeyboardInputEvents", {
+                message: "Input received from outside of @focusedBlock",
+                focusedBlock,
+                target: e.target,
+                targetElementBlockId: e.target.dataset.blockId,
+                targetElementBlockType: e.target.dataset.blockType,
+                registeredBlocks: this.registeredBlocks
+            });
         }
         const isStandoffBlock = focusedBlock.type == BlockType.StandoffEditorBlock;
         const blocks = this.getAncestors(focusedBlock);
@@ -394,7 +417,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     setFocus() {
         this.container.focus();
     }
-    setBlockFocus(block: IBlock) {
+    setBlockFocus(block: IBlock, skipLoop?: boolean) {
         console.log("setBlockFocus", { oldFocus: this.focus, newFocus: block });
         const oldFocus = this.focus;
         oldFocus?.container.classList.remove("focus-highlight");
@@ -410,7 +433,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 }
             });
         }
-        block.setFocus();
+        if (!skipLoop) block.setFocus();
     }
     // getImageBlockSchemas() {
     //     const self = this;
@@ -1008,11 +1031,15 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             rightMargin.generateIndex();
         }
     }
+    getBlockBuilder(type: BlockType) {
+        const item = this.blockBuilders.find(x => x.type == type);
+        return item?.builder;
+    }
     async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const item = this.blockBuilders.find(x => x.type == blockDto.type);
-        if (item) {
+        const builder = this.getBlockBuilder(blockDto.type);
+        if (builder) {
             try {
-                const newBlock = await item.builder(container, blockDto, this);
+                const newBlock = await builder(container, blockDto, this);
                 await this.handleBuildingMarginBlocks(newBlock, blockDto);
                 return newBlock;
             } catch (ex) {
@@ -1373,16 +1400,19 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         block.applyBlockPropertyStyling();
         return block;
     }
-    createTabBlock(dto?: IBlockDto){
-        const inputEvents = this.getTabBlockEvents();
-        const block = new TabBlock({
-            manager: this
-        });
-        block.inputEvents = inputEvents;
-        if (dto?.metadata) block.metadata = dto.metadata;
-        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
-        block.applyBlockPropertyStyling();
+    async createTabBlock(dto: IBlockDto = {}){
+        const builder = this.getBlockBuilder(BlockType.TabBlock);
+        const block = await builder(this.newContainer(), dto, this) as TabBlock;
         return block;
+        // const inputEvents = this.getTabBlockEvents();
+        // const block = new TabBlock({
+        //     manager: this
+        // });
+        // block.inputEvents = inputEvents;
+        // if (dto?.metadata) block.metadata = dto.metadata;
+        // if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+        // block.applyBlockPropertyStyling();
+        // return block;
     }
     createGridCellBlock(dto?: IBlockDto) {
         const block = new GridCellBlock({
@@ -1486,16 +1516,19 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         block.applyBlockPropertyStyling();
         return block;
     }
-    createTabRowBlock(dto?: IBlockDto) {
-        const inputEvents = this.getTabBlockEvents();
-        const block = new TabRowBlock({
-            manager: this
-        });
-        if (dto?.metadata) block.metadata = dto.metadata;
-        block.inputEvents = inputEvents;
-        if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
-        block.applyBlockPropertyStyling();
-        return block;
+    async createTabRowBlock(dto: IBlockDto = {}) {
+        const builder = this.getBlockBuilder(BlockType.TabRowBlock);
+        const rowBlock = await builder(this.newContainer(), dto, this) as TabRowBlock;
+        return rowBlock;
+        // const inputEvents = this.getTabBlockEvents();
+        // const block = new TabRowBlock({
+        //     manager: this
+        // });
+        // if (dto?.metadata) block.metadata = dto.metadata;
+        // block.inputEvents = inputEvents;
+        // if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
+        // block.applyBlockPropertyStyling();
+        // return block;
     }
     createLeftMarginBlock(dto?: IBlockDto) {
         const block = new DocumentBlock({

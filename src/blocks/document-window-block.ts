@@ -40,8 +40,7 @@ export class DocumentWindowBlock extends WindowBlock
                 await manager.buildChildren(dcw, dto, (child) => {
                     dcw.container.appendChild(child.container);
                 });
-                dcw.styleBar.document = dcw.blocks[0] as DocumentBlock;
-                
+                dcw.styleBar.document = manager.getParentOfType(dcw, BlockType.DocumentBlock) as DocumentBlock;
                 container.appendChild(dcw.container);
                 return dcw;
             }

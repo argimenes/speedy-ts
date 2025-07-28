@@ -14,28 +14,47 @@ export class TabRowBlock extends AbstractBlock {
         this.header = document.createElement("DIV") as HTMLDivElement;
         this.labels = [];
         this.container.appendChild(this.header);
-        this.inputEvents = this.getTabBlockEvents();
+        this.suppressEventHandlers = true;
+        //this.inputEvents = this.getTabBlockEvents();
     }
-    getTabBlockEvents() {
-        const events: InputEvent[] = [
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Mouse,
-                    match: "click"
-                },
-                action: {
-                    name: "Set focus to the current block.",
-                    description: "",
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const block = args.block;
-                        const manager = block.manager as UniverseBlock;
-                        manager.setBlockFocus(block);
-                    }
-                }
-            }
-        ]
-        return events;
+    getActiveTab() {
+        return this.blocks.find((x) => (x as TabBlock).metadata?.active) as TabBlock;
+    }
+    firstTab() {
+        return this.blocks[0] as TabBlock;
+    }
+    // getTabBlockEvents() {
+    //     const events: InputEvent[] = [
+    //         {
+    //             mode: "default",
+    //             trigger: {
+    //                 source: InputEventSource.Mouse,
+    //                 match: "click"
+    //             },
+    //             action: {
+    //                 name: "Set focus to the current block.",
+    //                 description: "",
+    //                 handler: async (args: IBindingHandlerArgs) => {
+    //                     const block = args.block;
+    //                     const manager = block.manager as UniverseBlock;
+    //                     manager.setBlockFocus(block);
+    //                 }
+    //             }
+    //         }
+    //     ]
+    //     return events;
+    // }
+    setFocus() {
+        const activeTab = this.getActiveTab();
+        if (activeTab) {
+            activeTab.setCustomFocus();
+            return;
+        }
+        const firstTab = this.firstTab();
+        if (firstTab) {
+            firstTab.setCustomFocus();
+        }
+        console.error("No active tab found to set focus on.");
     }
     deleteTab(tab: TabBlock) {
         const parent = this;
@@ -57,30 +76,30 @@ export class TabRowBlock extends AbstractBlock {
         return {
             type: BlockType.TabRowBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
-                const block = new TabRowBlock({ manager, ...dto });
-                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
-                block.applyBlockPropertyStyling();
-                await manager.buildChildren(block, dto);
-                block.renderLabels();
-                const activeBlock = block.blocks.find(x => x.metadata.active) as TabBlock;
+                const row = new TabRowBlock({ manager, ...dto, type: BlockType.TabRowBlock });
+                if (dto?.blockProperties) row.addBlockProperties(dto.blockProperties);
+                row.applyBlockPropertyStyling();
+                await manager.buildChildren(row, dto);
+                row.renderLabels();
+                const activeBlock = row.blocks.find(x => x.metadata.active) as TabBlock;
                 if (activeBlock) {
-                    block.setTabActive(activeBlock);
+                    row.setTabActive(activeBlock);
                 } else {
-                    block.setTabActive(block.blocks[0] as TabBlock);
+                    row.blocks.length && row.setTabActive(row.firstTab());
                 }
-                container.appendChild(block.container);
-                return block;
+                container.appendChild(row.container);
+                return row;
             }
         };
     }
-    attachEventHandlers() {
-        this.container.addEventListener("click", this.handleClick.bind(this));
-    }
-    handleClick(e: MouseEvent, tab?: TabBlock) {
-        const onClick = this.inputEvents.find(x => (x.trigger.match as string).toLowerCase() == "click");
-        if (!onClick) return;
-        onClick.action.handler({ block: tab || this, caret: {} as any });
-    }
+    // attachEventHandlers() {
+    //     this.container.addEventListener("click", this.handleClick.bind(this));
+    // }
+    // handleClick(e: MouseEvent, tab?: TabBlock) {
+    //     const onClick = this.inputEvents.find(x => (x.trigger.match as string).toLowerCase() == "click");
+    //     if (!onClick) return;
+    //     onClick.action.handler({ block: tab || this, caret: {} as any });
+    // }
     setTabActive(tab: TabBlock) {
         const label = this.labels.find(x => x.id == tab.id) as HTMLSpanElement;
         Array.from(this.header.children).forEach(n => n.classList.remove("active"));
@@ -102,8 +121,9 @@ export class TabRowBlock extends AbstractBlock {
             label.classList.add("tab-label");
             self.labels.push(label);
             label.addEventListener("click", (e) => {
+                e.preventDefault();
                 self.setTabActive(tab);
-                self.handleClick(e, tab);
+                tab.setCustomFocus();
             });
             header.appendChild(label);
         });
@@ -121,37 +141,38 @@ export class TabRowBlock extends AbstractBlock {
     getTab(id: GUID) {
         return this.getBlock(id) as TabBlock;
     }
-    async appendTab() {
-        const lastTab = this.blocks.at(-1) as TabBlock;
-        await this.addTab({ previousTabId: lastTab.id, name: (this.blocks.length + 1) + "" });
+    lastTab() {
+        return this.blocks.at(-1) as TabBlock;
+    }
+    async appendTab(blockId?: string) {
+        const lastTab = this.lastTab();
+        await this.addTab({ previousTabId: lastTab.id, name: (this.blocks.length + 1) + "", copyTextBlockId: blockId });
     }
     async addTab({ previousTabId, name, copyTextBlockId }: { previousTabId: string, name: string, copyTextBlockId?: string }) {
         const previousTab = this.getTab(previousTabId);
-        const row = previousTab.getRow();
-        if (!row) return;
         const newTab = await this.createNewTab(name);
+        const manager = this.manager;
         let textBlock: StandoffEditorBlock;
         if (copyTextBlockId) {
-            const block = this.getBlock(copyTextBlockId) as StandoffEditorBlock;
-            const dto = block.serialize();
-            textBlock = await this.manager.recursivelyBuildBlock(this.newContainer(), dto) as StandoffEditorBlock;
+            const sourceTextBlock = manager.getBlock(copyTextBlockId) as StandoffEditorBlock;
+            const sourceTextBlockDto = sourceTextBlock.serialize();
+            textBlock = await manager.recursivelyBuildBlock(this.newContainer(), sourceTextBlockDto) as StandoffEditorBlock;
+            manager.registerBlock(textBlock);
         } else {
-            textBlock = await this.manager.recursivelyBuildBlock(this.newContainer(), { type: BlockType.StandoffEditorBlock, blockProperties:[ { type: "block/alignment/left" }] }) as StandoffEditorBlock;
+            textBlock = await manager.recursivelyBuildBlock(this.newContainer(), { type: BlockType.StandoffEditorBlock, blockProperties:[ { type: "block/alignment/left" }] }) as StandoffEditorBlock;
         }
-        textBlock.addEOL();
-        this.manager.addBlockTo(newTab, textBlock);
-        this.manager.addBlockTo(row, newTab);
+        manager.addBlockTo(newTab, textBlock);
+        manager.addBlockTo(this, newTab);
         textBlock.relation.parent = newTab;
         previousTab.relation.next = newTab;
         newTab.relation.previous = previousTab;
-        this.manager.generateParentSiblingRelations(row);
-        row.renderLabels();
+        manager.generateParentSiblingRelations(this.relation.parent as AbstractBlock);
+        this.renderLabels();
         newTab.panel.appendChild(textBlock.container);
-        row.container.appendChild(newTab.container);
-        const label = newTab.container.querySelector(".tab-label") as HTMLSpanElement;
-        row.setTabActive(newTab);
+        this.container.appendChild(newTab.container);
+        this.setTabActive(newTab);
         setTimeout(() => {
-            this.manager.setBlockFocus(textBlock);
+            manager.setBlockFocus(textBlock);
             textBlock.setCaret(0, CARET.LEFT);
         }, 1);
         return newTab;
@@ -234,7 +255,7 @@ export class TabBlock extends AbstractBlock {
             type: BlockType.TabBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
                 const block = new TabBlock({
-                    manager, ...dto
+                    manager, ...dto, type: BlockType.TabBlock
                 });
                 if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
                 block.applyBlockPropertyStyling();
@@ -283,6 +304,15 @@ export class TabBlock extends AbstractBlock {
                 border: "none"
             }
         });
+    }
+    setCustomFocus() {
+        if(!this.blocks.length) return;
+        const block = this.blocks[0] as IBlock;
+        if (block.type == BlockType.StandoffEditorBlock) {
+            (block as StandoffEditorBlock).setCaret(0, CARET.LEFT);
+        }
+        block.setFocus();
+        this.manager.setBlockFocus(block);
     }
     serialize() {
         return {

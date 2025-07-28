@@ -1650,30 +1650,6 @@ export class DocumentBlock extends AbstractBlock {
                 mode: "default",
                 trigger: {
                     source: InputEventSource.Keyboard,
-                    match: "Control-Shift-T"
-                },
-                action: {
-                    name: "To tab/add tab",
-                    description: "Either wraps the text in a new tab, or creates a new tab",
-                    handler: async (args: IBindingHandlerArgs) => {
-                        const block = args.block as StandoffEditorBlock;
-                        const manager = block.manager as UniverseBlock;
-                        const parent = manager.getParent(block) as IBlock;
-                        if (!parent) return;
-                        if (parent.type == BlockType.TabBlock) {
-                            let tab = parent as TabBlock;
-                            let row = tab.getRow();
-                            row.addTab({ tabId: parent.id, name: "...", copyTextBlockId: block.id });
-                        } else {
-                            _this.convertBlockToTab(block.id);
-                        }
-                    }
-                }
-            },
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Keyboard,
                     match: "Control-Enter"
                 },
                 action: {
@@ -1882,20 +1858,14 @@ export class DocumentBlock extends AbstractBlock {
         searchBlock.setFocus();
     }
     async handleCreateNewTab(args: IBindingHandlerArgs) {
-        const block = args.block as StandoffEditorBlock;
-        const manager = block.manager as UniverseBlock;
-        const parent = manager.getParent(block) as IBlock;
-        if (!parent) return;
-        if (parent.type == BlockType.TabBlock) {
-            let tab = parent as TabBlock;
-            let row = tab.getRow();
-            // const previousTabName = parent.metadata.name || "";
-            // const [parsed, tabNum] = manager.tryParseInt(previousTabName);
-            // const newTabName = parsed ? ((tabNum as number) + 1) + "" : "...";
-            // row.addTab({ previousTabId: parent.id, name: newTabName });
-            await row.appendTab();
+        const textBlock = args.block as StandoffEditorBlock;
+        const manager = textBlock.manager as UniverseBlock;
+        const parent = manager.getParentOfType(textBlock, BlockType.TabBlock) as TabBlock;
+        if (parent?.type == BlockType.TabBlock) {
+            const row = parent.getRow();
+            await row.appendTab(textBlock.id);
         } else {
-            this.convertBlockToTab(block.id);
+            await this.convertBlockToTab(textBlock.id);
         }
     }
     async deindentBlock(args: IBindingHandlerArgs) {
@@ -2578,58 +2548,57 @@ export class DocumentBlock extends AbstractBlock {
             });
         }
     }
-    convertBlockToTab(blockId: GUID) {
+    async convertBlockToTab(blockId: GUID) {
         const manager = this.manager;
-        const block = this.manager.getBlock(blockId) as IBlock;
-        if (!block) return;
-        const tabRow = manager.createTabRowBlock();
-        const tab = manager.createTabBlock({
-            type: BlockType.TabBlock,
+        const source = this.manager.getBlock(blockId) as IBlock;
+        if (!source) {
+            console.error("convertBlockToTab", { error: "Source block not found.", blockId });
+            return; 
+        } 
+        const row = await manager.createTabRowBlock();
+        const tab = await manager.createTabBlock({
             metadata: {
                 name: "1"
             }
         });
-        const parent = manager.getParent(block) as AbstractBlock;
-        const bi = parent.blocks.findIndex(x=> x.id == block.id);
-        //parent.blocks.splice(bi, 1);
+        const parent = manager.getParent(source) as AbstractBlock;
+        const bi = parent.blocks.findIndex(x=> x.id == source.id);
         this.removeBlockAt(parent, bi);
-        this.addBlockTo(tab, block);
-        this.addBlockTo(tabRow, tab);
-        this.insertBlockAt(parent, tabRow, bi);
-        //parent.blocks.splice(bi, 0, tabRow);
-        tabRow.renderLabels();
-        (tabRow.blocks[0] as TabBlock)?.setActive();
-        const previous = block.relation.previous;
+        this.addBlockTo(tab, source);
+        this.addBlockTo(row, tab);
+        this.insertBlockAt(parent, row, bi);
+        row.renderLabels();
+        row.firstTab()?.setActive();
+        const previous = source.relation.previous;
         if (previous) {
-            previous.relation.next = tabRow;
-            tabRow.relation.previous = previous;
+            previous.relation.next = row;
+            row.relation.previous = previous;
         }
-        const next = block.relation.next;
+        const next = source.relation.next;
         if (next) {
-            next.relation.previous = tabRow;
-            tabRow.relation.next = next;
+            next.relation.previous = row;
+            row.relation.next = next;
         }
-        delete block.relation.previous;
-        block.relation.parent = tab;
-        tab.relation.parent = tabRow;
-        tabRow.relation.parent = parent;
+        delete source.relation.previous;
+        source.relation.parent = tab;
+        tab.relation.parent = row;
+        row.relation.parent = parent;
         manager.generateParentSiblingRelations(parent);
         /**
          * Sort out all the tab panel stuff, rendering the label, etc.
          */
-        block.container.insertAdjacentElement("afterend", tabRow.container);
-        tabRow.container.appendChild(tab.container);
-        tab.panel.appendChild(block.container);
-        setTimeout(() => {
-            
-        }, 1);
-        manager.setBlockFocus(block);
-            if (block.type == BlockType.StandoffEditorBlock) {
-                const _block = block as StandoffEditorBlock;
+        source.container.insertAdjacentElement("afterend", row.container);
+        row.container.appendChild(tab.container);
+        tab.panel.appendChild(source.container);
+        manager.setBlockFocus(source);
+        if (source.type == BlockType.StandoffEditorBlock) {
+            setTimeout(() => {
+                const _block = source as StandoffEditorBlock;
                 const caret = _block.lastCaret;
                 _block.setCaret(caret.index, CARET.LEFT);
-            }
-            return tabRow;
+            }, 1);
+        }
+        return row;
     }
     convertToDocumentTab(blockId: GUID) {
         const manager = this.manager;
