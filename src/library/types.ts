@@ -79,6 +79,7 @@ export enum BlockType {
     LeftMarginBlock = "left-margin-block",
     RightMarginBlock = "right-margin-block",
     ImageBlock = "image-block",
+    MembraneBlock = "membrane-block",
     YouTubeVideoBlock = "youtube-video-block",
     YouTubeVideoBackgroundBlock = "youtube-video-background-block",
     PlainTextBlock = "plain-text-block",

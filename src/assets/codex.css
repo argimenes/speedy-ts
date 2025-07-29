@@ -245,6 +245,9 @@ DOCUMENT TABS (PAGES)
 .document-row {
   margin-top: 1.5rem;
 }
+.membrane-block {
+  
+}
 .document-tab-label {
     display: inline;
     color: #333;

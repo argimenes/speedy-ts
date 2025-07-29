@@ -24,6 +24,7 @@ import { CanvasBackgroundBlock } from "../blocks/canvas-background-block";
 import { YouTubeVideoBackgroundBlock } from "../blocks/youtube-video-background-block";
 import { CanvasBlock } from "../blocks/canvas-block";
 import { DocumentTabRowBlock, DocumentTabBlock } from "../blocks/document-tabs-block";
+import { MembraneBlock } from "../blocks/membrane-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -31,6 +32,9 @@ type Props = {
 export const BlockManagerWindow : Component<Props> = (props) => {
     const initialise = (el: HTMLDivElement) => {
         const doc2: IBlockDto = {
+            type: BlockType.MembraneBlock,
+            children: [
+                {
                     type: BlockType.DocumentTabRowBlock,
                     children: [
                         {
@@ -517,7 +521,9 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             ]
                         }
                     ]
-                };
+                }
+            ]
+        };
 
         const doc: IBlockDto = {
             type: BlockType.DocumentBlock,
@@ -1011,6 +1017,7 @@ const foo = (bar) => {
             VideoBackgroundBlock.getBlockBuilder(),
             ImageBackgroundBlock.getBlockBuilder(),
             WorkspaceBlock.getBlockBuilder(),
+            MembraneBlock.getBlockBuilder(),
         ]);
         workspace.createImageWorkspace();
         workspace.addDocumentToWorkspace(doc2).then();
