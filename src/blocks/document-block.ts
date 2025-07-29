@@ -67,12 +67,13 @@ export class DocumentBlock extends AbstractBlock {
         if (!block) {
             return;
         }
-        const rotate = block.blockProperties.find(x => x.type == "block/rotate");
+        const amt = 90;
+        const rotate = block.blockProperties?.find(x => x.type == "block/rotate");
         if (rotate) {
             const value = parseInt(rotate.value);
-            let newValue = value - 45;
+            let newValue = value - amt;
             if (newValue < 0) {
-                newValue = 360 - 45;
+                newValue = 360 - amt;
             }
             rotate.value = newValue + "";
             block.applyBlockPropertyStyling();
@@ -80,7 +81,7 @@ export class DocumentBlock extends AbstractBlock {
         }
         const type = {
             type: "block/rotate",
-            value: "-45",
+            value: "-" + amt,
         } as BlockPropertyDto;
         block.addBlockProperties([type]);
         block.applyBlockPropertyStyling();
@@ -90,12 +91,13 @@ export class DocumentBlock extends AbstractBlock {
         if (!block) {
             return;
         }
-        const rotate = block.blockProperties.find(x => x.type == "block/rotate");
+        const amt = 90;
+        const rotate = block.blockProperties?.find(x => x.type == "block/rotate");
         if (rotate) {
             const value = parseInt(rotate.value);
-            let newValue = value + 45;
+            let newValue = value + amt;
             if (newValue > 360) {
-                newValue = 45;
+                newValue = amt;
             }
             rotate.value = newValue + "";
             block.applyBlockPropertyStyling();
@@ -103,7 +105,7 @@ export class DocumentBlock extends AbstractBlock {
         }
         const type = {
             type: "block/rotate",
-            value: "45",
+            value: amt+"",
         } as BlockPropertyDto;
         block.addBlockProperties([type]);
         block.applyBlockPropertyStyling();
@@ -113,7 +115,7 @@ export class DocumentBlock extends AbstractBlock {
         if (tb.type != BlockType.StandoffEditorBlock) {
             return;
         }
-        const indent = tb.blockProperties.find(x => x.type == "block/indent");
+        const indent = tb.blockProperties?.find(x => x.type == "block/indent");
         if (indent) {
             const value = parseInt(indent.value);
             const newValue = value - 1;
@@ -135,7 +137,7 @@ export class DocumentBlock extends AbstractBlock {
         if (tb.type != BlockType.StandoffEditorBlock) {
             return;
         }
-        const indent = tb.blockProperties.find(x => x.type == "block/indent");
+        const indent = tb.blockProperties?.find(x => x.type == "block/indent");
         if (indent) {
             indent.value = (parseInt(indent.value) + 1) + "";
             tb.applyBlockPropertyStyling();
@@ -203,7 +205,7 @@ export class DocumentBlock extends AbstractBlock {
         if (tb.type != BlockType.StandoffEditorBlock) {
             return;
         }
-        const blockProp = tb.blockProperties.find(x => x.type == type);
+        const blockProp = tb.blockProperties?.find(x => x.type == type);
         if (blockProp) {
             blockProp.value = value;
             blockProp.applyStyling();
