@@ -55,6 +55,7 @@ export abstract class AbstractBlock implements IBlock {
         });
         this.commitHandler = () => { };
         this.metadata = args.metadata || {};
+        this.metadata.defaultFolder = this.metadata.defaultFolder || "uploads"; 
         this.blockProperties = [];
         this.blockSchemas = args.blockSchemas || [];
         this.commitHandler = () => { };

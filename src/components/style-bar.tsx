@@ -4,6 +4,7 @@ import { renderToNode } from "../library/common";
 import { IAbstractBlockConstructor, IBlockDto, IBlock, BlockType } from "../library/types";
 import { DocumentBlock } from "../blocks/document-block";
 import { IconAlignCenter, IconAlignJustified, IconAlignLeft, IconAlignRight, IconBold, IconClearFormatting, IconColorPicker, IconH1, IconH2, IconH3, IconH4, IconIndentDecrease, IconIndentIncrease, IconItalic, IconRotateClockwise, IconRotateClockwise2, IconSeparatorVertical } from "@tabler/icons-solidjs";
+import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 
 export interface IStyleBarBlockConstructor extends IAbstractBlockConstructor {
     document?: DocumentBlock;
@@ -122,31 +123,37 @@ export class StyleBarBlock extends AbstractBlock {
         this.manager.registerBlock(this);
     }
     selectBackgroundColour() {
-        this.document.selectBackgroundColour();
+        const block = this.manager.getBlockInFocus() as StandoffEditorBlock;
+        if (block.type != BlockType.StandoffEditorBlock) return;
+        const colour = prompt("Colour?");
+        block.selectBackgroundColour(colour);
     }
     selectFontColour() {
-        this.document.selectFontColour();
+        const block = this.manager.getBlockInFocus() as StandoffEditorBlock;
+        if (block.type != BlockType.StandoffEditorBlock) return;
+        const colour = prompt("Colour?");
+        block.selectFontColour(colour);
     }
     rotateRight() {
-        this.document.turnRightRotateBlockProperty();
+        this.manager.turnRightRotateBlockProperty();
     }
     rotateLeft() {
-        this.document.turnLeftRotateBlockProperty();
+        this.manager.turnLeftRotateBlockProperty();
     }
     addOrDecreaseIndent() {
-        this.document.addOrDecreaseIndentBlockProperty();
+        this.manager.addOrDecreaseIndentBlockProperty();
     }
     addOrIncreaseIndent() {
-        this.document.addOrIncreaseIndentBlockProperty();
+        this.manager.addOrIncreaseIndentBlockProperty();
     }
     applyStyle(name: string) {
-        this.document.applyStyle(name);
+        this.manager.applyStyle(name);
     }
     addOrEditBlockStyle(name: string, value?: string) {
-        this.document.addOrEditBlockStyle(name, value);
+        this.manager.addOrEditBlockStyle(name, value);
     }
     clearFormatting() {
-        this.document.clearFormatting();
+        this.manager.clearFormatting();
     }
     render() {
         const node = renderToNode(StyleBar({ block: this }));

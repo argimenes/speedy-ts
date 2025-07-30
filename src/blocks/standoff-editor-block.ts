@@ -798,6 +798,28 @@ export class StandoffEditorBlock extends AbstractBlock {
     removeFocus() {
         this.container.blur();
     }
+    selectFontColour(colour: string) {
+        const selection = this.getSelection();
+        const type = {
+            type: "text/colour",
+            value: colour,
+            start: selection.start.index,
+            end: selection.end.index
+        } as StandoffPropertyDto;
+        this.addStandoffPropertiesDto([type]);
+        this.applyStandoffPropertyStyling();
+    }
+    selectBackgroundColour(colour: string) {
+        const selection = this.getSelection();
+        const type = {
+            type: "text/background-colour",
+            value: colour,
+            start: selection.start.index,
+            end: selection.end.index
+        } as StandoffPropertyDto;
+        this.addStandoffPropertiesDto([type]);
+        this.applyStandoffPropertyStyling();
+    }
     getWordsFromText(text: string) {
         const re = new RegExp(/\b[^\s]+\b/, "g");
         const words: Word[] = [];

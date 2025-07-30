@@ -10,7 +10,7 @@ import { YouTubeVideoBlock } from "./blocks/youtube-video-block";
 import { IframeBlock } from "./blocks/iframe-block";
 import { BlockProperty } from "./library/block-property";
 import { StandoffEditorBlock } from "./blocks/standoff-editor-block";
-import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IUniverseBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType, passoverClass, isStr, DocumentHistory, IMenuButtonBindingHandlerArgs } from "./library/types";
+import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IUniverseBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType, passoverClass, isStr, DocumentHistory, IMenuButtonBindingHandlerArgs, BlockPropertyDto } from "./library/types";
 import { PlainTextBlock } from "./blocks/plain-text-block";
 import { EmbedDocumentBlock } from "./blocks/embed-document-block";
 import { fetchGet } from "./library/common";
@@ -921,23 +921,136 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         };
         const doc = await this.addDocumentToWorkspace(dto);
     }
-    async saveServerDocument(blockId: string, filename: string, folder: string) {
-        const doc = this.getBlock(blockId) as DocumentBlock;
-        const win = this.getParentOfType(doc, BlockType.DocumentWindowBlock) as DocumentWindowBlock;
-        const dto = doc.serialize();
-        folder = folder || this.metadata.folder;
-        if (!filename) {
-            const firstParagraph = this.flatten(dto).find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlockDto;
-            if (firstParagraph) {
-                filename = firstParagraph.text.substring(0, 20);
-            } else {
-                filename = prompt("Filename?");
+    turnRightRotateBlockProperty() {
+        const block = this.getBlockInFocus();
+        if (!block) {
+            return;
+        }
+        const amt = 90;
+        const rotate = block.blockProperties?.find(x => x.type == "block/rotate");
+        if (rotate) {
+            const value = parseInt(rotate.value);
+            let newValue = value + amt;
+            if (newValue > 360) {
+                newValue = amt;
             }
+            rotate.value = newValue + "";
+            block.applyBlockPropertyStyling();
+            return;
         }
-        if (!filename) return;
-        if (win) {
-            win.setTitle(filename);
+        const type = {
+            type: "block/rotate",
+            value: amt+"",
+        } as BlockPropertyDto;
+        block.addBlockProperties([type]);
+        block.applyBlockPropertyStyling();
+    }
+    addOrDecreaseIndentBlockProperty() {
+        const tb = this.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
         }
+        const indent = tb.blockProperties?.find(x => x.type == "block/indent");
+        if (indent) {
+            const value = parseInt(indent.value);
+            const newValue = value - 1;
+            indent.value = newValue + "";
+            tb.applyBlockPropertyStyling();
+            tb.updateView();
+            return;
+        }
+        const type = {
+            type: "block/indent",
+            value: "0",
+        } as BlockPropertyDto;
+        tb.addBlockProperties([type]);
+        tb.applyBlockPropertyStyling();
+        tb.updateView();
+    }
+    clearFormatting() {
+        const tb = this.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        tb.blockProperties.forEach(p => tb.removeBlockProperty(p));
+        tb.standoffProperties.forEach(sp => sp.destroy());
+        tb.updateView();
+    }
+    addOrEditBlockStyle(type:string, value?: string) {
+        const tb = this.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        const blockProp = tb.blockProperties?.find(x => x.type == type);
+        if (blockProp) {
+            blockProp.value = value;
+            blockProp.applyStyling();
+        } else {
+            tb.addBlockProperties([{ type, value }]);
+            tb.applyBlockPropertyStyling();
+        }
+        tb.updateView();
+    }
+    applyStyle(type: string) {
+        const tb = this.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        this.applyStandoffProperty(tb, type);
+    }
+    turnLeftRotateBlockProperty() {
+        const block = this.getBlockInFocus();
+        if (!block) {
+            return;
+        }
+        const amt = 90;
+        const rotate = block.blockProperties?.find(x => x.type == "block/rotate");
+        if (rotate) {
+            const value = parseInt(rotate.value);
+            let newValue = value - amt;
+            if (newValue < 0) {
+                newValue = 360 - amt;
+            }
+            rotate.value = newValue + "";
+            block.applyBlockPropertyStyling();
+            return;
+        }
+        const type = {
+            type: "block/rotate",
+            value: "-" + amt,
+        } as BlockPropertyDto;
+        block.addBlockProperties([type]);
+        block.applyBlockPropertyStyling();
+    }
+    addOrIncreaseIndentBlockProperty() {
+        const tb = this.getBlockInFocus() as StandoffEditorBlock;
+        if (tb.type != BlockType.StandoffEditorBlock) {
+            return;
+        }
+        const indent = tb.blockProperties?.find(x => x.type == "block/indent");
+        if (indent) {
+            indent.value = (parseInt(indent.value) + 1) + "";
+            tb.applyBlockPropertyStyling();
+            tb.updateView();
+            return;
+        }
+        const type = {
+            type: "block/indent",
+            value: "1",
+        } as BlockPropertyDto;
+        tb.addBlockProperties([type]);
+        tb.applyBlockPropertyStyling();
+        tb.updateView();
+    }
+    async saveServerDocument(blockId: string, filename: string, folder: string) {
+        const block = this.getBlock(blockId) as AbstractBlock;
+        const dto = block.serialize();
+        folder = folder || this.metadata.defaultFolder;
+        const now = new Date();
+        const suffix = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()} ${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`;
+        filename = filename || `Untitled - ${suffix}.json`;
+        const win = this.getParentOfType(block, BlockType.DocumentWindowBlock) as DocumentWindowBlock;
+        if (win) win.setTitle(filename);
         const res = await fetch("/api/saveDocumentJson", {
             headers: { "Content-Type": "application/json" },
             method: "POST",
@@ -949,8 +1062,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         });
         const json = await res.json();
         if (!json.Success) {
-            return;
+            return false;
         }
+        return true;
     }
     async buildUnknownBlock(container: HTMLElement, blockDto: IBlockDto) {
         const unkownBlock = new DocumentBlock({
