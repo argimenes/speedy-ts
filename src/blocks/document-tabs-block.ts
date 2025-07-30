@@ -5,6 +5,7 @@ import { UniverseBlock } from "../universe-block";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { Template } from "../library/templates";
 import { DocumentBlock } from "./document-block";
+import { MembraneBlock } from "./membrane-block";
 
 export class DocumentTabRowBlock extends AbstractBlock {
     header: HTMLDivElement;
@@ -179,11 +180,14 @@ export class DocumentTabBlock extends AbstractBlock {
         this.inputEvents = this.getInputEvents();
     }
     extract() {
+        const mem = this.manager.getParentOfType(this, BlockType.MembraneBlock) as MembraneBlock;
         const dto = this.serialize();
-        const extractedPage = {
+        const extracted = {
             type: BlockType.MembraneBlock,
             metadata: {
-                name: this.metadata.name || "Extracted Page"
+                name: mem.metadata.name || "Extracted Page",
+                filename: mem.metadata.filename || "extracted-page.json",
+                folder: mem.metadata.folder || "uploads"
             },
             children: [
                 {
@@ -194,7 +198,7 @@ export class DocumentTabBlock extends AbstractBlock {
                 }
             ]
         };
-        this.manager.addDocumentToWorkspace(extractedPage);
+        this.manager.addDocumentToWorkspace(extracted);
     }
     override explode() {
         /**
