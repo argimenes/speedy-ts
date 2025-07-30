@@ -178,6 +178,24 @@ export class DocumentTabBlock extends AbstractBlock {
         this.container.appendChild(this.panel);
         this.inputEvents = this.getInputEvents();
     }
+    extract() {
+        const dto = this.serialize();
+        const extractedPage = {
+            type: BlockType.MembraneBlock,
+            metadata: {
+                name: this.metadata.name || "Extracted Page"
+            },
+            children: [
+                {
+                    type: BlockType.DocumentTabRowBlock,
+                    children: [
+                        dto
+                    ]
+                }
+            ]
+        };
+        this.manager.addDocumentToWorkspace(extractedPage);
+    }
     override explode() {
         /**
          * Destroy the block but first disgorge all of its child blocks.
