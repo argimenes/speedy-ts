@@ -198,7 +198,7 @@ export class DocumentTabBlock extends AbstractBlock {
                 }
             ]
         };
-        this.manager.addDocumentToWorkspace(extracted);
+        this.manager.addMembraneToDocumentWindow(extracted);
     }
     override explode() {
         /**

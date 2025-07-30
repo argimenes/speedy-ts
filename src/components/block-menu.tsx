@@ -190,7 +190,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const win = this.manager.getParentOfType(this.source, BlockType.DocumentWindowBlock);
       const block = win.blocks[0];
       const dto = block.serialize();
-      this.manager.addDocumentToWorkspace(dto);
+      this.manager.addMembraneToDocumentWindow(dto);
     }
     addGridRow() {
       const row = this.manager.getParentOfType(this.source, BlockType.GridRowBlock) as GridRowBlock;
@@ -493,7 +493,7 @@ export class BlockMenuBlock extends AbstractBlock {
           type: "item",
           label: "Tabs",
           children: [
-            itemAddTabBlock, itemRenameTab, itemDestructureTabs, hr,
+            itemAddTabBlock, itemRenameTab,  itemExtractTab, itemDestructureTabs, hr,
             itemMergeTabLeft, itemMergeTabRight, hr,
             itemMoveTabLeft, itemMoveTabRight, hr,
             itemDeleteTab

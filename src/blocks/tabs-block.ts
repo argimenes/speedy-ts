@@ -209,7 +209,7 @@ export class TabBlock extends AbstractBlock {
     extract() {
         const mem = this.manager.getParentOfType(this, BlockType.MembraneBlock) as MembraneBlock;
         const dto = this.serialize();
-        const extractedPage = {
+        const extracted = {
             type: BlockType.MembraneBlock,
             metadata: {
                 name: mem.metadata.name || "Extracted Tab",
@@ -225,7 +225,7 @@ export class TabBlock extends AbstractBlock {
                 }
             ]
         };
-        this.manager.addDocumentToWorkspace(extractedPage);
+        this.manager.addMembraneToDocumentWindow(extracted);
     }
     override explode() {
         /**

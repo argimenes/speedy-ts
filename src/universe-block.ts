@@ -919,7 +919,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             filename,
             folder
         };
-        const doc = await this.addDocumentToWorkspace(dto);
+        const doc = await this.addMembraneToDocumentWindow(dto);
     }
     async saveServerDocument(blockId: string, filename: string, folder: string) {
         const doc = this.getBlock(blockId) as DocumentBlock;
@@ -1280,7 +1280,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             headers: { "Content-Type": "application/json" }
         }).then();
     }
-    async addDocumentToWorkspace(dto: IMainListBlockDto) {
+    async addMembraneToDocumentWindow(dto: IMainListBlockDto) {
         const container = document.createElement("DIV") as HTMLDivElement;
         const count = this.registeredBlocks.filter(x => x.type == BlockType.DocumentWindowBlock).length;
         const buffer = count * 20;
@@ -1307,24 +1307,28 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const background = this.getBackground();
         this.addBlockTo(background, documentWindow);
         background.container.appendChild(documentWindow.container);
-        this.generateParentSiblingRelations(documentWindow);
+        this.generateParentSiblingRelations(background);
+
+        /** need to rewrite this to account for MembraneBlock being the new root */
         const doc = documentWindow.blocks[0] as DocumentBlock;
-        doc.generateIndex();
-        doc.setFocus();
-        this.takeSnapshot(doc.id);
-        const entities = await doc.getEntities();
-        const props = doc.getAllStandoffPropertiesByType("codex/entity-reference");
-        props.forEach(p => {
-            let entity = entities.find(e => e.Guid == p.value);
-            if (!entity) return;
-            p.cache.entity = entity;
-        });
-        this.history[doc.id] = {
-            id: doc.id,
-            redoStack: [],
-            undoStack: [],
-            lastChange: Date.now()
-        };
+        if (doc) {
+            doc.generateIndex();
+            doc.setFocus();
+            this.takeSnapshot(doc.id);
+            const entities = await doc.getEntities();
+            const props = doc.getAllStandoffPropertiesByType("codex/entity-reference");
+            props.forEach(p => {
+                let entity = entities.find(e => e.Guid == p.value);
+                if (!entity) return;
+                p.cache.entity = entity;
+            });
+            this.history[doc.id] = {
+                id: doc.id,
+                redoStack: [],
+                undoStack: [],
+                lastChange: Date.now()
+            };
+        }
         return doc;
     }
     takeSnapshot(id: string) {
