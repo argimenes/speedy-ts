@@ -1020,7 +1020,7 @@ const foo = (bar) => {
             MembraneBlock.getBlockBuilder(),
         ]);
         workspace.createImageWorkspace();
-        workspace.addDocumentToWorkspace(doc2).then();
+        workspace.addMembraneToDocumentWindow(doc2).then();
         props.getInstance(workspace);
         console.log("== GLOBAL ==", { manager: workspace, block: workspace.blocks[0] })
     }

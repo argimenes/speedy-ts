@@ -5,6 +5,7 @@ import { UniverseBlock } from "../universe-block";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { Template } from "../library/templates";
 import { DocumentBlock } from "./document-block";
+import { MembraneBlock } from "./membrane-block";
 
 export class DocumentTabRowBlock extends AbstractBlock {
     header: HTMLDivElement;
@@ -177,6 +178,27 @@ export class DocumentTabBlock extends AbstractBlock {
         this.panel.classList.add("document-tab-panel");
         this.container.appendChild(this.panel);
         this.inputEvents = this.getInputEvents();
+    }
+    extract() {
+        const mem = this.manager.getParentOfType(this, BlockType.MembraneBlock) as MembraneBlock;
+        const dto = this.serialize();
+        const extracted = {
+            type: BlockType.MembraneBlock,
+            metadata: {
+                name: mem.metadata.name || "Extracted Page",
+                filename: mem.metadata.filename || "extracted-page.json",
+                folder: mem.metadata.folder || "uploads"
+            },
+            children: [
+                {
+                    type: BlockType.DocumentTabRowBlock,
+                    children: [
+                        dto
+                    ]
+                }
+            ]
+        };
+        this.manager.addMembraneToDocumentWindow(extracted);
     }
     override explode() {
         /**

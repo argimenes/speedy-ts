@@ -1,4 +1,4 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy, IconEaseOut } from "@tabler/icons-solidjs";
 import { Component, onCleanup, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -93,6 +93,14 @@ export class BlockMenuBlock extends AbstractBlock {
       const grid = this.manager.getParentOfType(this.source, BlockType.GridBlock) as GridBlock;
       grid.destructure();
     }
+    extractTab() {
+      const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
+      tab.extract();
+    }
+    extractPage() {
+      const page = this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock) as DocumentTabBlock;
+      page.extract();
+    }
     destructureTabs() {
       const tabRow = this.manager.getParentOfType(this.source, BlockType.TabRowBlock) as TabRowBlock;
       tabRow.destructure();
@@ -182,7 +190,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const win = this.manager.getParentOfType(this.source, BlockType.DocumentWindowBlock);
       const block = win.blocks[0];
       const dto = block.serialize();
-      this.manager.addDocumentToWorkspace(dto);
+      this.manager.addMembraneToDocumentWindow(dto);
     }
     addGridRow() {
       const row = this.manager.getParentOfType(this.source, BlockType.GridRowBlock) as GridRowBlock;
@@ -320,6 +328,16 @@ export class BlockMenuBlock extends AbstractBlock {
               label: "Destructure tabs",
               icon: <IconStackPop />,
               onClick: () => self.destructureTabs()
+        };
+        const itemExtractTab= {
+              label: "Extract",
+              icon: <IconStackPop />,
+              onClick: () => self.extractTab()
+        };
+        const itemExtractPage = {
+              label: "Extract",
+              icon: <IconStackPop />,
+              onClick: () => self.extractPage()
         };
         const itemDestructureIndentedList = {
               label: "Destructure list",
@@ -475,7 +493,7 @@ export class BlockMenuBlock extends AbstractBlock {
           type: "item",
           label: "Tabs",
           children: [
-            itemAddTabBlock, itemRenameTab, itemDestructureTabs, hr,
+            itemAddTabBlock, itemRenameTab,  itemExtractTab, itemDestructureTabs, hr,
             itemMergeTabLeft, itemMergeTabRight, hr,
             itemMoveTabLeft, itemMoveTabRight, hr,
             itemDeleteTab
@@ -485,7 +503,7 @@ export class BlockMenuBlock extends AbstractBlock {
           type: "item",
           label: "Pages",
           children: [
-            itemAddPage, itemRenamePage, hr,
+            itemAddPage, itemRenamePage, itemExtractPage, hr,
             itemMovePageLeft, itemMovePageRight, hr,
             itemDeletePage
           ]
