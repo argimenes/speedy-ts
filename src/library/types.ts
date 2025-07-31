@@ -89,6 +89,7 @@ export enum BlockType {
 }
 export interface IBlock {
     id: GUID;
+    clientId: GUID;
     manager?: UniverseBlock; // for coordinating actions between Blocks
     root?: IBlock;
     type: BlockType;

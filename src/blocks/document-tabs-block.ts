@@ -6,6 +6,7 @@ import { StandoffEditorBlock } from "./standoff-editor-block";
 import { Template } from "../library/templates";
 import { DocumentBlock } from "./document-block";
 import { MembraneBlock } from "./membrane-block";
+import { first } from "underscore";
 
 export class DocumentTabRowBlock extends AbstractBlock {
     header: HTMLDivElement;
@@ -38,6 +39,13 @@ export class DocumentTabRowBlock extends AbstractBlock {
             }
         ]
         return events;
+    }
+    setFocus() {
+        const tab = this.blocks[0] as DocumentTabBlock;
+        if (tab?.type != BlockType.DocumentTabBlock) {
+            return;
+        }
+        tab.setFocus();
     }
     deleteTab(tab: DocumentTabBlock) {
         const parent = this;
@@ -181,7 +189,7 @@ export class DocumentTabBlock extends AbstractBlock {
     }
     extract() {
         const mem = this.manager.getParentOfType(this, BlockType.MembraneBlock) as MembraneBlock;
-        const dto = this.serialize();
+        const tabDto = this.serialize();
         const extracted = {
             type: BlockType.MembraneBlock,
             metadata: {
@@ -189,14 +197,10 @@ export class DocumentTabBlock extends AbstractBlock {
                 filename: mem.metadata.filename || "extracted-page.json",
                 folder: mem.metadata.folder || "uploads"
             },
-            children: [
-                {
-                    type: BlockType.DocumentTabRowBlock,
-                    children: [
-                        dto
-                    ]
-                }
-            ]
+            children: [{
+                type: BlockType.DocumentTabRowBlock,
+                children: [tabDto]
+            }]
         };
         this.manager.addMembraneToDocumentWindow(extracted);
     }
@@ -290,6 +294,14 @@ export class DocumentTabBlock extends AbstractBlock {
             classList: ["document-tab"]
         });
         this.panel.classList.add("active");
+    }
+    setFocus() {
+        const firstTextBox = this.blocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
+        if (!firstTextBox) {
+            return;
+        }
+        firstTextBox.setFocus();
+        firstTextBox.setCaret(0, CARET.LEFT);
     }
     setInactive() {
         this.metadata.active = false;

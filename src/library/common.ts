@@ -1,5 +1,7 @@
 import { JSX } from "solid-js";
 import { render } from "solid-js/web";
+import { IndexedBlock } from "../blocks/document-block";
+import { IBlock, BlockType } from "./types";
 const cache = {};
 
 export const renderToNode2 = (jsx: JSX.Element) => {
@@ -47,6 +49,19 @@ export const fetchPost = async (url: string, data: any) => {
         body: form
     });
     return response;
+};
+export const flattenTree = (root: IBlock): IndexedBlock[] => {
+    const index: IndexedBlock[] = [];
+    function traverse(block: IBlock, depth: number = 0, path: string = '0'): void {
+        // Visit the current node
+        index.push({ block, index: index.length, depth, path });
+        // Recursively traverse all children
+        block.blocks.forEach((child, index) => {
+            traverse(child, depth + 1, `${path}.${index + 1}`);
+        });
+    }
+    traverse(root);
+    return index;
 };
 function nullSafety<TModel = Record<string, any>>(obj: TModel): TModel {
     var result: any = {};

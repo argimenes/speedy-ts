@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock, CARET, InputEventSource, InputEvent, RowPosition, Caret, IBindingHandlerArgs, DIRECTION, ISelection, passoverClass, IRange, FindMatch, EventType, BlockState, GUID, StandoffPropertyDto, isStr, Word, BlockPropertyDto } from '../library/types';
 import { StandoffEditorBlock } from './standoff-editor-block';
-import { drawAnimatedSelection, drawClippedRectangle, drawSpikySelection, updateElement } from '../library/svg';
+import { updateElement } from '../library/svg';
 import { UniverseBlock } from '../universe-block';
 import { AnnotationPanelBlock } from '../components/annotation-panel';
 import { fetchGet, renderToNode } from '../library/common';
@@ -20,10 +20,7 @@ import { BlockProperty } from '../library/block-property';
 import BlockVines from '../library/plugins/block-vines';
 import { StandoffProperty } from '../library/standoff-property';
 import { BlockPropertySchemas } from '../properties/block-properties';
-import { BlockMenuBlock } from '../components/block-menu';
 import { CanvasBlock } from './canvas-block';
-import { Component } from 'solid-js';
-import { StyleBarBlock } from '../components/style-bar';
 import { DocumentTabBlock } from './document-tabs-block';
 
 const maxHistoryItems = 30;
@@ -131,7 +128,7 @@ export class DocumentBlock extends AbstractBlock {
                 const document = new DocumentBlock({ ...dto, manager });
                 document.applyBlockPropertyStyling();
                 updateElement(document.container, { classList: ["document-container"] });
-                //document.container.appendChild(document.styleBar.container);
+                document.generateIndex();
                 await manager.buildChildren(document, dto);
                 container.appendChild(document.container);
                 return document;

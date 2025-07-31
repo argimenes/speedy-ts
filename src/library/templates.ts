@@ -2,17 +2,19 @@ import { BlockType } from "./types";
 
 export const Template = {
     EmptyDocument: {
-        type: BlockType.DocumentBlock,
+        type: BlockType.MembraneBlock,
         children: [
             {
-                type: BlockType.StandoffEditorBlock,
-                text: "",
-                standoffProperties: [],
-                blockProperties: []       
+                type: BlockType.DocumentBlock,
+                children: [
+                    {
+                        type: BlockType.StandoffEditorBlock
+                    }
+                ],
+                blockProperties: [
+                    { type: "block/alignment/left "}
+                ]
             }
-        ],
-        blockProperties: [
-            { type: "block/alignment/left "}
         ]
     }
 };

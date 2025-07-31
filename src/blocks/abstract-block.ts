@@ -13,6 +13,7 @@ const platform = isMac ? Platform.Mac : isWindows ? Platform.Windows : Platform.
 export const passoverClass = "block-modal";
 export abstract class AbstractBlock implements IBlock {
     id: string;
+    clientId: string;
     type: BlockType;
     blocks: IBlock[];
     overlays: Overlay[];
@@ -42,6 +43,7 @@ export abstract class AbstractBlock implements IBlock {
     blockEvents: UniverseBlockEvent;
     constructor(args: IAbstractBlockConstructor) {
         this.id = args?.id || uuidv4();
+        this.clientId = uuidv4();
         this.manager = args.manager;
         this.relation = {};
         this.type = BlockType.AbstractBlock;
@@ -50,12 +52,12 @@ export abstract class AbstractBlock implements IBlock {
             classList: ["abstract-block"],
             dataset: {
                 "blockId": this.id,
+                "clientId": this.clientId,
                 "blockType": args.type || "client-block"
             }
         });
         this.commitHandler = () => { };
         this.metadata = args.metadata || {};
-        this.metadata.defaultFolder = this.metadata.defaultFolder || "uploads"; 
         this.blockProperties = [];
         this.blockSchemas = args.blockSchemas || [];
         this.commitHandler = () => { };
@@ -67,6 +69,9 @@ export abstract class AbstractBlock implements IBlock {
         this.canSerialize = true;
         this.blockEvents = {};
         this.modes = ["default"];
+        if (this.manager) {
+            this.manager.registerBlock(this);
+        }
     }
     subscribeTo(eventName: string, handler: () => void) {
         const evt = this.blockEvents[eventName];

@@ -13,7 +13,7 @@ import { StandoffEditorBlock } from "./blocks/standoff-editor-block";
 import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IUniverseBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType, passoverClass, isStr, DocumentHistory, IMenuButtonBindingHandlerArgs, BlockPropertyDto } from "./library/types";
 import { PlainTextBlock } from "./blocks/plain-text-block";
 import { EmbedDocumentBlock } from "./blocks/embed-document-block";
-import { fetchGet } from "./library/common";
+import { fetchGet, flattenTree } from "./library/common";
 import { TableBlock, TableCellBlock, TableRowBlock } from './blocks/tables-blocks';
 import { ControlPanelBlock } from './components/control-panel';
 import _ from 'underscore';
@@ -33,6 +33,7 @@ import { BlockMenuBlock } from './components/block-menu';
 import { posix } from 'path';
 import { CanvasBlock } from './blocks/canvas-block';
 import { DocumentTabBlock, DocumentTabRowBlock } from './blocks/document-tabs-block';
+import { MembraneBlock } from './blocks/membrane-block';
 
 export type BlockBuilder =
     (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => Promise<IBlock>;
@@ -59,7 +60,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.container = props?.container || document.createElement("DIV") as HTMLElement;
         this.blocks = [];
         this.metadata = {
-            folder: ""
+            defaultFolder: "uploads"    
         };
         this.relation = {};
         this.selections = [];
@@ -139,9 +140,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             return;
         }
 
-        const blockEl = (e.target as HTMLElement).closest("[data-block-id]") as HTMLElement | null;
+        const blockEl = (e.target as HTMLElement).closest("[data-client-id]") as HTMLElement | null;
         if (blockEl) {
             console.log("block-id from DOM:", blockEl.dataset.blockId);
+            console.log("client-id from DOM:", blockEl.dataset.clientId);
             console.log("block DOM is inside active tab?", !!blockEl.closest(".tab.active"));
         }
 
@@ -913,13 +915,18 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (!json.Success) {
             return;
         }
-        const dto = json.Data.document as IBlockDto;
-        dto.metadata = {
-            ...dto.metadata,
-            filename,
-            folder
-        };
-        const doc = await this.addMembraneToDocumentWindow(dto);
+        let dto = json.Data.document as IBlockDto;
+        if (dto.type != BlockType.MembraneBlock) {
+            dto = {
+                type: BlockType.MembraneBlock,
+                metadata: {
+                    filename,
+                    folder
+                },
+                children: [dto]
+            };
+        }
+        await this.addMembraneToDocumentWindow(dto);
     }
     turnRightRotateBlockProperty() {
         const block = this.getBlockInFocus();
@@ -1422,13 +1429,11 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addBlockTo(background, documentWindow);
         background.container.appendChild(documentWindow.container);
         this.generateParentSiblingRelations(background);
-
-        /** need to rewrite this to account for MembraneBlock being the new root */
-        const doc = documentWindow.blocks[0] as DocumentBlock;
-        if (doc) {
-            doc.generateIndex();
-            doc.setFocus();
-            this.takeSnapshot(doc.id);
+        const membrane = documentWindow.blocks[0] as MembraneBlock;
+        const index = flattenTree(documentWindow);
+        const documents = index.filter(x => x.block.type == BlockType.DocumentBlock).map(x => x.block as DocumentBlock);
+        const _this = this;
+        documents.forEach(async doc => {
             const entities = await doc.getEntities();
             const props = doc.getAllStandoffPropertiesByType("codex/entity-reference");
             props.forEach(p => {
@@ -1436,14 +1441,15 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 if (!entity) return;
                 p.cache.entity = entity;
             });
-            this.history[doc.id] = {
+            _this.history[doc.id] = {
                 id: doc.id,
                 redoStack: [],
                 undoStack: [],
                 lastChange: Date.now()
             };
-        }
-        return doc;
+        });
+        membrane.setFocus();
+        return membrane;
     }
     takeSnapshot(id: string) {
         const block = this.getBlock(id);
@@ -1984,7 +1990,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }
     }
     registerBlock(block: IBlock) {
-        if (this.registeredBlocks.findIndex(x=> x.id == block.id) >= 0) {
+        if (this.registeredBlocks.findIndex(x=> x.clientId == block.clientId) >= 0) {
             return;
         }
         this.registeredBlocks.push(block);

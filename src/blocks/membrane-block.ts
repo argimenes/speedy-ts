@@ -1,6 +1,7 @@
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { UniverseBlock } from '../universe-block';
+import { DocumentTabRowBlock } from './document-tabs-block';
 
 export class MembraneBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
@@ -20,6 +21,13 @@ export class MembraneBlock extends AbstractBlock {
                 return block;
             }
         };
+    }
+    setFocus() {
+        const row= this.blocks[0] as DocumentTabRowBlock;
+        if (row.type != BlockType.DocumentTabRowBlock) {
+            return;
+        }
+        row.setFocus();
     }
     serialize() {
         return {
