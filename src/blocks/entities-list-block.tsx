@@ -8,7 +8,7 @@ import { render } from "solid-js/web";
 import _ from "underscore";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { AbstractBlock } from "../blocks/abstract-block";
-import { DocumentBlock } from "../blocks/document-block";
+import { PageBlock } from "./page-block";
 
 type StandoffPropertyGroup = {
     item: StandoffProperty;
@@ -142,7 +142,7 @@ export const EntitiesListView : Component<EntitiesListViewProps> = ({ wrapper })
         }));
     }
     onMount(async () => {
-        const doc = manager.getParentOfType(wrapper.source, BlockType.DocumentBlock) as DocumentBlock;
+        const doc = manager.getParentOfType(wrapper.source, BlockType.PageBlock) as PageBlock;
         const properties = doc.getAllStandoffPropertiesByType("codex/entity-reference");
         const entities = await doc.getEntities() as Entity[];
         const group = countItems(properties);

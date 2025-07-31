@@ -3,7 +3,7 @@ import { updateElement } from "../library/svg";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, InputEvent, InputEventSource, IBindingHandlerArgs, GUID, CARET } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { StandoffEditorBlock } from "./standoff-editor-block";
-import { DocumentBlock } from "./document-block";
+import { PageBlock } from "./page-block";
 import { MembraneBlock } from "./membrane-block";
 
 export class TabRowBlock extends AbstractBlock {

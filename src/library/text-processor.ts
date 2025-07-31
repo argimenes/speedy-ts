@@ -2,7 +2,7 @@ import { BlockProperty } from "./block-property";
 import { Cell } from "./cell";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { BlockPropertyDto, BlockType, Caret, CARET, IBindingHandlerArgs, IPropertySchema, IRange, StandoffPropertyDto } from "./types";
-import { DocumentBlock } from "../blocks/document-block";
+import { PageBlock } from "../blocks/page-block";
 import urlRegex from 'url-regex-safe';
 
 export interface ITextProcessorConstructor {
@@ -175,7 +175,7 @@ export class TextProcessor {
                 pattern: "\\[ \\]", wrapper: {  start: "[ ]", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
-                    const doc = args.block.manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                    const doc = args.block.manager.getParentOfType(args.block, BlockType.PageBlock) as PageBlock;
                     doc.makeCheckbox(block);
                 }
             },
@@ -183,7 +183,7 @@ export class TextProcessor {
                 pattern: "^- ", wrapper: {  start: "- ", end: "" },
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { block } = args;
-                    const doc = args.block.manager.getParentOfType(args.block, BlockType.DocumentBlock) as DocumentBlock;
+                    const doc = args.block.manager.getParentOfType(args.block, BlockType.PageBlock) as PageBlock;
                     doc.indentBlock({ block });
                 }
             },
@@ -287,7 +287,7 @@ export class TextProcessor {
                 process: async (args: ITextPatternRecogniserHandler) => {
                     const { match, block } = args;
                     const manager = args.block.manager;
-                    const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+                    const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
                     if (!doc) return;
                     const url = args.text.substring(match.start, match.end);
                     doc.addVideoBlock(block, url);

@@ -36,17 +36,17 @@ export interface IndexedBlock {
   path: string;
 }
 
-export interface IDocumentBlockConstructor extends IAbstractBlockConstructor {}
+export interface IPageBlockConstructor extends IAbstractBlockConstructor {}
 
 
-export class DocumentBlock extends AbstractBlock {
+export class PageBlock extends AbstractBlock {
     index: IndexedBlock[];
     textProcessor: TextProcessor;
     state: string;
     //styleBar: StyleBarBlock;
-    constructor(args: IDocumentBlockConstructor) {
+    constructor(args: IPageBlockConstructor) {
         super(args);
-        this.type = BlockType.DocumentBlock;
+        this.type = BlockType.PageBlock;
         this.state = BlockState.initalising;
         this.metadata = args.metadata || {};
         this.index = [];
@@ -85,7 +85,7 @@ export class DocumentBlock extends AbstractBlock {
                     const json = await res.json();
                     dto = json.Data.document;
                 }
-                const block = new DocumentBlock({ ...dto, manager });
+                const block = new PageBlock({ ...dto, manager });
                 block.addBlockProperties([ { type: "block/marginalia/right" }, { type: "block/alignment", value: "right" } ]);
                 block.applyBlockPropertyStyling();
                 await manager.buildChildren(block, dto);
@@ -103,7 +103,7 @@ export class DocumentBlock extends AbstractBlock {
                     const json = await res.json();
                     dto = json.Data.document;
                 }
-                const block = new DocumentBlock({ ...dto, manager });
+                const block = new PageBlock({ ...dto, manager });
                 block.addBlockProperties([ { type: "block/marginalia/left" } ]);
                 block.applyBlockPropertyStyling();
                 await manager.buildChildren(block, dto);
@@ -114,7 +114,7 @@ export class DocumentBlock extends AbstractBlock {
     }
     static getBlockBuilder() {
         return {
-            type: BlockType.DocumentBlock,
+            type: BlockType.PageBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
                 if (dto.metadata?.loadFromExternal) {
                     const res = await fetchGet("/api/loadDocumentJson", { folder: dto.metadata.folder, filename: dto.metadata.filename });
@@ -125,7 +125,7 @@ export class DocumentBlock extends AbstractBlock {
                         dto = json.Data.document;
                     }
                 }
-                const document = new DocumentBlock({ ...dto, manager });
+                const document = new PageBlock({ ...dto, manager });
                 document.applyBlockPropertyStyling();
                 updateElement(document.container, { classList: ["document-container"] });
                 document.generateIndex();
@@ -141,10 +141,10 @@ export class DocumentBlock extends AbstractBlock {
     }
     async extractIntoNewDocument(id: GUID) {
         const block = this.manager.getBlock(id);
-        const { metadata } = this.manager.getParentOfType(block, BlockType.DocumentBlock);
+        const { metadata } = this.manager.getParentOfType(block, BlockType.PageBlock);
         const dto = block.serialize();
         const docDto = {
-            type: BlockType.DocumentBlock,
+            type: BlockType.PageBlock,
             metadata: {
               ...metadata,
               filename: `${block.type}-${id}.json`
@@ -636,7 +636,7 @@ export class DocumentBlock extends AbstractBlock {
     makeCheckbox(block: IBlock) {
         const manager = this.manager;
         this.triggerBeforeChange();
-        const root = manager.getParentOfType(block, BlockType.DocumentBlock);
+        const root = manager.getParentOfType(block, BlockType.PageBlock);
         const parent = block.relation.parent as AbstractBlock;
         const checkbox = manager.createCheckboxBlock();
         this.addBlockBefore(checkbox, block);
@@ -656,7 +656,7 @@ export class DocumentBlock extends AbstractBlock {
     moveBlockUp(block: IBlock) {
         const manager = this.manager;
         this.triggerBeforeChange();
-        const root = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+        const root = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
         const i = root.index.findIndex(x => x.block.id == block.id);
         if (i <= 0) {
             return;
@@ -674,7 +674,7 @@ export class DocumentBlock extends AbstractBlock {
     moveBlockDown(block: IBlock) {
         const manager = this.manager;
         this.triggerBeforeChange();
-        const root = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+        const root = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
         const i = root.index.findIndex(x => x.block.id == block.id);
         const maxIndex = root.index.length - 1;
         if (i >= maxIndex) {
@@ -842,7 +842,7 @@ export class DocumentBlock extends AbstractBlock {
                         const caret = args.caret as Caret;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.manager;
-                        const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+                        const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
                         if (!caret.left) {
                             return;
                         }
@@ -1253,7 +1253,7 @@ export class DocumentBlock extends AbstractBlock {
                         const caret = args.caret as Caret;
                         const block = args.block as StandoffEditorBlock;
                         const manager = block.manager;
-                        const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+                        const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
                         if (!caret.left) {
                             return;
                         }
@@ -1340,7 +1340,7 @@ export class DocumentBlock extends AbstractBlock {
                     handler: async (args: IBindingHandlerArgs) => {
                         const caret = args.caret as Caret;
                         const block = args.block as StandoffEditorBlock;
-                        const doc = args.block.manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+                        const doc = args.block.manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
                         const manager = block.manager;
                         if (caret.right.isEOL) {
                             return;
@@ -2032,7 +2032,7 @@ export class DocumentBlock extends AbstractBlock {
     async handleCreateRightMargin(args: IBindingHandlerArgs){
         const block = args.block as StandoffEditorBlock;
         const manager = block.manager as UniverseBlock;
-        let rightMargin = block.relation.rightMargin as DocumentBlock;
+        let rightMargin = block.relation.rightMargin as PageBlock;
         block.clearSelection();
         /**
          * If there is no LeftMarginBlock already then create one and add
@@ -2057,7 +2057,7 @@ export class DocumentBlock extends AbstractBlock {
                     }
                 }
             });
-            rightMargin = block.relation.rightMargin as DocumentBlock;
+            rightMargin = block.relation.rightMargin as PageBlock;
             const textBlock = rightMargin.blocks[0] as StandoffEditorBlock;
             setTimeout(() => {
                 manager.setBlockFocus(textBlock);
@@ -2074,7 +2074,7 @@ export class DocumentBlock extends AbstractBlock {
     async handleCreateLeftMargin(args: IBindingHandlerArgs){
         const block = args.block as StandoffEditorBlock;
         const manager = block.manager as UniverseBlock;
-        let leftMargin = block.relation.leftMargin as DocumentBlock;
+        let leftMargin = block.relation.leftMargin as PageBlock;
         block.clearSelection();
         /**
          * If there is no LeftMarginBlock already then create one and add
@@ -2099,7 +2099,7 @@ export class DocumentBlock extends AbstractBlock {
                     }
                 }
             });
-            leftMargin = block.relation.leftMargin as DocumentBlock;
+            leftMargin = block.relation.leftMargin as PageBlock;
         }
         const textBlock = leftMargin.blocks[0] as StandoffEditorBlock;
         setTimeout(() => {
@@ -2127,7 +2127,7 @@ export class DocumentBlock extends AbstractBlock {
         if (!parent) return;
         console.log("reloadDocument", { parent, dto })
         this.destroy();
-        const doc = await manager.recursivelyBuildBlock(parent.container, dto) as DocumentBlock;
+        const doc = await manager.recursivelyBuildBlock(parent.container, dto) as PageBlock;
         manager.addBlockTo(parent, doc);
         manager.generateParentSiblingRelations(parent);
         doc.generateIndex();
@@ -2449,7 +2449,7 @@ export class DocumentBlock extends AbstractBlock {
     convertToDocumentTab(blockId: GUID) {
         const manager = this.manager;
         const block = this.manager.getBlock(blockId) as StandoffEditorBlock;
-        const doc = this.manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+        const doc = this.manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
         if (!doc) return;
         const tabRow = manager.createDocumentTabRowBlock();
         const tab = manager.createDocumentTabBlock({

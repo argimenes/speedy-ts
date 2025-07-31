@@ -6,7 +6,7 @@ import { AbstractBlock } from "./abstract-block";
 import { Cell, Row } from "../library/cell";
 import { KEYS } from "../library/keyboard";
 import { BlockType, ICoordOffsets, IInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation, FindMatch, isStr, IBlockDto } from "../library/types";
-import { DocumentBlock } from "./document-block";
+import { PageBlock } from "./page-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 import BlockVines from "../library/plugins/block-vines";
 import { UniverseBlock } from "../universe-block";
@@ -1117,7 +1117,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.setCaret(0, CARET.LEFT);
     }
     triggerBeforeChange() {
-        const doc = this.manager.getParentOfType(this, BlockType.DocumentBlock) as AbstractBlock;
+        const doc = this.manager.getParentOfType(this, BlockType.PageBlock) as AbstractBlock;
         if (!doc) return;
         doc.publish("beforeChange");
     }
@@ -1365,7 +1365,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             return;
         }
         const manager = args.manager;
-        const root = manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+        const root = manager.getParentOfType(this, BlockType.PageBlock) as PageBlock;
         const index = root.index;
         const ci = index.findIndex(x => x.block.id == self.id);
         if (ci <= 0) return;
@@ -1396,7 +1396,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             return;
         }
         const manager = args.manager;
-        const root = manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+        const root = manager.getParentOfType(this, BlockType.PageBlock) as PageBlock;
         const index = root.index;
         const ci = index.findIndex(x => x.block.id == self.id);
         if (ci == -1) {

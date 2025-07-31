@@ -2,7 +2,7 @@ import { StyleBar, StyleBarBlock } from "../components/style-bar";
 import { BlockType, IBlockDto } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { AbstractBlock } from "./abstract-block";
-import { DocumentBlock } from "./document-block";
+import { PageBlock } from "./page-block";
 import { IWindowBlockConstructor, WindowBlock } from "./window-block";
 
 export interface IDocumentWindowBlockConstructor extends IWindowBlockConstructor {
@@ -40,7 +40,7 @@ export class DocumentWindowBlock extends WindowBlock
                 await manager.buildChildren(dcw, dto, (child) => {
                     dcw.container.appendChild(child.container);
                 });
-                let doc = manager.registeredBlocks.find(x => x.type == BlockType.DocumentBlock) as DocumentBlock;
+                let doc = manager.registeredBlocks.find(x => x.type == BlockType.PageBlock) as PageBlock;
                 dcw.styleBar.document = doc; /// It's just a reference for some useful functions; later we can move those functions.
                 // dcw.styleBar.document = manager.getParentOfType(dcw, BlockType.DocumentBlock) as DocumentBlock;
                 container.appendChild(dcw.container);

@@ -7,7 +7,7 @@ import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { BlockType, CARET, IAbstractBlockConstructor, IBlock, IBlockDto, ISetSource } from "../library/types";
 import { renderToNode } from "../library/common";
 import { AbstractBlock } from "../blocks/abstract-block";
-import { DocumentBlock } from "../blocks/document-block";
+import { PageBlock } from "../blocks/page-block";
 import { Template } from "../library/templates";
 
 type Model = {
@@ -67,7 +67,7 @@ export class ControlPanelBlock extends AbstractBlock {
             if (!manager) return;
             const filename = parameters && parameters[0] || model.file;
             const block = manager.getBlockInFocus() as IBlock;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             await doc.embedDocument(block, filename);
         }
         const loadMicroDocument = async (parameters: string[]) => {
@@ -149,7 +149,7 @@ export class ControlPanelBlock extends AbstractBlock {
         const createCodeMirrorBlock = () => {
             const block = manager?.getBlockInFocus();
             if (!block) return;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             doc.addCodeMirrorBlock(block);
         }
         const createNewDocumentClicked = (e: Event) => {
@@ -195,37 +195,37 @@ export class ControlPanelBlock extends AbstractBlock {
         const addImage = (url: string) => {
             const block = manager?.getBlockInFocus();
             if (!block) return;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             doc.addImageBlock(block, url);
         }
         const addImageRight = (url: string) => {
             const block = manager?.getBlockInFocus();
             if (!block) return;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             doc.addImageRight(block, url);
         }
         const addImageLeft = (url: string) => {
             const block = manager?.getBlockInFocus();
             if (!block) return;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             doc.addImageLeft(block, url);
         }
         const addVideo = (url: string) => {
             const block = manager?.getBlockInFocus();
             if (!block) return;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             doc.addVideoBlock(block, url);
         }
         const addIFrame = (url: string) => {
             const block = manager?.getBlockInFocus();
             if (!block) return;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             doc.addIFrameBlock(block, url);
         }
         const createGrid = (rows: number, cells: number) => {
             const block = manager.getBlockInFocus();
             if (!block) return;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             const grid = doc.createGrid(rows, cells) as GridBlock;
             doc.addBlockAfter(grid, block);
             const textBlock = grid.blocks[0].blocks[0].blocks[0] as StandoffEditorBlock;
@@ -235,7 +235,7 @@ export class ControlPanelBlock extends AbstractBlock {
         const createTable = (rows: number, cells: number) => {
             const block = manager.getBlockInFocus();
             if (!block) return;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             const table = doc.createTable(rows, cells) as GridBlock;
             doc.addBlockAfter(table, block);
             const textBlock = table.blocks[0].blocks[0].blocks[0] as StandoffEditorBlock;
@@ -274,13 +274,13 @@ export class ControlPanelBlock extends AbstractBlock {
             if (!block) return;
             const next = block.relation.next;
             if (!next) return;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             doc.mergeBlocks(next.id, block.id);
         }
         const split = () => {
             const block = manager?.getBlockInFocus() as StandoffEditorBlock;
             if (!block) return;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             const caret = block.lastCaret;
             doc.splitTextBlock(block.id, caret.index || 0);
         }
@@ -315,22 +315,22 @@ export class ControlPanelBlock extends AbstractBlock {
         }
         const makeCheckbox = () => {
             const block = manager?.lastFocus;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             doc?.makeCheckbox(block);
         }
         const moveBlockUp = () => {
             const block = manager?.getBlockInFocus() as IBlock;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             doc.moveBlockUp(block);
         }
         const moveBlockDown = () => {
             const block = manager?.getBlockInFocus() as IBlock;
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             doc.moveBlockDown(block);
         }
         const toTab = () => {
             const block = manager?.getBlockInFocus();
-            const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
+            const doc = manager.getParentOfType(block, BlockType.PageBlock) as PageBlock;
             doc.convertBlockToTab(block!.id);
         }
         const runCommand = async () => {

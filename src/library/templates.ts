@@ -5,7 +5,7 @@ export const Template = {
         type: BlockType.MembraneBlock,
         children: [
             {
-                type: BlockType.DocumentBlock,
+                type: BlockType.PageBlock,
                 children: [
                     {
                         type: BlockType.StandoffEditorBlock

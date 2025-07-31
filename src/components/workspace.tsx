@@ -1,7 +1,7 @@
 import { Component } from "solid-js"
 import { UniverseBlock } from "../universe-block"
 import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto, ICheckBlockDto, StandoffPropertyDto } from "../library/types";
-import { DocumentBlock } from "../blocks/document-block";
+import { PageBlock } from "../blocks/page-block";
 import { WorkspaceBlock } from "../blocks/workspace-block";
 import { VideoBackgroundBlock } from "../blocks/video-background-block";
 import { ImageBackgroundBlock } from "../blocks/image-background-block";
@@ -41,7 +41,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             type: BlockType.DocumentTabBlock,
                             children: [
                                 {
-                                    type: BlockType.DocumentBlock,
+                                    type: BlockType.PageBlock,
                                     children: [                
                                         {
                                             type: BlockType.StandoffEditorBlock,
@@ -507,7 +507,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             type: BlockType.DocumentTabBlock,
                             children: [
                                 {
-                                    type: BlockType.DocumentBlock,
+                                    type: BlockType.PageBlock,
                                     children: [
                                         {
                                             type: BlockType.StandoffEditorBlock,
@@ -526,7 +526,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
         };
 
         const doc: IBlockDto = {
-            type: BlockType.DocumentBlock,
+            type: BlockType.PageBlock,
             children: [                
                 {
                     type: BlockType.StandoffEditorBlock,
@@ -1007,9 +1007,9 @@ const foo = (bar) => {
             GridBlock.getBlockBuilder(),
             GridRowBlock.getBlockBuilder(),
             GridCellBlock.getBlockBuilder(),
-            DocumentBlock.getBlockBuilder(),
-            DocumentBlock.getLeftMarginBlockBuilder(),
-            DocumentBlock.getRightMarginBlockBuilder(),
+            PageBlock.getBlockBuilder(),
+            PageBlock.getLeftMarginBlockBuilder(),
+            PageBlock.getRightMarginBlockBuilder(),
             WindowBlock.getBlockBuilder(),
             DocumentWindowBlock.getBlockBuilder(),
             CanvasBackgroundBlock.getBlockBuilder(),

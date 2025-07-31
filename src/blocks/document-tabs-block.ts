@@ -4,7 +4,7 @@ import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, InputEvent, In
 import { UniverseBlock } from "../universe-block";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { Template } from "../library/templates";
-import { DocumentBlock } from "./document-block";
+import { PageBlock } from "./page-block";
 import { MembraneBlock } from "./membrane-block";
 import { first } from "underscore";
 
@@ -141,7 +141,7 @@ export class DocumentTabRowBlock extends AbstractBlock {
         const row = previousTab.getRow();
         if (!row) return;
         const newTab = await this.createNewTab(name);
-        let doc = await this.manager.recursivelyBuildBlock(this.newContainer(), Template.EmptyDocument) as DocumentBlock;
+        let doc = await this.manager.recursivelyBuildBlock(this.newContainer(), Template.EmptyDocument) as PageBlock;
         this.manager.addBlockTo(newTab, doc);
         this.manager.addBlockTo(row, newTab);
         doc.relation.parent = newTab;

@@ -3,7 +3,7 @@ import { Component, onCleanup, onMount } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
 import { renderToNode } from "../library/common";
-import { DocumentBlock } from "../blocks/document-block";
+import { PageBlock } from "../blocks/page-block";
 import { ContextMenu, ContextMenuItem } from "./context-menu";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "../blocks/grid-block";
@@ -41,7 +41,7 @@ interface IBlockMenuBlockConstructor extends IAbstractBlockConstructor {
 export class BlockMenuBlock extends AbstractBlock {
     contextMenuEvent: MouseEvent;
     source: IBlock;
-    doc: DocumentBlock;
+    doc: PageBlock;
     node: HTMLElement;
     constructor(args: IBlockMenuBlockConstructor){
         super(args);
@@ -51,7 +51,7 @@ export class BlockMenuBlock extends AbstractBlock {
         this.suppressEventHandlers = true;
         this.source = args.source;
         this.node = document.createElement("DIV") as HTMLElement;
-        this.doc = this.manager.getParentOfType(this.source, BlockType.DocumentBlock) as DocumentBlock;
+        this.doc = this.manager.getParentOfType(this.source, BlockType.PageBlock) as PageBlock;
     }
     serialize(): IBlockDto {
         return null;
@@ -260,7 +260,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const insidePage = !!this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock);
       const insideIndentedList = !!this.manager.getParentOfType(this.source, BlockType.IndentedListBlock);
       const isBackground = this.source.type.toLowerCase().indexOf("background") >= 0;
-      const insideDocument = !!this.manager.getParentOfType(this.source, BlockType.DocumentBlock);
+      const insideDocument = !!this.manager.getParentOfType(this.source, BlockType.PageBlock);
 
       if (insideDocument) {
         const itemDeleteBlock= {

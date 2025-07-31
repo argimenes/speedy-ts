@@ -2,12 +2,12 @@ import { Component } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { renderToNode } from "../library/common";
 import { IAbstractBlockConstructor, IBlockDto, IBlock, BlockType } from "../library/types";
-import { DocumentBlock } from "../blocks/document-block";
+import { PageBlock } from "../blocks/page-block";
 import { IconAlignCenter, IconAlignJustified, IconAlignLeft, IconAlignRight, IconBold, IconClearFormatting, IconColorPicker, IconH1, IconH2, IconH3, IconH4, IconIndentDecrease, IconIndentIncrease, IconItalic, IconRotateClockwise, IconRotateClockwise2, IconSeparatorVertical } from "@tabler/icons-solidjs";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 
 export interface IStyleBarBlockConstructor extends IAbstractBlockConstructor {
-    document?: DocumentBlock;
+    document?: PageBlock;
 }
 
 type Props = {
@@ -114,7 +114,7 @@ export const StyleBar : Component<Props> = (props) => {
 };
 
 export class StyleBarBlock extends AbstractBlock {
-    document: DocumentBlock;
+    document: PageBlock;
     constructor(args: IStyleBarBlockConstructor) {
         super(args);
         this.suppressEventHandlers = true;

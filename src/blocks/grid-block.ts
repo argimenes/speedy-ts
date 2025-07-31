@@ -2,7 +2,7 @@ import { AbstractBlock } from "./abstract-block";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { updateElement } from "../library/svg";
-import { DocumentBlock } from "./document-block";
+import { PageBlock } from "./page-block";
 
 export class GridBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
@@ -29,7 +29,7 @@ export class GridBlock extends AbstractBlock {
          * and destroy the Grid structure itself.
          */
         const parent = this.relation.parent as AbstractBlock;
-        const doc = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+        const doc = this.manager.getParentOfType(this, BlockType.PageBlock) as PageBlock;
         const rows = this.blocks as GridRowBlock[];
         [...rows].reverse().forEach(row => {
             let cells = row.blocks as GridCellBlock[];
@@ -218,7 +218,7 @@ export class GridCellBlock extends AbstractBlock {
         if (!source || !target) return;
         const row = source.getRow();
         const grid = row.getGrid();
-        const doc = this.manager.getParentOfType(source, BlockType.DocumentBlock) as DocumentBlock;
+        const doc = this.manager.getParentOfType(source, BlockType.PageBlock) as PageBlock;
         this.moveBlocksAndContainers(source, target);
         this.manager.removeBlockFrom(row, source);
         this.manager.generateParentSiblingRelations(row);
