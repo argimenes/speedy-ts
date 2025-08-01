@@ -1095,9 +1095,19 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             source: block
         });
         const e = args.e as MouseEvent;
+        const menuHeight = 200;
+        const menuWidth = 300;
         const node = menu.render();
-        const x = e.clientX - 20;
-        const y = e.clientY + 20;
+        let x = e.clientX - 20;
+        let y = e.clientY + 20;
+        const xdiff = window.innerWidth - e.clientX;
+        const ydiff = window.innerHeight - e.clientY;
+        if (ydiff < menuHeight) {
+            y = e.clientY - ydiff - 10;
+        }
+        if (xdiff < menuWidth) {
+            x = e.clientX - xdiff - 10;
+        }
         updateElement(menu.container, {
             style: {
                 position: "absolute",

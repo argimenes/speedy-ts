@@ -25,6 +25,7 @@ import { YouTubeVideoBackgroundBlock } from "../blocks/youtube-video-background-
 import { CanvasBlock } from "../blocks/canvas-block";
 import { DocumentTabRowBlock, DocumentTabBlock } from "../blocks/document-tabs-block";
 import { MembraneBlock } from "../blocks/membrane-block";
+import { PocketBlock } from "../blocks/pocket-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -42,48 +43,53 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             children: [
                                 {
                                     type: BlockType.PageBlock,
-                                    children: [                
+                                    children: [
                                         {
-                                            type: BlockType.StandoffEditorBlock,
-                                            text: "Standoff Property Text Editor",
-                                            blockProperties: [ { type: "block/font/size", value: "h3" }],
-                                            standoffProperties: [
-                                                { type: "style/rainbow", start: 18, end: 21 },
-                                                { type: "style/highlighter", start: 5, end: 12 },
-                                                { type: "style/spiky", start: 15, end: 28 },
-                                            ],
-                                            metadata: {
-                                                
-                                            }
+                                            type: BlockType.PocketBlock,
+                                            children: [
+                                                {
+                                                    type: BlockType.StandoffEditorBlock,
+                                                    text: "Standoff Property Text Editor",
+                                                    blockProperties: [ { type: "block/font/size", value: "h3" }],
+                                                    standoffProperties: [
+                                                        { type: "style/rainbow", start: 18, end: 21 },
+                                                        { type: "style/highlighter", start: 5, end: 12 },
+                                                        { type: "style/spiky", start: 15, end: 28 },
+                                                    ],
+                                                    metadata: {
+                                                        
+                                                    }
+                                                } as IStandoffEditorBlockDto,
+                                                {
+                                                    type: BlockType.StandoffEditorBlock,
+                                                    text: "Once upon a midnight dreary ... [left aligned]",
+                                                    standoffProperties: [
+                                                        { type: "style/italics", start: 5, end: 12 },
+                                                        { type: "style/bold", start: 7, end: 14 },
+                                                        { type: "animation/spinner", start: 10, end: 12 },
+                                                        { type: "codex/entity-reference", start: 10, end: 18, value: "abd-def-ghi-123" },
+                                                        { type: "codex/block-reference", start: 5, end: 14, value: "abd-def-ghi-321" },
+                                                        { type: "codex/time-reference", start: 15, end: 22, value: "abd-def-ghi-432" },
+                                                        { type: "style/rectangle", start: 20, end: 32 },
+                                                    ],
+                                                    blockProperties: [
+                                                        { type: "block/alignment", value: "left" }
+                                                    ],
+                                                    relation: {
+                                                        leftMargin: {
+                                                            type: BlockType.LeftMarginBlock,
+                                                            children: [
+                                                                {
+                                                                    type: BlockType.StandoffEditorBlock,
+                                                                    text: "Left margin note 1.",
+                                                                    blockProperties: [ { type: "block/alignment", value: "left" }, { type: "block/font/size", value: "three-quarters" }]
+                                                                } as IStandoffEditorBlockDto
+                                                            ]
+                                                        }
+                                                    }
+                                                } as IStandoffEditorBlockDto,
+                                            ]
                                         },
-                                        {
-                                            type: BlockType.StandoffEditorBlock,
-                                            text: "Once upon a midnight dreary ... [left aligned]",
-                                            standoffProperties: [
-                                                { type: "style/italics", start: 5, end: 12 },
-                                                { type: "style/bold", start: 7, end: 14 },
-                                                { type: "animation/spinner", start: 10, end: 12 },
-                                                { type: "codex/entity-reference", start: 10, end: 18, value: "abd-def-ghi-123" },
-                                                { type: "codex/block-reference", start: 5, end: 14, value: "abd-def-ghi-321" },
-                                                { type: "codex/time-reference", start: 15, end: 22, value: "abd-def-ghi-432" },
-                                                { type: "style/rectangle", start: 20, end: 32 },
-                                            ],
-                                            blockProperties: [
-                                                { type: "block/alignment", value: "left" }
-                                            ],
-                                            relation: {
-                                                leftMargin: {
-                                                    type: BlockType.LeftMarginBlock,
-                                                    children: [
-                                                        {
-                                                            type: BlockType.StandoffEditorBlock,
-                                                            text: "Left margin note 1.",
-                                                            blockProperties: [ { type: "block/alignment", value: "left" }, { type: "block/font/size", value: "three-quarters" }]
-                                                        } as IStandoffEditorBlockDto
-                                                    ]
-                                                }
-                                            }
-                                        } as IStandoffEditorBlockDto,
                                         {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "... while I pondered weak and weary [right aligned]",
@@ -116,7 +122,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "Canvas",
                                             blockProperties: [ { type: "block/font/size", value: "h3" }, { type: "block/margin/top/40px" }]
-                                        },
+                                        } as IStandoffEditorBlockDto,
                                         {
                                             type: BlockType.CanvasBlock
                                         },
@@ -124,7 +130,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "Video",
                                             blockProperties: [ { type: "block/font/size", value: "h3" }, { type: "block/margin/top/40px" }]
-                                        },
+                                        } as IStandoffEditorBlockDto,
                                         {
                                             type: BlockType.YouTubeVideoBlock,
                                             metadata: {
@@ -135,7 +141,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "Other Text Editors",
                                             blockProperties: [ { type: "block/font/size", value: "h3" }, { type: "block/margin/top/40px" }]
-                                        },
+                                        } as IStandoffEditorBlockDto,
                                         {
                                             type: BlockType.GridBlock,
                                             children: [
@@ -178,7 +184,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "Nested Lists",
                                             blockProperties: [ { type: "block/font/size", value: "h3" }, { type: "block/margin/top/40px" }]
-                                        },
+                                        } as IStandoffEditorBlockDto,
                                         {
                                             type: BlockType.IndentedListBlock,
                                             children: [
@@ -246,7 +252,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "Tabs",
                                             blockProperties: [ { type: "block/font/size", value: "h3" }, { type: "block/margin/top/40px" }]
-                                        },
+                                        } as IStandoffEditorBlockDto,
                                         {
                                             type: BlockType.TabRowBlock,
                                             children: [
@@ -328,7 +334,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "Grids",
                                             blockProperties: [ { type: "block/font/size/h3" }, { type: "block/margin/top/40px" }]
-                                        },
+                                        } as IStandoffEditorBlockDto,
                                         {
                                             type: BlockType.GridBlock,
                                             children: [
@@ -368,7 +374,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                                                 {
                                                                     type: BlockType.StandoffEditorBlock,
                                                                     text: "Row 1 - Cell 3"
-                                                                }
+                                                                } as IStandoffEditorBlockDto
                                                             ]
                                                         }
                                                     ]
@@ -397,7 +403,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                                                 {
                                                                     type: BlockType.StandoffEditorBlock,
                                                                     text: "Row 2 - Cell 2"
-                                                                },
+                                                                } as IStandoffEditorBlockDto,
                                                                 {
                                                                     type: BlockType.IFrameBlock,
                                                                     metadata: {
@@ -426,7 +432,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "Tables",
                                             blockProperties: [ { type: "block/font/size", value: "h3" }, { type: "block/margin/top/40px" }]
-                                        },
+                                        } as IStandoffEditorBlockDto,
                                         {
                                             type: BlockType.TableBlock,
                                             children: [
@@ -448,7 +454,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                                                 {
                                                                     type: BlockType.StandoffEditorBlock,
                                                                     text: "Table Cell 01/02"
-                                                                }
+                                                                } as IStandoffEditorBlockDto
                                                             ]
                                                         },
                                                         {
@@ -512,7 +518,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                         {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "Text on Page 2 ..."
-                                        }
+                                        } as IStandoffEditorBlockDto
                                     ],
                                     metadata: {
                                         name: "Page 2"
@@ -1018,6 +1024,7 @@ const foo = (bar) => {
             ImageBackgroundBlock.getBlockBuilder(),
             WorkspaceBlock.getBlockBuilder(),
             MembraneBlock.getBlockBuilder(),
+            PocketBlock.getBlockBuilder(),
         ]);
         workspace.createImageWorkspace();
         workspace.addMembraneToDocumentWindow(doc2).then();

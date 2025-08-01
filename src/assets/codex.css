@@ -576,3 +576,9 @@ DOCUMENT TABS (PAGES)
 .block-selection {
   border: 1px dotted gold;
 }
+
+.pocket-block {
+  height: 100px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
