@@ -1,5 +1,5 @@
 import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy, IconEaseOut } from "@tabler/icons-solidjs";
-import { Component, onCleanup, onMount } from "solid-js";
+import { Component } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
 import { renderToNode } from "../library/common";
@@ -10,8 +10,8 @@ import { GridBlock, GridCellBlock, GridRowBlock } from "../blocks/grid-block";
 import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
 import { IndentedListBlock } from "../blocks/indented-list-block";
 import { DocumentWindowBlock } from "../blocks/document-window-block";
-import { updateElement } from "../library/svg";
 import { DocumentTabBlock, DocumentTabRowBlock } from "../blocks/document-tabs-block";
+import { PocketBlock } from "../blocks/pocket-block";
 
 type Props = {
     items: ContextMenuItem[];
@@ -66,16 +66,13 @@ export class BlockMenuBlock extends AbstractBlock {
       const cm = this.doc.addCodeMirrorBlock(this.source);
       this.manager.setBlockFocus(cm);
     }
-    addImageBlock() {
-        console.log("addImageBlock");
-        const url = prompt("Url");
-        const v = this.doc.addImageBlock(this.source, url);
-        this.manager.setBlockFocus(v);
+    addImageBlock(url: string) {
+        const block = this.doc.addImageBlock(this.source, url);
+        this.manager.setBlockFocus(block);
     }
-    addVideoBlock() {
-        const url = prompt("Url");
-        const v = this.doc.addVideoBlock(this.source, url);
-        this.manager.setBlockFocus(v);
+    addVideoBlock(url: string) {
+        const block = this.doc.addVideoBlock(this.source, url);
+        this.manager.setBlockFocus(block);
     }
     addCanvasBlock() {
       this.doc.addCanvasBlock(this.source);
@@ -129,6 +126,9 @@ export class BlockMenuBlock extends AbstractBlock {
     convertToTab() {
       this.doc.convertBlockToTab(this.source.id);
     }
+    convertToPocket() {
+      // this.doc.convertBlockToPocket(this.source.id);
+    }
     mergeLeft() {
       const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
       cell.mergeLeft();
@@ -148,6 +148,20 @@ export class BlockMenuBlock extends AbstractBlock {
     moveCellLeft() {
         const cell = this.manager.getParentOfType(this.source, BlockType.GridCellBlock) as GridCellBlock;
         cell.moveCellLeft();
+    }
+    resizePocket(value: string) {
+      const pocket = this.manager.getParentOfType(this.source, BlockType.PocketBlock) as PocketBlock;
+      const height = parseInt(value);
+      pocket.metadata.height = height;
+      pocket.update();
+    }
+    explodePocket() {
+      const pocket = this.manager.getParentOfType(this.source, BlockType.PocketBlock) as PocketBlock;   
+      pocket.explode();
+    }
+    deletePocket() {
+      const pocket = this.manager.getParentOfType(this.source, BlockType.PocketBlock) as PocketBlock;
+      pocket.destroy();
     }
     deletePage() {
       const tab = this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock) as DocumentTabBlock;
@@ -260,9 +274,10 @@ export class BlockMenuBlock extends AbstractBlock {
       const insidePage = !!this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock);
       const insideIndentedList = !!this.manager.getParentOfType(this.source, BlockType.IndentedListBlock);
       const isBackground = this.source.type.toLowerCase().indexOf("background") >= 0;
-      const insideDocument = !!this.manager.getParentOfType(this.source, BlockType.PageBlock);
+      const insideMembrane = !!this.manager.getParentOfType(this.source, BlockType.MembraneBlock);
+      const insidePocket = !!this.manager.getParentOfType(this.source, BlockType.PocketBlock);
 
-      if (insideDocument) {
+      if (insideMembrane) {
         const itemDeleteBlock= {
             type: "item", 
             label: "Delete Block",
@@ -275,8 +290,16 @@ export class BlockMenuBlock extends AbstractBlock {
             icon: <IconPlus />,
             children: [
                 { type:"item", icon: <IconCode/>, label: "Code", onClick: () => self.addHtmlBlock() },
-                { type:"item", label: "Video", icon: <IconVideo />, onClick: () => self.addVideoBlock() },
-                { type:"item", label: "Image", icon: <IconImageInPicture />, onClick: () => self.addImageBlock() },
+                {
+                    type:"item", label: "Video", icon: <IconVideo />, children: [
+                      { type: "input", onInput: (url) => self.addVideoBlock(url) }
+                    ]
+                },
+                {
+                  type:"item", label: "Image", icon: <IconImageInPicture />, children: [
+                    { type: "input", onInput: (url) => self.addImageBlock(url) }
+                  ]
+                },
                 { type:"item", label: "Canvas", icon: <IconRectangleVertical />, onClick: () => self.addCanvasBlock() },
                 {
                   type: "item", label: "Add Grid", icon: <IconGrid3x3 />,
@@ -313,6 +336,11 @@ export class BlockMenuBlock extends AbstractBlock {
               label: "Convert to tab",
               icon: <IconArrowsSplit />,
               onClick: () => self.convertToTab()
+        };
+        const itemConvertToPocket = {
+              label: "Convert to pocket",
+              icon: <IconArrowsSplit />,
+              onClick: () => self.convertToPocket()
         };
         const itemConvertToIndentedList = {
               label: "Convert to list",
@@ -439,6 +467,33 @@ export class BlockMenuBlock extends AbstractBlock {
               onClick: () => self.deletePage()
         };
         /**
+         * Pockets
+         */
+        const itemResizePocket = {
+              label: "Resize",
+              icon: <IconPlus />,
+              children: [
+                {
+                  type: "input",
+                  placeholder: "Enter new height",
+                  label: "Height (px)",
+                  onInput: (value: string) => {
+                    self.resizePocket(value);
+                  }
+                }
+              ]
+        };
+        const itemExplodePocket = {
+              label: "Explode",
+              icon: <IconPlus />,
+              onClick: () => self.explodePocket()
+        };
+        const itemDeletePocket = {
+              label: "Delete",
+              icon: <IconTrash />,
+              onClick: () => self.deletePocket()
+        };
+        /**
          * Grids
          */
         const itemAddGridRow = {
@@ -508,6 +563,14 @@ export class BlockMenuBlock extends AbstractBlock {
             itemDeletePage
           ]
         };
+        const itemPocketsMenu = {
+          type: "item",
+          label: "Pockets",
+          children: [
+            itemResizePocket, itemExplodePocket,
+            itemDeletePocket
+          ]
+        };
         const itemIndentedListMenu = {
           type: "item",
           label: "List",
@@ -537,6 +600,11 @@ export class BlockMenuBlock extends AbstractBlock {
           items.push(itemConvertToGrid);
         } else {
             items.push(itemGridsMenu);
+        }
+        if (!insidePocket) {
+          items.push(itemConvertToPocket);
+        } else {
+            items.push(itemPocketsMenu);
         }
         if (!insideIndentedList) {
           items.push(itemConvertToIndentedList);

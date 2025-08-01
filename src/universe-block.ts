@@ -227,6 +227,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 targetElementBlockType: e.target.dataset.blockType,
                 registeredBlocks: this.registeredBlocks
             });
+            return ALLOW;
         }
         const isStandoffBlock = focusedBlock.type == BlockType.StandoffEditorBlock;
         const blocks = this.getAncestors(focusedBlock);
