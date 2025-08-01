@@ -6,7 +6,6 @@ import { StandoffEditorBlock } from "./standoff-editor-block";
 import { Template } from "../library/templates";
 import { PageBlock } from "./page-block";
 import { MembraneBlock } from "./membrane-block";
-import { first } from "underscore";
 
 export class DocumentTabRowBlock extends AbstractBlock {
     header: HTMLDivElement;
@@ -107,7 +106,7 @@ export class DocumentTabRowBlock extends AbstractBlock {
         self.labels.forEach(x => x.remove());
         self.labels = [];
         tabs.forEach((tab, i) => {
-            const label = (tab.container.querySelector("span.tab-label") || document.createElement("SPAN")) as HTMLSpanElement;
+            const label = (tab.container.querySelector("span.document-tab-label") || document.createElement("SPAN")) as HTMLSpanElement;
             label.setAttribute("id", tab.id);
             label.innerHTML = tab.metadata?.name || ("Page " + (i+1));
             label.classList.add("document-tab-label");

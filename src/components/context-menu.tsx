@@ -56,6 +56,7 @@ type InputItemType = {
   type: "input";
   label: string;
   placeholder?: string;
+  value?: () => string;
   onInput: (value: string) => void;
 };
 
@@ -92,7 +93,7 @@ export const MenuItem: Component<MenuItemProps> = (props) => {
 
   // Handle input field items
   if (props.item.type === "input") {
-    const [value, setValue] = createSignal("");
+    const [value, setValue] = createSignal((props.item.value && props.item.value()) || "");
     let inputRef: HTMLInputElement | undefined;
 
     createEffect(() => {

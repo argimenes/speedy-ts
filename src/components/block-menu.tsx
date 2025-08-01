@@ -12,6 +12,7 @@ import { IndentedListBlock } from "../blocks/indented-list-block";
 import { DocumentWindowBlock } from "../blocks/document-window-block";
 import { DocumentTabBlock, DocumentTabRowBlock } from "../blocks/document-tabs-block";
 import { PocketBlock } from "../blocks/pocket-block";
+import { MembraneBlock } from "../blocks/membrane-block";
 
 type Props = {
     items: ContextMenuItem[];
@@ -171,10 +172,10 @@ export class BlockMenuBlock extends AbstractBlock {
       const row = this.manager.getParentOfType(this.source, BlockType.DocumentTabRowBlock) as DocumentTabRowBlock;
       await row.appendTab();
     }
-    renamePage() {
-      const tab = this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock) as DocumentTabBlock;
-      const name = prompt("Title?");
-      tab.setName(name);
+    renamePage(name: string) {
+      const page = this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock) as DocumentTabBlock;
+      page.setName(name);
+      page.setActive();
     }
     deleteTab() {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
@@ -184,18 +185,16 @@ export class BlockMenuBlock extends AbstractBlock {
       const row = this.manager.getParentOfType(this.source, BlockType.TabRowBlock) as TabRowBlock;
       await row.appendTab();
     }
-    renameTab() {
+    renameTab(name: string) {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
-      const name = prompt("Name: ");
       tab.setName(name);
+      tab.setActive();
     }
-    async saveDocument() {
-      let filename = this.doc.metadata.filename;
-      let folder = this.doc.metadata.folder;
-      if (!filename) filename = prompt("Filename?");
+    async saveDocument(filename: string) {
       const win = this.manager.getParentOfType(this.source, BlockType.DocumentWindowBlock);
-      const block = win.blocks[0];
-      await this.manager.saveServerDocument(block.id, filename, "uploads")
+      const membrane = win.blocks[0];
+      let folder = membrane.metadata?.folder || "uploads";
+      await this.manager.saveServerDocument(membrane.id, filename, folder)
     }
     async renameDocument() {
       alert("Rename is not implemented");
@@ -419,22 +418,33 @@ export class BlockMenuBlock extends AbstractBlock {
               onClick: () => self.moveCellLeft()
         };
         const itemMoveTabRight = {
-              label: "Move tab right",
+              label: "Move right",
               icon: <IconSwipeRight />,
               onClick: () => self.moveCellRight()
         };
         const itemRenameTab = {
-              label: "Rename tab",
+              label: "Rename",
               icon: <IconEdit />,
-              onClick: () => self.renameTab()
+              children: [
+                {
+                  type: "input",
+                  value: () => {
+                    const tab = self.manager.getParentOfType(self.source, BlockType.TabBlock) as TabBlock;
+                    return tab.metadata.name;
+                  },
+                  onInput: (name: string) => {
+                    self.renameTab(name);
+                  }
+                }
+              ]
         };
         const itemAddTabBlock = {
-              label: "Add tab",
+              label: "Add",
               icon: <IconPlus />,
               onClick: () => self.addTab()
         };
         const itemDeleteTab = {
-              label: "Delete tab",
+              label: "Delete",
               icon: <IconTrash />,
               onClick: () => self.deleteTab()
         };
@@ -452,9 +462,20 @@ export class BlockMenuBlock extends AbstractBlock {
               onClick: () => self.movePageRight()
         };
         const itemRenamePage = {
-              label: "Rename page",
+              label: "Rename",
               icon: <IconEdit />,
-              onClick: () => self.renamePage()
+              children: [
+                {
+                  type: "input",
+                  value: () => {
+                    const page = self.manager.getParentOfType(self.source, BlockType.DocumentTabBlock) as DocumentTabBlock;
+                    return page.metadata.name;
+                  },
+                  onInput: (name: string) => {
+                    self.renamePage(name);
+                  }
+                }
+              ]
         };
         const itemAddPage = {
               label: "Add page",
@@ -504,10 +525,23 @@ export class BlockMenuBlock extends AbstractBlock {
         /**
          * File
          */
+        const membrane = this.manager.getParentOfType(this.source, BlockType.MembraneBlock) as MembraneBlock;
         const itemSave = {
               label: "Save",
               icon: <IconDisc />,
-              onClick: () => self.saveDocument()
+              children: [
+                {
+                  type: "input",
+                  placeholder: "filename",
+                  value: () => membrane?.metadata.filename,
+                  onInput: (filename) => {
+                    if (membrane) {
+                      membrane.metadata.filename = filename;
+                    }
+                    self.saveDocument(filename);
+                  }
+                }
+              ]
         };
         const itemRename = {
               label: "Rename",
