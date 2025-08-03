@@ -45,51 +45,46 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                     type: BlockType.PageBlock,
                                     children: [
                                         {
-                                            type: BlockType.PocketBlock,
-                                            children: [
-                                                {
-                                                    type: BlockType.StandoffEditorBlock,
-                                                    text: "Standoff Property Text Editor",
-                                                    blockProperties: [ { type: "block/font/size", value: "h3" }],
-                                                    standoffProperties: [
-                                                        { type: "style/rainbow", start: 18, end: 21 },
-                                                        { type: "style/highlighter", start: 5, end: 12 },
-                                                        { type: "style/spiky", start: 15, end: 28 },
-                                                    ],
-                                                    metadata: {
-                                                        
-                                                    }
-                                                } as IStandoffEditorBlockDto,
-                                                {
-                                                    type: BlockType.StandoffEditorBlock,
-                                                    text: "Once upon a midnight dreary ... [left aligned]",
-                                                    standoffProperties: [
-                                                        { type: "style/italics", start: 5, end: 12 },
-                                                        { type: "style/bold", start: 7, end: 14 },
-                                                        { type: "animation/spinner", start: 10, end: 12 },
-                                                        { type: "codex/entity-reference", start: 10, end: 18, value: "abd-def-ghi-123" },
-                                                        { type: "codex/block-reference", start: 5, end: 14, value: "abd-def-ghi-321" },
-                                                        { type: "codex/time-reference", start: 15, end: 22, value: "abd-def-ghi-432" },
-                                                        { type: "style/rectangle", start: 20, end: 32 },
-                                                    ],
-                                                    blockProperties: [
-                                                        { type: "block/alignment", value: "left" }
-                                                    ],
-                                                    relation: {
-                                                        leftMargin: {
-                                                            type: BlockType.LeftMarginBlock,
-                                                            children: [
-                                                                {
-                                                                    type: BlockType.StandoffEditorBlock,
-                                                                    text: "Left margin note 1.",
-                                                                    blockProperties: [ { type: "block/alignment", value: "left" }, { type: "block/font/size", value: "three-quarters" }]
-                                                                } as IStandoffEditorBlockDto
-                                                            ]
-                                                        }
-                                                    }
-                                                } as IStandoffEditorBlockDto,
-                                            ]
-                                        },
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Standoff Property Text Editor",
+                                            blockProperties: [ { type: "block/font/size", value: "h3" }],
+                                            standoffProperties: [
+                                                { type: "style/rainbow", start: 18, end: 21 },
+                                                { type: "style/highlighter", start: 5, end: 12 },
+                                                { type: "style/spiky", start: 15, end: 28 },
+                                            ],
+                                            metadata: {
+                                                
+                                            }
+                                        } as IStandoffEditorBlockDto,
+                                        {
+                                            type: BlockType.StandoffEditorBlock,
+                                            text: "Once upon a midnight dreary ... [left aligned]",
+                                            standoffProperties: [
+                                                { type: "style/italics", start: 5, end: 12 },
+                                                { type: "style/bold", start: 7, end: 14 },
+                                                { type: "animation/spinner", start: 10, end: 12 },
+                                                { type: "codex/entity-reference", start: 10, end: 18, value: "abd-def-ghi-123" },
+                                                { type: "codex/block-reference", start: 5, end: 14, value: "abd-def-ghi-321" },
+                                                { type: "codex/time-reference", start: 15, end: 22, value: "abd-def-ghi-432" },
+                                                { type: "style/rectangle", start: 20, end: 32 },
+                                            ],
+                                            blockProperties: [
+                                                { type: "block/alignment", value: "left" }
+                                            ],
+                                            relation: {
+                                                leftMargin: {
+                                                    type: BlockType.LeftMarginBlock,
+                                                    children: [
+                                                        {
+                                                            type: BlockType.StandoffEditorBlock,
+                                                            text: "Left margin note 1.",
+                                                            blockProperties: [ { type: "block/alignment", value: "left" }, { type: "block/font/size", value: "three-quarters" }]
+                                                        } as IStandoffEditorBlockDto
+                                                    ]
+                                                }
+                                            }
+                                        } as IStandoffEditorBlockDto,
                                         {
                                             type: BlockType.StandoffEditorBlock,
                                             text: "... while I pondered weak and weary [right aligned]",
