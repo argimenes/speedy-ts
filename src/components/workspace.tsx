@@ -26,6 +26,7 @@ import { CanvasBlock } from "../blocks/canvas-block";
 import { DocumentTabRowBlock, DocumentTabBlock } from "../blocks/document-tabs-block";
 import { MembraneBlock } from "../blocks/membrane-block";
 import { PocketBlock } from "../blocks/pocket-block";
+import { DocumentTagBlock, DocumentTagRowBlock } from "../blocks/sticky-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -35,6 +36,30 @@ export const BlockManagerWindow : Component<Props> = (props) => {
         const doc2: IBlockDto = {
             type: BlockType.MembraneBlock,
             children: [
+                {
+                    type: BlockType.DocumentTagRowBlock,
+                    children: [
+                        {
+                            type: BlockType.DocumentTagBlock,
+                            metadata: {
+                                text: "1st tag"
+                            }
+                        },
+                        {
+                            type: BlockType.DocumentTagBlock,
+                            metadata: {
+                                backgroundColor: "cyan",
+                                text: "2nd tag"
+                            },
+                            children: [
+                                {
+                                    type: BlockType.StandoffEditorBlock,
+                                    text: "Testy tester ..."
+                                }
+                            ]
+                        }
+                    ]
+                },
                 {
                     type: BlockType.DocumentTabRowBlock,
                     children: [
@@ -1020,6 +1045,8 @@ const foo = (bar) => {
             WorkspaceBlock.getBlockBuilder(),
             MembraneBlock.getBlockBuilder(),
             PocketBlock.getBlockBuilder(),
+            DocumentTagBlock.getBlockBuilder(),
+            DocumentTagRowBlock.getBlockBuilder(),
         ]);
         workspace.createImageWorkspace();
         workspace.addMembraneToDocumentWindow(doc2).then();

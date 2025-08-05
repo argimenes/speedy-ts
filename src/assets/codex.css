@@ -582,3 +582,17 @@ DOCUMENT TABS (PAGES)
   overflow-y: scroll;
   overflow-x: hidden;
 }
+.document-tag-row-block {
+  position: fixed;
+  top: 0;
+  left: -100px;
+  width: 100px;
+}
+.document-tag-label-block {
+  position: relative;
+  height: 1.5rem;
+  background-color: gold;
+  font-size: 1rem;
+  text-align: right;
+  padding-right: 5px;
+}

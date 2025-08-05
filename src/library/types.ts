@@ -86,7 +86,9 @@ export enum BlockType {
     PlainTextBlock = "plain-text-block",
     CodeMirrorBlock = "code-mirror-block",
     CheckboxBlock = "checkbox-block",
-    EmbedDocumentBlock = "embed-document-block"
+    EmbedDocumentBlock = "embed-document-block",
+    DocumentTagBlock = "document-tag-block",
+    DocumentTagRowBlock = "document-tag-row-block"
 }
 export interface IBlock {
     id: GUID;
