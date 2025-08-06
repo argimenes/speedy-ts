@@ -233,6 +233,9 @@ TABS
 .active {
     display: inline;
 }
+.inactive {
+  display: none;
+}
 .tab {
     box-shadow: 2px 2px 2px #fbfbfb;
 }
@@ -581,6 +584,14 @@ DOCUMENT TABS (PAGES)
   height: 100px;
   overflow-y: scroll;
   overflow-x: hidden;
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid #ccc;  
+  /* border: 2px solid #6b4f1d;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  border-bottom-left-radius: 80px 40px;
+  border-bottom-right-radius: 80px 40px;
+  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.25); */
 }
 .document-tag-row-block {
   position: fixed;
@@ -595,4 +606,14 @@ DOCUMENT TABS (PAGES)
   font-size: 1rem;
   text-align: right;
   padding-right: 5px;
+}
+.document-tag-panel {
+    position: fixed;
+    display: block;
+    top: 0;
+    left: 0;
+    width: 400px;
+    height: 400px;
+    z-index: 200;
+    background-color: #fff;
 }

@@ -1,4 +1,4 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy, IconEaseOut } from "@tabler/icons-solidjs";
+import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy, IconEaseOut, IconTag } from "@tabler/icons-solidjs";
 import { Component } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -13,6 +13,7 @@ import { DocumentWindowBlock } from "../blocks/document-window-block";
 import { DocumentTabBlock, DocumentTabRowBlock } from "../blocks/document-tabs-block";
 import { PocketBlock } from "../blocks/pocket-block";
 import { MembraneBlock } from "../blocks/membrane-block";
+import { DocumentTagRowBlock } from "../blocks/sticky-block";
 
 type Props = {
     items: ContextMenuItem[];
@@ -116,6 +117,20 @@ export class BlockMenuBlock extends AbstractBlock {
       firstCellText.replaceWith(this.source as AbstractBlock);
       this.manager.generateParentSiblingRelations(parent);
       this.manager.reindexAncestorDocument(parent);
+    }
+    async addTag() {
+      const membrane = this.manager.getParentOfType(this.source, BlockType.MembraneBlock) as MembraneBlock;
+      let tagRow = this.manager.registeredBlocks.find(b => b.type == BlockType.DocumentTagRowBlock) as DocumentTagRowBlock;
+      if (!tagRow) {
+        const dto = {
+          type: BlockType.DocumentTagRowBlock
+        };
+        tagRow = await this.manager.recursivelyBuildBlock(this.newContainer(), dto) as DocumentTagRowBlock;
+        membrane.blocks.push(tagRow);
+        membrane.container.appendChild(tagRow.container);
+        this.manager.generateParentSiblingRelations(membrane);
+      }
+      await tagRow.addTag();
     }
     async convertToList() {
       await this.doc.indentBlock({ block: this.source })
@@ -345,6 +360,11 @@ export class BlockMenuBlock extends AbstractBlock {
               label: "Convert to list",
               icon: <IconList />,
               onClick: () => self.convertToList()
+        };
+        const itemAddTag = {
+              label: "Add tag",
+              icon: <IconTag />,
+              onClick: () => self.addTag()
         };
         const itemDestructureGrid = {
               label: "Destructure grid",
@@ -588,6 +608,15 @@ export class BlockMenuBlock extends AbstractBlock {
             itemDeleteTab
           ]
         };
+        const itemTagsMenu = {
+          type: "item",
+          icon: <IconTag />,
+          label: "Tags",
+          children: [
+            itemAddTag,
+            itemDeleteTab
+          ]
+        };
         const itemPagesMenu = {
           type: "item",
           label: "Pages",
@@ -614,6 +643,7 @@ export class BlockMenuBlock extends AbstractBlock {
         };
         items.push(itemAdd);
         items.push(itemFileMenu);
+        items.push(itemTagsMenu);
         /**
          * Tabs
          */

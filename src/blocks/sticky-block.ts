@@ -3,6 +3,8 @@ import { updateElement } from "../library/svg";
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { UniverseBlock } from '../universe-block';
+import { PocketBlock } from './pocket-block';
+import { StandoffEditorBlock } from './standoff-editor-block';
 
 type StickyBlockSide = "top"|"bottom"|"left"|"right";
 
@@ -16,8 +18,8 @@ interface IDocumentTagBlockMetadata {
     x: number;
 }
 
-
 export class DocumentTagRowBlock extends AbstractBlock {
+    leftSide: HTMLDivElement;
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.DocumentTagRowBlock;
@@ -27,11 +29,50 @@ export class DocumentTagRowBlock extends AbstractBlock {
         if (args.metadata) this.metadata = { ...this.metadata, ...args.metadata };
         this.inputEvents = this.getInputEvents();
         this.setBlockSchemas(this.getBlockSchemas());
+        this.leftSide = document.createElement("DIV") as HTMLDivElement;
     }
     getBlockSchemas() {
         return [
             
         ]
+    }
+    getNewTabColour() {
+        return "cyan";
+    }
+    async createNewTag() {
+        const total = this.blocks.length;
+        const dto = {
+            type: BlockType.DocumentTagBlock,
+            metadata: {
+                text: "Tag #" + total,
+                backgroundColor: this.getNewTabColour()
+            },
+            children: [
+                {
+                    type: BlockType.PocketBlock,
+                    children: [
+                        {
+                            type: BlockType.StandoffEditorBlock
+                        }
+                    ]
+                }
+            ]
+        };
+        const tagBlock = await this.manager.recursivelyBuildBlock(this.newContainer(), dto) as DocumentTagBlock;
+        this.blocks.push(tagBlock);
+        const pocket = tagBlock.blocks[0] as PocketBlock;
+        pocket.container.classList.add("document-tag-panel", "active");
+        this.container.appendChild(pocket.container);
+        const textBlock = pocket.blocks[0] as StandoffEditorBlock;
+        this.manager.setBlockFocus(textBlock);
+        textBlock.setCaret(0);
+        this.manager.generateParentSiblingRelations(this);
+        this.manager.reindexAncestorDocument(this);
+        return tagBlock;
+    }
+    async addTag() {
+        const tag = await this.createNewTag();
+        this.renderTagLabels();
     }
     static getBlockBuilder() {
         return {
@@ -42,11 +83,14 @@ export class DocumentTagRowBlock extends AbstractBlock {
                 block.applyBlockPropertyStyling();
                 block.build();
                 await manager.buildChildren(block, dto);
-                block.renderTags();
+                block.renderTagLabels();
                 container.appendChild(block.container);
                 return block;
             }
         };
+    }
+    hideAllTagPanels() {
+        this.blocks.forEach((tag: DocumentTagBlock) => tag.hidePanel());
     }
     getInputEvents() {
         return [
@@ -54,15 +98,16 @@ export class DocumentTagRowBlock extends AbstractBlock {
         ];
     }
     build() {
-        updateElement(this.container, { classList: ["document-tag-row-block"] });
+        updateElement(this.leftSide, { classList: ["document-tag-row-block"] });
+        this.container.appendChild(this.leftSide);
     }
-    renderTags() {
+    renderTagLabels() {
         /**
          * Essentially this should render all the labels for the child
          * DocumentTagBlocks
          */
         const self = this;
-        self.container.innerHTML = null;
+        self.leftSide.innerHTML = null;
         const tags = this.blocks.map((tag: DocumentTagBlock) => tag.renderTag());
         const tagHeight = 25;
         const frag = document.createDocumentFragment();
@@ -70,7 +115,7 @@ export class DocumentTagRowBlock extends AbstractBlock {
             //node.style.top = (i * tagHeight) + "px";
             frag.appendChild(node);
         });
-        this.container.appendChild(frag);
+        this.leftSide.appendChild(frag);
     }
     bind(data: IBlockDto) {
         this.id = data.id || uuidv4();
@@ -101,8 +146,10 @@ export class DocumentTagRowBlock extends AbstractBlock {
 export class DocumentTagBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
+        const self = this;
         this.type = BlockType.DocumentTagBlock;
         this.metadata = {
+            active: false,
             side: "left",
             backgroundColor: "gold",
             y: 0
@@ -110,6 +157,24 @@ export class DocumentTagBlock extends AbstractBlock {
         if (args.metadata) this.metadata = { ...this.metadata, ...args.metadata };
         this.inputEvents = this.getInputEvents();
         this.setBlockSchemas(this.getBlockSchemas());
+    }
+    toggleActiveState() {
+        const active = this.metadata.active;
+        if (active) {
+            this.metadata.active = false;
+            this.hidePanel();
+        } else {
+            this.metadata.active = true;
+            this.showPanel();
+        }
+    }
+    showPanel(){
+        this.container.classList.add("active");
+        this.container.classList.remove("inactive");
+    }
+    hidePanel() {
+        this.container.classList.add("inactive");
+        this.container.classList.remove("active");
     }
     getBlockSchemas() {
         return [
@@ -140,9 +205,14 @@ export class DocumentTagBlock extends AbstractBlock {
         this.update();
     }
     update() {
-
+        if (this.metadata.active) {
+            this.showPanel();
+        } else {
+            this.hidePanel();
+        }
     }
     renderTag() {
+        const self = this;
         const container = document.createElement("DIV") as HTMLDivElement;
         const { text, html, color, backgroundColor } = (this.metadata as IDocumentTagBlockMetadata);
         container.classList.add("document-tag-label-block");
@@ -158,7 +228,16 @@ export class DocumentTagBlock extends AbstractBlock {
         if (html) {
             container.innerHTML = html;
         }
+        container.addEventListener("click", (e) => {
+            e.preventDefault();
+            const row = self.getRow();
+            row.hideAllTagPanels();
+            self.toggleActiveState();
+        });
         return container;
+    }
+    getRow() {
+        return this.relation.parent as DocumentTagRowBlock;
     }
     bind(data: IBlockDto) {
         this.id = data.id || uuidv4();
