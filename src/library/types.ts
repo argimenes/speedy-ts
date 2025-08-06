@@ -80,15 +80,15 @@ export enum BlockType {
     RightMarginBlock = "right-margin-block",
     ImageBlock = "image-block",
     PocketBlock = "pocket-block",
-    MembraneBlock = "membrane-block",
+    DocumentBlock = "document-block",
     YouTubeVideoBlock = "youtube-video-block",
     YouTubeVideoBackgroundBlock = "youtube-video-background-block",
     PlainTextBlock = "plain-text-block",
     CodeMirrorBlock = "code-mirror-block",
     CheckboxBlock = "checkbox-block",
     EmbedDocumentBlock = "embed-document-block",
-    DocumentTagBlock = "document-tag-block",
-    DocumentTagRowBlock = "document-tag-row-block"
+    StickyTabBlock = "sticky-tab-block",
+    StickyTabRowBlock = "sticky-tab-row-block"
 }
 export interface IBlock {
     id: GUID;

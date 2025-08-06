@@ -6,23 +6,23 @@ import { UniverseBlock } from '../universe-block';
 import { PocketBlock } from './pocket-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
 
-type StickyBlockSide = "top"|"bottom"|"left"|"right";
+type BlockSide = "top"|"bottom"|"left"|"right";
 
-interface IDocumentTagBlockMetadata {
+interface IStickyTabBlockMetadata {
     text: string;
     html: string;
     color: string;
     backgroundColor: string;
-    side: StickyBlockSide;
+    side: BlockSide;
     y: number;
     x: number;
 }
 
-export class DocumentTagRowBlock extends AbstractBlock {
+export class StickyTabRowBlock extends AbstractBlock {
     leftSide: HTMLDivElement;
     constructor(args: IAbstractBlockConstructor) {
         super(args);
-        this.type = BlockType.DocumentTagRowBlock;
+        this.type = BlockType.StickyTabRowBlock;
         this.metadata = {
             
         };
@@ -42,43 +42,41 @@ export class DocumentTagRowBlock extends AbstractBlock {
     async createNewTag() {
         const total = this.blocks.length;
         const dto = {
-            type: BlockType.DocumentTagBlock,
+            type: BlockType.StickyTabBlock,
             metadata: {
-                text: "Tag #" + total,
-                backgroundColor: this.getNewTabColour()
+                text: "Tab #" + total + 1,
+                backgroundColor: this.getNewTabColour(),
+                active: true
             },
             children: [
                 {
-                    type: BlockType.PocketBlock,
-                    children: [
-                        {
-                            type: BlockType.StandoffEditorBlock
-                        }
-                    ]
+                    type: BlockType.StandoffEditorBlock,
+                    text: "",
+                    standoffProperties: []
                 }
             ]
         };
-        const tagBlock = await this.manager.recursivelyBuildBlock(this.newContainer(), dto) as DocumentTagBlock;
-        this.blocks.push(tagBlock);
-        const pocket = tagBlock.blocks[0] as PocketBlock;
-        pocket.container.classList.add("document-tag-panel", "active");
-        this.container.appendChild(pocket.container);
-        const textBlock = pocket.blocks[0] as StandoffEditorBlock;
+        const tab = await this.manager.recursivelyBuildBlock(this.newContainer(), dto) as StickyTabBlock;
+        this.blocks.push(tab);
+        this.container.appendChild(tab.container);
+        const textBlock = this.blocks[0] as StandoffEditorBlock;
         this.manager.setBlockFocus(textBlock);
         textBlock.setCaret(0);
         this.manager.generateParentSiblingRelations(this);
         this.manager.reindexAncestorDocument(this);
-        return tagBlock;
+        return tab;
     }
     async addTag() {
-        const tag = await this.createNewTag();
+        const tab = await this.createNewTag();
         this.renderTagLabels();
+        this.hideAllTagPanels();
+        tab.setActive();
     }
     static getBlockBuilder() {
         return {
-            type: BlockType.DocumentTagRowBlock,
+            type: BlockType.StickyTabRowBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
-                const block = new DocumentTagRowBlock({ manager, ...dto });
+                const block = new StickyTabRowBlock({ manager, ...dto });
                 if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
                 block.applyBlockPropertyStyling();
                 block.build();
@@ -90,7 +88,7 @@ export class DocumentTagRowBlock extends AbstractBlock {
         };
     }
     hideAllTagPanels() {
-        this.blocks.forEach((tag: DocumentTagBlock) => tag.hidePanel());
+        this.blocks.forEach((tag: StickyTabBlock) => tag.hidePanel());
     }
     getInputEvents() {
         return [
@@ -98,8 +96,9 @@ export class DocumentTagRowBlock extends AbstractBlock {
         ];
     }
     build() {
-        updateElement(this.leftSide, { classList: ["document-tag-row-block"] });
+        updateElement(this.leftSide, { classList: ["sticky-tab-row-block"] });
         this.container.appendChild(this.leftSide);
+        this.hideAllTagPanels();
     }
     renderTagLabels() {
         /**
@@ -108,7 +107,7 @@ export class DocumentTagRowBlock extends AbstractBlock {
          */
         const self = this;
         self.leftSide.innerHTML = null;
-        const tags = this.blocks.map((tag: DocumentTagBlock) => tag.renderTag());
+        const tags = this.blocks.map((tag: StickyTabBlock) => tag.renderTag());
         const tagHeight = 25;
         const frag = document.createDocumentFragment();
         tags.forEach((node, i) => {
@@ -139,15 +138,15 @@ export class DocumentTagRowBlock extends AbstractBlock {
 }
 
 /**
- * A DocumentTagBlock should be a child of a MembraneBlock as it is intended
+ * A StickyTabBlock should be a child of a MembraneBlock as it is intended
  * to draw tags attached to the sides of the Window.
  */
 
-export class DocumentTagBlock extends AbstractBlock {
+export class StickyTabBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         const self = this;
-        this.type = BlockType.DocumentTagBlock;
+        this.type = BlockType.StickyTabBlock;
         this.metadata = {
             active: false,
             side: "left",
@@ -159,21 +158,20 @@ export class DocumentTagBlock extends AbstractBlock {
         this.setBlockSchemas(this.getBlockSchemas());
     }
     toggleActiveState() {
-        const active = this.metadata.active;
-        if (active) {
-            this.metadata.active = false;
-            this.hidePanel();
-        } else {
-            this.metadata.active = true;
+        this.metadata.active = !this.metadata.active;
+        this.updatePanelVisibility();
+    }
+    updatePanelVisibility() {
+        if (this.metadata.active) {
             this.showPanel();
+        } else {
+            this.hidePanel();
         }
     }
     showPanel(){
         this.container.classList.add("active");
-        this.container.classList.remove("inactive");
     }
     hidePanel() {
-        this.container.classList.add("inactive");
         this.container.classList.remove("active");
     }
     getBlockSchemas() {
@@ -183,9 +181,9 @@ export class DocumentTagBlock extends AbstractBlock {
     }
     static getBlockBuilder() {
         return {
-            type: BlockType.DocumentTagBlock,
+            type: BlockType.StickyTabBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
-                const block = new DocumentTagBlock({ manager, ...dto });
+                const block = new StickyTabBlock({ manager, ...dto });
                 if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
                 block.applyBlockPropertyStyling();
                 block.build();
@@ -201,21 +199,17 @@ export class DocumentTagBlock extends AbstractBlock {
         ];
     }
     build() {
-        updateElement(this.container, { classList: ["document-tag-label-block"] });
+        updateElement(this.container, { classList: ["sticky-tab-panel"] });
         this.update();
     }
     update() {
-        if (this.metadata.active) {
-            this.showPanel();
-        } else {
-            this.hidePanel();
-        }
+        this.updatePanelVisibility();
     }
     renderTag() {
         const self = this;
         const container = document.createElement("DIV") as HTMLDivElement;
-        const { text, html, color, backgroundColor } = (this.metadata as IDocumentTagBlockMetadata);
-        container.classList.add("document-tag-label-block");
+        const { text, html, color, backgroundColor } = (this.metadata as IStickyTabBlockMetadata);
+        container.classList.add("sticky-tab-label-block");
         if (color) {
             updateElement(container, { style: { "color": color } });
         }
@@ -232,12 +226,16 @@ export class DocumentTagBlock extends AbstractBlock {
             e.preventDefault();
             const row = self.getRow();
             row.hideAllTagPanels();
-            self.toggleActiveState();
+            self.setActive();
         });
         return container;
     }
+    setActive() {
+        this.metadata.active = true;
+        this.updatePanelVisibility();
+    }
     getRow() {
-        return this.relation.parent as DocumentTagRowBlock;
+        return this.relation.parent as StickyTabRowBlock;
     }
     bind(data: IBlockDto) {
         this.id = data.id || uuidv4();

@@ -38,22 +38,16 @@ export interface IndexedBlock {
 
 export interface IPageBlockConstructor extends IAbstractBlockConstructor {}
 
-
 export class PageBlock extends AbstractBlock {
     index: IndexedBlock[];
     textProcessor: TextProcessor;
     state: string;
-    //styleBar: StyleBarBlock;
     constructor(args: IPageBlockConstructor) {
         super(args);
         this.type = BlockType.PageBlock;
         this.state = BlockState.initalising;
         this.metadata = args.metadata || {};
         this.index = [];
-        // this.styleBar = new StyleBarBlock({
-        //     manager: this.manager,
-        //     document: this
-        // });
         this.textProcessor = new TextProcessor();
         this.inputEvents = this.getInputEvents();
         this.setBlockSchemas(this.getBlockSchemas());
@@ -189,38 +183,6 @@ export class PageBlock extends AbstractBlock {
                 name: "Top margin - 40",
                 decorate: {
                     blockClass: "block_margin_top_40px"
-                }
-            },
-            {
-                type: "block/text-size/h1",
-                name: "H1",
-                description: "",
-                decorate: {
-                    blockClass: "block_text-size_h1"
-                }
-            },
-            {
-                type: "block/text-size/h2",
-                name: "H2",
-                description: "",
-                decorate: {
-                    blockClass: "block_text-size_h2"
-                }
-            },
-            {
-                type: "block/text-size/h3",
-                name: "H3",
-                description: "",
-                decorate: {
-                    blockClass: "block_text-size_h3"
-                }
-            },
-            {
-                type: "block/text-size/h4",
-                name: "H4",
-                description: "",
-                decorate: {
-                    blockClass: "block_text-size_h4"
                 }
             },
             {

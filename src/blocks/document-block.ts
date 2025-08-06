@@ -3,17 +3,17 @@ import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../libr
 import { UniverseBlock } from '../universe-block';
 import { DocumentTabRowBlock } from './document-tabs-block';
 
-export class MembraneBlock extends AbstractBlock {
+export class DocumentBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
-        this.type = BlockType.MembraneBlock;
+        this.type = BlockType.DocumentBlock;
     }
     static getBlockBuilder() {
         return {
-            type: BlockType.MembraneBlock,
+            type: BlockType.DocumentBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
-                let test = {...dto, type: BlockType.MembraneBlock };
-                const block = new MembraneBlock({ manager, ...test });
+                let test = {...dto, type: BlockType.DocumentBlock };
+                const block = new DocumentBlock({ manager, ...test });
                 if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
                 block.applyBlockPropertyStyling();
                 await manager.buildChildren(block, dto);

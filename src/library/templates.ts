@@ -2,7 +2,7 @@ import { BlockType } from "./types";
 
 export const Template = {
     EmptyDocument: {
-        type: BlockType.MembraneBlock,
+        type: BlockType.DocumentBlock,
         children: [
             {
                 type: BlockType.PageBlock,

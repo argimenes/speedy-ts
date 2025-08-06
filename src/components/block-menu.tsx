@@ -12,8 +12,8 @@ import { IndentedListBlock } from "../blocks/indented-list-block";
 import { DocumentWindowBlock } from "../blocks/document-window-block";
 import { DocumentTabBlock, DocumentTabRowBlock } from "../blocks/document-tabs-block";
 import { PocketBlock } from "../blocks/pocket-block";
-import { MembraneBlock } from "../blocks/membrane-block";
-import { DocumentTagRowBlock } from "../blocks/sticky-block";
+import { DocumentBlock } from "../blocks/document-block";
+import { StickyTabRowBlock } from "../blocks/sticky-tab-block";
 
 type Props = {
     items: ContextMenuItem[];
@@ -119,13 +119,13 @@ export class BlockMenuBlock extends AbstractBlock {
       this.manager.reindexAncestorDocument(parent);
     }
     async addTag() {
-      const membrane = this.manager.getParentOfType(this.source, BlockType.MembraneBlock) as MembraneBlock;
-      let tagRow = this.manager.registeredBlocks.find(b => b.type == BlockType.DocumentTagRowBlock) as DocumentTagRowBlock;
+      const membrane = this.manager.getParentOfType(this.source, BlockType.DocumentBlock) as DocumentBlock;
+      let tagRow = this.manager.registeredBlocks.find(b => b.type == BlockType.StickyTabRowBlock) as StickyTabRowBlock;
       if (!tagRow) {
         const dto = {
-          type: BlockType.DocumentTagRowBlock
+          type: BlockType.StickyTabRowBlock
         };
-        tagRow = await this.manager.recursivelyBuildBlock(this.newContainer(), dto) as DocumentTagRowBlock;
+        tagRow = await this.manager.recursivelyBuildBlock(this.newContainer(), dto) as StickyTabRowBlock;
         membrane.blocks.push(tagRow);
         membrane.container.appendChild(tagRow.container);
         this.manager.generateParentSiblingRelations(membrane);
@@ -288,7 +288,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const insidePage = !!this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock);
       const insideIndentedList = !!this.manager.getParentOfType(this.source, BlockType.IndentedListBlock);
       const isBackground = this.source.type.toLowerCase().indexOf("background") >= 0;
-      const insideMembrane = !!this.manager.getParentOfType(this.source, BlockType.MembraneBlock);
+      const insideMembrane = !!this.manager.getParentOfType(this.source, BlockType.DocumentBlock);
       const insidePocket = !!this.manager.getParentOfType(this.source, BlockType.PocketBlock);
 
       if (insideMembrane) {
@@ -545,7 +545,7 @@ export class BlockMenuBlock extends AbstractBlock {
         /**
          * File
          */
-        const membrane = this.manager.getParentOfType(this.source, BlockType.MembraneBlock) as MembraneBlock;
+        const membrane = this.manager.getParentOfType(this.source, BlockType.DocumentBlock) as DocumentBlock;
         const itemSave = {
               label: "Save",
               icon: <IconDisc />,

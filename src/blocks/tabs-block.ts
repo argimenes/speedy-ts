@@ -4,7 +4,7 @@ import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, InputEvent, In
 import { UniverseBlock } from "../universe-block";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { PageBlock } from "./page-block";
-import { MembraneBlock } from "./membrane-block";
+import { DocumentBlock } from "./document-block";
 
 export class TabRowBlock extends AbstractBlock {
     header: HTMLDivElement;
@@ -207,10 +207,10 @@ export class TabBlock extends AbstractBlock {
         this.inputEvents = this.getTabBlockEvents();
     }
     extract() {
-        const mem = this.manager.getParentOfType(this, BlockType.MembraneBlock) as MembraneBlock;
+        const mem = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
         const dto = this.serialize();
         const extracted = {
-            type: BlockType.MembraneBlock,
+            type: BlockType.DocumentBlock,
             metadata: {
                 name: mem.metadata.name || "Extracted Tab",
                 filename: mem.metadata.filename || "extracted-tab.json",

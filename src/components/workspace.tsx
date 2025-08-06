@@ -24,9 +24,9 @@ import { CanvasBackgroundBlock } from "../blocks/canvas-background-block";
 import { YouTubeVideoBackgroundBlock } from "../blocks/youtube-video-background-block";
 import { CanvasBlock } from "../blocks/canvas-block";
 import { DocumentTabRowBlock, DocumentTabBlock } from "../blocks/document-tabs-block";
-import { MembraneBlock } from "../blocks/membrane-block";
+import { DocumentBlock } from "../blocks/document-block";
 import { PocketBlock } from "../blocks/pocket-block";
-import { DocumentTagBlock, DocumentTagRowBlock } from "../blocks/sticky-block";
+import { StickyTabBlock, StickyTabRowBlock } from "../blocks/sticky-tab-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -34,19 +34,25 @@ type Props = {
 export const BlockManagerWindow : Component<Props> = (props) => {
     const initialise = (el: HTMLDivElement) => {
         const doc2: IBlockDto = {
-            type: BlockType.MembraneBlock,
+            type: BlockType.DocumentBlock,
             children: [
                 {
-                    type: BlockType.DocumentTagRowBlock,
+                    type: BlockType.StickyTabRowBlock,
                     children: [
                         {
-                            type: BlockType.DocumentTagBlock,
+                            type: BlockType.StickyTabBlock,
                             metadata: {
                                 text: "1st tag"
-                            }
+                            },
+                            children: [
+                                {
+                                    type: BlockType.StandoffEditorBlock,
+                                    text: "Sticky tab block #1 ..."
+                                }
+                            ]
                         },
                         {
-                            type: BlockType.DocumentTagBlock,
+                            type: BlockType.StickyTabBlock,
                             metadata: {
                                 backgroundColor: "cyan",
                                 text: "2nd tag"
@@ -54,7 +60,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             children: [
                                 {
                                     type: BlockType.StandoffEditorBlock,
-                                    text: "Testy tester ..."
+                                    text: "Sticky tab block #2 ..."
                                 }
                             ]
                         }
@@ -1043,10 +1049,10 @@ const foo = (bar) => {
             VideoBackgroundBlock.getBlockBuilder(),
             ImageBackgroundBlock.getBlockBuilder(),
             WorkspaceBlock.getBlockBuilder(),
-            MembraneBlock.getBlockBuilder(),
+            DocumentBlock.getBlockBuilder(),
             PocketBlock.getBlockBuilder(),
-            DocumentTagBlock.getBlockBuilder(),
-            DocumentTagRowBlock.getBlockBuilder(),
+            StickyTabBlock.getBlockBuilder(),
+            StickyTabRowBlock.getBlockBuilder(),
         ]);
         workspace.createImageWorkspace();
         workspace.addMembraneToDocumentWindow(doc2).then();

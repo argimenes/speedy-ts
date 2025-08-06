@@ -33,7 +33,7 @@ import { BlockMenuBlock } from './components/block-menu';
 import { posix } from 'path';
 import { CanvasBlock } from './blocks/canvas-block';
 import { DocumentTabBlock, DocumentTabRowBlock } from './blocks/document-tabs-block';
-import { MembraneBlock } from './blocks/membrane-block';
+import { DocumentBlock } from './blocks/document-block';
 
 export type BlockBuilder =
     (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => Promise<IBlock>;
@@ -917,9 +917,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             return;
         }
         let dto = json.Data.document as IBlockDto;
-        if (dto.type != BlockType.MembraneBlock) {
+        if (dto.type != BlockType.DocumentBlock) {
             dto = {
-                type: BlockType.MembraneBlock,
+                type: BlockType.DocumentBlock,
                 metadata: {
                     filename,
                     folder
@@ -1447,7 +1447,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addBlockTo(background, documentWindow);
         background.container.appendChild(documentWindow.container);
         this.generateParentSiblingRelations(background);
-        const membrane = documentWindow.blocks[0] as MembraneBlock;
+        const membrane = documentWindow.blocks[0] as DocumentBlock;
         const index = flattenTree(documentWindow);
         const documents = index.filter(x => x.block.type == BlockType.PageBlock).map(x => x.block as PageBlock);
         const _this = this;
