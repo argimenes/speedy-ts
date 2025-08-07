@@ -147,7 +147,7 @@ export class PageBlock extends AbstractBlock {
                 dto
             ]
         } as IDocumentBlockDto;
-        const doc = await this.manager.addMembraneToDocumentWindow(docDto);
+        const doc = await this.manager.createDocumentWithWindow(docDto);
         await this.manager.saveServerDocument(doc.id, docDto.metadata.filename, metadata.folder);
     }
     getBlockSchemas() {

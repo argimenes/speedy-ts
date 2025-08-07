@@ -606,6 +606,9 @@ DOCUMENT TABS (PAGES)
   font-size: 1rem;
   text-align: right;
   padding-right: 5px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  margin-bottom: 3px;
 }
 .sticky-tab-panel {
     position: absolute;
@@ -617,7 +620,8 @@ DOCUMENT TABS (PAGES)
     z-index: 200;
     background-color: #fff;
     border: 1px solid #ccc;
-    border-radius: 5px;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 3px 5px;
 }
 .sticky-tab-panel.active {

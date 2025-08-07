@@ -160,9 +160,8 @@ export class ControlPanelBlock extends AbstractBlock {
             await manager.saveWorkspace();
         };
         const createDocument = async () => {
-            if (!manager) return;
-            const doc = Template.EmptyDocument;
-            await manager.addMembraneToDocumentWindow(doc);
+            const dto = Template.EmptyDocument;
+            await manager.createDocumentWithWindow(dto);
         }
         const setBackgroundColour = (colour: string) => {
             const prop = {

@@ -5,6 +5,9 @@ import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../libr
 import { UniverseBlock } from '../universe-block';
 import { PocketBlock } from './pocket-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
+import { random } from 'underscore';
+import { BlockPropertySchemas } from '../properties/block-properties';
+import { DocumentBlock } from './document-block';
 
 type BlockSide = "top"|"bottom"|"left"|"right";
 
@@ -37,16 +40,17 @@ export class StickyTabRowBlock extends AbstractBlock {
         ]
     }
     getNewTabColour() {
-        return "cyan";
+        const colours = ["#6CA0DC", "#A8E6A1", "#FDCB82", "#FFB6A0", "#A0E8B8", "#B9A7D0", "#FF8A80", "#FFDD82", "#00A9E0", "#D3A6D8", "#F2A7D4", "#FFF0D9"]
+        const len = colours.length - 1;
+        return colours[Math.floor(Math.random() * len)];
     }
-    async createNewTag() {
+    async createNewTab() {
         const total = this.blocks.length;
         const dto = {
             type: BlockType.StickyTabBlock,
             metadata: {
-                text: "Tab #" + total + 1,
-                backgroundColor: this.getNewTabColour(),
-                active: true
+                text: "Sticky tag #" + (total + 1),
+                backgroundColor: this.getNewTabColour()
             },
             children: [
                 {
@@ -54,7 +58,8 @@ export class StickyTabRowBlock extends AbstractBlock {
                     text: "",
                     standoffProperties: []
                 }
-            ]
+            ],
+            blockProperties: [{ type: "block/alignment", value: "left" }]
         };
         const tab = await this.manager.recursivelyBuildBlock(this.newContainer(), dto) as StickyTabBlock;
         this.blocks.push(tab);
@@ -66,11 +71,15 @@ export class StickyTabRowBlock extends AbstractBlock {
         this.manager.reindexAncestorDocument(this);
         return tab;
     }
-    async addTag() {
-        const tab = await this.createNewTag();
-        this.renderTagLabels();
-        this.hideAllTagPanels();
+    async addTab() {
+        const tab = await this.createNewTab();
+        this.renderTabLabels();
+        this.hideAllTabPanels();
         tab.setActive();
+    }
+    deleteTab(tab: StickyTabBlock) {
+        tab.destroy();
+        this.renderTabLabels();
     }
     static getBlockBuilder() {
         return {
@@ -81,13 +90,13 @@ export class StickyTabRowBlock extends AbstractBlock {
                 block.applyBlockPropertyStyling();
                 block.build();
                 await manager.buildChildren(block, dto);
-                block.renderTagLabels();
+                block.renderTabLabels();
                 container.appendChild(block.container);
                 return block;
             }
         };
     }
-    hideAllTagPanels() {
+    hideAllTabPanels() {
         this.blocks.forEach((tag: StickyTabBlock) => tag.setInactive());
     }
     getInputEvents() {
@@ -98,9 +107,9 @@ export class StickyTabRowBlock extends AbstractBlock {
     build() {
         updateElement(this.leftSide, { classList: ["sticky-tab-row-block"] });
         this.container.appendChild(this.leftSide);
-        this.hideAllTagPanels();
+        this.hideAllTabPanels();
     }
-    renderTagLabels() {
+    renderTabLabels() {
         /**
          * Essentially this should render all the labels for the child
          * DocumentTagBlocks
@@ -108,10 +117,8 @@ export class StickyTabRowBlock extends AbstractBlock {
         const self = this;
         self.leftSide.innerHTML = null;
         const tags = this.blocks.map((tag: StickyTabBlock) => tag.renderTag());
-        const tagHeight = 25;
         const frag = document.createDocumentFragment();
         tags.forEach((node, i) => {
-            //node.style.top = (i * tagHeight) + "px";
             frag.appendChild(node);
         });
         this.leftSide.appendChild(frag);
@@ -210,6 +217,35 @@ export class StickyTabBlock extends AbstractBlock {
             
         ];
     }
+    deleteTab() {
+        const row = this.getRow();
+        row.deleteTab(this);
+    }
+    setName(name: string) {
+        this.metadata.text = name;
+        this.getRow().renderTabLabels();
+    }
+    extract() {
+        const doc = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+        const tabDto = this.serialize();
+        const name = this.metadata.name || "Extracted Sticky Tab";
+        const extracted = {
+            type: BlockType.DocumentBlock,
+            metadata: {
+                name: name,
+                filename: doc.metadata.filename || "extracted-sticky-tab.json",
+                folder: doc.metadata.folder || "uploads"
+            },
+            children: [{
+                type: BlockType.PageBlock,
+                metadata: {
+                    name: name
+                },
+                children: [tabDto]
+            }]
+        };
+        this.manager.createDocumentWithWindow(extracted);
+    }
     build() {
         updateElement(this.container, { classList: ["sticky-tab-panel"] });
         this.update();
@@ -237,8 +273,9 @@ export class StickyTabBlock extends AbstractBlock {
         container.addEventListener("click", (e) => {
             e.preventDefault();
             const row = self.getRow();
-            row.hideAllTagPanels();
-            if (!self.metadata.active) {
+            const active = self.metadata.active;
+            row.hideAllTabPanels();
+            if (!active) {
                 self.setActive();
             }
         });

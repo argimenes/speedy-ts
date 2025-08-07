@@ -927,7 +927,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 children: [dto]
             };
         }
-        await this.addMembraneToDocumentWindow(dto);
+        await this.createDocumentWithWindow(dto);
     }
     turnRightRotateBlockProperty() {
         const block = this.getBlockInFocus();
@@ -1419,11 +1419,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             headers: { "Content-Type": "application/json" }
         }).then();
     }
-    async addMembraneToDocumentWindow(dto: IMainListBlockDto) {
-        const container = document.createElement("DIV") as HTMLDivElement;
-        const count = this.registeredBlocks.filter(x => x.type == BlockType.DocumentWindowBlock).length;
-        const buffer = count * 20;
-        const documentWindow = await this.recursivelyBuildBlock(container, {
+    async createDocumentWithWindow(dto: IMainListBlockDto) {
+        const totalWindows = this.registeredBlocks.filter(x => x.type == BlockType.DocumentWindowBlock).length;
+        const buffer = totalWindows * 20;
+        const documentWindow = await this.recursivelyBuildBlock(this.newContainer(), {
             type: BlockType.DocumentWindowBlock,
             metadata: {
                 title: dto.metadata?.filename,
@@ -1447,11 +1446,11 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.addBlockTo(background, documentWindow);
         background.container.appendChild(documentWindow.container);
         this.generateParentSiblingRelations(background);
-        const membrane = documentWindow.blocks[0] as DocumentBlock;
+        const doc = documentWindow.blocks[0] as DocumentBlock;
         const index = flattenTree(documentWindow);
-        const documents = index.filter(x => x.block.type == BlockType.PageBlock).map(x => x.block as PageBlock);
+        const pages = index.filter(x => x.block.type == BlockType.PageBlock).map(x => x.block as PageBlock);
         const _this = this;
-        documents.forEach(async doc => {
+        pages.forEach(async doc => {
             const entities = await doc.getEntities();
             const props = doc.getAllStandoffPropertiesByType("codex/entity-reference");
             props.forEach(p => {
@@ -1466,8 +1465,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 lastChange: Date.now()
             };
         });
-        membrane.setFocus();
-        return membrane;
+        doc.setFocus();
+        return doc;
     }
     takeSnapshot(id: string) {
         const block = this.getBlock(id);

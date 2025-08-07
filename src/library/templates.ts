@@ -6,14 +6,11 @@ export const Template = {
         children: [
             {
                 type: BlockType.PageBlock,
-                children: [
-                    {
-                        type: BlockType.StandoffEditorBlock
-                    }
-                ],
-                blockProperties: [
-                    { type: "block/alignment/left "}
-                ]
+                metadata: {
+                    name: "Main Page"
+                },
+                children: [{ type: BlockType.StandoffEditorBlock }],
+                blockProperties: [ { type: "block/alignment/left "} ]
             }
         ]
     }

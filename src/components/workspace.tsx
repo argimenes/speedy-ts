@@ -42,12 +42,12 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                         {
                             type: BlockType.StickyTabBlock,
                             metadata: {
-                                text: "1st tag"
+                                text: "Sticky tag #1"
                             },
                             children: [
                                 {
                                     type: BlockType.StandoffEditorBlock,
-                                    text: "Sticky tab block #1 ..."
+                                    text: "Test text for Sticky Tag #1 ..."
                                 }
                             ]
                         },
@@ -55,12 +55,12 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                             type: BlockType.StickyTabBlock,
                             metadata: {
                                 backgroundColor: "cyan",
-                                text: "2nd tag"
+                                text: "Sticky tag #2"
                             },
                             children: [
                                 {
                                     type: BlockType.StandoffEditorBlock,
-                                    text: "Sticky tab block #2 ..."
+                                    text: "Test text for Sticky Tag #2 ..."
                                 }
                             ]
                         }
@@ -1055,7 +1055,7 @@ const foo = (bar) => {
             StickyTabRowBlock.getBlockBuilder(),
         ]);
         workspace.createImageWorkspace();
-        workspace.addMembraneToDocumentWindow(doc2).then();
+        workspace.createDocumentWithWindow(doc2).then();
         props.getInstance(workspace);
         console.log("== GLOBAL ==", { manager: workspace, block: workspace.blocks[0] })
     }

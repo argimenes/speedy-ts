@@ -13,7 +13,7 @@ import { DocumentWindowBlock } from "../blocks/document-window-block";
 import { DocumentTabBlock, DocumentTabRowBlock } from "../blocks/document-tabs-block";
 import { PocketBlock } from "../blocks/pocket-block";
 import { DocumentBlock } from "../blocks/document-block";
-import { StickyTabRowBlock } from "../blocks/sticky-tab-block";
+import { StickyTabBlock, StickyTabRowBlock } from "../blocks/sticky-tab-block";
 
 type Props = {
     items: ContextMenuItem[];
@@ -119,18 +119,18 @@ export class BlockMenuBlock extends AbstractBlock {
       this.manager.reindexAncestorDocument(parent);
     }
     async addTag() {
-      const membrane = this.manager.getParentOfType(this.source, BlockType.DocumentBlock) as DocumentBlock;
-      let tagRow = this.manager.registeredBlocks.find(b => b.type == BlockType.StickyTabRowBlock) as StickyTabRowBlock;
-      if (!tagRow) {
+      const doc = this.manager.getParentOfType(this.source, BlockType.DocumentBlock) as DocumentBlock;
+      let row = this.manager.registeredBlocks.find(b => b.type == BlockType.StickyTabRowBlock) as StickyTabRowBlock;
+      if (!row) {
         const dto = {
           type: BlockType.StickyTabRowBlock
         };
-        tagRow = await this.manager.recursivelyBuildBlock(this.newContainer(), dto) as StickyTabRowBlock;
-        membrane.blocks.push(tagRow);
-        membrane.container.appendChild(tagRow.container);
-        this.manager.generateParentSiblingRelations(membrane);
+        row = await this.manager.recursivelyBuildBlock(this.newContainer(), dto) as StickyTabRowBlock;
+        doc.blocks.push(row);
+        doc.container.appendChild(row.container);
+        this.manager.generateParentSiblingRelations(doc);
       }
-      await tagRow.addTag();
+      await row.addTab();
     }
     async convertToList() {
       await this.doc.indentBlock({ block: this.source })
@@ -192,6 +192,15 @@ export class BlockMenuBlock extends AbstractBlock {
       page.setName(name);
       page.setActive();
     }
+    renameStickyTab(name: string) {
+      const page = this.manager.getParentOfType(this.source, BlockType.StickyTabBlock) as StickyTabBlock;
+      page.setName(name);
+      page.setActive();
+    }
+    deleteStickyTab() {
+      const tab = this.manager.getParentOfType(this.source, BlockType.StickyTabBlock) as StickyTabBlock;
+      tab.deleteTab();
+    }
     deleteTab() {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
       tab.deleteTab();
@@ -218,7 +227,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const win = this.manager.getParentOfType(this.source, BlockType.DocumentWindowBlock);
       const block = win.blocks[0];
       const dto = block.serialize();
-      this.manager.addMembraneToDocumentWindow(dto);
+      this.manager.createDocumentWithWindow(dto);
     }
     addGridRow() {
       const row = this.manager.getParentOfType(this.source, BlockType.GridRowBlock) as GridRowBlock;
@@ -288,10 +297,11 @@ export class BlockMenuBlock extends AbstractBlock {
       const insidePage = !!this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock);
       const insideIndentedList = !!this.manager.getParentOfType(this.source, BlockType.IndentedListBlock);
       const isBackground = this.source.type.toLowerCase().indexOf("background") >= 0;
-      const insideMembrane = !!this.manager.getParentOfType(this.source, BlockType.DocumentBlock);
+      const insideDocument = !!this.manager.getParentOfType(this.source, BlockType.DocumentBlock);
       const insidePocket = !!this.manager.getParentOfType(this.source, BlockType.PocketBlock);
+      const insideStickyTag = !!this.manager.getParentOfType(this.source, BlockType.StickyTabBlock);
 
-      if (insideMembrane) {
+      if (insideDocument) {
         const itemDeleteBlock= {
             type: "item", 
             label: "Delete Block",
@@ -364,7 +374,7 @@ export class BlockMenuBlock extends AbstractBlock {
         const itemAddTag = {
               label: "Add tag",
               icon: <IconTag />,
-              onClick: () => self.addTag()
+              onClick: () => self.addTag(),
         };
         const itemDestructureGrid = {
               label: "Destructure grid",
@@ -507,6 +517,30 @@ export class BlockMenuBlock extends AbstractBlock {
               icon: <IconTrash />,
               onClick: () => self.deletePage()
         };
+        /***
+         * Sticky Tags
+         */
+        const itemDeleteTag = {
+              label: "Delete",
+              icon: <IconTrash />,
+              onClick: async () => self.deleteStickyTab()
+        };
+        const itemRenameStickyTab = {
+              label: "Rename",
+              icon: <IconEdit />,
+              children: [
+                {
+                  type: "input",
+                  value: () => {
+                    const tab = self.manager.getParentOfType(self.source, BlockType.StickyTabBlock) as StickyTabBlock;
+                    return tab.metadata.name;
+                  },
+                  onInput: (name: string) => {
+                    self.renameStickyTab(name);
+                  }
+                }
+              ]
+        };
         /**
          * Pockets
          */
@@ -613,10 +647,14 @@ export class BlockMenuBlock extends AbstractBlock {
           icon: <IconTag />,
           label: "Tags",
           children: [
-            itemAddTag,
-            itemDeleteTab
+            itemAddTag
           ]
         };
+        if (insideStickyTag) {
+          itemTagsMenu.children.push(itemRenameStickyTab as any);
+          itemTagsMenu.children.push(itemDeleteTag);
+          
+        }
         const itemPagesMenu = {
           type: "item",
           label: "Pages",
