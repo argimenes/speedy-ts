@@ -92,6 +92,10 @@ export class BlockMenuBlock extends AbstractBlock {
       const grid = this.manager.getParentOfType(this.source, BlockType.GridBlock) as GridBlock;
       grid.destructure();
     }
+    extractStickyTab() {
+      const tab = this.manager.getParentOfType(this.source, BlockType.StickyTabBlock) as StickyTabBlock;
+      tab.extract();
+    }
     extractTab() {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
       tab.extract();
@@ -396,6 +400,11 @@ export class BlockMenuBlock extends AbstractBlock {
               icon: <IconStackPop />,
               onClick: () => self.extractPage()
         };
+        const itemExtractStickyTab = {
+              label: "Extract",
+              icon: <IconStackPop />,
+              onClick: () => self.extractStickyTab()
+        };
         const itemDestructureIndentedList = {
               label: "Destructure list",
               icon: <IconStackPop />,
@@ -533,7 +542,7 @@ export class BlockMenuBlock extends AbstractBlock {
                   type: "input",
                   value: () => {
                     const tab = self.manager.getParentOfType(self.source, BlockType.StickyTabBlock) as StickyTabBlock;
-                    return tab.metadata.name;
+                    return tab.metadata.text;
                   },
                   onInput: (name: string) => {
                     self.renameStickyTab(name);
@@ -652,8 +661,8 @@ export class BlockMenuBlock extends AbstractBlock {
         };
         if (insideStickyTag) {
           itemTagsMenu.children.push(itemRenameStickyTab as any);
+          itemTagsMenu.children.push(itemExtractStickyTab as any);
           itemTagsMenu.children.push(itemDeleteTag);
-          
         }
         const itemPagesMenu = {
           type: "item",
