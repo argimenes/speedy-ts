@@ -608,12 +608,18 @@ DOCUMENT TABS (PAGES)
   padding-right: 5px;
 }
 .sticky-tab-panel {
-    position: fixed;
+    position: absolute;
     display: none;
     top: 0;
-    left: 0;
-    width: 400px;
-    height: 400px;
+    left: -250px;
+    width: 250px;
+    height: 250px;
     z-index: 200;
     background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 3px 5px;
+}
+.sticky-tab-panel.active {
+  display: block;
 }

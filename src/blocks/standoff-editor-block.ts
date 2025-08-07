@@ -12,6 +12,7 @@ import BlockVines from "../library/plugins/block-vines";
 import { UniverseBlock } from "../universe-block";
 import { ClockPlugin } from "../library/plugins/clock";
 import { BlockPropertySchemas } from "../properties/block-properties";
+import { DocumentBlock } from "./document-block";
 
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     const map = new Map();
@@ -98,22 +99,25 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.standoffProperties = [];
         this.selections = [];
         this.inputEvents = [
-            // {
-            //     mode: "default",
-            //     trigger: {
-            //         source: InputEventSource.Custom,
-            //         match: "contextmenu"
-            //     },
-            //     action: {
-            //         name: "Context Menu.",
-            //         description: "",
-            //         handler: async (args: IBindingHandlerArgs) => {
-            //             const block = args.block;
-            //             const manager = block.manager as UniverseBlock;
-            //             manager.loadBlockMenu(args);
-            //         }
-            //     }
-            // }
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Keyboard,
+                    match: "Enter"
+                },
+                action: {
+                    name: "Create a new text block. Move text to the right of the caret into the new block.",
+                    description: `
+                        
+                    `,
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        const manager = block.manager;
+                        const page = manager.registeredBlocks.find(x => x.type == BlockType.PageBlock) as PageBlock;
+                        page && await page.handleEnterKey(args);
+                    }
+                }
+            }
         ];
         this.setSchemas(this.getStandoffSchemas());
         this.setBlockSchemas(this.getBlockSchemas());

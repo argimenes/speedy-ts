@@ -59,7 +59,7 @@ export class StickyTabRowBlock extends AbstractBlock {
         const tab = await this.manager.recursivelyBuildBlock(this.newContainer(), dto) as StickyTabBlock;
         this.blocks.push(tab);
         this.container.appendChild(tab.container);
-        const textBlock = this.blocks[0] as StandoffEditorBlock;
+        const textBlock = tab.blocks[0] as StandoffEditorBlock;
         this.manager.setBlockFocus(textBlock);
         textBlock.setCaret(0);
         this.manager.generateParentSiblingRelations(this);
@@ -88,7 +88,7 @@ export class StickyTabRowBlock extends AbstractBlock {
         };
     }
     hideAllTagPanels() {
-        this.blocks.forEach((tag: StickyTabBlock) => tag.hidePanel());
+        this.blocks.forEach((tag: StickyTabBlock) => tag.setInactive());
     }
     getInputEvents() {
         return [
@@ -170,9 +170,21 @@ export class StickyTabBlock extends AbstractBlock {
     }
     showPanel(){
         this.container.classList.add("active");
+        const row = this.getRow();
+        const i = row.blocks.findIndex(x => x.clientId == this.clientId) + 1;
+        updateElement(this.container, {
+            style: {
+                top: (i * 25) + "px"
+            }
+        });
     }
     hidePanel() {
         this.container.classList.remove("active");
+        updateElement(this.container, {
+            style: {
+                top: "0px"
+            }
+        });
     }
     getBlockSchemas() {
         return [
@@ -226,12 +238,18 @@ export class StickyTabBlock extends AbstractBlock {
             e.preventDefault();
             const row = self.getRow();
             row.hideAllTagPanels();
-            self.setActive();
+            if (!self.metadata.active) {
+                self.setActive();
+            }
         });
         return container;
     }
     setActive() {
         this.metadata.active = true;
+        this.updatePanelVisibility();
+    }
+    setInactive() {
+        this.metadata.active = false;
         this.updatePanelVisibility();
     }
     getRow() {
