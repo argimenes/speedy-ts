@@ -3,7 +3,7 @@ import _ from 'underscore';
 import { updateElement } from '../library/svg';
 import { BlockProperty } from '../library/block-property';
 import { KEYS } from '../library/keyboard';
-import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET, UniverseBlockEvent, IBindingHandlerArgs, Caret } from '../library/types';
+import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET, UniverseBlockEvent, IBindingHandlerArgs, Caret, EventType } from '../library/types';
 import { UniverseBlock } from '../universe-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
 
@@ -109,6 +109,9 @@ export abstract class AbstractBlock implements IBlock {
         this.blockProperties.splice(bi, 1);
         if (!this.blockProperties?.length) this.blockProperties = [];
         prop.isDeleted = true;
+    }
+    triggerBeforeChange() {
+        this.publish(EventType.beforeChange);
     }
     addOverlay(name: string) {
         const blockIndex = 100;
