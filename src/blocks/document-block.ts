@@ -682,9 +682,7 @@ export class DocumentBlock extends AbstractBlock {
         history.undoStack = [];
         history.redoStack = [];
     }
-    triggerBeforeChange() {
-        this.publish(EventType.beforeChange);
-    }
+    
     getInputEvents() {
         const _this = this;
         return [

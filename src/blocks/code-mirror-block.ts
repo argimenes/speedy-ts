@@ -1,6 +1,6 @@
 import {basicSetup, EditorView} from "codemirror"
 import {javascript} from "@codemirror/lang-javascript"
-import { IAbstractBlockConstructor, BlockType, ICodeMirrorBlockDto, IBlock, IBlockDto } from "../library/types";
+import { IAbstractBlockConstructor, BlockType, ICodeMirrorBlockDto, IBlock } from "../library/types";
 import { AbstractBlock } from "./abstract-block";
 import { UniverseBlock } from "../universe-block";
 

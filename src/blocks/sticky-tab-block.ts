@@ -3,11 +3,8 @@ import { updateElement } from "../library/svg";
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { UniverseBlock } from '../universe-block';
-import { PocketBlock } from './pocket-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
-import { random } from 'underscore';
-import { BlockPropertySchemas } from '../properties/block-properties';
-import { DocumentBlock } from './page-block';
+import { DocumentBlock } from './document-block';
 
 type BlockSide = "top"|"bottom"|"left"|"right";
 

@@ -1,7 +1,6 @@
 import { Component, For, onCleanup, Show } from "solid-js";
 import { StandoffProperty } from "../library/standoff-property";
 import { createStore } from "solid-js/store";
-
 import { IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { updateElement } from "../library/svg";

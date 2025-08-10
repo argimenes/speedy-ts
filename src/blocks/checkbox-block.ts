@@ -1,11 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
-import { BlockType, IBlockDto, IBlock, IAbstractBlockConstructor, InputEventSource, IArrowNavigation, Caret, CARET, IRange } from "../library/types";
-import { PageBlock } from './document-block';
+import { BlockType, IBlockDto, IBlock, IAbstractBlockConstructor, InputEventSource, IArrowNavigation } from "../library/types";
 import { TabBlock, TabRowBlock } from './tabs-block';
 import { createElement, updateElement } from '../library/svg';
 import { AbstractBlock } from './abstract-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
 import { UniverseBlock } from '../universe-block';
+import { DocumentBlock } from './document-block';
 
 export interface ICheckBlockConstructor extends IAbstractBlockConstructor {
     checked?: boolean;
@@ -78,7 +78,7 @@ export class CheckboxBlock extends AbstractBlock {
     setupEventHandlers() {
         const self = this;
         this.checkbox.addEventListener("change", () => {
-            self.manager?.triggerBeforeChange();
+            self.triggerBeforeChange();
             self.checked = !self.checked;
         });
     }
@@ -105,7 +105,7 @@ export class CheckboxBlock extends AbstractBlock {
     handleArrowUp(args: IArrowNavigation): void {
         const self = this;
         const manager = args.manager;
-        const root = manager.getParentOfType(this, BlockType.PageBlock) as PageBlock;
+        const root = manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
         const index = root.index;
         const ci = index.findIndex(x => x.block.id == self.id);
         if (ci <= 0) return;
@@ -126,10 +126,12 @@ export class CheckboxBlock extends AbstractBlock {
             window.scrollBy(0, -1 * (previousRect.bottom + 25));
         }
     }
+    getDocument() {
+        return this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+    }
     handleArrowDown(args: IArrowNavigation) {
         const self = this;
-        const manager = args.manager;
-        const root = manager.getParentOfType(this, BlockType.PageBlock) as PageBlock;
+        const root = this.getDocument();
         const index = root.index;
         const ci = index.findIndex(x => x.block.id == self.id);
         if (ci == -1) {

@@ -5,14 +5,13 @@ import { StandoffProperty } from "../library/standoff-property";
 import { AbstractBlock } from "./abstract-block";
 import { Cell, Row } from "../library/cell";
 import { KEYS } from "../library/keyboard";
-import { BlockType, ICoordOffsets, IInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation, FindMatch, isStr, IBlockDto } from "../library/types";
-import { PageBlock } from "./document-block";
+import { BlockType, ICoordOffsets, IInput, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation, FindMatch, isStr, IBlockDto } from "../library/types";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 import BlockVines from "../library/plugins/block-vines";
 import { UniverseBlock } from "../universe-block";
 import { ClockPlugin } from "../library/plugins/clock";
 import { BlockPropertySchemas } from "../properties/block-properties";
-import { DocumentBlock } from "./page-block";
+import { DocumentBlock } from "./document-block";
 
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     const map = new Map();
@@ -113,8 +112,8 @@ export class StandoffEditorBlock extends AbstractBlock {
                     handler: async (args: IBindingHandlerArgs) => {
                         const block = args.block;
                         const manager = block.manager;
-                        const page = manager.registeredBlocks.find(x => x.type == BlockType.PageBlock) as PageBlock;
-                        page && await page.handleEnterKey(args);
+                        const doc = manager.registeredBlocks.find(x => x.type == BlockType.DocumentBlock) as DocumentBlock;
+                        doc && await doc.handleEnterKey(args);
                     }
                 }
             }
@@ -1369,7 +1368,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             return;
         }
         const manager = args.manager;
-        const root = manager.getParentOfType(this, BlockType.PageBlock) as PageBlock;
+        const root = manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
         const index = root.index;
         const ci = index.findIndex(x => x.block.id == self.id);
         if (ci <= 0) return;
@@ -1400,7 +1399,7 @@ export class StandoffEditorBlock extends AbstractBlock {
             return;
         }
         const manager = args.manager;
-        const root = manager.getParentOfType(this, BlockType.PageBlock) as PageBlock;
+        const root = manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
         const index = root.index;
         const ci = index.findIndex(x => x.block.id == self.id);
         if (ci == -1) {
@@ -1422,7 +1421,6 @@ export class StandoffEditorBlock extends AbstractBlock {
         next.moveCaretStart();
         const nextRect = next.container.getBoundingClientRect();
         const h = window.innerHeight;
-        //console.log("handleArrowDown", { nextRectTop: nextRect.top, h });
         const diff = h - nextRect.y;
         if (diff < 50) {
             window.scrollBy(0, nextRect.top - h + 50);

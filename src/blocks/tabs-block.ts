@@ -3,8 +3,7 @@ import { updateElement } from "../library/svg";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, InputEvent, InputEventSource, IBindingHandlerArgs, GUID, CARET } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { StandoffEditorBlock } from "./standoff-editor-block";
-import { PageBlock } from "./document-block";
-import { DocumentBlock } from "./page-block";
+import { DocumentBlock } from "./document-block";
 
 export class TabRowBlock extends AbstractBlock {
     header: HTMLDivElement;
@@ -207,14 +206,14 @@ export class TabBlock extends AbstractBlock {
         this.inputEvents = this.getTabBlockEvents();
     }
     extract() {
-        const mem = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
+        const doc = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
         const dto = this.serialize();
         const extracted = {
             type: BlockType.DocumentBlock,
             metadata: {
-                name: mem.metadata.name || "Extracted Tab",
-                filename: mem.metadata.filename || "extracted-tab.json",
-                folder: mem.metadata.folder || "uploads"
+                name: doc.metadata.name || "Extracted Tab",
+                filename: doc.metadata.filename || "extracted-tab.json",
+                folder: doc.metadata.folder || "uploads"
             },
             children: [
                 {

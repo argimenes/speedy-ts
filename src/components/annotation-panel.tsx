@@ -1,9 +1,9 @@
 import { createSignal, For, Match, Show, Switch } from "solid-js";
 import { renderToNode } from "../library/common";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
-import { IBlockDto, IBlock, IAbstractBlockConstructor, ISelection, InputEventSource } from "../library/types";
+import { IBlockDto, IBlock, IAbstractBlockConstructor, ISelection, InputEventSource, BlockType } from "../library/types";
 import { AbstractBlock } from "../blocks/abstract-block";
-
+import { DocumentBlock } from "../blocks/document-block";
 
 export interface IAnnotationPanelBlockConstructor extends IAbstractBlockConstructor {
     source: AbstractBlock;
@@ -138,13 +138,15 @@ export class AnnotationPanelBlock extends AbstractBlock {
             self.events.onClose();
         }
         const addTableClicked = (rows: number, cells: number) => {
-            const table = self.source.manager.createTable(rows, cells);
-            self.source.manager.addBlockAfter(table, self.source);
+            const doc = this.manager.getParentOfType(this.source, BlockType.DocumentBlock) as DocumentBlock;
+            const table = doc.createTable(rows, cells);
+            doc.addBlockAfter(table, self.source);
             self.destroy();
             self.events.onClose();
         }
         const bulletListClicked = () => {
-            self.source.manager?.indentBlock({ block: self.source });
+            const doc = this.manager.getParentOfType(this.source, BlockType.DocumentBlock) as DocumentBlock;
+            doc.indentBlock({ block: self.source });
             self.destroy();
             self.events.onClose();
         }
