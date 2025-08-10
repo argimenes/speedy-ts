@@ -617,6 +617,8 @@ DOCUMENT TABS (PAGES)
     left: -250px;
     width: 250px;
     height: 250px;
+    max-height: 250px;
+    overflow-y: auto;
     z-index: 200;
     background-color: #fff;
     border: 1px solid #ccc;
