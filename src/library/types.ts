@@ -59,7 +59,7 @@ export enum BlockType {
     UniverseBlock = "universe-block",
     WorkspaceBlock = "workspace-block",
     AbstractBlock = "root-block",
-    PageBlock = "main-list-block",
+    PageBlock = "page-block",
     IndentedListBlock = "indented-list-block",
     TabRowBlock = "tab-row-block",
     TabBlock = "tab-block",

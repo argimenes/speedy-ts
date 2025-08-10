@@ -41,7 +41,7 @@ export type StandoffEditorBlockDto = {
 export enum BlockType {
     BlockManagerBlock = "block-manager-block",
     AbstractBlock = "root-block",
-    DocumentBlock = "main-list-block",
+    DocumentBlock = "page-block",
     IndentedListBlock = "indented-list-block",
     TabRowBlock = "tab-row-block",
     TabBlock = "tab-block",

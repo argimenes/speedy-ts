@@ -1,5 +1,5 @@
 {
-    "type": "main-list-block",
+    "type": "page-block",
     "children": [
       {
         "type": "image-block",

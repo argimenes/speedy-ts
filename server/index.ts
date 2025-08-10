@@ -388,8 +388,8 @@ app.get('/api/indexAllDocumentsJson', async function(req: Request, res: Response
         const filepath = path.join(__dirname, baseDocumentPath, folder, filename);
         const data = fs.readFileSync(filepath, 'utf8');
         const doc = JSON.parse(data) as IBlockDto;
-        if (!doc || doc?.type != "main-list-block") {
-          console.log("main-list-block not found", { doc })
+        if (!doc || doc?.type != "page-block") {
+          console.log("page-block not found", { doc })
           continue;
         }
         await saveDocumentIndex(doc);

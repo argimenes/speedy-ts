@@ -44,7 +44,7 @@ export class DocumentBlock extends AbstractBlock {
     state: string;
     constructor(args: IDocumentBlockConstructor) {
         super(args);
-        this.type = BlockType.PageBlock;
+        this.type = BlockType.DocumentBlock;
         this.state = BlockState.initalising;
         this.metadata = args.metadata || {};
         this.index = [];
@@ -108,7 +108,7 @@ export class DocumentBlock extends AbstractBlock {
     }
     static getBlockBuilder() {
         return {
-            type: BlockType.PageBlock,
+            type: BlockType.DocumentBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
                 if (dto.metadata?.loadFromExternal) {
                     const res = await fetchGet("/api/loadDocumentJson", { folder: dto.metadata.folder, filename: dto.metadata.filename });
@@ -121,7 +121,6 @@ export class DocumentBlock extends AbstractBlock {
                 }
                 const document = new DocumentBlock({ ...dto, manager });
                 document.applyBlockPropertyStyling();
-                updateElement(document.container, { classList: ["document-container"] });
                 document.generateIndex();
                 await manager.buildChildren(document, dto);
                 container.appendChild(document.container);
@@ -135,10 +134,10 @@ export class DocumentBlock extends AbstractBlock {
     }
     async extractIntoNewDocument(id: GUID) {
         const block = this.manager.getBlock(id);
-        const { metadata } = this.manager.getParentOfType(block, BlockType.PageBlock);
+        const { metadata } = this.manager.getParentOfType(block, BlockType.DocumentBlock);
         const dto = block.serialize();
         const docDto = {
-            type: BlockType.PageBlock,
+            type: BlockType.DocumentBlock,
             metadata: {
               ...metadata,
               filename: `${block.type}-${id}.json`
@@ -598,7 +597,7 @@ export class DocumentBlock extends AbstractBlock {
     makeCheckbox(block: IBlock) {
         const manager = this.manager;
         this.triggerBeforeChange();
-        const root = manager.getParentOfType(block, BlockType.PageBlock);
+        const root = manager.getParentOfType(block, BlockType.DocumentBlock);
         const parent = block.relation.parent as AbstractBlock;
         const checkbox = manager.createCheckboxBlock();
         this.addBlockBefore(checkbox, block);

@@ -1,6 +1,7 @@
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { UniverseBlock } from '../universe-block';
+import { updateElement } from '../library/svg';
 
 export class PageBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
@@ -12,12 +13,13 @@ export class PageBlock extends AbstractBlock {
             type: BlockType.PageBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
                 let test = {...dto, type: BlockType.PageBlock };
-                const block = new PageBlock({ manager, ...test });
-                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
-                block.applyBlockPropertyStyling();
-                await manager.buildChildren(block, dto);
-                container.appendChild(block.container);
-                return block;
+                const page = new PageBlock({ manager, ...test });
+                if (dto?.blockProperties) page.addBlockProperties(dto.blockProperties);
+                page.applyBlockPropertyStyling();
+                await manager.buildChildren(page, dto);
+                updateElement(page.container, { classList: ["page-container"] });
+                container.appendChild(page.container);
+                return page;
             }
         };
     }

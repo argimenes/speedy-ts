@@ -118,7 +118,7 @@ body {
     flex-shrink: 0; /* Prevent header from resizing */
   } 
 
-  .document-container {
+  .page-container {
     overflow-x: auto;
     overflow-y: scroll;
     min-width: 800px;
