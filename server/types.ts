@@ -39,12 +39,24 @@ export type StandoffEditorBlockDto = {
     metadata?: {};
 }
 export enum BlockType {
-    BlockManagerBlock = "block-manager-block",
+    BlockMenu = "block-menu",
+    CanvasBlock = "canvas-block",
+    ContextMenuBlock = "context-menu-block",
+    CanvasBackgroundBlock = "canvas-background-block",
+    VideoBackgroundBlock = "video-background-block",
+    ImageBackgroundBlock = "image-background-block",
+    DocumentWindowBlock = "document-window-block",
+    WindowBlock = "window-block",
+    ControlPanelBlock = "control-panel-block",
+    UniverseBlock = "universe-block",
+    WorkspaceBlock = "workspace-block",
     AbstractBlock = "root-block",
-    DocumentBlock = "page-block",
+    PageBlock = "page-block",
     IndentedListBlock = "indented-list-block",
     TabRowBlock = "tab-row-block",
     TabBlock = "tab-block",
+    DocumentTabRowBlock = "document-tab-row-block",
+    DocumentTabBlock = "document-tab-block",
     TableBlock = "table-block",
     TableRowBlock = "table-row-block",
     TableCellBlock = "table-cell-block",
@@ -59,9 +71,14 @@ export enum BlockType {
     LeftMarginBlock = "left-margin-block",
     RightMarginBlock = "right-margin-block",
     ImageBlock = "image-block",
-    VideoBlock = "video-block",
+    PocketBlock = "pocket-block",
+    DocumentBlock = "document-block",
+    YouTubeVideoBlock = "youtube-video-block",
+    YouTubeVideoBackgroundBlock = "youtube-video-background-block",
     PlainTextBlock = "plain-text-block",
     CodeMirrorBlock = "code-mirror-block",
     CheckboxBlock = "checkbox-block",
-    EmbedDocumentBlock = "embed-document-block"
+    EmbedDocumentBlock = "embed-document-block",
+    StickyTabBlock = "sticky-tab-block",
+    StickyTabRowBlock = "sticky-tab-row-block"
 }
