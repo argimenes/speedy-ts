@@ -1,5 +1,4 @@
 import { createStore } from "solid-js/store";
-import { autofocus } from "@solid-primitives/autofocus";
 import { BlockType, FindMatch, IAbstractBlockConstructor, IBlock, IBlockDto, InputEventSource } from "../library/types";
 import { createSignal, Show } from "solid-js";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";

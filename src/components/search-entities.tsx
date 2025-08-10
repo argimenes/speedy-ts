@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 import { createStore } from "solid-js/store";
-import { autofocus } from "@solid-primitives/autofocus";
 import { FindMatch, GUID, IAbstractBlockConstructor, IBlock, IBlockDto, InputEventSource, ISelection } from "../library/types";
 import { createSignal, For } from "solid-js";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";

@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { BlockType, IBlockDto, IBlock, IAbstractBlockConstructor, InputEventSource, IArrowNavigation, Caret, CARET, IRange } from "../library/types";
-import { PageBlock } from './page-block';
+import { PageBlock } from './document-block';
 import { TabBlock, TabRowBlock } from './tabs-block';
 import { createElement, updateElement } from '../library/svg';
 import { AbstractBlock } from './abstract-block';

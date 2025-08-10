@@ -6,13 +6,13 @@ import { AbstractBlock } from "./abstract-block";
 import { Cell, Row } from "../library/cell";
 import { KEYS } from "../library/keyboard";
 import { BlockType, ICoordOffsets, IInput, InputEvent, IStandoffPropertySchema, ISelection, IStandoffEditorBlockConstructor, ModeTrigger, InputAction, Commit, Word, InputEventSource, Caret, CellHtmlElement, IBindingHandlerArgs, CellNode, ELEMENT_ROLE, BLOCK_POSITION, IRange, TPlatformKey, Platform, CARET, IStandoffEditorBlockDto, IBlockPropertySchema, RowPosition, IStandoffProperty, StandoffPropertyDto, IStandoffEditorBlockMonitor, IArrowNavigation, FindMatch, isStr, IBlockDto } from "../library/types";
-import { PageBlock } from "./page-block";
+import { PageBlock } from "./document-block";
 import { TabBlock, TabRowBlock } from "./tabs-block";
 import BlockVines from "../library/plugins/block-vines";
 import { UniverseBlock } from "../universe-block";
 import { ClockPlugin } from "../library/plugins/clock";
 import { BlockPropertySchemas } from "../properties/block-properties";
-import { DocumentBlock } from "./document-block";
+import { DocumentBlock } from "./page-block";
 
 function groupBy<T extends object> (list: T[], keyGetter: (item: T) => any){
     const map = new Map();

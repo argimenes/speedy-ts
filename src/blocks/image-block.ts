@@ -4,7 +4,7 @@ import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, CARET, IBindingHandlerArgs, InputEventSource, isStr } from '../library/types';
 import { UniverseBlock } from '../universe-block';
 import { BlockProperty } from '../library/block-property';
-import { PageBlock } from './page-block';
+import { PageBlock } from './document-block';
 
 export class ImageBlock extends AbstractBlock {
     image: HTMLImageElement;

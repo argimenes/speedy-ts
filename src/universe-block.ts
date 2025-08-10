@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { updateElement } from "./library/svg";
 import { v4 as uuidv4 } from 'uuid';
-import { PageBlock } from "./blocks/page-block";
 import { IndentedListBlock } from "./blocks/indented-list-block";
 import { TabBlock, TabRowBlock } from "./blocks/tabs-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "./blocks/grid-block";
@@ -10,7 +9,7 @@ import { YouTubeVideoBlock } from "./blocks/youtube-video-block";
 import { IframeBlock } from "./blocks/iframe-block";
 import { BlockProperty } from "./library/block-property";
 import { StandoffEditorBlock } from "./blocks/standoff-editor-block";
-import { IUniverseBlock,InputEvent, BlockType, IBlock, IBlockSelection, Commit, IUniverseBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, Command, CARET, RowPosition, IRange, Word, DIRECTION, ISelection, IStandoffPropertySchema, GUID, IBlockDto, IStandoffEditorBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IEmbedDocumentBlockDto, IPlugin, Caret, StandoffPropertyDto,  FindMatch, StandoffEditorBlockDto, BlockState, EventType, passoverClass, isStr, DocumentHistory, IMenuButtonBindingHandlerArgs, BlockPropertyDto } from "./library/types";
+import { IUniverseBlock,InputEvent, BlockType, IBlock, Commit, IUniverseBlockConstructor as IUniverseBlockConstructor, InputEventSource, IBindingHandlerArgs, IBatchRelateArgs, CARET, IRange, GUID, IBlockDto, IMainListBlockDto, PointerDirection, Platform, TPlatformKey, IPlainTextBlockDto, ICodeMirrorBlockDto, IPlugin, Caret, StandoffPropertyDto, StandoffEditorBlockDto, BlockState, passoverClass, DocumentHistory, BlockPropertyDto } from "./library/types";
 import { PlainTextBlock } from "./blocks/plain-text-block";
 import { EmbedDocumentBlock } from "./blocks/embed-document-block";
 import { fetchGet, flattenTree } from "./library/common";
@@ -28,11 +27,10 @@ import { ImageBackgroundBlock } from './blocks/image-background-block';
 import { VideoBackgroundBlock } from './blocks/video-background-block';
 import { UnknownBlock } from './blocks/unknown-block';
 import { ErrorBlock } from './blocks/error-block';
-import { CanvasBackgroundBlock } from './blocks/canvas-background-block';
 import { BlockMenuBlock } from './components/block-menu';
-import { posix } from 'path';
 import { CanvasBlock } from './blocks/canvas-block';
 import { DocumentTabBlock, DocumentTabRowBlock } from './blocks/document-tabs-block';
+import { PageBlock } from './blocks/page-block';
 import { DocumentBlock } from './blocks/document-block';
 
 export type BlockBuilder =
@@ -1156,14 +1154,14 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     async handleBuildingMarginBlocks(anchor: IBlock, blockDto: IBlockDto) {
         if (blockDto.relation?.leftMargin) {
-            const leftMargin = await this.recursivelyBuildBlock(anchor.container, blockDto.relation.leftMargin) as PageBlock;
+            const leftMargin = await this.recursivelyBuildBlock(anchor.container, blockDto.relation.leftMargin) as DocumentBlock;
             anchor.relation.leftMargin = leftMargin;
             leftMargin.relation.marginParent = anchor;
             this.stageLeftMarginBlock(leftMargin, anchor);
             leftMargin.generateIndex();
         }
         if (blockDto.relation?.rightMargin) {
-            const rightMargin = await this.recursivelyBuildBlock(anchor.container, blockDto.relation.rightMargin) as PageBlock;
+            const rightMargin = await this.recursivelyBuildBlock(anchor.container, blockDto.relation.rightMargin) as DocumentBlock;
             anchor.relation.rightMargin = rightMargin;
             rightMargin.relation.marginParent = anchor;
             this.stageRightMarginBlock(rightMargin, anchor);
@@ -1447,24 +1445,19 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         background.container.appendChild(documentWindow.container);
         this.generateParentSiblingRelations(background);
         const doc = documentWindow.blocks[0] as DocumentBlock;
-        const index = flattenTree(documentWindow);
-        const pages = index.filter(x => x.block.type == BlockType.PageBlock).map(x => x.block as PageBlock);
-        const _this = this;
-        pages.forEach(async doc => {
-            const entities = await doc.getEntities();
-            const props = doc.getAllStandoffPropertiesByType("codex/entity-reference");
-            props.forEach(p => {
-                let entity = entities.find(e => e.Guid == p.value);
-                if (!entity) return;
-                p.cache.entity = entity;
-            });
-            _this.history[doc.id] = {
-                id: doc.id,
-                redoStack: [],
-                undoStack: [],
-                lastChange: Date.now()
-            };
+        const entities = await doc.getEntities();
+        const props = doc.getAllStandoffPropertiesByType("codex/entity-reference");
+        props.forEach(p => {
+            let entity = entities.find(e => e.Guid == p.value);
+            if (!entity) return;
+            p.cache.entity = entity;
         });
+        this.history[doc.id] = {
+            id: doc.id,
+            redoStack: [],
+            undoStack: [],
+            lastChange: Date.now()
+        };
         doc.setFocus();
         return doc;
     }
@@ -1493,7 +1486,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             return;
         }
         container = container || document.createElement("DIV") as HTMLDivElement;
-        const doc = await this.recursivelyBuildBlock(container, dto) as PageBlock;
+        const doc = await this.recursivelyBuildBlock(container, dto) as DocumentBlock;
         doc.generateIndex();
         doc.setFocus();
     }
@@ -2001,8 +1994,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }
     }
     reindexAncestorDocument(descendant: IBlock) {
-        const root = (this.getParentOfType(descendant, BlockType.PageBlock) as PageBlock) || descendant as PageBlock;
-        if (root?.type == BlockType.PageBlock) {
+        const root = (this.getParentOfType(descendant, BlockType.DocumentBlock) as DocumentBlock) || descendant as DocumentBlock;
+        if (root?.type == BlockType.DocumentBlock) {
             root.generateIndex();
         }
     }

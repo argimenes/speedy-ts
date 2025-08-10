@@ -2,7 +2,7 @@ import { StyleBar, StyleBarBlock } from "../components/style-bar";
 import { BlockType, IBlockDto } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { AbstractBlock } from "./abstract-block";
-import { PageBlock } from "./page-block";
+import { PageBlock } from "./document-block";
 import { IWindowBlockConstructor, WindowBlock } from "./window-block";
 
 export interface IDocumentWindowBlockConstructor extends IWindowBlockConstructor {

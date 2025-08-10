@@ -4,8 +4,8 @@ import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, InputEvent, In
 import { UniverseBlock } from "../universe-block";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { Template } from "../library/templates";
-import { PageBlock } from "./page-block";
-import { DocumentBlock } from "./document-block";
+import { PageBlock } from "./document-block";
+import { DocumentBlock } from "./page-block";
 
 export class DocumentTabRowBlock extends AbstractBlock {
     header: HTMLDivElement;

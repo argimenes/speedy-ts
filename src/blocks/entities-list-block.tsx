@@ -8,7 +8,7 @@ import { render } from "solid-js/web";
 import _ from "underscore";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { AbstractBlock } from "../blocks/abstract-block";
-import { PageBlock } from "./page-block";
+import { PageBlock } from "./document-block";
 
 type StandoffPropertyGroup = {
     item: StandoffProperty;

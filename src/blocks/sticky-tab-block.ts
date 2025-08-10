@@ -7,7 +7,7 @@ import { PocketBlock } from './pocket-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
 import { random } from 'underscore';
 import { BlockPropertySchemas } from '../properties/block-properties';
-import { DocumentBlock } from './document-block';
+import { DocumentBlock } from './page-block';
 
 type BlockSide = "top"|"bottom"|"left"|"right";
 

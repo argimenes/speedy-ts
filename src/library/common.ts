@@ -1,6 +1,6 @@
 import { JSX } from "solid-js";
 import { render } from "solid-js/web";
-import { IndexedBlock } from "../blocks/page-block";
+import { IndexedBlock } from "../blocks/document-block";
 import { IBlock, BlockType } from "./types";
 const cache = {};
 

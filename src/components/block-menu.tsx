@@ -1,9 +1,8 @@
-import { IconFileText, IconImageInPicture, IconVideo, IconHtml, IconRectangle, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy, IconEaseOut, IconTag } from "@tabler/icons-solidjs";
+import { IconImageInPicture, IconVideo, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy, IconEaseOut, IconTag } from "@tabler/icons-solidjs";
 import { Component } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
 import { renderToNode } from "../library/common";
-import { PageBlock } from "../blocks/page-block";
 import { ContextMenu, ContextMenuItem } from "./context-menu";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { GridBlock, GridCellBlock, GridRowBlock } from "../blocks/grid-block";
@@ -12,8 +11,8 @@ import { IndentedListBlock } from "../blocks/indented-list-block";
 import { DocumentWindowBlock } from "../blocks/document-window-block";
 import { DocumentTabBlock, DocumentTabRowBlock } from "../blocks/document-tabs-block";
 import { PocketBlock } from "../blocks/pocket-block";
-import { DocumentBlock } from "../blocks/document-block";
 import { StickyTabBlock, StickyTabRowBlock } from "../blocks/sticky-tab-block";
+import { DocumentBlock } from "../blocks/document-block";
 
 type Props = {
     items: ContextMenuItem[];
@@ -43,7 +42,7 @@ interface IBlockMenuBlockConstructor extends IAbstractBlockConstructor {
 export class BlockMenuBlock extends AbstractBlock {
     contextMenuEvent: MouseEvent;
     source: IBlock;
-    doc: PageBlock;
+    doc: DocumentBlock;
     node: HTMLElement;
     constructor(args: IBlockMenuBlockConstructor){
         super(args);
@@ -53,7 +52,7 @@ export class BlockMenuBlock extends AbstractBlock {
         this.suppressEventHandlers = true;
         this.source = args.source;
         this.node = document.createElement("DIV") as HTMLElement;
-        this.doc = this.manager.getParentOfType(this.source, BlockType.PageBlock) as PageBlock;
+        this.doc = this.manager.getParentOfType(this.source, BlockType.DocumentBlock) as DocumentBlock;
     }
     serialize(): IBlockDto {
         return null;

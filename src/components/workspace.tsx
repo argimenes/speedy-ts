@@ -1,7 +1,6 @@
 import { Component } from "solid-js"
 import { UniverseBlock } from "../universe-block"
-import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto, ICheckBlockDto, StandoffPropertyDto } from "../library/types";
-import { PageBlock } from "../blocks/page-block";
+import { IBlockDto, BlockType, IStandoffEditorBlockDto, IMainListBlockDto, IPlainTextBlockDto, ICheckBlockDto } from "../library/types";
 import { WorkspaceBlock } from "../blocks/workspace-block";
 import { VideoBackgroundBlock } from "../blocks/video-background-block";
 import { ImageBackgroundBlock } from "../blocks/image-background-block";
@@ -24,9 +23,10 @@ import { CanvasBackgroundBlock } from "../blocks/canvas-background-block";
 import { YouTubeVideoBackgroundBlock } from "../blocks/youtube-video-background-block";
 import { CanvasBlock } from "../blocks/canvas-block";
 import { DocumentTabRowBlock, DocumentTabBlock } from "../blocks/document-tabs-block";
-import { DocumentBlock } from "../blocks/document-block";
 import { PocketBlock } from "../blocks/pocket-block";
 import { StickyTabBlock, StickyTabRowBlock } from "../blocks/sticky-tab-block";
+import { PageBlock } from "../blocks/page-block";
+import { DocumentBlock } from "../blocks/document-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -1039,9 +1039,9 @@ const foo = (bar) => {
             GridBlock.getBlockBuilder(),
             GridRowBlock.getBlockBuilder(),
             GridCellBlock.getBlockBuilder(),
-            PageBlock.getBlockBuilder(),
-            PageBlock.getLeftMarginBlockBuilder(),
-            PageBlock.getRightMarginBlockBuilder(),
+            DocumentBlock.getBlockBuilder(),
+            DocumentBlock.getLeftMarginBlockBuilder(),
+            DocumentBlock.getRightMarginBlockBuilder(),
             WindowBlock.getBlockBuilder(),
             DocumentWindowBlock.getBlockBuilder(),
             CanvasBackgroundBlock.getBlockBuilder(),
@@ -1049,7 +1049,7 @@ const foo = (bar) => {
             VideoBackgroundBlock.getBlockBuilder(),
             ImageBackgroundBlock.getBlockBuilder(),
             WorkspaceBlock.getBlockBuilder(),
-            DocumentBlock.getBlockBuilder(),
+            PageBlock.getBlockBuilder(),
             PocketBlock.getBlockBuilder(),
             StickyTabBlock.getBlockBuilder(),
             StickyTabRowBlock.getBlockBuilder(),

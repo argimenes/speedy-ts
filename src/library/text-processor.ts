@@ -2,7 +2,7 @@ import { BlockProperty } from "./block-property";
 import { Cell } from "./cell";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { BlockPropertyDto, BlockType, Caret, CARET, IBindingHandlerArgs, IPropertySchema, IRange, StandoffPropertyDto } from "./types";
-import { PageBlock } from "../blocks/page-block";
+import { PageBlock } from "../blocks/document-block";
 import urlRegex from 'url-regex-safe';
 
 export interface ITextProcessorConstructor {

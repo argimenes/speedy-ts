@@ -2,7 +2,7 @@ import { AbstractBlock } from "./abstract-block";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { updateElement } from "../library/svg";
-import { PageBlock } from "./page-block";
+import { PageBlock } from "./document-block";
 
 export class IndentedListBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
