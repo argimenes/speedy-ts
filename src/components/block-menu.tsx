@@ -1,4 +1,4 @@
-import { IconImageInPicture, IconVideo, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy, IconEaseOut, IconTag } from "@tabler/icons-solidjs";
+import { IconImageInPicture, IconVideo, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy, IconEaseOut, IconTag, IconFile, IconFile3d } from "@tabler/icons-solidjs";
 import { Component } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -13,6 +13,7 @@ import { DocumentTabBlock, DocumentTabRowBlock } from "../blocks/document-tabs-b
 import { PocketBlock } from "../blocks/pocket-block";
 import { StickyTabBlock, StickyTabRowBlock } from "../blocks/sticky-tab-block";
 import { DocumentBlock } from "../blocks/document-block";
+import { Template } from "../library/templates";
 
 type Props = {
     items: ContextMenuItem[];
@@ -277,6 +278,10 @@ export class BlockMenuBlock extends AbstractBlock {
     moveTabRight() {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
       tab.moveRight();
+    }
+    async createDocument() {
+        const dto = Template.EmptyDocument;
+        await this.manager.createDocumentWithWindow(dto);
     }
     setBackgroundImage(url: string) {
       this.manager.switchToImageBackground();
@@ -726,6 +731,20 @@ export class BlockMenuBlock extends AbstractBlock {
       }
 
       if (isBackground) {
+        const itemDocumentAdd = {
+          type: "item",
+          label: "Add",
+          icon: <IconPlus />,
+          onClick: async () => {
+            await self.createDocument();
+          }
+        };
+        const itemDocumentMenu = {
+          type: "item",
+          label: "Document",
+          icon: <IconFile3d />,
+          children:[ itemDocumentAdd ]
+        };
         const itemBackgroundMenu = {
               type: "item",
               label: "Background",
@@ -757,6 +776,7 @@ export class BlockMenuBlock extends AbstractBlock {
                 }
               ]
         };
+        items.push(itemDocumentMenu);
         items.push(itemBackgroundMenu);
       }
 
