@@ -1120,7 +1120,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.setCaret(0, CARET.LEFT);
     }
     triggerBeforeChange() {
-        const doc = this.manager.getParentOfType(this, BlockType.PageBlock) as AbstractBlock;
+        const doc = this.manager.getParentOfType(this, BlockType.DocumentBlock) as DocumentBlock;
         if (!doc) return;
         doc.publish("beforeChange");
     }

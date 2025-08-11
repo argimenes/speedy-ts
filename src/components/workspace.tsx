@@ -558,7 +558,7 @@ export const BlockManagerWindow : Component<Props> = (props) => {
         };
 
         const doc: IBlockDto = {
-            type: BlockType.PageBlock,
+            type: BlockType.DocumentBlock,
             children: [                
                 {
                     type: BlockType.StandoffEditorBlock,

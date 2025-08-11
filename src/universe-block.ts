@@ -824,7 +824,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.commits.push(commit);
         this.pointer++;
     }
-    stageRightMarginBlock(rightMargin: PageBlock, mainBlock: IBlock) {
+    stageRightMarginBlock(rightMargin: DocumentBlock, mainBlock: IBlock) {
         updateElement(mainBlock.container, {
             style: {
                 position: "relative"
@@ -851,7 +851,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         });
         rightMargin.container.appendChild(hand);
     }
-    stageLeftMarginBlock(leftMargin: PageBlock, mainBlock: IBlock) {
+    stageLeftMarginBlock(leftMargin: DocumentBlock, mainBlock: IBlock) {
         updateElement(mainBlock.container, {
             style: {
                 position: "relative"
@@ -1073,7 +1073,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         return true;
     }
     async buildUnknownBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const unkownBlock = new PageBlock({
+        const unkownBlock = new DocumentBlock({
             ...blockDto, manager: this
         });
         await this.buildChildren(unkownBlock, blockDto);
@@ -1192,10 +1192,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     getDocument() {
         const dto= {
             id: this.id,
-            type: BlockType.PageBlock,
+            type: BlockType.DocumentBlock,
             children: []
         } as IMainListBlockDto;
-        const mainBlock = this.registeredBlocks.find(x => x.type == BlockType.PageBlock);
+        const mainBlock = this.registeredBlocks.find(x => x.type == BlockType.DocumentBlock);
         if (!mainBlock) return dto;
         mainBlock.blocks.forEach(b => {
             let block = b.serialize();
@@ -1238,7 +1238,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             this.registeredBlocks = [];
         }
     }
-    setDocumentFocus(doc: PageBlock) {
+    setDocumentFocus(doc: DocumentBlock) {
         if (doc.metadata?.focus?.blockId) {
             const block = this.getBlock(doc.metadata.focus.blockId);
             this.setBlockFocus(block);
@@ -1382,7 +1382,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.generateParentSiblingRelations(this);
         setTimeout(() => {
             manager.registeredBlocks
-                .filter(x => x.type == BlockType.PageBlock)
+                .filter(x => x.type == BlockType.DocumentBlock)
                 .forEach(b => manager.takeSnapshot(b.id));
         }, 500);
     }
@@ -1402,7 +1402,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const ws = this.serialize().children[0];
         ws.metadata = { ...ws.metadata, filename };
         let children = this.flatten(ws);
-        const documents = children.filter(x => x.type == BlockType.PageBlock);
+        const documents = children.filter(x => x.type == BlockType.DocumentBlock);
         documents.forEach(d => {
             d.metadata = { ...d.metadata, loadFromExternal: true };
             d.children = [];
@@ -1481,7 +1481,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         history.undoStack.push(dto);
     }
     async loadDocument(dto: IMainListBlockDto, container?: HTMLDivElement) {
-        if (dto.type != BlockType.PageBlock) {
+        if (dto.type != BlockType.DocumentBlock) {
             console.error("Expected doc.type to be BlockType.DocumentBlock.");
             return;
         }
@@ -1507,7 +1507,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         });
     }
     createDocumentBlock(dto?: IBlockDto) {
-        const block = new PageBlock({
+        const block = new DocumentBlock({
             ...dto, manager: this
         });
         block.applyBlockPropertyStyling();
@@ -1665,7 +1665,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         // return block;
     }
     createLeftMarginBlock(dto?: IBlockDto) {
-        const block = new PageBlock({
+        const block = new DocumentBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
@@ -1725,7 +1725,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         return block;
     }
     createRightMarginBlock(dto?: IBlockDto) {
-        const block = new PageBlock({
+        const block = new DocumentBlock({
             manager: this
         });
         if (dto?.metadata) block.metadata = dto.metadata;
