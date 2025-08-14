@@ -5,6 +5,7 @@ import { UniverseBlock } from "../universe-block";
 import { StandoffEditorBlock } from "./standoff-editor-block";
 import { Template } from "../library/templates";
 import { DocumentBlock } from "./document-block";
+import { PageBlock } from "./page-block";
 
 export class DocumentTabRowBlock extends AbstractBlock {
     header: HTMLDivElement;
@@ -139,20 +140,23 @@ export class DocumentTabRowBlock extends AbstractBlock {
         const row = previousTab.getRow();
         if (!row) return;
         const newTab = await this.createNewTab(name);
-        let doc = await this.manager.recursivelyBuildBlock(this.newContainer(), Template.EmptyDocument) as DocumentBlock;
-        this.manager.addBlockTo(newTab, doc);
+        let page = await this.manager.recursivelyBuildBlock(this.newContainer(), Template.EmptyPage) as PageBlock;
+        this.manager.addBlockTo(newTab, page);
         this.manager.addBlockTo(row, newTab);
-        doc.relation.parent = newTab;
+        page.relation.parent = newTab;
         previousTab.relation.next = newTab;
         newTab.relation.previous = previousTab;
         this.manager.generateParentSiblingRelations(row);
         row.renderLabels();
-        newTab.panel.appendChild(doc.container);
+        newTab.panel.appendChild(page.container);
         row.container.appendChild(newTab.container);
         row.setTabActive(newTab);
         setTimeout(() => {
-            this.manager.setBlockFocus(doc);
-            (doc.blocks[0] as StandoffEditorBlock)?.setCaret(0, CARET.LEFT);
+            let tb = page.blocks[0] as StandoffEditorBlock;
+            if (tb) {
+                this.manager.setBlockFocus(tb);
+                tb.setCaret(0, CARET.LEFT);
+            }
         }, 1);
         return newTab;
     }

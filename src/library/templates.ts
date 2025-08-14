@@ -24,5 +24,14 @@ export const Template = {
                 ]
             }
         ]
+    },
+    EmptyPage: {
+        type: BlockType.PageBlock,
+        children: [
+            {
+                type: BlockType.StandoffEditorBlock,
+                blockProperties: [ { type: "block/alignment/left "} ]
+            }
+        ]
     }
 };

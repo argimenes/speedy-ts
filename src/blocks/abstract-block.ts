@@ -260,7 +260,7 @@ export abstract class AbstractBlock implements IBlock {
         }
     }
     getBlock(id: GUID) {
-        return this.blocks.find(x => x.id == id) as IBlock;
+        return this.manager.getBlock(id);
     }
     setCommitHandler(handler: (commit: Commit) => void) {
         this.commitHandler = handler;
