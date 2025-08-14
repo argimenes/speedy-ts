@@ -922,7 +922,22 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                     filename,
                     folder
                 },
-                children: [dto]
+                children: [
+                    {
+                        type: BlockType.DocumentTabRowBlock,
+                        children: [
+                            {
+                                type: BlockType.DocumentTabBlock,
+                                metadata: {
+                                    name: "Default"
+                                },
+                                children: [
+                                    { ...dto, type: BlockType.PageBlock }
+                                ]
+                            }
+                        ]
+                    }
+                ]
             };
         }
         await this.createDocumentWithWindow(dto);
