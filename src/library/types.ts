@@ -88,7 +88,9 @@ export enum BlockType {
     CheckboxBlock = "checkbox-block",
     EmbedDocumentBlock = "embed-document-block",
     StickyTabBlock = "sticky-tab-block",
-    StickyTabRowBlock = "sticky-tab-row-block"
+    StickyTabRowBlock = "sticky-tab-row-block",
+    SurfaceBlock = "surface-block",
+    SideBlock = "side-block"
 }
 export interface IBlock {
     id: GUID;

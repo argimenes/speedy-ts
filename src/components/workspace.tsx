@@ -27,6 +27,7 @@ import { PocketBlock } from "../blocks/pocket-block";
 import { StickyTabBlock, StickyTabRowBlock } from "../blocks/sticky-tab-block";
 import { PageBlock } from "../blocks/page-block";
 import { DocumentBlock } from "../blocks/document-block";
+import { SideBlock, SurfaceBlock } from "../blocks/surface-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -333,10 +334,35 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                                     },
                                                     children: [
                                                         {
-                                                            type: BlockType.ImageBlock,
-                                                            metadata: {
-                                                                url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Leonardo_da_Vinci_%281452-1519%29_-_The_Last_Supper_%281495-1498%29.jpg/1024px-Leonardo_da_Vinci_%281452-1519%29_-_The_Last_Supper_%281495-1498%29.jpg"
-                                                            }
+                                                            type: BlockType.SurfaceBlock,
+                                                            children: [
+                                                                {
+                                                                    type: BlockType.SideBlock,
+                                                                    metadata: {
+                                                                        active: true
+                                                                    },
+                                                                    children: [
+                                                                        {
+                                                                            type: BlockType.ImageBlock,
+                                                                            metadata: {
+                                                                                url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Leonardo_da_Vinci_%281452-1519%29_-_The_Last_Supper_%281495-1498%29.jpg/1024px-Leonardo_da_Vinci_%281452-1519%29_-_The_Last_Supper_%281495-1498%29.jpg"
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    type: BlockType.SideBlock,
+                                                                    metadata: {
+                                                                        active: false
+                                                                    },
+                                                                    children: [
+                                                                        {
+                                                                            type: BlockType.StandoffEditorBlock,
+                                                                            text: "Text behind the image ..."
+                                                                        } as IStandoffEditorBlockDto
+                                                                    ]
+                                                                }
+                                                            ]
                                                         },
                                                         {
                                                             type: BlockType.StandoffEditorBlock,
@@ -1053,6 +1079,8 @@ const foo = (bar) => {
             PocketBlock.getBlockBuilder(),
             StickyTabBlock.getBlockBuilder(),
             StickyTabRowBlock.getBlockBuilder(),
+            SurfaceBlock.getBlockBuilder(),
+            SideBlock.getBlockBuilder(),
         ]);
         workspace.createImageWorkspace();
         workspace.createDocumentWithWindow(doc2).then();
