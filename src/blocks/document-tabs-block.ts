@@ -121,12 +121,16 @@ export class DocumentTabRowBlock extends AbstractBlock {
         updateElement(addNewTabLabel, {
             innerHTML: "+",
             classList: ["document-tab-label"],
-            event: {
+            handler: {
                 click: async (e) => {
-                    const tab = await self.createNewTab(self.labels.length + "");
+                    await self.addTab({
+                        previousTabId: self.blocks[self.blocks.length - 1].id,
+                        name: "Page " + (self.blocks.length + 1)
+                    });
                 }
             }
         });
+        header.appendChild(addNewTabLabel);
     }
     getTab(id: GUID) {
         return this.getBlock(id) as DocumentTabBlock;

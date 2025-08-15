@@ -2,7 +2,7 @@ import { Component } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { renderToNode } from "../library/common";
 import { IAbstractBlockConstructor, IBlockDto, IBlock, BlockType } from "../library/types";
-import { IconAlignCenter, IconAlignJustified, IconAlignLeft, IconAlignRight, IconBold, IconClearFormatting, IconColorPicker, IconH1, IconH2, IconH3, IconH4, IconIndentDecrease, IconIndentIncrease, IconItalic, IconRotateClockwise, IconRotateClockwise2, IconSeparatorVertical } from "@tabler/icons-solidjs";
+import { IconAlignCenter, IconAlignJustified, IconAlignLeft, IconAlignRight, IconBackground, IconBold, IconClearFormatting, IconColorPicker, IconH1, IconH2, IconH3, IconH4, IconIndentDecrease, IconIndentIncrease, IconItalic, IconRotateClockwise, IconRotateClockwise2, IconSeparatorVertical } from "@tabler/icons-solidjs";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
 import { DocumentBlock } from "../blocks/document-block";
 
@@ -98,8 +98,8 @@ export const StyleBar : Component<Props> = (props) => {
                 <button onClick={onH3Clicked} class="btn btn-default btn-sm"><IconH3 /></button>
                 <button onClick={onH4Clicked} class="btn btn-default btn-sm"><IconH4 /></button>
                 <span style="margin: 0 10;">|</span>
-                <button onClick={onFontColourClicked} class="btn btn-default btn-sm">Font</button>
-                <button onClick={onBackgroundColourClicked} class="btn btn-default btn-sm">Background</button>
+                <button onClick={onFontColourClicked} class="btn btn-default btn-sm"><IconColorPicker /></button>
+                <button onClick={onBackgroundColourClicked} class="btn btn-default btn-sm"><IconBackground /></button>
                 <span style="margin: 0 10;">|</span>
                 <button onClick={onAddOrIncreaseIndentClicked} class="btn btn-default btn-sm"><IconIndentIncrease /></button>
                 <button onClick={onAddOrDecreaseIndentClicked} class="btn btn-default btn-sm"><IconIndentDecrease /></button>

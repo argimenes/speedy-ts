@@ -1,5 +1,5 @@
 import { IconImageInPicture, IconVideo, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy, IconEaseOut, IconTag, IconFile, IconFile3d } from "@tabler/icons-solidjs";
-import { Component } from "solid-js";
+import { Component, onCleanup } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
 import { renderToNode } from "../library/common";
@@ -192,9 +192,9 @@ export class BlockMenuBlock extends AbstractBlock {
       await row.appendTab();
     }
     renamePage(name: string) {
-      const page = this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock) as DocumentTabBlock;
-      page.setName(name);
-      page.setActive();
+      const documentTab = this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock) as DocumentTabBlock;
+      documentTab.setName(name);
+      documentTab.getRow().setTabActive(documentTab);
     }
     renameStickyTab(name: string) {
       const page = this.manager.getParentOfType(this.source, BlockType.StickyTabBlock) as StickyTabBlock;
@@ -284,7 +284,7 @@ export class BlockMenuBlock extends AbstractBlock {
         await this.manager.createDocumentWithWindow(dto);
     }
     setBackgroundImage(url: string) {
-      this.manager.switchToImageBackground();
+      this.manager.switchToImageBackground(url);
     }
     setBackgroundVideo(url: string) {
       this.manager.switchToVideoBackground();
@@ -754,7 +754,29 @@ export class BlockMenuBlock extends AbstractBlock {
                       type: "item",
                       label: "Image",
                       icon: <IconImageInPicture />,
-                      onClick: () => self.setBackgroundImage("")
+                      // onClick: () => self.setBackgroundImage(""),
+                      children: [
+                        { 
+                          type: "item",
+                          label: "Green aurora",
+                          onClick: () => self.setBackgroundImage("/image-backgrounds/green-aurora.jpg")
+                        },
+                        { 
+                          type: "item",
+                          label: "Desktop",
+                          onClick: () => self.setBackgroundImage("/image-backgrounds/wood.jpg")
+                        },
+                        { 
+                          type: "item",
+                          label: "High",
+                          onClick: () => self.setBackgroundImage("/image-backgrounds/clouds.jpg")
+                        },
+                        { 
+                          type: "item",
+                          label: "Aurora over snow",
+                          onClick: () => self.setBackgroundImage("/image-backgrounds/snow-aurora.jpg")
+                        }
+                      ]
                 },
                 {
                       type: "item",

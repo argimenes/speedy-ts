@@ -1332,13 +1332,14 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }) as AbstractBlock;
         this.switchBackground(originalBackground, videoBackground);
     }
-    async switchToImageBackground() {
+    async switchToImageBackground(url?: string) {
+        url = url || "/image-backgrounds/green-aurora.jpg";
         const originalBackground = this.getBackground();
         const container = document.createElement("DIV") as HTMLDivElement;
         const videoBackground = await this.recursivelyBuildBlock(container, {
             type: BlockType.ImageBackgroundBlock,
             metadata: {
-                url: "/image-backgrounds/pexels-visit-greenland-108649-360912.jpg"
+                url: url
             }
         }) as AbstractBlock;
         this.switchBackground(originalBackground, videoBackground);        
@@ -1350,7 +1351,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 {
                     type: BlockType.ImageBackgroundBlock,
                     metadata: {
-                        url: "/image-backgrounds/pexels-visit-greenland-108649-360912.jpg"
+                        url: "/image-backgrounds/green-aurora.jpg"
                     }
                 }
             ]
