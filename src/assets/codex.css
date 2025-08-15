@@ -629,3 +629,12 @@ DOCUMENT TABS (PAGES)
 .sticky-tab-panel.active {
   display: block;
 }
+.surface-block {
+
+}
+.side-block {
+  display: none;
+}
+.side-block.active {
+  display: block;
+}

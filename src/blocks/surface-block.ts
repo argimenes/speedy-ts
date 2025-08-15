@@ -9,31 +9,13 @@ export interface ISideBlockConstructor extends IAbstractBlockConstructor {}
 export class SurfaceBlock extends AbstractBlock {
     constructor(args: ISurfaceBlockConstructor) {
         super(args);
+        this.type = BlockType.SurfaceBlock;
     }
     getActiveSide() {
         return this.blocks.find(x => x.metadata.active) as SideBlock;
     }
     getInactiveSide() {
         return this.blocks.find(x => !x.metadata.active) as SideBlock;
-    }
-    getInputEvents() {
-        const self = this;
-        return [
-            {
-                mode: "default",
-                trigger: {
-                    source: InputEventSource.Mouse,
-                    match: "dblclick"
-                },
-                action: {
-                    name: "",
-                    description: "",
-                    handler: async (args: IBindingHandlerArgs) => {
-
-                    }
-                }
-            }
-        ]
     }
     toggleActiveSides() {
         const activeSide = this.getActiveSide();
@@ -76,21 +58,51 @@ export class SurfaceBlock extends AbstractBlock {
 export class SideBlock extends AbstractBlock {
     constructor(args: ISideBlockConstructor) {
         super(args);
+        this.type = BlockType.SideBlock;
         this.metadata = args.metadata || {};
+        //this.inputEvents = this.getInputEvents();
+    }
+    getInputEvents() {
+        const self = this;
+        return [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Mouse,
+                    match: "click"
+                },
+                action: {
+                    name: "",
+                    description: "",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block as SideBlock;
+                        block.toggle();
+                    }
+                }
+            }
+        ]
     }
     static getBlockBuilder() {
         return {
             type: BlockType.SideBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
-                const block = new SurfaceBlock({
+                const block = new SideBlock({
                     ...dto, manager
                 });
                 await manager.buildChildren(block, dto);
                 block.container.classList.add("side-block");
+                block.container.addEventListener("dblclick", (e) => {
+                    e.preventDefault();
+                    block.toggle();
+                });
                 container.appendChild(block.container);
                 return block;
             }
         };
+    }
+    toggle() {
+        const parent = this.relation.parent as SurfaceBlock;
+        parent.toggleActiveSides();
     }
     setInactive() {
         this.metadata.active = false;
