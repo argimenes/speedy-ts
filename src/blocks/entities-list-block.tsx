@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { Component, For, onMount } from "solid-js";
 import { StandoffProperty } from "../library/standoff-property";
 import { createStore } from "solid-js/store";
@@ -24,15 +25,59 @@ export interface IEntitiesListBlockConstructor {
 }
 export class EntitiesListBlock extends AbstractBlock {
     properties: StandoffProperty[];
-    node: HTMLDivElement;
     source: StandoffEditorBlock;
     caret: Caret;
+    header: HTMLDivElement;
     constructor(args: IEntitiesListBlockConstructor) {
         super({ manager: args.manager });
         this.source = args.source;
         this.caret = this.source.getCaret();
+        this.header = document.createElement("DIV") as HTMLDivElement;
+        this.header.setAttribute("id", uuidv4());
+        this.header.classList.add("window-block-header");
+        const controls = this.createControls();
+        this.header.appendChild(controls);
+        this.container.appendChild(this.header);
         this.properties = [];
         this.setupBindings();
+        this.render();
+    }
+    private createControls() {
+        const self = this;
+        const controls = document.createElement('div');
+        controls.className = 'window-controls';
+        controls.style.cssText = 'display: flex; gap: 5px;';
+        
+        const closeBtn = this.createWindowButton('×', async () => { 
+            self.destroy();
+        });
+        closeBtn.style.color = '#ff0000';
+
+        const title = document.createElement("SPAN") as HTMLSpanElement;
+        title.style.fontSize = "0.5rem";
+        title.textContent = "Entities Listing";
+        // this.title = title;
+
+        controls.append(closeBtn, title);
+        return controls;
+    }
+    private createWindowButton(text: string, onClick: () => void): HTMLElement {
+        const button = document.createElement('div');
+        button.className = 'window-control-button';
+        button.textContent = text;
+        button.style.cssText = `
+          width: 20px;
+          height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 3px;
+          cursor: pointer;
+        `;
+        button.addEventListener('click', onClick);
+        button.addEventListener('mouseenter', () => button.style.background = '#e0e0e0');
+        button.addEventListener('mouseleave', () => button.style.background = 'transparent');
+        return button;
     }
     setupBindings() {
         const self = this;
@@ -79,20 +124,16 @@ export class EntitiesListBlock extends AbstractBlock {
         });
         this.container.focus();
     }
-    async render() {
+    render() {
         const node = document.createElement("DIV") as HTMLDivElement;
         render(() => <EntitiesListView wrapper={this} />, node);
-        this.node = node;
-        return node;
+        this.container.appendChild(node);
     }
     close() {
         this.manager.deregisterBlock(this.id);
         this.manager.setBlockFocus(this.source);
         this.source.setCaret(this.caret.right.index, CARET.LEFT);
         this.destroy();
-    }
-    destroy() {
-        this.node.remove();
     }
     serialize(): IBlockDto {
         throw new Error();
@@ -113,8 +154,8 @@ type State = {
     activeItem: number;
     isOpen: boolean;
 }
-export const EntitiesListView : Component<EntitiesListViewProps> = ({ wrapper }) => {
-    const manager = wrapper.manager;
+export const EntitiesListView : Component<EntitiesListViewProps> = ({ wrapper: block }) => {
+    const manager = block.manager;
     const [state, setState] = createStore<State>({
         activeItem: 0,
         isOpen: false
@@ -142,7 +183,7 @@ export const EntitiesListView : Component<EntitiesListViewProps> = ({ wrapper })
         }));
     }
     onMount(async () => {
-        const doc = manager.getParentOfType(wrapper.source, BlockType.DocumentBlock) as DocumentBlock;
+        const doc = manager.getParentOfType(block.source, BlockType.DocumentBlock) as DocumentBlock;
         const properties = doc.getAllStandoffPropertiesByType("codex/entity-reference");
         const entities = await doc.getEntities() as Entity[];
         const group = countItems(properties);

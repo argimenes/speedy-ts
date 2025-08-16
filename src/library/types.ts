@@ -54,6 +54,7 @@ export enum BlockType {
     VideoBackgroundBlock = "video-background-block",
     ImageBackgroundBlock = "image-background-block",
     DocumentWindowBlock = "document-window-block",
+    EntitiesListBlock = "entities-list-block",
     WindowBlock = "window-block",
     ControlPanelBlock = "control-panel-block",
     UniverseBlock = "universe-block",

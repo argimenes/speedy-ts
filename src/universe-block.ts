@@ -133,11 +133,10 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
          */
     }
     async handleMouseInputEvents(e: MouseEvent) {
-        console.log("handleMouseInputEvents", { manager: this, e });
+        console.log("handleMouseInputEvents", { root: this, e });
         if (!this.container.contains(e.target as HTMLElement)) {
-            return;
+            console.log("root.container does not contain e.target ", { e, root: this })
         }
-
         const blockEl = (e.target as HTMLElement).closest("[data-client-id]") as HTMLElement | null;
         if (blockEl) {
             console.log("block-id from DOM:", blockEl.dataset.blockId);
@@ -723,12 +722,12 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             manager: this,
             source: block
         });
-        const node = await component.render();
-        updateElement(node, {
+        const doc = this.manager.getParentOfType(block, BlockType.DocumentBlock);
+        updateElement(component.container, {
             style: {
                 position: "fixed",
                 top: "20px",
-                left: "20px",
+                left: "-250px",
                 width: "250px",
                 "max-height": "720px",
                 height: "auto",
@@ -736,7 +735,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 "overflow-x": "hidden",
                 "z-index": this.getHighestZIndex()
             },
-            parent: document.body
+            parent: doc.container
         });
         block.removeFocus();
         this.registerBlock(component);
@@ -1413,8 +1412,8 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
           traverse(root);
           return result;
     }
-    saveWorkspace() {
-        const filename = prompt("Filename: ");
+    saveWorkspace(filename?: string) {
+        filename = filename || prompt("Filename: ");
         const ws = this.serialize().children[0];
         ws.metadata = { ...ws.metadata, filename };
         let children = this.flatten(ws);

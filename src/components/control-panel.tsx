@@ -10,6 +10,7 @@ import { AbstractBlock } from "../blocks/abstract-block";
 import { Template } from "../library/templates";
 import { DocumentBlock } from "../blocks/document-block";
 import { TableBlock } from "../blocks/tables-blocks";
+import { IconFile } from "@tabler/icons-solidjs";
 
 type Model = {
     command: string;
@@ -392,62 +393,51 @@ export class ControlPanelBlock extends AbstractBlock {
         }
         const ControlPanel = () => {
             return (
-                <div class="control-panel" style="text-align: left;">
+                <div class="control-panel block_theme_glass" style="text-align: left;">
                     <div class="partition">
-                        <button type="button" onClick={createNewDocumentClicked}>Create new document</button>
+                        <button type="button" onClick={createNewDocumentClicked}><IconFile /></button>
                     </div>
                     <div class="partition">
-                        <form onSubmit={onSubmit}>
-                            <input
-                                type="text"
-                                value={model.command}
-                                class="form-control"
-                                onInput={(e) => setModel("command", e.currentTarget.value)}
-                            />
-                            <button type="submit" class="btn btn-default">Run</button>
-                        </form>
-                    </div>
-                    <div class="partition">
-                        <select value={model.folder} onChange={folderChanged}>
+                        <select value={model.folder} onChange={folderChanged} style="width: 200px;">
                             <For each={resources.folders}>{(folder) =>
                                 <option value={folder}>
                                     {folder}
                                 </option>
                             }</For>
                         </select>
-                        <button class="form-control" onClick={loadFolderClicked}>Load</button>
+                        <button class="form-control" onClick={loadFolderClicked}>Set Folder</button>
                     </div>
                     <div class="partition">
-                        <select value={model.file} onChange={fileChanged}>
+                        <select value={model.file} onChange={fileChanged} style="width: 200px;">
                             <For each={resources.files}>{(file) =>
                                 <option value={file}>
                                     {file}
                                 </option>
                             }</For>
                         </select>
-                        <button class="form-control" onClick={loadSelectedFileClicked}>Load</button>
+                        <button class="form-control" onClick={loadSelectedFileClicked}>Load Doc</button>
                     </div>
                     <div class="partition">
-                        <select value={model.template} onInput={(e) => setModel("template", e.currentTarget.value)}>
+                        <select value={model.template} onInput={(e) => setModel("template", e.currentTarget.value)} style="width: 200px;">
                             <For each={resources.templates}>{(template) =>
                                 <option value={template}>
                                     {template}
                                 </option>
                             }</For>
                         </select>
-                        <button class="form-control" onClick={loadSelectedTemplateClicked}>Load</button>
+                        <button class="form-control" onClick={loadSelectedTemplateClicked}>Load Template</button>
                     </div>
                     <div class="partition">
-                        <select value={model.workspace} onInput={(e) => setModel("workspace", e.currentTarget.value)}>
+                        <select value={model.workspace} onInput={(e) => setModel("workspace", e.currentTarget.value)} style="width: 200px;">
                             <For each={resources.workspaces}>{(workspace) =>
                                 <option value={workspace}>
                                     {workspace}
                                 </option>
                             }</For>
                         </select>
-                        <button class="form-control" onClick={loadSelectedWorkspaceClicked}>Load</button>
+                        <button class="form-control" onClick={loadSelectedWorkspaceClicked}>Load Workspace</button>
                     </div>
-                    <div class="partition">
+                    {/* <div class="partition">
                         <form onSubmit={onWorkspaceSourceSubmit}>
                             <input
                                 type="text"
@@ -457,17 +447,7 @@ export class ControlPanelBlock extends AbstractBlock {
                             />
                             <button type="submit" class="btn btn-default">Set</button>
                         </form>
-                    </div>
-                    <div class="partition">
-                        <select value={model.background} onInput={(e) => setModel("background", e.currentTarget.value)}>
-                            <For each={resources.backgrounds}>{(background) =>
-                                <option value={background}>
-                                    {background}
-                                </option>
-                            }</For>
-                        </select>
-                        <button class="form-control" onClick={loadSelectedBackgroundClicked}>Load</button>
-                    </div>
+                    </div> */}
                 </div>
             )
         }

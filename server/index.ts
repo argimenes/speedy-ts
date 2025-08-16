@@ -203,13 +203,19 @@ export async function closeDb(): Promise<void> {
 await initDb();
 
 const app = express();
+// 1) Use an absolute path
+const assetsDir = path.resolve(__dirname, 'dist', 'assets');
 
+// 2) Serve everything under /assets (images included)
+app.use('/assets', express.static(assetsDir, {
+  maxAge: '1y',          // optional caching
+  immutable: true        // optional caching
+}));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('dist'));
 app.use("/templates", express.static('templates'));
 app.use('/uploads', express.static('uploads'));
-app.use('/assets', express.static('dist/assets'));
 app.use('/video-backgrounds', express.static(path.join(__dirname, basePath, 'backgrounds/video')));
 app.use('/image-backgrounds', express.static(path.join(__dirname, basePath, 'backgrounds/images')));
 app.use(express.json({limit: '50mb'}));

@@ -1,4 +1,4 @@
-import { IconImageInPicture, IconVideo, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy, IconEaseOut, IconTag, IconFile, IconFile3d } from "@tabler/icons-solidjs";
+import { IconImageInPicture, IconVideo, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy, IconEaseOut, IconTag, IconFile, IconFile3d, IconDesk } from "@tabler/icons-solidjs";
 import { Component, onCleanup } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
 import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
@@ -218,11 +218,14 @@ export class BlockMenuBlock extends AbstractBlock {
       tab.setName(name);
       tab.setActive();
     }
+    async saveWorkspace(filename: string) {
+      await this.manager.saveWorkspace(filename);
+    }
     async saveDocument(filename: string) {
       const win = this.manager.getParentOfType(this.source, BlockType.DocumentWindowBlock);
-      const membrane = win.blocks[0];
-      let folder = membrane.metadata?.folder || "uploads";
-      await this.manager.saveServerDocument(membrane.id, filename, folder)
+      const doc = win.blocks[0];
+      let folder = doc.metadata?.folder || "uploads";
+      await this.manager.saveServerDocument(doc.id, filename, folder)
     }
     async renameDocument() {
       alert("Rename is not implemented");
@@ -739,6 +742,20 @@ export class BlockMenuBlock extends AbstractBlock {
             await self.createDocument();
           }
         };
+        const itemSaveWorkspace = {
+          type: "item",
+          label: "Save",
+          icon: <IconDisc />,
+          children: [
+            { type: "input", onInput: (filename) => self.saveWorkspace(filename) }
+          ]
+        };
+        const itemWorkspaceMenu = {
+          type: "item",
+          label: "Workspace",
+          icon: <IconDesk />,
+          children:[ itemSaveWorkspace ]
+        };
         const itemDocumentMenu = {
           type: "item",
           label: "Document",
@@ -800,6 +817,7 @@ export class BlockMenuBlock extends AbstractBlock {
         };
         items.push(itemDocumentMenu);
         items.push(itemBackgroundMenu);
+        items.push(itemWorkspaceMenu);
       }
 
       const jsx = BlockMenu({
