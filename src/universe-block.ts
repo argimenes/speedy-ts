@@ -1186,12 +1186,19 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const item = this.blockBuilders.find(x => x.type == type);
         return item?.builder;
     }
+    migrateType(type: string) {
+        if (type == "membrane-block") return BlockType.DocumentBlock;
+        if (type == "main-list-block") return BlockType.DocumentBlock; 
+        return type;
+    }
     async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
-        const builder = this.getBlockBuilder(blockDto.type);
+        const type = this.migrateType(blockDto.type) as BlockType;
+        const builder = this.getBlockBuilder(type);
         if (builder) {
             try {
-                const newBlock = await builder(container, blockDto, this);
-                await this.handleBuildingMarginBlocks(newBlock, blockDto);
+                const dto = {...blockDto, type: type };
+                const newBlock = await builder(container, dto, this);
+                await this.handleBuildingMarginBlocks(newBlock, dto);
                 return newBlock;
             } catch (ex) {
                 console.error("recursivelyBuildBlock", { container, blockDto, ex, manager: this });
