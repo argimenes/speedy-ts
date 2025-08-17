@@ -12,6 +12,7 @@ let db: Surreal | undefined;
 const basePath = "../../../codex-data";
 const baseDocumentPath = basePath + "/data";
 const baseWorkspacesPath = basePath + "/workspaces"
+const baseTemplatesPath = basePath + "/templates"
 
 type MulterRequest = Request & { files: Express.Multer.File[] };
 
@@ -214,7 +215,7 @@ app.use('/assets', express.static(assetsDir, {
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('dist'));
-app.use("/templates", express.static('templates'));
+app.use("/templates", express.static('data/templates'));
 app.use('/uploads', express.static('uploads'));
 app.use('/video-backgrounds', express.static(path.join(__dirname, basePath, 'backgrounds/video')));
 app.use('/image-backgrounds', express.static(path.join(__dirname, basePath, 'backgrounds/images')));

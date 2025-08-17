@@ -904,7 +904,9 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (!json.Success) {
             return;
         }
-        this.loadDocument(json.Data.document);
+        // this.loadDocument(json.Data.document);
+        const dto = json.Data.document;
+        await this.createDocumentWithWindow(dto);
     }
     async loadServerDocument(filename: string, folder: string = ".") {
         const res = await fetchGet("/api/loadDocumentJson", { filename, folder });
