@@ -3,12 +3,20 @@ import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigati
 import { UniverseBlock } from "../universe-block";
 import { updateElement } from "../library/svg";
 import { DocumentBlock } from "./document-block";
+import { BlockPropertySchemas } from "../properties/block-properties";
 
 export class GridBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.GridBlock;
         this.container.classList.add(this.type);
+        this.setBlockSchemas(this.getBlockSchemas());
+    }
+    getBlockSchemas() {
+        return [
+            BlockPropertySchemas.blockSize,
+            BlockPropertySchemas.blockPosition
+        ]
     }
     static getBlockBuilder() {
         return {
@@ -172,6 +180,12 @@ export class GridCellBlock extends AbstractBlock {
         super(args);
         this.container.classList.add("grid-cell-block", "grid-cell");
         this.type = BlockType.GridCellBlock;
+        this.setBlockSchemas(this.getBlockSchemas());
+    }
+    getBlockSchemas() {
+        return [
+            BlockPropertySchemas.blockSize
+        ]
     }
     static getBlockBuilder() {
         return {
