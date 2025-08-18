@@ -23,7 +23,7 @@ import { CanvasBackgroundBlock } from "../blocks/canvas-background-block";
 import { YouTubeVideoBackgroundBlock } from "../blocks/youtube-video-background-block";
 import { CanvasBlock } from "../blocks/canvas-block";
 import { DocumentTabRowBlock, DocumentTabBlock } from "../blocks/document-tabs-block";
-import { PocketBlock } from "../blocks/pocket-block";
+import { ContainerBlock } from "../blocks/container-block";
 import { StickyTabBlock, StickyTabRowBlock } from "../blocks/sticky-tab-block";
 import { PageBlock } from "../blocks/page-block";
 import { DocumentBlock } from "../blocks/document-block";
@@ -1076,7 +1076,7 @@ const foo = (bar) => {
             ImageBackgroundBlock.getBlockBuilder(),
             WorkspaceBlock.getBlockBuilder(),
             PageBlock.getBlockBuilder(),
-            PocketBlock.getBlockBuilder(),
+            ContainerBlock.getBlockBuilder(),
             StickyTabBlock.getBlockBuilder(),
             StickyTabRowBlock.getBlockBuilder(),
             SurfaceBlock.getBlockBuilder(),

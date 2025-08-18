@@ -10,7 +10,7 @@ import { TabBlock, TabRowBlock } from "../blocks/tabs-block";
 import { IndentedListBlock } from "../blocks/indented-list-block";
 import { DocumentWindowBlock } from "../blocks/document-window-block";
 import { DocumentTabBlock, DocumentTabRowBlock } from "../blocks/document-tabs-block";
-import { PocketBlock } from "../blocks/pocket-block";
+import { ContainerBlock } from "../blocks/container-block";
 import { StickyTabBlock, StickyTabRowBlock } from "../blocks/sticky-tab-block";
 import { DocumentBlock } from "../blocks/document-block";
 import { Template } from "../library/templates";
@@ -170,17 +170,17 @@ export class BlockMenuBlock extends AbstractBlock {
         cell.moveCellLeft();
     }
     resizePocket(value: string) {
-      const pocket = this.manager.getParentOfType(this.source, BlockType.PocketBlock) as PocketBlock;
+      const pocket = this.manager.getParentOfType(this.source, BlockType.ContainerBlock) as ContainerBlock;
       const height = parseInt(value);
       pocket.metadata.height = height;
       pocket.update();
     }
     explodePocket() {
-      const pocket = this.manager.getParentOfType(this.source, BlockType.PocketBlock) as PocketBlock;   
+      const pocket = this.manager.getParentOfType(this.source, BlockType.ContainerBlock) as ContainerBlock;   
       pocket.explode();
     }
     deletePocket() {
-      const pocket = this.manager.getParentOfType(this.source, BlockType.PocketBlock) as PocketBlock;
+      const pocket = this.manager.getParentOfType(this.source, BlockType.ContainerBlock) as ContainerBlock;
       pocket.destroy();
     }
     deletePage() {
@@ -309,7 +309,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const insideIndentedList = !!this.manager.getParentOfType(this.source, BlockType.IndentedListBlock);
       const isBackground = this.source.type.toLowerCase().indexOf("background") >= 0;
       const insideDocument = !!this.manager.getParentOfType(this.source, BlockType.DocumentBlock);
-      const insidePocket = !!this.manager.getParentOfType(this.source, BlockType.PocketBlock);
+      const insidePocket = !!this.manager.getParentOfType(this.source, BlockType.ContainerBlock);
       const insideStickyTag = !!this.manager.getParentOfType(this.source, BlockType.StickyTabBlock);
 
       if (insideDocument) {

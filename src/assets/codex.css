@@ -581,18 +581,8 @@ DOCUMENT TABS (PAGES)
   border: 1px dotted gold;
 }
 
-.pocket-block {
-  height: 100px;
-  overflow-y: scroll;
-  overflow-x: hidden;
-  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
-  border: 1px solid #ccc;  
-  /* border: 2px solid #6b4f1d;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  border-bottom-left-radius: 80px 40px;
-  border-bottom-right-radius: 80px 40px;
-  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.25); */
+.container-block {
+  
 }
 .sticky-tab-row-block {
   position: fixed;

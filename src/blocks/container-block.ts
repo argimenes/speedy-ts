@@ -3,24 +3,26 @@ import { updateElement } from "../library/svg";
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { UniverseBlock } from '../universe-block';
+import { BlockPropertySchemas } from '../properties/block-properties';
 
-export class PocketBlock extends AbstractBlock {
+export class ContainerBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
-        this.type = BlockType.PocketBlock;
+        this.type = BlockType.ContainerBlock;
         this.inputEvents = this.getInputEvents();
         this.setBlockSchemas(this.getBlockSchemas());
     }
     getBlockSchemas() {
         return [
-            
+            BlockPropertySchemas.blockPosition,
+            BlockPropertySchemas.blockSize
         ]
     }
     static getBlockBuilder() {
         return {
-            type: BlockType.PocketBlock,
+            type: BlockType.ContainerBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
-                const block = new PocketBlock({ manager, ...dto });
+                const block = new ContainerBlock({ manager, ...dto });
                 if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
                 block.applyBlockPropertyStyling();
                 block.build();
@@ -36,18 +38,11 @@ export class PocketBlock extends AbstractBlock {
         ];
     }
     build() {
-        updateElement(this.container, { classList: ["pocket-block"] });
+        updateElement(this.container, { classList: ["container-block"] });
         this.update();
     }
     update() {
-        const height = this.metadata.height;
-        if (height) {
-            updateElement(this.container, {
-                style: {
-                    "height": height + "px",
-                }
-            });
-        }
+        
     }
     bind(data: IBlockDto) {
         this.id = data.id || uuidv4();
