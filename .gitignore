@@ -4,3 +4,5 @@ public
 uploads
 surrealDB
 .DS_Store
+data/*.json
+data/surreal.db
