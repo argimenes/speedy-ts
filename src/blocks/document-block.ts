@@ -303,7 +303,7 @@ export class DocumentBlock extends AbstractBlock {
                         width: "50px"
                     }
                 });
-                const textBlock = manager.createStandoffEditorBlock();
+                const textBlock = manager.createStandoffEditorBlockAsync();
                 textBlock.addEOL();
                 this.addBlockTo(cell, textBlock);
                 this.addBlockTo(row, cell);
@@ -329,7 +329,7 @@ export class DocumentBlock extends AbstractBlock {
                         width: (width-2) + "%"
                     }
                 });
-                const textBlock = manager.createStandoffEditorBlock();
+                const textBlock = manager.createStandoffEditorBlockAsync();
                 textBlock.addEOL();
                 this.addBlockTo(cellBlock, textBlock);
                 this.addBlockTo(rowBlock, cellBlock);
@@ -492,7 +492,7 @@ export class DocumentBlock extends AbstractBlock {
             .map(x => {
                 return { ...x, start: x.start < ci ? 0 : x.start - ci, end: x.end - ci} as StandoffPropertyDto;
             });
-        const secondBlock = await manager.createStandoffEditorBlock();
+        const secondBlock = await manager.createStandoffEditorBlockAsync();
         secondBlock.relation.parent = block.relation.parent;
         secondBlock.bind({
             type: BlockType.StandoffEditorBlock,
@@ -1469,7 +1469,7 @@ export class DocumentBlock extends AbstractBlock {
                             || manager.getParentOfType(block, BlockType.IndentedListBlock)
                         ;
                         if (!structure) return;
-                        const newBlock = manager.createStandoffEditorBlock();
+                        const newBlock = manager.createStandoffEditorBlockAsync();
                         newBlock.addEOL();
                         this.addBlockAfter(newBlock, structure);
                         setTimeout(() => {
@@ -1908,10 +1908,8 @@ export class DocumentBlock extends AbstractBlock {
                 }
                 const li = previous.getLastCell().index;
                 this.mergeBlocks(block.id, previous.id);
-                setTimeout(() => {
-                    manager.setBlockFocus(previous);
-                    previous.setCaret(li, CARET.LEFT);
-                }, 1);
+                manager.setBlockFocus(previous);
+                previous.setCaret(li, CARET.LEFT);
                 return;
             } else {
                 manager.setBlockFocus(block.relation.previous);
@@ -2109,7 +2107,7 @@ export class DocumentBlock extends AbstractBlock {
         }
         await this.reloadDocument(last);
     }
-    pastePlainTextItem(targetBlockId: GUID, ci: number, item: any) {
+    async pastePlainTextItemAsync(targetBlockId: GUID, ci: number, item: any) {
         const manager = this.manager;
         const block = this.getBlock(targetBlockId) as StandoffEditorBlock;
         const text = item.data.text;
@@ -2123,7 +2121,7 @@ export class DocumentBlock extends AbstractBlock {
                 continue;
             }
             currentBlock = temp[i-1];
-            const newBlock = manager.createStandoffEditorBlock();
+            const newBlock = await manager.createStandoffEditorBlockAsync();
             newBlock.bind({
                 type: BlockType.StandoffEditorBlock,
                 text: lines[i]
@@ -2241,14 +2239,14 @@ export class DocumentBlock extends AbstractBlock {
             return;
         }
         console.log("handlePasteForStandoffEditorBlock", { e, json, text })
-        const ci = caret.left ? caret.left.index + 1 : 0;
+        const ci = caret ? caret.left ? caret.left.index + 1 : 0 : 0;
         if (text) {
             const item = {
                 data: {
                     text: text
                 }
             };
-            this.pastePlainTextItem(block.id, ci, item);
+            await this.pastePlainTextItemAsync(block.id, ci, item);
         }
         if (json) {
             const item = JSON.parse(json);
@@ -2310,7 +2308,7 @@ export class DocumentBlock extends AbstractBlock {
         const block = args.block as StandoffEditorBlock;
         if (block.type != BlockType.StandoffEditorBlock) {
             const blockData = block.serialize();
-            const newBlock = await manager.createStandoffEditorBlock();
+            const newBlock = await manager.createStandoffEditorBlockAsync();
             newBlock.relation.parent = block.relation.parent;
             newBlock.addBlockProperties(blockData.blockProperties || []);
             newBlock.applyBlockPropertyStyling();
@@ -2331,7 +2329,7 @@ export class DocumentBlock extends AbstractBlock {
             split.moveCaretStart();
             return;
         }
-        const newBlock = await manager.createStandoffEditorBlock();
+        const newBlock = await manager.createStandoffEditorBlockAsync();
         const blockData = currentBlock.serialize();
         newBlock.relation.parent = block.relation.parent;
         newBlock.addBlockProperties(blockData.blockProperties || []);

@@ -83,7 +83,7 @@ export class ImageBlock extends AbstractBlock {
                         const imageBlock = args.block as ImageBlock;
                         const manager = imageBlock.manager as UniverseBlock;
                         const doc = manager.getParentOfType(imageBlock, BlockType.DocumentBlock) as DocumentBlock;
-                        const newBlock = manager.createStandoffEditorBlock();
+                        const newBlock = manager.createStandoffEditorBlockAsync();
                         newBlock.addEOL();
                         doc.addBlockAfter(newBlock, imageBlock);
                         setTimeout(() => {

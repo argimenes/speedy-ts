@@ -669,7 +669,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     deserializeBlock(data: any) {
         switch (data.type) {
             case BlockType.StandoffEditorBlock: {
-                const block = this.createStandoffEditorBlock();
+                const block = this.createStandoffEditorBlockAsync();
                 block.bind(data);
                 return block;
             };
@@ -1799,7 +1799,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const block = new CheckboxBlock({ manager: this, ...dto });
         return block;
     }
-    async createStandoffEditorBlock(dto?: IBlockDto) {
+    async createStandoffEditorBlockAsync(dto?: IBlockDto) {
         const block = await this.recursivelyBuildBlock(
             this.newContainer(),
             {...dto, type: BlockType.StandoffEditorBlock }

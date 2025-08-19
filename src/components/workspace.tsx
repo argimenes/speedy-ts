@@ -28,6 +28,7 @@ import { StickyTabBlock, StickyTabRowBlock } from "../blocks/sticky-tab-block";
 import { PageBlock } from "../blocks/page-block";
 import { DocumentBlock } from "../blocks/document-block";
 import { SideBlock, SurfaceBlock } from "../blocks/surface-block";
+import { BookBlock, VersoBlock } from "../blocks/book-block";
 
 type Props = {
     getInstance: (inst: UniverseBlock) => void;
@@ -1081,6 +1082,8 @@ const foo = (bar) => {
             StickyTabRowBlock.getBlockBuilder(),
             SurfaceBlock.getBlockBuilder(),
             SideBlock.getBlockBuilder(),
+            BookBlock.getBlockBuilder(),
+            VersoBlock.getBlockBuilder(),
         ]);
         workspace.createImageWorkspace();
         workspace.createDocumentWithWindow(doc2).then();

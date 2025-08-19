@@ -629,3 +629,13 @@ DOCUMENT TABS (PAGES)
 .side-block.active {
   display: block;
 }
+.book-block {
+  display: block;
+  max-width: 1600px;
+  max-height: 600px;
+}
+.verso-block {
+  display: inline-block;
+  max-width: 800px;
+  max-height: 600px;
+}
