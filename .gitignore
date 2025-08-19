@@ -1,7 +1,6 @@
 node_modules
 dist
 public
-data
 uploads
 surrealDB
 .DS_Store

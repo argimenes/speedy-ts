@@ -1,0 +1,44 @@
+{
+    "type": "document-block",
+    "metadata": {
+      "name": "Manuscript",
+      "filename": "/templates/manuscript.json"
+    },
+    "children": [
+      {
+        "type": "book-block",
+        "children": [
+          {
+            "type": "verso-block",
+            "metadata": {
+              "verso": "left",
+              "page": "1"
+            },
+            "children": [
+              {
+                "type": "image-block",
+                "metadata": {
+                  "url": "/templates/images/left-page.png"
+                }
+              }
+            ]
+          },
+          {
+            "type": "verso-block",
+            "metadata": {
+              "verso": "right",
+              "page": "2"
+            },
+            "children": [
+              {
+                "type": "image-block",
+                "metadata": {
+                  "url": "/templates/images/right-page.png"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
