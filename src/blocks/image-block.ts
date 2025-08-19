@@ -113,7 +113,7 @@ export class ImageBlock extends AbstractBlock {
     }
     attachEventHandlers() {
         this.container.addEventListener("click", this.handleClick.bind(this));
-        this.container.addEventListener("keydown", this.handleKeyDown.bind(this));
+        // this.container.addEventListener("keydown", this.handleKeyDown.bind(this));
     }
     private handleKeyDown(e: KeyboardEvent) {
         const ALLOW = true, FORBID = false;

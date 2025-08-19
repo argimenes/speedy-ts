@@ -477,7 +477,7 @@ export class DocumentBlock extends AbstractBlock {
         target.applyStandoffPropertyStyling();
         this.deleteBlock(sourceId);
     }
-    splitTextBlock(blockId: GUID, ci: number) {
+    async splitTextBlock(blockId: GUID, ci: number) {
         const manager = this.manager;
         console.log("splitBlock", { blockId, ci });
         const block = this.getBlock(blockId) as StandoffEditorBlock;
@@ -492,7 +492,7 @@ export class DocumentBlock extends AbstractBlock {
             .map(x => {
                 return { ...x, start: x.start < ci ? 0 : x.start - ci, end: x.end - ci} as StandoffPropertyDto;
             });
-        const secondBlock = manager.createStandoffEditorBlock();
+        const secondBlock = await manager.createStandoffEditorBlock();
         secondBlock.relation.parent = block.relation.parent;
         secondBlock.bind({
             type: BlockType.StandoffEditorBlock,
@@ -2310,7 +2310,7 @@ export class DocumentBlock extends AbstractBlock {
         const block = args.block as StandoffEditorBlock;
         if (block.type != BlockType.StandoffEditorBlock) {
             const blockData = block.serialize();
-            const newBlock = manager.createStandoffEditorBlock();
+            const newBlock = await manager.createStandoffEditorBlock();
             newBlock.relation.parent = block.relation.parent;
             newBlock.addBlockProperties(blockData.blockProperties || []);
             newBlock.applyBlockPropertyStyling();
@@ -2320,29 +2320,29 @@ export class DocumentBlock extends AbstractBlock {
             newBlock.moveCaretStart();
             return;
         }
-        const textBlock = block as StandoffEditorBlock;
+        const currentBlock = block as StandoffEditorBlock;
         const atStart = caret.left == null;
         const atEnd = caret.right.isEOL;
         const isInside = !atStart && !atEnd;
         if (isInside) {
             const ci = caret.left?.index as number;
-            const split = this.splitTextBlock(textBlock.id, ci + 1);
+            const split = await this.splitTextBlock(currentBlock.id, ci + 1);
             manager.setBlockFocus(split);
             split.moveCaretStart();
             return;
         }
-        const newBlock = manager.createStandoffEditorBlock();
-        const blockData = textBlock.serialize();
+        const newBlock = await manager.createStandoffEditorBlock();
+        const blockData = currentBlock.serialize();
         newBlock.relation.parent = block.relation.parent;
         newBlock.addBlockProperties(blockData.blockProperties || []);
         newBlock.applyBlockPropertyStyling();
         newBlock.addEOL();
         if (atStart) {
-            this.addPreviousBlock(newBlock, textBlock);
-            manager.setBlockFocus(textBlock);
-            block.moveCaretStart();
+            this.addPreviousBlock(newBlock, currentBlock);
+            // manager.setBlockFocus(newBlock);
+            // newBlock.moveCaretStart();
         } else if (atEnd) {
-            this.addBlockAfter(newBlock, textBlock);
+            this.addBlockAfter(newBlock, currentBlock);
             manager.setBlockFocus(newBlock);
             newBlock.moveCaretStart();
         }

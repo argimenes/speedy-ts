@@ -1799,7 +1799,14 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const block = new CheckboxBlock({ manager: this, ...dto });
         return block;
     }
-    createStandoffEditorBlock(dto?: IBlockDto) {
+    async createStandoffEditorBlock(dto?: IBlockDto) {
+        const block = await this.recursivelyBuildBlock(
+            this.newContainer(),
+            {...dto, type: BlockType.StandoffEditorBlock }
+        );
+        return block as StandoffEditorBlock;
+    }
+    createStandoffEditorBlock__OLD(dto?: IBlockDto) {
         const textBlock = new StandoffEditorBlock({ manager: this, ...dto });
         textBlock.setCommitHandler(this.storeCommit.bind(this));
         if (dto?.metadata) textBlock.metadata = dto.metadata;
