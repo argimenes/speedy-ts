@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, CARET, IBindingHandlerArgs, InputEventSource, isStr } from '../library/types';
 import { UniverseBlock } from '../universe-block';
@@ -25,7 +25,7 @@ export class ImageBlock extends AbstractBlock {
                     onInit: (p: BlockProperty) => {
                         const container = p.block.container;
                         const {x, y, position } = p.metadata;
-                        updateElement(container, {
+                        setElement(container, {
                             style: {
                                 position: position || "absolute",
                                 left: x + "px",
@@ -43,7 +43,7 @@ export class ImageBlock extends AbstractBlock {
                     onInit: (p: BlockProperty) => {
                         const container = p.block.container;
                         const {width, height} = p.metadata;
-                        updateElement(container, {
+                        setElement(container, {
                             style: {
                                 height: isStr(height) ? height : height + "px",
                                 width: isStr(width) ? width : width + "px"
@@ -144,7 +144,7 @@ export class ImageBlock extends AbstractBlock {
     }
     build() {
         if (this.metadata.url) {
-            updateElement(this.image, {
+            setElement(this.image, {
                 attribute: {
                     src: this.metadata.url
                 },

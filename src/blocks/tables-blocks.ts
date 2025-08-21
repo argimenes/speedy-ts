@@ -1,5 +1,5 @@
 import { AbstractBlock } from "./abstract-block";
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 
@@ -8,7 +8,7 @@ export class TableBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.TableBlock;
-        updateElement(this.container, {
+        setElement(this.container, {
             style: {
                 display: "table"
             }
@@ -55,7 +55,7 @@ export class TableRowBlock extends AbstractBlock {
         super(args);
         this.type = BlockType.TableRowBlock;
         this.metadata.active = false;
-        updateElement(this.container, {
+        setElement(this.container, {
             style: {
                 display: "table-row"
             }
@@ -107,7 +107,7 @@ export class TableCellBlock extends AbstractBlock {
         super(args);
         this.type = BlockType.TableCellBlock;
         this.metadata = {active: false, ...(args.metadata || {})};
-        updateElement(this.container, {
+        setElement(this.container, {
             style: {
                 display: "table-cell",
                 width: (this.metadata.width || 50) + "px"

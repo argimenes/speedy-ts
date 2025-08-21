@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { BlockType, IBlockDto, IBlock, IAbstractBlockConstructor, InputEventSource, IArrowNavigation } from "../library/types";
 import { TabBlock, TabRowBlock } from './tabs-block';
-import { createElement, updateElement } from '../library/svg';
+import { createElement, setElement } from '../library/svg';
 import { AbstractBlock } from './abstract-block';
 import { StandoffEditorBlock } from './standoff-editor-block';
 import { UniverseBlock } from '../universe-block';
@@ -67,7 +67,7 @@ export class CheckboxBlock extends AbstractBlock {
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
                 const block = new CheckboxBlock({ manager, ...dto });
                 await manager.buildChildren(block, dto, (child) => {
-                    updateElement(child.container, { style: { display: "inline-block" } });
+                    setElement(child.container, { style: { display: "inline-block" } });
                     block.wrapper.appendChild(child.container);
                 });
                 container.appendChild(block.container);
@@ -85,7 +85,7 @@ export class CheckboxBlock extends AbstractBlock {
     check() {
         this.manager?.triggerBeforeChange();
         this.checked = true;
-        updateElement(this.checkbox, {
+        setElement(this.checkbox, {
             attribute: {
                 checked: true
             }

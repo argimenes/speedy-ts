@@ -1,4 +1,4 @@
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { BlockType, IAbstractBlockConstructor, IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { AbstractBlock } from "./abstract-block";

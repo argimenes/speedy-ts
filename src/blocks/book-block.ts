@@ -1,16 +1,72 @@
 import { v4 as uuidv4 } from 'uuid';
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { UniverseBlock } from '../universe-block';
 import { BlockPropertySchemas } from '../properties/block-properties';
 
+interface IActiveVerso {
+    left: VersoBlock;
+    right: VersoBlock;
+}
 export class BookBlock extends AbstractBlock {
+    leftNav: HTMLDivElement;
+    rightNav: HTMLDivElement;
+    active: IActiveVerso;
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.BookBlock;
         this.inputEvents = this.getInputEvents();
         this.setBlockSchemas(this.getBlockSchemas());
+        this.leftNav = document.createElement("DIV") as HTMLDivElement;
+        this.rightNav = document.createElement("DIV") as HTMLDivElement;
+        this.setupNavigationControls();
+        this.active = {} as any;
+    }
+    loadPreviousVersos() {
+        const i = this.blocks.findIndex(x=> x.id == this.active.left.id);
+        if (i < 2) return;
+        this.active.left.setInactive();
+        this.active.right.setInactive();
+        this.active.left = this.active.left.relation.previous.relation.previous as VersoBlock;
+        this.active.right = this.active.right.relation.previous.relation.previous as VersoBlock;
+        this.active.left.setActive();
+        this.active.right.setActive();
+    }
+    loadNextVersos() {
+        const len = this.blocks.length - 1;
+        const i = this.blocks.findIndex(x=> x.id == this.active.left.id);
+        if (len < 2) return;
+        this.active.left.setInactive();
+        this.active.right.setInactive();
+        this.active.left = this.active.left.relation.next.relation.next as VersoBlock;
+        this.active.right = this.active.right.relation.next.relation.next as VersoBlock;
+        this.active.left.setActive();
+        this.active.right.setActive();
+    }
+    setupNavigationControls() {
+        const self = this;
+        setElement(this.leftNav, {
+            classList: ["book-nav-control", "left"],
+            innerHTML: "‹",
+            handler: {
+                "click": (e: Event) => {
+                    e.preventDefault();
+                    self.loadPreviousVersos();
+                }
+            }
+        });
+        setElement(this.rightNav, {
+            classList: ["book-nav-control", "right"],
+            innerHTML: "›",
+            handler: {
+                "click": (e: Event) => {
+                    e.preventDefault();
+                    self.loadNextVersos();
+                }
+            }
+        });
+        this.container.append(...[this.leftNav, this.rightNav]);
     }
     getBlockSchemas() {
         return [
@@ -22,27 +78,35 @@ export class BookBlock extends AbstractBlock {
         return {
             type: BlockType.BookBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
-                const block = new BookBlock({ manager, ...dto });
-                if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
-                block.applyBlockPropertyStyling();
-                block.build();
-                await manager.buildChildren(block, dto);
-                container.appendChild(block.container);
-                return block;
+                const book = new BookBlock({ manager, ...dto });
+                if (dto?.blockProperties) book.addBlockProperties(dto.blockProperties);
+                book.applyBlockPropertyStyling();
+                book.build();
+                await manager.buildChildren(book, dto);
+                container.appendChild(book.container);
+                if (book.blocks.length >= 2) {
+                    book.active.left = book.blocks[0] as VersoBlock;
+                    book.active.right = book.blocks[1] as VersoBlock;
+                    book.active.left.setActive();
+                    book.active.right.setActive();
+                }
+                return book;
             }
         };
     }
+    
     getInputEvents() {
         return [
             
         ];
     }
     build() {
-        updateElement(this.container, { classList: ["book-block"] });
+        setElement(this.container, { classList: ["book-block"] });
         this.update();
     }
     update() {
-        
+        this.active.left?.update();
+        this.active.right?.update();
     }
     bind(data: IBlockDto) {
         this.id = data.id || uuidv4();
@@ -111,11 +175,24 @@ export class VersoBlock extends AbstractBlock {
         ];
     }
     build() {
-        updateElement(this.container, { classList: ["verso-block"] });
+        setElement(this.container, { classList: ["verso-block"] });
         this.update();
     }
     update() {
-        
+        const active = this.metadata.active;
+        setElement(this.container, {
+            style: {
+                "display": active ? "inline-block" : "none"
+            }
+        });
+    }
+    setActive() {
+        this.metadata.active = true;
+        this.update();
+    }
+    setInactive() {
+        this.metadata.active = false;
+        this.update();
     }
     bind(data: IBlockDto) {
         this.id = data.id || uuidv4();

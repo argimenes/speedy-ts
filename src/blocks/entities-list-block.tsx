@@ -4,7 +4,7 @@ import { StandoffProperty } from "../library/standoff-property";
 import { createStore } from "solid-js/store";
 import { BlockType, CARET, Caret, GUID, IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
 import { UniverseBlock } from "../universe-block";
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { render } from "solid-js/web";
 import _ from "underscore";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
@@ -117,7 +117,7 @@ export class EntitiesListBlock extends AbstractBlock {
         ];
     }
     setFocus() {
-        updateElement(this.container, {
+        setElement(this.container, {
             attribute: {
                 "tabIndex": -1
             }

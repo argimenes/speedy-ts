@@ -45,7 +45,7 @@ export const wrapRange = (property: StandoffProperty, wrapper?: CellHtmlElement)
     };
     const cells = property.getCells();
     cells.forEach(cell => wrapper.appendChild(cell.element as HTMLSpanElement));
-    updateElement(wrapper, {
+    setElement(wrapper, {
         style: {
             display: "inline-block"
         }
@@ -58,12 +58,12 @@ export const wrapRange = (property: StandoffProperty, wrapper?: CellHtmlElement)
 export function createElement<T extends HTMLElement> (type: string, config?: any) {
     var el = document.createElement(type);
     if (config) {
-        updateElement(el, config);
+        setElement(el, config);
     }
      return el as T;
 };
 
-export function updateElement<T extends HTMLElement>(el: T, config: any) {
+export function setElement<T extends HTMLElement>(el: T, config: any) {
     if (config.innerHTML) {
         el.innerHTML = config.innerHTML;
     }

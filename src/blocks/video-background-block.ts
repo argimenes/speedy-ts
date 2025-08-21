@@ -1,4 +1,4 @@
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { BlockType, IAbstractBlockConstructor, IBlock, IBlockDto } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { AbstractBlock } from "./abstract-block";
@@ -36,7 +36,7 @@ export class VideoBackgroundBlock extends AbstractBlock {
     constructor(args: IVideoBackgroundBlockConstructor ) {
         super(args);
         this.type = BlockType.VideoBackgroundBlock;
-        updateElement(this.container, {
+        setElement(this.container, {
             classList: ["fullscreen-background"]
         });
         if (args.metadata?.url) {

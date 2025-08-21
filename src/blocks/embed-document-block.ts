@@ -1,7 +1,7 @@
 import { AbstractBlock } from "./abstract-block";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from "../library/types"
 import { UniverseBlock } from "../universe-block";
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 
 export interface IEmbedDocumentBlockConstructor extends IAbstractBlockConstructor {
     filename?: string;
@@ -26,7 +26,7 @@ export class EmbedDocumentBlock extends AbstractBlock {
                     const manager = new UniverseBlock();
                     await manager.loadServerDocument(block.filename);
                     block.container.appendChild(manager.container);
-                    updateElement(block.container, {
+                    setElement(block.container, {
                         style: {
                             zoom: 0.5,
                             "overflow-x": "hidden",

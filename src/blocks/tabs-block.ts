@@ -1,5 +1,5 @@
 import { AbstractBlock } from "./abstract-block";
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, InputEvent, InputEventSource, IBindingHandlerArgs, GUID, CARET } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { StandoffEditorBlock } from "./standoff-editor-block";
@@ -128,7 +128,7 @@ export class TabRowBlock extends AbstractBlock {
             header.appendChild(label);
         });
         const addNewTabLabel = document.createElement("SPAN") as HTMLSpanElement;
-        updateElement(addNewTabLabel, {
+        setElement(addNewTabLabel, {
             innerHTML: "+",
             classList: ["tab-label"],
             event: {
@@ -312,7 +312,7 @@ export class TabBlock extends AbstractBlock {
     }
     setActive() {
         this.metadata.active = true;
-        updateElement(this.container, {
+        setElement(this.container, {
             classList: ["tab"]
         });
         this.panel.classList.add("active");
@@ -320,7 +320,7 @@ export class TabBlock extends AbstractBlock {
     setInactive() {
         this.metadata.active = false;
         this.panel.classList.remove("active");
-        updateElement(this.container, {
+        setElement(this.container, {
             style: {
                 border: "none"
             }

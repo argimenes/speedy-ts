@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import _ from 'underscore';
-import { updateElement } from '../library/svg';
+import { setElement } from '../library/svg';
 import { BlockProperty } from '../library/block-property';
 import { KEYS } from '../library/keyboard';
 import { IBlock, BlockType, Overlay, InputAction, InputEvent, IBlockPropertySchema, Commit, IAbstractBlockConstructor, Platform, IInput, InputEventSource, BlockPropertyDto, GUID, IBlockDto, IMouseInput, IArrowNavigation, CARET, UniverseBlockEvent, IBindingHandlerArgs, Caret, EventType } from '../library/types';
@@ -48,7 +48,7 @@ export abstract class AbstractBlock implements IBlock {
         this.relation = {};
         this.type = BlockType.AbstractBlock;
         this.container = args?.container || document.createElement("DIV") as HTMLDivElement;
-        updateElement(this.container, {
+        setElement(this.container, {
             classList: ["abstract-block"],
             dataset: {
                 "blockId": this.id,
@@ -119,7 +119,7 @@ export abstract class AbstractBlock implements IBlock {
         const indexes = this.overlays.map(x=> x.index);
         const lastIndex = Math.max(...indexes);
         const newIndex = lastIndex + 1;
-        updateElement(container, {
+        setElement(container, {
             attribute: {
                 position: "absolute",
                 x: 0,

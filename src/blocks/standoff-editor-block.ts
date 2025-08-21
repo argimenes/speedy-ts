@@ -1,5 +1,5 @@
 import _ from "underscore";
-import { createRainbow, createUnderline, drawAnimatedSelection, drawClippedRectangle, drawSpikySelection, updateElement } from "../library/svg";
+import { createRainbow, createUnderline, drawAnimatedSelection, drawClippedRectangle, drawSpikySelection, setElement } from "../library/svg";
 import { BlockProperty } from "../library/block-property";
 import { StandoffProperty } from "../library/standoff-property";
 import { AbstractBlock } from "./abstract-block";
@@ -70,7 +70,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         this.type = BlockType.StandoffEditorBlock;
         this.relation = {};
         this.wrapper = document.createElement("DIV") as HTMLDivElement;
-        updateElement(this.wrapper, {
+        setElement(this.wrapper, {
             attribute: {
                 contenteditable: "true"
             },
@@ -186,7 +186,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                     onInit: async (p:StandoffProperty) => {
                         const manager = new UniverseBlock();
                         const container = p.start.element as HTMLSpanElement;
-                        updateElement(container, {
+                        setElement(container, {
                             style: {
                                 display: "inline-block",
                                 zoom: 0.08
@@ -194,7 +194,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                         });
                         await manager.loadServerDocument(p.value);
                         container.innerHTML = "";
-                        updateElement(manager.container, {
+                        setElement(manager.container, {
                             style: {
                                 maxWidth: p.start.cache.offset.w,
                                 maxHeight: p.start.cache.offset.h,
@@ -205,7 +205,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                     },
                     onDestroy: (p: StandoffProperty) => {
                         const span = p.start.element as HTMLSpanElement;
-                        updateElement(span, {
+                        setElement(span, {
                             display: "inline",
                             zoom: 1
                         });
@@ -561,7 +561,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                     onInit: (p: BlockProperty) => {
                         const container = p.block.container;
                         const {x, y, position } = p.metadata;
-                        updateElement(container, {
+                        setElement(container, {
                             style: {
                                 position: position || "absolute",
                                 left: x + "px",
@@ -579,7 +579,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                     onInit: (p: BlockProperty) => {
                         const container = p.block.container;
                         const {width, height} = p.metadata;
-                        updateElement(container, {
+                        setElement(container, {
                             style: {
                                 height: isStr(height) ? height : height + "px",
                                 width: isStr(width) ? width : width + "px",
@@ -589,7 +589,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                         });
                         const minWidth = p.metadata["min-width"];
                         if (minWidth) {
-                            updateElement(container, {
+                            setElement(container, {
                             style: {
                                 "min-width": minWidth + "px"
                             }
@@ -714,7 +714,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                         const url = p.value || (p.value = prompt("Background image url: ") || "");
                         if (!url) return;
                         const panel = p.block.container;
-                        updateElement(panel, {
+                        setElement(panel, {
                             style: {
                                 "background-size": "cover",
                                 "background": "url(" + url + ") no-repeat center center fixed"
@@ -728,7 +728,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                 name: "Set background colour",
                 event: {
                     onInit: (p: BlockProperty) => {
-                        updateElement(p.block.container, {
+                        setElement(p.block.container, {
                             style: {
                                 "background-color": p.value
                             }
@@ -741,7 +741,7 @@ export class StandoffEditorBlock extends AbstractBlock {
                 name: "Set font colour",
                 event: {
                     onInit: (p: BlockProperty) => {
-                        updateElement(p.block.container, {
+                        setElement(p.block.container, {
                             style: {
                                 "color": p.value
                             }
@@ -925,7 +925,7 @@ export class StandoffEditorBlock extends AbstractBlock {
         let top = cache.offset.y + cache.offset.h + 18;
         let left = cache.offset.x + cache.offset.w + 13;
         const marker = this.cache.marker = document.createElement("SPAN") as HTMLSpanElement;
-        updateElement(marker, {
+        setElement(marker, {
             style: {
                 position: "absolute",
                 top: top + "px",

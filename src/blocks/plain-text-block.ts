@@ -1,7 +1,7 @@
 import { AbstractBlock } from "./abstract-block";
 import { UniverseBlock } from "../universe-block";
 import { getCursorPos } from "../library/keyboard";
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { IAbstractBlockConstructor, BlockType, IBlock, IPlainTextBlockDto } from "../library/types";
 
 export class PlainTextBlock extends AbstractBlock {
@@ -12,7 +12,7 @@ export class PlainTextBlock extends AbstractBlock {
         this.type = BlockType.PlainTextBlock;
         this.text = "";
         this.textarea = document.createElement("textarea") as HTMLTextAreaElement;
-        updateElement(this.textarea, {
+        setElement(this.textarea, {
             style: {
                 width: "100%",
                 height: "auto"

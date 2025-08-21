@@ -37,6 +37,36 @@
                 }
               }
             ]
+          },
+          {
+            "type": "verso-block",
+            "metadata": {
+              "verso": "left",
+              "page": "3"
+            },
+            "children": [
+              {
+                "type": "image-block",
+                "metadata": {
+                  "url": "/templates/images/right-page.png"
+                }
+              }
+            ]
+          },
+          {
+            "type": "verso-block",
+            "metadata": {
+              "verso": "right",
+              "page": "4"
+            },
+            "children": [
+              {
+                "type": "image-block",
+                "metadata": {
+                  "url": "/templates/images/left-page.png"
+                }
+              }
+            ]
           }
         ]
       }

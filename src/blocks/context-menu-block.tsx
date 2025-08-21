@@ -2,7 +2,7 @@ import { Component } from "solid-js";
 import { IBlockDto, IBlock, IAbstractBlockConstructor, BlockType, InputEventSource, IBindingHandlerArgs } from "../library/types";
 import { AbstractBlock } from "./abstract-block";
 import { render } from "solid-js/web";
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { UniverseBlock } from "../universe-block";
 
 export interface IContextMenuBlockConstructor extends IAbstractBlockConstructor
@@ -39,7 +39,7 @@ export class ContextMenuBlock extends AbstractBlock {
     setupPosition() {
         const { x, y } = this.metadata?.position || {};
         const { w, h } = this.metadata?.size || {};
-        updateElement(this.container, {
+        setElement(this.container, {
             classList: ["block-window", "context-menu-window"],
             style: {
                 position: "absolute",
@@ -47,8 +47,8 @@ export class ContextMenuBlock extends AbstractBlock {
                 "z-index": this.manager.getHighestZIndex()
             }
         });
-        if (w) updateElement(this.container, { style: { width: `${w}px` } });
-        if (h) updateElement(this.container, { style: { height: `${h}px` } });
+        if (w) setElement(this.container, { style: { width: `${w}px` } });
+        if (h) setElement(this.container, { style: { height: `${h}px` } });
     }
     static getBlockBuilder() {
         return {

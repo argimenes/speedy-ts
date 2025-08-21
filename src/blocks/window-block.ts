@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IBindingHandlerArgs, InputEventSource } from '../library/types';
 import { AbstractBlock } from './abstract-block';
-import { updateElement } from '../library/svg';
+import { setElement } from '../library/svg';
 import { UniverseBlock } from '../universe-block';
 import { ContextMenuBlock } from './context-menu-block';
 import { DraggableWindow } from '../library/draggable-window';
@@ -91,7 +91,7 @@ export class WindowBlock extends AbstractBlock {
     updatePosition() {
         const pos = this.metadata.position;
         this.container.style.transform = `translate(${pos.x}px,${pos.y}px)`;
-        updateElement(this.container, {
+        setElement(this.container, {
             style: {
                 width: this.metadata.size.w,
                 height: this.metadata.size.h,
@@ -274,7 +274,7 @@ export class WindowBlock extends AbstractBlock {
             }
             if (self.state == "maximised") {
                 self.state = "normal";
-                updateElement(win, {
+                setElement(win, {
                     style: {
                         top: previousState.top + "px",
                         left: previousState.left + "px",
@@ -284,14 +284,14 @@ export class WindowBlock extends AbstractBlock {
                 });
             } else {
                 self.state = "minimized";
-                updateElement(win, {
+                setElement(win, {
                     style: {
                         bottom: 0,
                         right: 0,
                         width: "100px"
                     }
                 });
-                updateElement(win.children[1] as HTMLElement , {
+                setElement(win.children[1] as HTMLElement , {
                     style: {
                         display: "none"
                     }
@@ -313,7 +313,7 @@ export class WindowBlock extends AbstractBlock {
             }
             if (self.state == "minimized") {
                 self.state = "normal";
-                updateElement(win, {
+                setElement(win, {
                     style: {
                         top: previousState.top + "px",
                         left: previousState.left + "px",
@@ -321,7 +321,7 @@ export class WindowBlock extends AbstractBlock {
                         height: previousState.height + "px"
                     }
                 });
-                updateElement(win.children[1] as HTMLElement , {
+                setElement(win.children[1] as HTMLElement , {
                     style: {
                         display: "block"
                     }
@@ -335,7 +335,7 @@ export class WindowBlock extends AbstractBlock {
                     width: rect.width,
                     height: rect.height
                 };
-                updateElement(win, {
+                setElement(win, {
                     style: {
                         top: 0,
                         left: 0,

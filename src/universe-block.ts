@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { updateElement } from "./library/svg";
+import { setElement } from "./library/svg";
 import { v4 as uuidv4 } from 'uuid';
 import { IndentedListBlock } from "./blocks/indented-list-block";
 import { TabBlock, TabRowBlock } from "./blocks/tabs-block";
@@ -427,7 +427,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         const win = this.getParentOfType(block, BlockType.WindowBlock);
         if (win) {
             console.log({ win, container: win.container });
-            updateElement(win.container, {
+            setElement(win.container, {
                 style: {
                     "z-index": this.getHighestZIndex()
                 }
@@ -507,7 +507,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
               }
           
               const y = Math.sin(charObj.position / degrees) * amplitude;
-              updateElement(charObj.cell.element as HTMLSpanElement, {
+              setElement(charObj.cell.element as HTMLSpanElement, {
                 style: {
                     position: "absolute",
                     x: charObj.position + "px",
@@ -723,7 +723,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             source: block
         });
         const doc = this.manager.getParentOfType(block, BlockType.DocumentBlock);
-        updateElement(component.container, {
+        setElement(component.container, {
             style: {
                 position: "fixed",
                 top: "20px",
@@ -824,12 +824,12 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         this.pointer++;
     }
     stageRightMarginBlock(rightMargin: DocumentBlock, mainBlock: IBlock) {
-        updateElement(mainBlock.container, {
+        setElement(mainBlock.container, {
             style: {
                 position: "relative"
             }
         });
-        updateElement(rightMargin.container, {
+        setElement(rightMargin.container, {
             style: {
                 position: "absolute",
                 top: 0,
@@ -840,7 +840,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         });
         const hand = document.createElement("SPAN") as HTMLSpanElement;
         hand.innerHTML = "☜";
-        updateElement(hand, {
+        setElement(hand, {
             style: {
                 "font-size": "2rem",
                 position: "absolute",
@@ -851,12 +851,12 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         rightMargin.container.appendChild(hand);
     }
     stageLeftMarginBlock(leftMargin: DocumentBlock, mainBlock: IBlock) {
-        updateElement(mainBlock.container, {
+        setElement(mainBlock.container, {
             style: {
                 position: "relative"
             }
         });
-        updateElement(leftMargin.container, {
+        setElement(leftMargin.container, {
             style: {
                 position: "absolute",
                 top: 0,
@@ -867,7 +867,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         });
         const hand = document.createElement("SPAN") as HTMLSpanElement;
         hand.innerHTML = "☞";
-        updateElement(hand, {
+        setElement(hand, {
             style: {
                 "font-size": "2rem",
                 position: "absolute",
@@ -1123,7 +1123,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (xdiff < menuWidth) {
             x = e.clientX - xdiff - 10;
         }
-        updateElement(menu.container, {
+        setElement(menu.container, {
             style: {
                 position: "absolute",
                 top: y + "px",
@@ -1524,7 +1524,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
          */
         const defaultWidth = 40;
         const level = block.metadata.indentLevel as number;
-        updateElement(block.container, {
+        setElement(block.container, {
             style: {
                 "margin-left": (level * defaultWidth) + "px"
             }
@@ -1535,7 +1535,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             ...dto, manager: this
         });
         block.applyBlockPropertyStyling();
-        updateElement(block.container, { classList: ["document-container"] });
+        setElement(block.container, { classList: ["document-container"] });
         return block;
     }
     createIndentedListBlock(dto?: IBlockDto) {
@@ -1579,13 +1579,13 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         });
         if (dto?.metadata) block.metadata = dto.metadata;
         if (block.metadata.width) {
-            updateElement(block.container, {
+            setElement(block.container, {
                 style: {
                     width: block.metadata.width
                 }
             });
         }
-        updateElement(block.container, {
+        setElement(block.container, {
             style: {
                 "vertical-align": "top"
             }
@@ -1918,7 +1918,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
     }
     setMultiColumns(id: GUID, cols: number) {
         const block = this.getBlock(id);
-        updateElement(block.container, {
+        setElement(block.container, {
             style: {
                 "column-count": cols
             }

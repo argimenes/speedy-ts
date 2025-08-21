@@ -1,7 +1,7 @@
 import { AbstractBlock } from "./abstract-block";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from "../library/types";
 import { UniverseBlock } from "../universe-block";
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { DocumentBlock } from "./document-block";
 import { BlockPropertySchemas } from "../properties/block-properties";
 
@@ -91,7 +91,7 @@ export class GridRowBlock extends AbstractBlock {
                 const block = new GridRowBlock({ manager, ...dto });
                 await manager.buildChildren(block, dto, (b) => {
                     if (b.metadata?.width) {
-                        updateElement(b.container, {
+                        setElement(b.container, {
                             style: {
                                 width: b.metadata?.width
                             }
@@ -193,13 +193,13 @@ export class GridCellBlock extends AbstractBlock {
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
                 const block = new GridCellBlock({ manager, ...dto });
                 if (block.metadata.width) {
-                    updateElement(block.container, {
+                    setElement(block.container, {
                         style: {
                             width: block.metadata.width
                         }
                     });
                 }
-                updateElement(block.container, {
+                setElement(block.container, {
                     style: {
                         "vertical-align": "top"
                     }
@@ -218,7 +218,7 @@ export class GridCellBlock extends AbstractBlock {
     }
     setWidth(width: string) {
         this.metadata.width = width;
-        updateElement(this.container, {
+        setElement(this.container, {
             style: {
                 width: width
             }

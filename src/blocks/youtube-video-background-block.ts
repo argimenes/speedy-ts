@@ -4,7 +4,7 @@ import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, InputEvent, IBlock, IBindingHandlerArgs, InputEventSource, ISetSource } from '../library/types';
 import { Options } from 'youtube-player/dist/types';
 import { UniverseBlock } from '../universe-block';
-import { updateElement } from '../library/svg';
+import { setElement } from '../library/svg';
 
 
 
@@ -15,7 +15,7 @@ export class YouTubeVideoBackgroundBlock extends AbstractBlock implements ISetSo
         super(args);
         this.type = BlockType.YouTubeVideoBackgroundBlock;
         this.iframe = document.createElement("DIV") as HTMLDivElement;
-        updateElement(this.iframe, {
+        setElement(this.iframe, {
             style: {
                 position: "fixed", // Use fixed instead of absolute
                 pointerEvents: "none", // Disables mouse interactions
@@ -27,7 +27,7 @@ export class YouTubeVideoBackgroundBlock extends AbstractBlock implements ISetSo
                 overflow: "hidden"
             }
         });
-        updateElement(this.container, {
+        setElement(this.container, {
             classList: ["fullscreen-background"]
         });
         this.player = YouTubePlayer(this.iframe, {

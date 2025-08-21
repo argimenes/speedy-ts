@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { UniverseBlock } from '../universe-block';
@@ -102,7 +102,7 @@ export class StickyTabRowBlock extends AbstractBlock {
         ];
     }
     build() {
-        updateElement(this.leftSide, { classList: ["sticky-tab-row-block"] });
+        setElement(this.leftSide, { classList: ["sticky-tab-row-block"] });
         this.container.appendChild(this.leftSide);
         this.hideAllTabPanels();
     }
@@ -176,7 +176,7 @@ export class StickyTabBlock extends AbstractBlock {
         this.container.classList.add("active");
         const row = this.getRow();
         const i = row.blocks.findIndex(x => x.clientId == this.clientId) + 1;
-        updateElement(this.container, {
+        setElement(this.container, {
             style: {
                 top: (i * 25) + "px"
             }
@@ -184,7 +184,7 @@ export class StickyTabBlock extends AbstractBlock {
     }
     hidePanel() {
         this.container.classList.remove("active");
-        updateElement(this.container, {
+        setElement(this.container, {
             style: {
                 top: "0px"
             }
@@ -244,7 +244,7 @@ export class StickyTabBlock extends AbstractBlock {
         this.manager.createDocumentWithWindow(extracted);
     }
     build() {
-        updateElement(this.container, { classList: ["sticky-tab-panel"] });
+        setElement(this.container, { classList: ["sticky-tab-panel"] });
         this.update();
     }
     update() {
@@ -256,10 +256,10 @@ export class StickyTabBlock extends AbstractBlock {
         const { text, html, color, backgroundColor } = (this.metadata as IStickyTabBlockMetadata);
         container.classList.add("sticky-tab-label-block");
         if (color) {
-            updateElement(container, { style: { "color": color } });
+            setElement(container, { style: { "color": color } });
         }
         if (backgroundColor) {
-            updateElement(container, { style: { "background-color": backgroundColor } });
+            setElement(container, { style: { "background-color": backgroundColor } });
         }
         if (text) {
             container.innerText = text;

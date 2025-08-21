@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { UniverseBlock } from '../universe-block';
-import { updateElement } from '../library/svg';
+import { setElement } from '../library/svg';
 import { InfiniteCanvas } from '../library/infinite-canvas';
 
 export class CanvasBlock extends AbstractBlock {
@@ -32,15 +32,15 @@ export class CanvasBlock extends AbstractBlock {
         };
     }
     build() {
-        updateElement(this.minimap, {
+        setElement(this.minimap, {
             classList: ["minimap"],
             style: {
                 width: "200px",
                 height: "150px"
             }
         });
-        updateElement(this.canvas, { classList: ["canvas"] });
-        updateElement(this.viewport, { classList: ["viewport"] });
+        setElement(this.canvas, { classList: ["canvas"] });
+        setElement(this.viewport, { classList: ["viewport"] });
         this.viewport.appendChild(this.canvas);
         this.viewport.appendChild(this.minimap);
         this.container.appendChild(this.viewport);

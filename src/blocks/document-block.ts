@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IMainListBlockDto as IDocumentBlockDto, IBlockDto, IBlock, CARET, InputEventSource, InputEvent, RowPosition, Caret, IBindingHandlerArgs, DIRECTION, ISelection, passoverClass, IRange, FindMatch, EventType, BlockState, GUID, StandoffPropertyDto, isStr, Word, BlockPropertyDto } from '../library/types';
 import { StandoffEditorBlock } from './standoff-editor-block';
-import { updateElement } from '../library/svg';
+import { setElement } from '../library/svg';
 import { UniverseBlock } from '../universe-block';
 import { AnnotationPanelBlock } from '../components/annotation-panel';
 import { fetchGet, renderToNode } from '../library/common';
@@ -215,7 +215,7 @@ export class DocumentBlock extends AbstractBlock {
                         const url = p.value || (p.value = prompt("Background image url: ") || "");
                         if (!url) return;
                         const panel = p.block.container;
-                        updateElement(panel, {
+                        setElement(panel, {
                             style: {
                                 "background-size": "cover",
                                 "background": "url(" + url + ") no-repeat center center fixed"
@@ -229,7 +229,7 @@ export class DocumentBlock extends AbstractBlock {
                 name: "Set background colour",
                 event: {
                     onInit: (p: BlockProperty) => {
-                        updateElement(p.block.container, {
+                        setElement(p.block.container, {
                             style: {
                                 "background-color": p.value
                             }
@@ -242,7 +242,7 @@ export class DocumentBlock extends AbstractBlock {
                 name: "Set font colour",
                 event: {
                     onInit: (p: BlockProperty) => {
-                        updateElement(p.block.container, {
+                        setElement(p.block.container, {
                             style: {
                                 "color": p.value
                             }
@@ -605,7 +605,7 @@ export class DocumentBlock extends AbstractBlock {
         const i = parent.blocks.findIndex(x => x.id == block.id);
         parent.blocks.splice(i, 1);
         checkbox.wrapper.appendChild(block.container);
-        updateElement(block.container, {
+        setElement(block.container, {
             style: {
                 display: "inline-block"
             }
@@ -1579,7 +1579,7 @@ export class DocumentBlock extends AbstractBlock {
         const left = selection
             ? selection.start.cache.offset.x
             : caret.right.cache.offset.x;
-        updateElement(node, {
+        setElement(node, {
             style: {
                 top: top + "px",
                 left: left + "px"
@@ -1648,7 +1648,7 @@ export class DocumentBlock extends AbstractBlock {
         const node = await searchBlock.render();
         const top = 0;
         const left = caret.right.cache.offset.x - 10;
-        updateElement(node, {
+        setElement(node, {
             style: {
                 top: top + "px",
                 left: left + "px"
@@ -1723,7 +1723,7 @@ export class DocumentBlock extends AbstractBlock {
         const level = firstListParent?.metadata.indentLevel || 0 as number;
         list.metadata.indentLevel = level + 1;
         list.container.appendChild(block.container);
-        updateElement(list.container, {
+        setElement(list.container, {
             classList: ["list-item-numbered"]
         });
         previous.container.appendChild(list.container);
@@ -1818,7 +1818,7 @@ export class DocumentBlock extends AbstractBlock {
         const offset = anchor.cache.offset;
         const top = offset.cy + offset.y + offset.h + 5;
         const left = offset.x;
-        updateElement(node, {
+        setElement(node, {
             style: {
                 position: "absolute",
                 top: top + "px",
@@ -2145,7 +2145,7 @@ export class DocumentBlock extends AbstractBlock {
         const manager = this.manager;
         const parent = manager.getParent(sibling) as AbstractBlock;
         await manager.loadServerDocument(filename);
-        updateElement(manager.container, {
+        setElement(manager.container, {
             style: {
                 zoom: 0.5,
                 "overflow-x": "hidden",
@@ -2197,7 +2197,7 @@ export class DocumentBlock extends AbstractBlock {
         const node = await panel.render();
         const top = 0;
         const left = caret.right.cache.offset.x - 10;
-        updateElement(node, {
+        setElement(node, {
             style: {
                 top: top + "px",
                 left: left + "px"
@@ -2346,7 +2346,7 @@ export class DocumentBlock extends AbstractBlock {
         }
         const list = manager.getParentOfType(block, BlockType.IndentedListBlock);
         if (list) {
-            updateElement(newBlock.container, {
+            setElement(newBlock.container, {
                 classList: ["list-item-numbered"]
             });
         }

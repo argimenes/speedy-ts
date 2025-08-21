@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { UniverseBlock } from '../universe-block';
@@ -38,7 +38,7 @@ export class ContainerBlock extends AbstractBlock {
         ];
     }
     build() {
-        updateElement(this.container, { classList: ["container-block"] });
+        setElement(this.container, { classList: ["container-block"] });
         this.update();
     }
     update() {

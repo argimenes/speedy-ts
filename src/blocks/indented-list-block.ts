@@ -1,7 +1,7 @@
 import { AbstractBlock } from "./abstract-block";
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, IArrowNavigation } from "../library/types";
 import { UniverseBlock } from "../universe-block";
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 
 export class IndentedListBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
@@ -16,7 +16,7 @@ export class IndentedListBlock extends AbstractBlock {
                 if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
                 block.applyBlockPropertyStyling();
                 await manager.buildChildren(block, dto, (b) =>
-                    updateElement(b.container, {
+                    setElement(b.container, {
                         classList: ["list-item-numbered"]
                 }));
                 const level = block.metadata.indentLevel || 0 as number;

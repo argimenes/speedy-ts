@@ -1,4 +1,4 @@
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { BlockType, IAbstractBlockConstructor, IBlock, IBlockDto } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { AbstractBlock } from "./abstract-block";
@@ -36,7 +36,7 @@ export class ImageBackgroundBlock extends AbstractBlock {
     constructor(args: IImageBackgroundBlockConstructor ) {
         super(args);
         this.type = BlockType.ImageBackgroundBlock;
-        updateElement(this.container, {
+        setElement(this.container, {
             classList: ["fullscreen-background"]
         });
         if (args.metadata?.url) {
@@ -44,7 +44,7 @@ export class ImageBackgroundBlock extends AbstractBlock {
         }
     }
     setImage(url: string) {
-        updateElement(this.container, {
+        setElement(this.container, {
             style: {
                 "background-image": `url('${url}')`,
                 "background-size": "cover",

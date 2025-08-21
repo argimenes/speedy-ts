@@ -639,3 +639,21 @@ DOCUMENT TABS (PAGES)
   max-width: 800px;
   max-height: 600px;
 }
+.book-nav-control {
+  position: absolute;
+  top: 385px;
+  height: 30px;
+  width: 30px;
+  text-align: center;
+  vertical-align: middle;
+  background-color: #ccc;
+  padding: 5px;
+  font-size: 1.5rem;
+  border: 1px solid #666;
+}
+.book-nav-control.left {
+  left:-35px;
+}
+.book-nav-control.right {
+  right:-35px;
+}

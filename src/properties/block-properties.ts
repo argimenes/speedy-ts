@@ -1,5 +1,5 @@
 import { BlockProperty } from "../library/block-property";
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { isStr } from "../library/types";
 
 export const BlockPropertySchemas = {
@@ -33,7 +33,7 @@ export const BlockPropertySchemas = {
         description: "Rotate block.",
         render: {
             destroy: async (p: BlockProperty) => {
-                updateElement(p.block.container, {
+                setElement(p.block.container, {
                     style: {
                         "transform": `rotate(0)`,
                         "transform-origin": "unset"
@@ -42,7 +42,7 @@ export const BlockPropertySchemas = {
             },
             update: async (p: BlockProperty) => {
                 const value = p.value || "0";
-                updateElement(p.block.container, {
+                setElement(p.block.container, {
                     style: {
                         "transform": `rotate(${value}deg)`,
                         "transform-origin": "center"
@@ -57,7 +57,7 @@ export const BlockPropertySchemas = {
         description: "Align text to: left; right; center; justify.",
         render: {
             destroy: async (p: BlockProperty) => {
-                updateElement(p.block.container, {
+                setElement(p.block.container, {
                     style: {
                         "text-align": "unset"
                     }
@@ -65,7 +65,7 @@ export const BlockPropertySchemas = {
             },
             update: async (p: BlockProperty) => {
                 const value = p.value || "left";
-                updateElement(p.block.container, {
+                setElement(p.block.container, {
                     style: {
                         "text-align": value
                     }
@@ -90,7 +90,7 @@ export const BlockPropertySchemas = {
         },
         render: {
             destroy: async (p: BlockProperty) => {
-                updateElement(p.block.container, {
+                setElement(p.block.container, {
                     style: {
                         "font-size": "unset",
                         "line-height": "unset"
@@ -99,7 +99,7 @@ export const BlockPropertySchemas = {
             },
             update: async (p: BlockProperty) => {
                 const value = p.schema.library.toSize(p.value);
-                updateElement(p.block.container, {
+                setElement(p.block.container, {
                     style: {
                         "font-size": value,
                         "line-height": value
@@ -140,7 +140,7 @@ export const BlockPropertySchemas = {
             onInit: (p: BlockProperty) => {
                 const container = p.block.container;
                 const {width, height} = p.metadata;
-                updateElement(container, {
+                setElement(container, {
                     style: {
                         height: isStr(height) ? height : height + "px",
                         width: isStr(width) ? width : width + "px",
@@ -150,7 +150,7 @@ export const BlockPropertySchemas = {
                 });
                 const minWidth = p.metadata["min-width"];
                 if (minWidth) {
-                    updateElement(container, {
+                    setElement(container, {
                     style: {
                         "min-width": minWidth + "px"
                     }
@@ -167,7 +167,7 @@ export const BlockPropertySchemas = {
                 const manager = p.block.manager;
                 const container = p.block.container;
                 const {x, y, position } = p.metadata;
-                updateElement(container, {
+                setElement(container, {
                     style: {
                         position: position || "absolute",
                         left: x + "px",

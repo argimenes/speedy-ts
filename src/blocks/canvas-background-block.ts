@@ -1,4 +1,4 @@
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { BlockType, IAbstractBlockConstructor, IBlock, IBlockDto } from "../library/types";
 import { UniverseBlock } from "../universe-block";
 import { AbstractBlock } from "./abstract-block";
@@ -14,7 +14,7 @@ export class CanvasBackgroundBlock extends AbstractBlock {
         super(args);
         this.type = BlockType.CanvasBackgroundBlock;
         this.canvas = document.createElement("CANVAS") as HTMLCanvasElement;
-        updateElement(this.canvas, {
+        setElement(this.canvas, {
             style: {
                 position: "fixed",
                 width: `${window.screen.width}px`,
@@ -26,7 +26,7 @@ export class CanvasBackgroundBlock extends AbstractBlock {
         // this.canvas.height = window.screen.height;
         this.container.appendChild(this.canvas);
         this.createGradient();
-        updateElement(this.container, {
+        setElement(this.container, {
             classList: ["fullscreen-background"]
         });
     }

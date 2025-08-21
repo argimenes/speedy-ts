@@ -1,7 +1,7 @@
 import { AbstractBlock } from './abstract-block';
 import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
 import { UniverseBlock } from '../universe-block';
-import { updateElement } from '../library/svg';
+import { setElement } from '../library/svg';
 
 export class PageBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
@@ -17,7 +17,7 @@ export class PageBlock extends AbstractBlock {
                 if (dto?.blockProperties) page.addBlockProperties(dto.blockProperties);
                 page.applyBlockPropertyStyling();
                 await manager.buildChildren(page, dto);
-                updateElement(page.container, { classList: ["page-container"] });
+                setElement(page.container, { classList: ["page-container"] });
                 container.appendChild(page.container);
                 return page;
             }

@@ -3,7 +3,7 @@ import { StandoffProperty } from "../library/standoff-property";
 import { createStore } from "solid-js/store";
 import { IBindingHandlerArgs, IBlock, IBlockDto, InputEventSource } from "../library/types";
 import { UniverseBlock } from "../universe-block";
-import { updateElement } from "../library/svg";
+import { setElement } from "../library/svg";
 import { AbstractBlock } from "./abstract-block";
 
 type StandoffPropertyState = {
@@ -30,7 +30,7 @@ export class MonitorBlock extends AbstractBlock implements IHandleyKeyboardInput
         this.properties = [];
     }
     setFocus(){
-        updateElement(this.container, {
+        setElement(this.container, {
             attribute: {
                 "tabIndex": -1
             }

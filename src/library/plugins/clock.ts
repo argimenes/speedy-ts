@@ -1,5 +1,5 @@
 import { StandoffProperty } from "../standoff-property";
-import { updateElement, wrapRange } from "../svg";
+import { setElement, wrapRange } from "../svg";
 import { IAnimationPlugin, CellHtmlElement, ClockDirection, IClockPluginConstructor, CARET } from "../types";
 
 export class ClockPlugin implements IAnimationPlugin {
@@ -79,7 +79,7 @@ export class ClockPlugin implements IAnimationPlugin {
         this.draw();
     }
     draw() {
-        updateElement(this.property.wrapper, {
+        setElement(this.property.wrapper, {
             style: {
                 transform: `rotate(${this.degrees}deg)`
             }
