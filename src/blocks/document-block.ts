@@ -146,7 +146,7 @@ export class DocumentBlock extends AbstractBlock {
                 dto
             ]
         } as IDocumentBlockDto;
-        const doc = await this.manager.createDocumentWithWindow(docDto);
+        const doc = await this.manager.createDocumentWithWindowAsync(docDto);
         await this.manager.saveServerDocument(doc.id, docDto.metadata.filename, metadata.folder);
     }
     getBlockSchemas() {

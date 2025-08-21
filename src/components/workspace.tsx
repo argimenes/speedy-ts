@@ -1086,7 +1086,7 @@ const foo = (bar) => {
             VersoBlock.getBlockBuilder(),
         ]);
         workspace.createImageWorkspace();
-        workspace.createDocumentWithWindow(doc2).then();
+        workspace.createDocumentWithWindowAsync(doc2).then();
         props.getInstance(workspace);
         console.log("== GLOBAL ==", { manager: workspace, block: workspace.blocks[0] })
     }

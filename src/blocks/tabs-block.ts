@@ -224,7 +224,7 @@ export class TabBlock extends AbstractBlock {
                 }
             ]
         };
-        this.manager.createDocumentWithWindow(extracted);
+        this.manager.createDocumentWithWindowAsync(extracted);
     }
     override explode() {
         /**

@@ -241,7 +241,7 @@ export class StickyTabBlock extends AbstractBlock {
                 children: [tabDto]
             }]
         };
-        this.manager.createDocumentWithWindow(extracted);
+        this.manager.createDocumentWithWindowAsync(extracted);
     }
     build() {
         setElement(this.container, { classList: ["sticky-tab-panel"] });

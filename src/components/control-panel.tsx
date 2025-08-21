@@ -156,16 +156,16 @@ export class ControlPanelBlock extends AbstractBlock {
             const doc = manager.getParentOfType(block, BlockType.DocumentBlock) as DocumentBlock;
             doc.addCodeMirrorBlock(block);
         }
-        const createNewDocumentClicked = (e: Event) => {
+        const createNewDocumentClicked = async (e: Event) => {
             e.preventDefault();
-            createDocument();
+            await createDocument();
         }
         const saveWorkspace = async () => {
-            await manager.saveWorkspace();
+            await manager.saveWorkspaceAsync();
         };
         const createDocument = async () => {
             const dto = Template.EmptyDocument;
-            await manager.createDocumentWithWindow(dto);
+            await manager.createDocumentWithWindowAsync(dto);
         }
         const setBackgroundColour = (colour: string) => {
             const prop = {

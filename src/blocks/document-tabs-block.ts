@@ -208,7 +208,7 @@ export class DocumentTabBlock extends AbstractBlock {
                 children: [tabDto]
             }]
         };
-        this.manager.createDocumentWithWindow(extracted);
+        this.manager.createDocumentWithWindowAsync(extracted);
     }
     override explode() {
         /**

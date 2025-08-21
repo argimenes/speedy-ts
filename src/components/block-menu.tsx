@@ -219,7 +219,7 @@ export class BlockMenuBlock extends AbstractBlock {
       tab.setActive();
     }
     async saveWorkspace(filename: string) {
-      await this.manager.saveWorkspace(filename);
+      await this.manager.saveWorkspaceAsync(filename);
     }
     async saveDocument(filename: string) {
       const win = this.manager.getParentOfType(this.source, BlockType.DocumentWindowBlock);
@@ -234,7 +234,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const win = this.manager.getParentOfType(this.source, BlockType.DocumentWindowBlock);
       const block = win.blocks[0];
       const dto = block.serialize();
-      this.manager.createDocumentWithWindow(dto);
+      this.manager.createDocumentWithWindowAsync(dto);
     }
     addGridRow() {
       const row = this.manager.getParentOfType(this.source, BlockType.GridRowBlock) as GridRowBlock;
@@ -284,7 +284,7 @@ export class BlockMenuBlock extends AbstractBlock {
     }
     async createDocument() {
         const dto = Template.EmptyDocument;
-        await this.manager.createDocumentWithWindow(dto);
+        await this.manager.createDocumentWithWindowAsync(dto);
     }
     setBackgroundImage(url: string) {
       this.manager.switchToImageBackground(url);

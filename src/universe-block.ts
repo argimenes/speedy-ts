@@ -607,7 +607,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                         
                     `,
                     handler: async (args) => {
-                        _this.saveWorkspace();
+                        _this.saveWorkspaceAsync();
                     }
                 }
             },
@@ -906,7 +906,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         }
         // this.loadDocument(json.Data.document);
         const dto = json.Data.document;
-        await this.createDocumentWithWindow(dto);
+        await this.createDocumentWithWindowAsync(dto);
     }
     async loadServerDocument(filename: string, folder: string = ".") {
         const res = await fetchGet("/api/loadDocumentJson", { filename, folder });
@@ -941,7 +941,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
                 ]
             };
         }
-        await this.createDocumentWithWindow(dto);
+        await this.createDocumentWithWindowAsync(dto);
     }
     turnRightRotateBlockProperty() {
         const block = this.getBlockInFocus();
@@ -1421,7 +1421,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
           traverse(root);
           return result;
     }
-    saveWorkspace(filename?: string) {
+    async saveWorkspaceAsync(filename?: string) {
         filename = filename || prompt("Filename: ");
         const ws = this.serialize().children[0];
         ws.metadata = { ...ws.metadata, filename };
@@ -1432,7 +1432,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             d.children = [];
         });
         console.log("saveWorkspace", { dto: ws, children, documents });
-        fetch("/api/saveWorkspaceJson", {
+        await fetch("/api/saveWorkspaceJson", {
             method: "POST",
             body: JSON.stringify({
                 filename,
@@ -1441,7 +1441,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             headers: { "Content-Type": "application/json" }
         }).then();
     }
-    async createDocumentWithWindow(dto: IMainListBlockDto) {
+    async createDocumentWithWindowAsync(dto: IMainListBlockDto) {
         const totalWindows = this.registeredBlocks.filter(x => x.type == BlockType.DocumentWindowBlock).length;
         const buffer = totalWindows * 20;
         const documentWindow = await this.recursivelyBuildBlock(this.newContainer(), {
