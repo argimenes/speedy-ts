@@ -5,6 +5,7 @@ import { isStr } from "../library/types";
 export const BlockPropertySchemas = {
     getDocumentBlockProperties() {
         return [
+            BlockPropertySchemas.blockMargin,
             BlockPropertySchemas.blockRotate,
             BlockPropertySchemas.blockIndent,
             BlockPropertySchemas.blockAlignment,
@@ -17,6 +18,7 @@ export const BlockPropertySchemas = {
     },
     getStandoffBlockProperties() {
         return [
+            BlockPropertySchemas.blockMargin,
             BlockPropertySchemas.blockRotate,
             BlockPropertySchemas.blockIndent,
             BlockPropertySchemas.blockAlignment,
@@ -173,6 +175,21 @@ export const BlockPropertySchemas = {
                         left: x + "px",
                         top: y + "px",
                         "z-index": manager.getHighestZIndex()
+                    }
+                });
+            }
+        }
+    },
+    blockMargin: {
+        type: "block/margin",
+        name: "Block margin",
+        render: {
+            update: (p: BlockProperty) => {
+                const container = p.block.container;
+                const {top, left, bottom, right } = p.metadata;
+                setElement(container, {
+                    style: {
+                        "margin-top": top
                     }
                 });
             }

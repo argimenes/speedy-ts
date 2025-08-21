@@ -14,6 +14,7 @@ import { ContainerBlock } from "../blocks/container-block";
 import { StickyTabBlock, StickyTabRowBlock } from "../blocks/sticky-tab-block";
 import { DocumentBlock } from "../blocks/document-block";
 import { Template } from "../library/templates";
+import { BookBlock, FixedSizePageBlock } from "../blocks/book-block";
 
 type Props = {
     items: ContextMenuItem[];
@@ -252,6 +253,46 @@ export class BlockMenuBlock extends AbstractBlock {
       const tab = this.manager.getParentOfType(this.source, BlockType.DocumentTabBlock) as DocumentTabBlock;
       tab.moveLeft();
     }
+    async addBlankPagesToBook() {
+      const book = this.manager.getParentOfType(this.source, BlockType.BookBlock) as BookBlock;
+      const leftPage = await this.manager.recursivelyBuildBlock(this.newContainer(),{
+        type: BlockType.FixedSizePageBlock,
+        metadata: {
+          page: "Left"
+        },
+        children: [
+          {
+            type: BlockType.StandoffEditorBlock,
+            blockProperties: [ { type: "block/margin", metadata: { top: "50px "}} ]
+          }
+        ]
+      }) as FixedSizePageBlock;
+      const rightPage = await this.manager.recursivelyBuildBlock(this.newContainer(), {
+        type: BlockType.FixedSizePageBlock,
+        metadata: {
+          page: "Right"
+        },
+        children: [
+          {
+            type: BlockType.StandoffEditorBlock,
+            blockProperties: [ { type: "block/margin", metadata: { top: "50px "}} ]
+          }
+        ]
+      }) as FixedSizePageBlock;
+      leftPage.relation.parent = book;
+      rightPage.relation.parent = book;
+      const lastPage = book.getLastPage();
+      this.manager.insertBlockAfter(lastPage, leftPage);
+      this.manager.insertBlockAfter(leftPage, rightPage);
+      book.leftPage = leftPage;
+      book.rightPage = rightPage;
+      book.setAllPagesInactive();
+      leftPage.setActive();
+      rightPage.setActive();
+      this.manager.generateParentSiblingRelations(book);
+      this.manager.setBlockFocus(leftPage);
+      (leftPage.blocks[0] as StandoffEditorBlock)?.moveCaretStart();
+    }
     moveTabLeft() {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
       tab.moveLeft();
@@ -311,6 +352,7 @@ export class BlockMenuBlock extends AbstractBlock {
       const insideDocument = !!this.manager.getParentOfType(this.source, BlockType.DocumentBlock);
       const insidePocket = !!this.manager.getParentOfType(this.source, BlockType.ContainerBlock);
       const insideStickyTag = !!this.manager.getParentOfType(this.source, BlockType.StickyTabBlock);
+      const insideBook = !!this.manager.getParentOfType(this.source, BlockType.BookBlock);
 
       if (insideDocument) {
         const itemDeleteBlock= {
@@ -495,6 +537,14 @@ export class BlockMenuBlock extends AbstractBlock {
               onClick: () => self.deleteTab()
         };
         /**
+         * Books
+         */
+        const itemAddBlankPages = {
+              label: "Add blank pages",
+              icon: <IconFile />,
+              onClick: () => self.addBlankPagesToBook()
+        };
+        /**
          * Document Tabs (Pages)
          */
         const itemMovePageLeft = {
@@ -631,6 +681,13 @@ export class BlockMenuBlock extends AbstractBlock {
                 itemSetWindowThemeToDefault
               ]
         };
+        const itemBookMenu = {
+          type: "item",
+          label: "Book",
+          children: [
+            itemAddBlankPages
+          ]
+        };
         const itemFileMenu = {
           type: "item",
           label: "File",
@@ -698,6 +755,9 @@ export class BlockMenuBlock extends AbstractBlock {
         items.push(itemAdd);
         items.push(itemFileMenu);
         items.push(itemTagsMenu);
+        if (insideBook) {
+          items.push(itemBookMenu);
+        }
         /**
          * Tabs
          */

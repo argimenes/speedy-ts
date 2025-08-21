@@ -631,13 +631,25 @@ DOCUMENT TABS (PAGES)
 }
 .book-block {
   display: block;
-  max-width: 1600px;
-  max-height: 600px;
+  max-width: 1200px;
+  max-height: 800px;
+  width: 1200px;
+  height: 800px;
 }
-.verso-block {
-  display: inline-block;
-  max-width: 800px;
-  max-height: 600px;
+.fixed-size-page-block {
+  position: absolute;
+  max-width: 600px;
+  max-height: 800px;
+  width: 600px;
+  height: 800px;
+}
+.fixed-size-page-block.left {
+  top: 0;
+  left: 0;
+}
+.fixed-size-page-block.right {
+  top: 0;
+  right: 0;
 }
 .book-nav-control {
   position: absolute;

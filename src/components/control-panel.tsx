@@ -165,7 +165,10 @@ export class ControlPanelBlock extends AbstractBlock {
         };
         const createDocument = async () => {
             const dto = Template.EmptyDocument;
-            await manager.createDocumentWithWindowAsync(dto);
+            const doc = await manager.createDocumentWithWindowAsync(dto);
+            const tb = doc.blocks[0].blocks[0].blocks[0].blocks[0] as StandoffEditorBlock;
+            manager.setBlockFocus(tb);
+            tb.moveCaretStart();
         }
         const setBackgroundColour = (colour: string) => {
             const prop = {

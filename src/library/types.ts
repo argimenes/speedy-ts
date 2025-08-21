@@ -82,7 +82,7 @@ export enum BlockType {
     ImageBlock = "image-block",
     ContainerBlock = "container-block",
     BookBlock = "book-block",
-    VersoBlock = "verso-block",
+    FixedSizePageBlock = "fixed-size-page-block",
     DocumentBlock = "document-block",
     YouTubeVideoBlock = "youtube-video-block",
     YouTubeVideoBackgroundBlock = "youtube-video-background-block",

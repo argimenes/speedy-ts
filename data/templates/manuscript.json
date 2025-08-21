@@ -9,10 +9,10 @@
         "type": "book-block",
         "children": [
           {
-            "type": "verso-block",
+            "type": "fixed-size-page-block",
             "metadata": {
-              "verso": "left",
-              "page": "1"
+              "page": "left",
+              "label": "1"
             },
             "children": [
               {
@@ -24,10 +24,10 @@
             ]
           },
           {
-            "type": "verso-block",
+            "type": "fixed-size-page-block",
             "metadata": {
-              "verso": "right",
-              "page": "2"
+              "page": "right",
+              "label": "2"
             },
             "children": [
               {
@@ -39,10 +39,10 @@
             ]
           },
           {
-            "type": "verso-block",
+            "type": "fixed-size-page-block",
             "metadata": {
-              "verso": "left",
-              "page": "3"
+              "page": "left",
+              "label": "3"
             },
             "children": [
               {
@@ -54,10 +54,10 @@
             ]
           },
           {
-            "type": "verso-block",
+            "type": "fixed-size-page-block",
             "metadata": {
-              "verso": "right",
-              "page": "4"
+              "page": "right",
+              "label": "4"
             },
             "children": [
               {

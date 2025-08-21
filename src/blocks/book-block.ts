@@ -5,14 +5,11 @@ import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../libr
 import { UniverseBlock } from '../universe-block';
 import { BlockPropertySchemas } from '../properties/block-properties';
 
-interface IActiveVerso {
-    left: VersoBlock;
-    right: VersoBlock;
-}
 export class BookBlock extends AbstractBlock {
     leftNav: HTMLDivElement;
     rightNav: HTMLDivElement;
-    active: IActiveVerso;
+    leftPage: FixedSizePageBlock;
+    rightPage: FixedSizePageBlock;
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.BookBlock;
@@ -21,28 +18,37 @@ export class BookBlock extends AbstractBlock {
         this.leftNav = document.createElement("DIV") as HTMLDivElement;
         this.rightNav = document.createElement("DIV") as HTMLDivElement;
         this.setupNavigationControls();
-        this.active = {} as any;
     }
-    loadPreviousVersos() {
-        const i = this.blocks.findIndex(x=> x.id == this.active.left.id);
-        if (i < 2) return;
-        this.active.left.setInactive();
-        this.active.right.setInactive();
-        this.active.left = this.active.left.relation.previous.relation.previous as VersoBlock;
-        this.active.right = this.active.right.relation.previous.relation.previous as VersoBlock;
-        this.active.left.setActive();
-        this.active.right.setActive();
+    getLastPage() {
+        const maxIndex = this.blocks.length - 1;
+        if (maxIndex < 0) {
+            return null;
+        }
+        return this.blocks[maxIndex] as FixedSizePageBlock;
     }
-    loadNextVersos() {
-        const len = this.blocks.length - 1;
-        const i = this.blocks.findIndex(x=> x.id == this.active.left.id);
-        if (len < 2) return;
-        this.active.left.setInactive();
-        this.active.right.setInactive();
-        this.active.left = this.active.left.relation.next.relation.next as VersoBlock;
-        this.active.right = this.active.right.relation.next.relation.next as VersoBlock;
-        this.active.left.setActive();
-        this.active.right.setActive();
+    setAllPagesInactive() {
+        this.blocks.forEach((b: FixedSizePageBlock) => b.setInactive());
+    }
+    loadPreviousPageset() {
+        const leftIndex = this.blocks.findIndex(x=> x.id == this.leftPage.id);
+        if (leftIndex == 0) return;
+        this.leftPage.setInactive();
+        this.rightPage.setInactive();
+        this.leftPage = this.leftPage.relation.previous.relation.previous as FixedSizePageBlock;
+        this.rightPage = this.rightPage.relation.previous.relation.previous as FixedSizePageBlock;
+        this.leftPage.setActive();
+        this.rightPage.setActive();
+    }
+    loadNextPageset() {
+        const maxIndex = this.blocks.length - 1;
+        const rightIndex = this.blocks.findIndex(x=> x.id == this.rightPage.id);
+        if (rightIndex == maxIndex) return;
+        this.leftPage.setInactive();
+        this.rightPage.setInactive();
+        this.leftPage = this.leftPage.relation.next.relation.next as FixedSizePageBlock;
+        this.rightPage = this.rightPage.relation.next.relation.next as FixedSizePageBlock;
+        this.leftPage.setActive();
+        this.rightPage.setActive();
     }
     setupNavigationControls() {
         const self = this;
@@ -52,7 +58,7 @@ export class BookBlock extends AbstractBlock {
             handler: {
                 "click": (e: Event) => {
                     e.preventDefault();
-                    self.loadPreviousVersos();
+                    self.loadPreviousPageset();
                 }
             }
         });
@@ -62,7 +68,7 @@ export class BookBlock extends AbstractBlock {
             handler: {
                 "click": (e: Event) => {
                     e.preventDefault();
-                    self.loadNextVersos();
+                    self.loadNextPageset();
                 }
             }
         });
@@ -85,10 +91,10 @@ export class BookBlock extends AbstractBlock {
                 await manager.buildChildren(book, dto);
                 container.appendChild(book.container);
                 if (book.blocks.length >= 2) {
-                    book.active.left = book.blocks[0] as VersoBlock;
-                    book.active.right = book.blocks[1] as VersoBlock;
-                    book.active.left.setActive();
-                    book.active.right.setActive();
+                    book.leftPage = book.blocks[0] as FixedSizePageBlock;
+                    book.rightPage = book.blocks[1] as FixedSizePageBlock;
+                    book.leftPage.setActive();
+                    book.rightPage.setActive();
                 }
                 return book;
             }
@@ -105,8 +111,8 @@ export class BookBlock extends AbstractBlock {
         this.update();
     }
     update() {
-        this.active.left?.update();
-        this.active.right?.update();
+        this.leftPage?.update();
+        this.rightPage?.update();
     }
     bind(data: IBlockDto) {
         this.id = data.id || uuidv4();
@@ -129,23 +135,23 @@ export class BookBlock extends AbstractBlock {
     }    
 }
 
-enum Verso {
+enum Page {
     "Left" = "Left",
     "Right" = "Right"
 }
 interface IVersoBlockConstructor extends IAbstractBlockConstructor {
-    page?: string;
-    verso?: Verso;
+    label?: string;
+    page?: Page;
 }
 
-export class VersoBlock extends AbstractBlock {
-    verso: Verso;
-    page: string;
+export class FixedSizePageBlock extends AbstractBlock {
+    page: Page;
+    label: string;
     constructor(args: IVersoBlockConstructor) {
         super(args);
-        this.type = BlockType.VersoBlock;
-        this.page = args.page;
-        this.verso = args.verso || Verso.Left;
+        this.type = BlockType.FixedSizePageBlock;
+        this.label = args.label;
+        this.page = args.page || Page.Left;
         this.inputEvents = this.getInputEvents();
         this.setBlockSchemas(this.getBlockSchemas());
     }
@@ -157,9 +163,9 @@ export class VersoBlock extends AbstractBlock {
     }
     static getBlockBuilder() {
         return {
-            type: BlockType.VersoBlock,
+            type: BlockType.FixedSizePageBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
-                const block = new VersoBlock({ manager, ...dto });
+                const block = new FixedSizePageBlock({ manager, ...dto });
                 if (dto?.blockProperties) block.addBlockProperties(dto.blockProperties);
                 block.applyBlockPropertyStyling();
                 block.build();
@@ -175,14 +181,16 @@ export class VersoBlock extends AbstractBlock {
         ];
     }
     build() {
-        setElement(this.container, { classList: ["verso-block"] });
+        const page = this.metadata.page as string;
+        const pageCss = page.toLowerCase() == "left" ? "left" : "right";
+        setElement(this.container, { classList: ["fixed-size-page-block", pageCss] });
         this.update();
     }
     update() {
         const active = this.metadata.active;
         setElement(this.container, {
             style: {
-                "display": active ? "inline-block" : "none"
+                "display": active ? "block" : "none"
             }
         });
     }
