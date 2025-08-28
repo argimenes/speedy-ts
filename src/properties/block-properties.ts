@@ -1,10 +1,12 @@
 import { BlockProperty } from "../library/block-property";
+import { DraggableWindow } from "../library/draggable-window";
 import { setElement } from "../library/svg";
 import { isStr } from "../library/types";
 
 export const BlockPropertySchemas = {
     getDocumentBlockProperties() {
         return [
+            BlockPropertySchemas.blockDraggable,
             BlockPropertySchemas.blockMargin,
             BlockPropertySchemas.blockRotate,
             BlockPropertySchemas.blockIndent,
@@ -28,6 +30,30 @@ export const BlockPropertySchemas = {
             BlockPropertySchemas.blockFontSizeHalf,
             BlockPropertySchemas.blockFontSizeThreeQuarters
         ];
+    },
+    blockDraggable: {
+        type: "block/draggable",
+        name: "Draggable Block",
+        description: "Makes the block draggable.",
+        event: {
+            onInit: async (p: BlockProperty) => {
+                const container = p.block.container;
+                const handle = (container.querySelector(".drag-handle")
+                || container) as HTMLDivElement;
+                const dragger = new DraggableWindow(container, handle, {
+                    enableResize: true,
+                    minimizeDuration: 300,  // Optional: Customize minimize animation duration
+                    minimizeIconClass: 'minimized-icon',  // Custom class for minimized icon
+                    onDragStart: () => console.log('Started dragging'),
+                    onDragMove: (x, y) => console.log(`Dragging to ${x}, ${y}`),
+                    onDragEnd: () => console.log('Stopped dragging'),
+                });
+                p.metadata.dragger = dragger;
+            },
+            onDestroy: async (p: BlockProperty) => {
+                (p.metadata.dragger as DraggableWindow).destroy();
+            },
+        }
     },
     blockRotate: {
         type: "block/rotate",

@@ -1,5 +1,6 @@
 import { StyleBarBlock } from "../components/style-bar";
 import { BlockType, IBlockDto } from "../library/types";
+import { BlockPropertySchemas } from "../properties/block-properties";
 import { UniverseBlock } from "../universe-block";
 import { AbstractBlock } from "./abstract-block";
 import { DocumentBlock } from "./document-block";
@@ -34,7 +35,8 @@ export class DocumentWindowBlock extends WindowBlock
                     manager,
                     onClose: async (b) => b.destroy()
                 });
-                dcw.addBlockProperties(dto.blockProperties);
+                const blockProperties = [{ type: "block/draggable"}, ...dto.blockProperties];
+                dcw.addBlockProperties(blockProperties);
                 dcw.applyBlockPropertyStyling();
                 dcw.container.appendChild(dcw.styleBar.container);
                 await manager.buildChildren(dcw, dto, (child) => {
@@ -63,7 +65,8 @@ export class DocumentWindowBlock extends WindowBlock
                 decorate: {
                     blockClass: "block_theme_paper"
                 }
-            }
+            },
+            BlockPropertySchemas.blockDraggable
         ]
     }
 }

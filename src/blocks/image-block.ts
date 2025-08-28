@@ -5,6 +5,7 @@ import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, CARET, IBindin
 import { UniverseBlock } from '../universe-block';
 import { BlockProperty } from '../library/block-property';
 import { DocumentBlock } from './document-block';
+import { BlockPropertySchemas } from '../properties/block-properties';
 
 export class ImageBlock extends AbstractBlock {
     image: HTMLImageElement;
@@ -18,6 +19,7 @@ export class ImageBlock extends AbstractBlock {
     }
     getBlockSchemas() {
         return [
+            BlockPropertySchemas.blockDraggable,
             {
                 type: "block/position",
                 name: "Block position",

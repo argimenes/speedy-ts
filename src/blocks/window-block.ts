@@ -5,6 +5,7 @@ import { setElement } from '../library/svg';
 import { UniverseBlock } from '../universe-block';
 import { ContextMenuBlock } from './context-menu-block';
 import { DraggableWindow } from '../library/draggable-window';
+import { BlockPropertySchemas } from '../properties/block-properties';
 
 type WindowBlockMetadata =  {
     title: string;
@@ -59,7 +60,7 @@ export class WindowBlock extends AbstractBlock {
         this.isDragging = false;
         this.header = document.createElement("DIV") as HTMLDivElement;
         this.header.setAttribute("id", uuidv4());
-        this.header.classList.add("window-block-header");
+        this.header.classList.add("window-block-header", "drag-handle");
         const controls = this.createControls();
         this.header.appendChild(controls);
         this.container.appendChild(this.header);
@@ -75,7 +76,8 @@ export class WindowBlock extends AbstractBlock {
             type: BlockType.WindowBlock,
             builder: async (container: HTMLElement, dto: IBlockDto, manager: UniverseBlock) => {
                 const block = new WindowBlock({ manager, ...dto });
-                block.addBlockProperties(dto.blockProperties);
+                const blockProperties = [{ type: "block/draggable"}, ...dto.blockProperties];
+                block.addBlockProperties(blockProperties);
                 await manager.buildChildren(block, dto, (child) => {
                     block.container.appendChild(child.container);
                 });
@@ -114,7 +116,8 @@ export class WindowBlock extends AbstractBlock {
                 decorate: {
                     blockClass: "block_theme_paper"
                 }
-            }
+            },
+            BlockPropertySchemas.blockDraggable
         ]
     }
     async onContextMenu(e: MouseEvent) {
@@ -221,14 +224,14 @@ export class WindowBlock extends AbstractBlock {
         [handle].forEach(x => x.addEventListener("contextmenu", this.onContextMenu.bind(this)));
 
 
-        const dragger = new DraggableWindow(win, handle, {
-            enableResize: true,
-            minimizeDuration: 300,  // Optional: Customize minimize animation duration
-            minimizeIconClass: 'minimized-icon',  // Custom class for minimized icon
-            onDragStart: () => console.log('Started dragging'),
-            onDragMove: (x, y) => console.log(`Dragging to ${x}, ${y}`),
-            onDragEnd: () => console.log('Stopped dragging'),
-          });
+        // const dragger = new DraggableWindow(win, handle, {
+        //     enableResize: true,
+        //     minimizeDuration: 300,  // Optional: Customize minimize animation duration
+        //     minimizeIconClass: 'minimized-icon',  // Custom class for minimized icon
+        //     onDragStart: () => console.log('Started dragging'),
+        //     onDragMove: (x, y) => console.log(`Dragging to ${x}, ${y}`),
+        //     onDragEnd: () => console.log('Stopped dragging'),
+        //   });
           
 
         // handle.addEventListener('mousedown', (e) => {

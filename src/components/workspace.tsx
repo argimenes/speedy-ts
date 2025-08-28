@@ -347,7 +347,10 @@ export const BlockManagerWindow : Component<Props> = (props) => {
                                                                             type: BlockType.ImageBlock,
                                                                             metadata: {
                                                                                 url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Leonardo_da_Vinci_%281452-1519%29_-_The_Last_Supper_%281495-1498%29.jpg/1024px-Leonardo_da_Vinci_%281452-1519%29_-_The_Last_Supper_%281495-1498%29.jpg"
-                                                                            }
+                                                                            },
+                                                                            blockProperties: [
+                                                                                { type: "block/draggable" }
+                                                                            ]
                                                                         }
                                                                     ]
                                                                 },
