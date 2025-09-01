@@ -47,8 +47,9 @@ export class SurfaceBlock extends AbstractBlock {
             id: this.id,
             type: this.type,
             metadata: this.metadata,
-            blockProperties: this.blockProperties
-        }
+            blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
+            children: this.blocks?.map(x => x.serialize()) || []
+        } as IBlockDto;
     }
     deserialize(json: any | any[]): IBlock {
         return this;
@@ -123,8 +124,9 @@ export class SideBlock extends AbstractBlock {
             id: this.id,
             type: this.type,
             metadata: this.metadata,
-            blockProperties: this.blockProperties
-        }
+            blockProperties: this.blockProperties?.map(x => x.serialize()) || [],
+            children: this.blocks?.map(x => x.serialize()) || []
+        } as IBlockDto;
     }
     deserialize(json: any | any[]): IBlock {
         return this;
