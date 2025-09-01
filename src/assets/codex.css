@@ -644,11 +644,11 @@ DOCUMENT TABS (PAGES)
   height: 800px;
 }
 .fixed-size-page-block.left {
-  top: 0;
+  top: 45px;
   left: 0;
 }
 .fixed-size-page-block.right {
-  top: 0;
+  top: 45px;
   right: 0;
 }
 .book-nav-control {

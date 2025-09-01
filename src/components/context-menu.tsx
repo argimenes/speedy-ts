@@ -1,5 +1,6 @@
 import { Component, For, JSX, Show, createEffect, createSignal, onCleanup } from "solid-js";
 import clsx from "clsx";
+import { ListItem } from "../library/types";
 
 interface ContextMenuProps {
   visible: boolean;
@@ -52,6 +53,15 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
 };
 
 
+
+type SelectItemType = {
+  type: "select";
+  label: string;
+  options: ListItem[];
+  value?: () => string;
+  onInput: (value: ListItem) => void;
+};
+
 type InputItemType = {
   type: "input";
   label: string;
@@ -74,7 +84,7 @@ type SeparatorType = {
   type: "separator";
 };
 
-export type ContextMenuItem = MenuItemType | SeparatorType | InputItemType;
+export type ContextMenuItem = MenuItemType | SeparatorType | InputItemType | SelectItemType;
 
 type MenuItemProps = {
   item: ContextMenuItem;
@@ -131,6 +141,37 @@ export const MenuItem: Component<MenuItemProps> = (props) => {
         >
           OK
         </button>
+      </div>
+    );
+  }
+
+  // Handle input field items
+  if (props.item.type === "select") {
+    const [value, setValue] = createSignal((props.item.value && props.item.value()) || "");
+
+    const submit = () => {
+      if (value()) {
+        const item = ((props.item as SelectItemType)).options.find(i => i.value === value());
+        (props.item as SelectItemType).onInput(item);
+        props.onClose();
+      }
+    };
+
+    return (
+      <div>
+        <For each={props.item.options}>{(opt) =>
+            <div>
+              <input
+                type="radio"
+                id={opt.value}
+                name="select"
+                value={opt.value}
+                checked={value() === opt.value}
+                onChange={() => {setValue(opt.value); submit() }}
+              />
+              <label for={opt.value}>{opt.text}</label>
+            </div>
+          }</For>
       </div>
     );
   }
