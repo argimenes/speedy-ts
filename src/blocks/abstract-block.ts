@@ -271,6 +271,7 @@ export abstract class AbstractBlock implements IBlock {
     // updateView() {
 
     // }
+    
     setFocus(){
         this.container.focus({ });
     }

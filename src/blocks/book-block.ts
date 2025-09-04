@@ -53,7 +53,7 @@ export class BookBlock extends AbstractBlock {
     setupNavigationControls() {
         const self = this;
         setElement(this.leftNav, {
-            classList: ["book-nav-control", "left"],
+            classList: ["book-nav-control", "left", "drag-handle"],
             innerHTML: "‹",
             handler: {
                 "click": (e: Event) => {
@@ -63,7 +63,7 @@ export class BookBlock extends AbstractBlock {
             }
         });
         setElement(this.rightNav, {
-            classList: ["book-nav-control", "right"],
+            classList: ["book-nav-control", "right", "drag-handle"],
             innerHTML: "›",
             handler: {
                 "click": (e: Event) => {

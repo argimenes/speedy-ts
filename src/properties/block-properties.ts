@@ -38,15 +38,22 @@ export const BlockPropertySchemas = {
         event: {
             onInit: async (p: BlockProperty) => {
                 const container = p.block.container;
-                const handle = (container.querySelector(".drag-handle")
-                || container) as HTMLDivElement;
+                const handle = (container.querySelector(".drag-handle") || container) as HTMLDivElement;
+                if (p.metadata.position) {
+                    container.style.transform = `translate(${p.metadata.position.x}px, ${p.metadata.position.y}px)`;
+                }
                 const dragger = new DraggableWindow(container, handle, {
                     enableResize: true,
                     minimizeDuration: 300,  // Optional: Customize minimize animation duration
                     minimizeIconClass: 'minimized-icon',  // Custom class for minimized icon
                     onDragStart: () => console.log('Started dragging'),
-                    onDragMove: (x, y) => console.log(`Dragging to ${x}, ${y}`),
-                    onDragEnd: () => console.log('Stopped dragging'),
+                    onDragMove: (x, y) => {
+                        console.log(`Dragging to ${x}, ${y}`);
+                        p.metadata.position = { x, y };
+                    },
+                    onDragEnd: () => {
+                        console.log('Stopped dragging');
+                    },
                 });
                 p.metadata.dragger = dragger;
             },

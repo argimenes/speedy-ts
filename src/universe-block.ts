@@ -1193,6 +1193,18 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
         if (type == "main-list-block") return BlockType.DocumentBlock; 
         return type;
     }
+    updateFromMetadata(block: IBlock) {
+        if (!block || !block.metadata) return;
+        if (block.metadata.position) {
+            setElement(block.container, {
+                style: {
+                    position: "absolute",
+                    left: block.metadata.position.x + "px",
+                    top: block.metadata.position.y + "px"
+                }
+            });
+        }
+    }
     async recursivelyBuildBlock(container: HTMLElement, blockDto: IBlockDto) {
         const type = this.migrateType(blockDto.type) as BlockType;
         const builder = this.getBlockBuilder(type);
@@ -1200,6 +1212,7 @@ export class UniverseBlock extends AbstractBlock implements IUniverseBlock {
             try {
                 const dto = {...blockDto, type: type };
                 const newBlock = await builder(container, dto, this);
+                this.updateFromMetadata(newBlock);
                 await this.handleBuildingMarginBlocks(newBlock, dto);
                 return newBlock;
             } catch (ex) {

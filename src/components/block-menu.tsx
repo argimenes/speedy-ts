@@ -1,7 +1,7 @@
-import { IconImageInPicture, IconVideo, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy, IconEaseOut, IconTag, IconFile, IconFile3d, IconDesk } from "@tabler/icons-solidjs";
+import { IconImageInPicture, IconVideo, IconTrash, IconGrid3x3, IconRectangleVertical, IconPlus, IconCode, IconArrowsSplit, IconSwipeLeft, IconSwipeRight, IconGitMerge, IconStackPop, IconEdit, IconList, IconHomeDown, IconHomeUp, IconWindow, IconBackground, IconBrandYoutube, Icon3dRotate, IconDisc, IconPencil, IconCopy, IconEaseOut, IconTag, IconFile, IconFile3d, IconDesk, IconSelect, IconBlocks } from "@tabler/icons-solidjs";
 import { Component, onCleanup } from "solid-js";
 import { AbstractBlock } from "../blocks/abstract-block";
-import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor } from "../library/types";
+import { IBlockDto, IBlock, BlockType, IAbstractBlockConstructor, ListItem } from "../library/types";
 import { renderToNode } from "../library/common";
 import { ContextMenu, ContextMenuItem } from "./context-menu";
 import { StandoffEditorBlock } from "../blocks/standoff-editor-block";
@@ -202,6 +202,13 @@ export class BlockMenuBlock extends AbstractBlock {
       page.setName(name);
       page.setActive();
     }
+    getAncestorBlockTypesList() {
+      const ancestors = this.manager.getAncestors(this.source);
+      const list: ListItem[] = ancestors.map(a => {
+        return { text: a.type, value: a.id };
+      });
+      return list;
+    }
     deleteStickyTab() {
       const tab = this.manager.getParentOfType(this.source, BlockType.StickyTabBlock) as StickyTabBlock;
       tab.deleteTab();
@@ -296,6 +303,9 @@ export class BlockMenuBlock extends AbstractBlock {
     moveTabLeft() {
       const tab = this.manager.getParentOfType(this.source, BlockType.TabBlock) as TabBlock;
       tab.moveLeft();
+    }
+    setChosenFocus(id: string) {
+        this.manager.setBlockFocus(this.manager.getBlock(id) as AbstractBlock);
     }
     switchThemeTo(theme: string) {
         const win = this.manager.getParentOfType(this.source, BlockType.DocumentWindowBlock) as DocumentWindowBlock;
@@ -583,6 +593,17 @@ export class BlockMenuBlock extends AbstractBlock {
               icon: <IconTrash />,
               onClick: () => self.deletePage()
         };
+        /**
+         * Set Focus
+         */
+        const itemSelectBlock = {
+              type: "select",
+              label: "Set focus",
+              options: self.getAncestorBlockTypesList(),
+              icon: <IconBlocks />,
+              onInput: (item: ListItem) => self.setChosenFocus(item.value)
+        };
+
         /***
          * Sticky Tags
          */
@@ -681,6 +702,14 @@ export class BlockMenuBlock extends AbstractBlock {
                 itemSetWindowThemeToDefault
               ]
         };
+        const itemSelectMenu = {
+          type: "item",
+          label: "Select",
+          icon: <IconSelect />,
+          children: [
+            itemSelectBlock
+          ]
+        };
         const itemBookMenu = {
           type: "item",
           label: "Book",
@@ -758,6 +787,7 @@ export class BlockMenuBlock extends AbstractBlock {
         if (insideBook) {
           items.push(itemBookMenu);
         }
+        items.push(itemSelectMenu);
         /**
          * Tabs
          */

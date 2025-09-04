@@ -518,3 +518,5 @@ export type DocumentHistory = {
     redoStack: IBlockDto[];
     lastChange: number;
 }
+
+export type ListItem =  { text: string; value: string };
