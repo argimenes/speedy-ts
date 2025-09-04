@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Three.js Treasure Binding → Openable Book with Editable Pages</title>
+  <style>
+    html, body { height: 100%; margin: 0; overflow: hidden; background: #0b0f14; }
+    #app { position: fixed; inset: 0; }
+    /* Layer the WebGL canvas (3D solids) behind the CSS3D layer (editable pages). */
+    #webgl { position: absolute; inset: 0; z-index: 0; }
+    #css3d { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+
+    /* Simple on-screen UI */
+    .ui { position: fixed; top: 12px; left: 12px; z-index: 2; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    .ui button {
+      padding: 8px 12px; border-radius: 10px; border: 0; background: #1f2937; color: #fff; cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0,0,0,.35); margin-right: 8px; font-weight: 600;
+    }
+    .ui button:hover { filter: brightness(1.1); }
+
+    /* Editable page styles (these are real HTML pages rendered in 3D) */
+    .page {
+      width: 640px; height: 960px; /* aspect ~2:3 */
+      background: #fffffb; border: 1px solid #e7e5e4; border-radius: 10px; box-sizing: border-box;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      padding: 28px; line-height: 1.3; font-family: Georgia, "Times New Roman", serif; font-size: 20px; color: #111827;
+      overflow: auto; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+      pointer-events: auto; /* allow typing / selecting */
+    }
+    .page[contenteditable="true"]:focus { outline: 2px solid #60a5fa; }
+    .watermark { position:absolute; bottom: 12px; right: 14px; font-size: 12px; color: #9ca3af; }
+
+    /* Helper overlay for click-target */
+    .hint { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); color: #cbd5e1; font: 13px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; opacity: .75; z-index: 2; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="webgl"></div>
+    <div id="css3d"></div>
+    <div class="ui">
+      <button id="toggle">Open / Close</button>
+      <button id="center">Center Camera</button>
+    </div>
+    <div class="hint">Click the book or press <strong>Open / Close</strong>. Type directly on the pages.</div>
+  </div>
+
+  <script type="module">
+    // --- Imports (module URLs fixed to a known Three.js version) ---
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+    import { CSS3DRenderer, CSS3DObject } from 'https://unpkg.com/three@0.160.0/examples/jsm/renderers/CSS3DRenderer.js';
+
+    // --- Sizes / Book metrics (world units) ---
+    const W = 2.0;            // single page width
+    const H = 3.0;            // page height
+    const T = 0.10;           // cover thickness
+    const GUTTER = 0.02;      // gap at the spine
+    const PAGE_THICK = 0.02;  // thin fake page block thickness for visuals
+
+    // --- Scene / Camera ---
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0f14);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(6, 4, 8);
+
+    // Lights
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x334155, 0.6); scene.add(hemi);
+    const key = new THREE.DirectionalLight(0xffffff, 0.9); key.position.set(6, 8, 4); key.castShadow = true; scene.add(key);
+
+    // --- Renderers ---
+    const webgl = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    webgl.setSize(window.innerWidth, window.innerHeight);
+    webgl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    document.getElementById('webgl').appendChild(webgl.domElement);
+
+    const css3d = new CSS3DRenderer();
+    css3d.setSize(window.innerWidth, window.innerHeight);
+    css3d.domElement.style.pointerEvents = 'none'; // pages re-enable on themselves
+    document.getElementById('css3d').appendChild(css3d.domElement);
+
+    const controls = new OrbitControls(camera, css3d.domElement);
+    controls.enableDamping = true;
+    controls.enablePan = true;
+    controls.target.set(0, H * 0.4, 0);
+
+    // --- Book group with hinges ---
+    const book = new THREE.Group();
+    scene.add(book);
+
+    // Decorative treasure-binding materials (simple PBR-ish look)
+    const gold = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.2 });
+    const leather = new THREE.MeshStandardMaterial({ color: 0x3b2f2f, metalness: 0.1, roughness: 0.8 });
+    const inlay = new THREE.MeshStandardMaterial({ color: 0x6b7280, metalness: 0.6, roughness: 0.4 });
+
+    // Base platform (to catch shadows / ground the object visually)
+    const baseGeo = new THREE.CylinderGeometry(6.5, 6.5, 0.25, 64);
+    const baseMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.0, roughness: 1.0 });
+    const base = new THREE.Mesh(baseGeo, baseMat); base.position.y = -0.13; base.receiveShadow = true; scene.add(base);
+
+    // Spine block
+    const spineGeo = new THREE.BoxGeometry(T, H, W + W + GUTTER * 2);
+    const spine = new THREE.Mesh(spineGeo, leather);
+    spine.castShadow = true; spine.receiveShadow = true;
+    book.add(spine);
+
+    // Hinges (pivot groups at the spine centerline)
+    const leftHinge = new THREE.Group();
+    const rightHinge = new THREE.Group();
+    book.add(leftHinge, rightHinge);
+
+    // Left cover (its local origin = hinge line)
+    const coverGeo = new THREE.BoxGeometry(W, H, T);
+    const leftCover = new THREE.Mesh(coverGeo, leather);
+    leftCover.castShadow = true; leftCover.receiveShadow = true;
+    leftCover.position.set(-W/2 - GUTTER/2, 0, 0); // hinge at x=0
+    leftHinge.add(leftCover);
+
+    // Right cover
+    const rightCover = new THREE.Mesh(coverGeo, leather);
+    rightCover.castShadow = true; rightCover.receiveShadow = true;
+    rightCover.position.set(+W/2 + GUTTER/2, 0, 0);
+    rightHinge.add(rightCover);
+
+    // Simple central ornament (treasure binding vibes)
+    const ornament = new THREE.TorusKnotGeometry(0.35, 0.12, 128, 16, 1, 3);
+    const frontOrn = new THREE.Mesh(ornament, gold);
+    frontOrn.position.set(0.0, 0.0, (T/2) + 0.02);
+    // Attach to right cover front face (closed book shows front on the right)
+    rightCover.add(frontOrn);
+
+    // Faux page block (for edges when closed)
+    const pagesBlockGeo = new THREE.BoxGeometry(W*2 - 0.06, H - 0.06, PAGE_THICK);
+    const pagesBlockMat = new THREE.MeshStandardMaterial({ color: 0xeeeae2, metalness: 0.05, roughness: 0.8 });
+    const pagesBlock = new THREE.Mesh(pagesBlockGeo, pagesBlockMat);
+    pagesBlock.position.set(0, 0, 0);
+    book.add(pagesBlock);
+
+    // --- CSS3D: real editable pages ---
+    const leftDom = document.createElement('div');
+    leftDom.className = 'page';
+    leftDom.setAttribute('contenteditable', 'true');
+    leftDom.innerHTML = `<h2 contenteditable="true" style="margin:0 0 8px 0;font-weight:700;">Left Page</h2>
+<p>Type here. This is a real HTML page rendered in 3D space. You can paste content, select text, etc.</p>
+<div class="watermark">CSS3D page</div>`;
+
+    const rightDom = document.createElement('div');
+    rightDom.className = 'page';
+    rightDom.setAttribute('contenteditable', 'true');
+    rightDom.innerHTML = `<h2 contenteditable="true" style="margin:0 0 8px 0;font-weight:700;">Right Page</h2>
+<p>These DIVs stay editable while the 3D book opens/closes. Try rotating the camera with the mouse.</p>
+<div class="watermark">CSS3D page</div>`;
+
+    const leftPage = new CSS3DObject(leftDom);
+    const rightPage = new CSS3DObject(rightDom);
+
+    // Position pages just above the page block plane so they don't z-fight
+    const PAGE_Z = 0.001;
+    leftPage.position.set(-W/2 - GUTTER/2 + 0.01, 0, PAGE_Z);
+    rightPage.position.set(+W/2 + GUTTER/2 - 0.01, 0, -PAGE_Z);
+
+    // Pages need to be rotated so their normal faces outward (DOM is always single-sided)
+    leftPage.rotation.y = Math.PI; // face inward like a left page
+    rightPage.rotation.y = 0;      // face inward like a right page
+
+    // Scale CSS pixels to world units (we'll map 320px → 1 world unit)
+    const pxToWorld = 1 / 320; // tweak to taste
+    leftPage.scale.set(pxToWorld, pxToWorld, pxToWorld);
+    rightPage.scale.set(pxToWorld, pxToWorld, pxToWorld);
+
+    // Mount pages into the scene via a CSS3D-only root object that mirrors book transforms
+    const cssBookRoot = new THREE.Object3D();
+    scene.add(cssBookRoot);
+    cssBookRoot.add(leftPage, rightPage);
+
+    // Keep CSS pages aligned with the WebGL book (updated each frame)
+    function syncCSSBook() {
+      cssBookRoot.position.copy(book.position);
+      cssBookRoot.quaternion.copy(book.quaternion);
+      cssBookRoot.scale.copy(book.scale);
+    }
+
+    // --- Animation state ---
+    let t = 0;                 // 0 = closed, 1 = fully open
+    const OPEN_MAX = Math.PI * 0.9; // ~162° dramatic open
+
+    function setOpen(amount) {
+      t = THREE.MathUtils.clamp(amount, 0, 1);
+      const ang = OPEN_MAX * t;
+      leftHinge.rotation.y = +ang;   // swing left cover backward
+      rightHinge.rotation.y = -ang;  // swing right cover forward
+
+      // Fade the ornamental front when open for readability
+      frontOrn.visible = (t < 0.7);
+
+      // Show / hide faux page block depending on openness
+      pagesBlock.visible = (t < 0.15);
+
+      // Slight page splay for a tactile feel
+      leftPage.rotation.y = Math.PI - (0.15 * t);
+      rightPage.rotation.y = 0 + (0.15 * t);
+    }
+
+    setOpen(0); // start closed
+
+    // --- Interaction ---
+    const toggleBtn = document.getElementById('toggle');
+    toggleBtn.addEventListener('click', () => tweenTo(t < 0.5 ? 1 : 0));
+    document.getElementById('center').addEventListener('click', () => {
+      controls.target.set(0, H * 0.4, 0);
+      camera.position.set(6, 4, 8);
+      controls.update();
+    });
+
+    // Click to toggle via raycast on covers
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    window.addEventListener('pointerdown', (e) => {
+      // Ignore clicks that originate inside an editable page (let typing/selecting work)
+      if (e.target && e.target.classList && e.target.classList.contains('page')) return;
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects([leftCover, rightCover, spine], true);
+      if (hits.length) tweenTo(t < 0.5 ? 1 : 0);
+    });
+
+    // Simple tween without external libs
+    let anim = null;
+    function tweenTo(target, duration = 650) {
+      if (anim) cancelAnimationFrame(anim.raf);
+      const start = performance.now();
+      const t0 = t; const dt = target - t0;
+      function step(now) {
+        const u = Math.min(1, (now - start) / duration);
+        // easeInOutCubic
+        const e = u < 0.5 ? 4*u*u*u : 1 - Math.pow(-2*u + 2, 3)/2;
+        setOpen(t0 + dt * e);
+        controls.update();
+        render();
+        if (u < 1) anim.raf = requestAnimationFrame(step);
+      }
+      anim = { raf: requestAnimationFrame(step) };
+    }
+
+    // --- Resize ---
+    window.addEventListener('resize', onResize);
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      webgl.setSize(window.innerWidth, window.innerHeight);
+      css3d.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // --- Render loop ---
+    function render() {
+      controls.update();
+      syncCSSBook();
+      webgl.render(scene, camera);
+      css3d.render(scene, camera);
+    }
+
+    (function loop() {
+      requestAnimationFrame(loop);
+      render();
+    })();
+
+    // --- Subtle layout offsets for book parts ---
+    // Raise the book slightly above the base.
+    book.position.y = 0.15;
+    cssBookRoot.position.y = 0.15;
+
+    // Shift spine slightly negative Z so the right cover visually sits on top when closed.
+    spine.position.z = -T/2;
+    pagesBlock.position.z = -T/2 + 0.001;
+  </script>
+</body>
+</html>

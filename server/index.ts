@@ -681,9 +681,15 @@ const generateIndex = (doc: IBlockDto): IndexedBlock[] => {
   return result;
 }
 
+app.get('/test.html', function(req: Request, res: Response) {
+  res.sendFile(path.join(__dirname, '../test.html'));
+});
+
 app.get('/', function(req: Request, res: Response) {
   res.sendFile(path.join(__dirname, '../index.html'));
 });
+
+
 
 function listFolders(): string[] {
   try {
