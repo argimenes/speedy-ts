@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
 import fs from "fs";
 import { RecordId, Surreal } from "surrealdb";
+import { surrealdbNodeEngines } from "@surrealdb/node";
 import type { IBlockDto, StandoffEditorBlockDto, BlockType, IndexedBlock } from "./types";
 //import { BlockType } from "./types";
 let db: Surreal | undefined;
@@ -30,15 +31,20 @@ const __dirname = path.dirname(__filename);
 
 export async function initDb(): Promise<Surreal | undefined> {
   if (db) return db;
-  db = new Surreal();
+  // db = new Surreal();
+  db = new Surreal({
+    engines: surrealdbNodeEngines(), // enable embedded Node engine
+  });
   try {
-      await db.connect("http://127.0.0.1:8000/rpc", {
-        namespace: "codex-ns", database: "codex-db",
-        auth: {
-          username: "root",
-          password: "root"
-        }
-      });
+      // await db.connect("http://127.0.0.1:8000/rpc", {
+      //   namespace: "codex-ns", database: "codex-db",
+      //   auth: {
+      //     username: "root",
+      //     password: "root"
+      //   }
+      // });
+      await db.connect("surrealkv://./data/appdb"); // creates/uses ./data/appdb
+      await db.use({ namespace: "codex-ns", database: "codex-db" });
       return db;
   } catch (err) {
       console.error("Failed to connect to SurrealDB:", err);
