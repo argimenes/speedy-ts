@@ -7,3 +7,4 @@ surrealDB
 data/*json
 data/surreal.db
 data/video
+data/appdb
