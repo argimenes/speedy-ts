@@ -1,12 +1,38 @@
 import { AbstractBlock } from './abstract-block';
-import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock } from '../library/types';
+import { IAbstractBlockConstructor, BlockType, IBlockDto, IBlock, InputEventSource, IBindingHandlerArgs } from '../library/types';
 import { UniverseBlock } from '../universe-block';
 import { setElement } from '../library/svg';
+import { StandoffEditorBlock } from './standoff-editor-block';
 
 export class PageBlock extends AbstractBlock {
     constructor(args: IAbstractBlockConstructor) {
         super(args);
         this.type = BlockType.PageBlock;
+        this.inputEvents = this.getInputEvents();
+    }
+    getInputEvents() {
+        return [
+            {
+                mode: "default",
+                trigger: {
+                    source: InputEventSource.Mouse,
+                    match: "clickleft"
+                },
+                action: {
+                    name: "Clicking in a page area.",
+                    description: "",
+                    handler: async (args: IBindingHandlerArgs) => {
+                        const block = args.block;
+                        const manager = block.manager as UniverseBlock;
+                        if (block.type != BlockType.PageBlock) return;
+                        const first = block.blocks.find(x => x.type == BlockType.StandoffEditorBlock) as StandoffEditorBlock;
+                        if (!first) return;
+                        manager.setBlockFocus(first);
+                        first.moveCaretStart();
+                    }
+                }
+            },
+        ]
     }
     static getBlockBuilder() {
         return {
